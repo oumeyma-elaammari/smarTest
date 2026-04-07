@@ -23,7 +23,7 @@ server:
 
 app:
   jwt:
-    secret: SmArTeSt_S3cr3t_K3y_2025_ENSA_ChangeMe!
+    secret: SmArTeSt_S3cr3t_K3y_2026_ENSA_ChangeMe!
     expiration: 86400000
   websocket:
     allowed-origins: http://localhost:5173

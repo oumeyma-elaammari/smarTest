@@ -1,5 +1,6 @@
 package com.smartest.backend.entity;
 
+import com.smartest.backend.entity.enumeration.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,7 +25,10 @@ public class Utilisateur {
     @Column(unique = true, length = 150)
     private String email;
 
-    private String role;  // ETUDIANT ou PROF
+    @Column(nullable = false)
+    private String password;
+
+    private Role role;
 
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL)
     private List<Reponse> reponses = new ArrayList<>();
@@ -32,7 +36,7 @@ public class Utilisateur {
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL)
     private List<Resultat> resultats = new ArrayList<>();
 
-    public Utilisateur(String nom, String email, String role) {
+    public Utilisateur(String nom, String email, Role role) {
         this.nom = nom;
         this.email = email;
         this.role = role;
