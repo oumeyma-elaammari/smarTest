@@ -15,6 +15,8 @@ public interface ProfesseurRepository extends JpaRepository<Professeur, Long> {
     // Trouver un professeur par email
     Optional<Professeur> findByEmail(String email);
 
+    boolean existsByEmail(String email);
+
     // Trouver les professeurs par nom
     List<Professeur> findByNomContainingIgnoreCase(String nom);
 

@@ -3,8 +3,8 @@ package com.smartest.backend.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.smartest.backend.entity.enumeration.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.smartest.backend.entity.Utilisateur;
@@ -12,23 +12,24 @@ import com.smartest.backend.entity.Utilisateur;
 @Repository
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> {
 
-    // Trouver un utilisateur par email
+    // Find by email
     Optional<Utilisateur> findByEmail(String email);
 
-    // Trouver les utilisateurs par rôle
-    List<Utilisateur> findByRole(String role);
-
-    // Vérifier si un email existe déjà
+    // Check if email exists
     boolean existsByEmail(String email);
 
-    // Recherche par nom (contient)
+    // Search by name
     List<Utilisateur> findByNomContainingIgnoreCase(String nom);
 
-    // Requête personnalisée : trouver les étudiants (role = 'etudiant')
-    @Query("SELECT u FROM Utilisateur u WHERE u.role = 'etudiant'")
-    List<Utilisateur> findAllEtudiants();
+    // Find by role (enum)
+    List<Utilisateur> findByRole(Role role);
 
-    // Requête personnalisée : trouver les professeurs
-    @Query("SELECT u FROM Utilisateur u WHERE u.role = 'professeur'")
-    List<Utilisateur> findAllProfesseurs();
+    // ✅ Plus de @Query — on utilise findByRole avec l'enum directement
+    default List<Utilisateur> findAllEtudiants() {
+        return findByRole(Role.ETUDIANT);
+    }
+
+    default List<Utilisateur> findAllProfesseurs() {
+        return findByRole(Role.PROFESSEUR);
+    }
 }
