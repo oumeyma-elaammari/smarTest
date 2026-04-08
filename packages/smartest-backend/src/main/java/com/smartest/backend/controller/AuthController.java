@@ -59,7 +59,7 @@ public class AuthController {
                     .status(HttpStatus.OK)   // 200
                     .body(response);
 
-        } catch (InvalidPasswordException | AccountNotFoundException _) {
+        } catch (InvalidPasswordException | AccountNotFoundException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)   // 401
                     .build();
