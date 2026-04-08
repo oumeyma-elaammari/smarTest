@@ -1,6 +1,8 @@
 package com.smartest.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.smartest.backend.entity.enumeration.Difficulte;
+import com.smartest.backend.entity.enumeration.TypeQuestion;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class Question {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,9 +24,13 @@ public class Question {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String enonce;
 
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private TypeQuestion type;
 
-    private String difficulte;
+    @Enumerated(EnumType.STRING)
+    private Difficulte difficulte;
+
+    // ===== RELATIONS =====
 
     @JsonIgnore
     @ToString.Exclude
@@ -42,7 +47,7 @@ public class Question {
     @JsonIgnore
     @ToString.Exclude
     @ManyToMany(mappedBy = "questions")
-    private List<Quiz> quizs = new ArrayList<>();
+    private List<Quiz> quizzes = new ArrayList<>();
 
     @JsonIgnore
     @ToString.Exclude
@@ -51,10 +56,11 @@ public class Question {
 
     @JsonIgnore
     @ToString.Exclude
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reponse> reponses = new ArrayList<>();
 
-    public Question(String enonce, String type, String difficulte, Professeur professeur) {
+    // constructeur personnalisé
+    public Question(String enonce, TypeQuestion type, Difficulte difficulte, Professeur professeur) {
         this.enonce = enonce;
         this.type = type;
         this.difficulte = difficulte;
