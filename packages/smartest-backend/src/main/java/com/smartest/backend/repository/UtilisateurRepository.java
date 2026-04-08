@@ -31,4 +31,9 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     default List<Utilisateur> findAllProfesseurs() {
         return findByRole(Role.PROFESSEUR);
     }
+
+    Optional<Utilisateur> findByTokenVerification(String token);
+
+    Optional<Utilisateur> findByResetPasswordToken(String token);
+
 }
