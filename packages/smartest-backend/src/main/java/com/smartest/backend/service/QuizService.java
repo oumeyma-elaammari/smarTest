@@ -77,8 +77,6 @@ public class QuizService {
         quiz.setTitre(request.getTitre());
         quiz.setDuree(request.getDuree());
         quiz.setProfesseur(professeur);
-
-        // Associer le cours si présent
         if (request.getCoursId() != null) {
             Cours cours = coursRepository.findById(request.getCoursId())
                     .orElseThrow(() -> new RuntimeException("Cours non trouvé avec l'id: " + request.getCoursId()));
@@ -252,8 +250,8 @@ public class QuizService {
     /**
      * Convertir une entité Reponse en ReponseResponseDTO
      */
-    private ReponseResponseDTO convertReponseToResponseDTO(Reponse reponse) {
-        ReponseResponseDTO dto = new ReponseResponseDTO();
+    private ReponseResponse convertReponseToResponseDTO(Reponse reponse) {
+        ReponseResponse dto = new ReponseResponse();
         dto.setId(reponse.getId());
         dto.setContenu(reponse.getContenu());
         dto.setCorrecte(reponse.getCorrecte());
