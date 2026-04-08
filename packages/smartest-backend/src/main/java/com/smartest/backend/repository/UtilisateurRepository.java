@@ -24,7 +24,6 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     // Find by role (enum)
     List<Utilisateur> findByRole(Role role);
 
-    // ✅ Plus de @Query — on utilise findByRole avec l'enum directement
     default List<Utilisateur> findAllEtudiants() {
         return findByRole(Role.ETUDIANT);
     }

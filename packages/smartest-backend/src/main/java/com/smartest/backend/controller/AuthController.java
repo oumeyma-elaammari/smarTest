@@ -1,5 +1,6 @@
 package com.smartest.backend.controller;
 
+import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.response.AuthResponse;
 import com.smartest.backend.dto.LoginRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
@@ -20,11 +21,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-
+//for prof
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
-   @PostMapping("/registerProf")
+   @PostMapping("/register")
     public ResponseEntity<String> register(
             @Valid @RequestBody RegisterRequest request) {
 
@@ -46,11 +47,33 @@ public class AuthController {
         }
     }
 
-    // ══════════════════════════════════════════════════════════
+    // POST /auth/register/etudiant
+    @PostMapping("/register/etudiant")
+    public ResponseEntity<String> registerEtudiant(
+            @Valid @RequestBody RegisterEtudiantRequest request) {
+
+        try {
+            String message = authService.registerEtudiant(request);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)  // 201
+                    .body(message);
+
+        } catch (PasswordMismatchException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)  // 400
+                    .body(e.getMessage());
+
+        } catch (EmailAlreadyUsedException e) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)  // 409
+                    .body(e.getMessage());
+        }
+    }
+
     //  POST /auth/login
     //  Connexion professeur ou étudiant
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
+    public ResponseEntity<?> login(
             @Valid @RequestBody LoginRequest request) {
 
         try {
@@ -59,11 +82,15 @@ public class AuthController {
                     .status(HttpStatus.OK)   // 200
                     .body(response);
 
-        } catch (InvalidPasswordException | AccountNotFoundException e) {
+        } catch (InvalidPasswordException e) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)   // 401
-                    .build();
+                    .body(e.getMessage());
 
+        } catch (AccountNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)   // 401
+                    .body(e.getMessage());
         }
     }
 }
