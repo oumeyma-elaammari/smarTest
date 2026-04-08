@@ -24,7 +24,7 @@ public class Utilisateur {
     @Column(unique = true, length = 150)
     private String email;
 
-    private String role;  // ETUDIANT ou PROF
+    private String role;  
 
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL)
     private List<Reponse> reponses = new ArrayList<>();
