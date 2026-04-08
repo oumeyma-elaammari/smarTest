@@ -1,15 +1,15 @@
 package com.smartest.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "cours")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cours {
