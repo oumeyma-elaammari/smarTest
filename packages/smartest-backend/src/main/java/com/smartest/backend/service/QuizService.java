@@ -252,8 +252,8 @@ public class QuizService {
     /**
      * Convertir une entité Reponse en ReponseResponseDTO
      */
-    private ReponseResponseDTO convertReponseToResponseDTO(Reponse reponse) {
-        ReponseResponseDTO dto = new ReponseResponseDTO();
+    private ReponseResponse convertReponseToResponseDTO(Reponse reponse) {
+        ReponseResponse dto = new ReponseResponse();
         dto.setId(reponse.getId());
         dto.setContenu(reponse.getContenu());
         dto.setCorrecte(reponse.getCorrecte());

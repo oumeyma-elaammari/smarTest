@@ -2,7 +2,7 @@ package com.smartest.backend.controller;
 
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.response.AuthResponse;
-import com.smartest.backend.dto.LoginRequest;
+import com.smartest.backend.dto.request.LoginRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
 import com.smartest.backend.exception.AccountNotFoundException;
 import com.smartest.backend.exception.EmailAlreadyUsedException;

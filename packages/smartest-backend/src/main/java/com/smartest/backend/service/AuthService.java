@@ -2,7 +2,6 @@ package com.smartest.backend.service;
 
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.response.AuthResponse;
-import com.smartest.backend.dto.LoginRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.enumeration.Role;
@@ -16,6 +15,7 @@ import com.smartest.backend.repository.UtilisateurRepository;
 import com.smartest.backend.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.smartest.backend.dto.request.LoginRequest;
 
 @Service
 public class AuthService {

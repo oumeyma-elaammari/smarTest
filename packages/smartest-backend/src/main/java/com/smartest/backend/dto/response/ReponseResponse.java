@@ -13,7 +13,6 @@ public class ReponseResponse {
     private Long id;
 
     private String contenu;
-
     private Boolean correcte;
 
     private Long questionId;
