@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import com.smartest.backend.entity.enumeration.Role;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +16,16 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Utilisateur {
+    @Column(unique = true)
+    private String resetPasswordToken;
+
+    private LocalDateTime resetPasswordExpiry;
+
+    @Column(nullable = false)
+    private boolean emailVerifie = false;
+
+    @Column(unique = true)
+    private String tokenVerification;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

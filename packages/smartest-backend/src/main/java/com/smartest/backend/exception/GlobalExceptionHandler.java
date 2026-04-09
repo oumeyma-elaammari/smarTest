@@ -49,6 +49,22 @@ public class GlobalExceptionHandler {
                 .body(ex.getMessage());
     }
 
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<String> handleEmailNotVerified(
+            EmailNotVerifiedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)   // 403
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<String> handleInvalidToken(
+            InvalidTokenException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)  // 400
+                .body(ex.getMessage());
+    }
+
     // ── Mot de passe incorrect ─────────────────────────────────
     @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<String> handleInvalidPassword(
