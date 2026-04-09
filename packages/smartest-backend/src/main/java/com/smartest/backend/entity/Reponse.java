@@ -1,5 +1,6 @@
 package com.smartest.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,13 +9,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "reponse")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Reponse {
@@ -28,14 +28,20 @@ public class Reponse {
 
     private Boolean correcte;
 
+    @JsonIgnore
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "utilisateur_id", nullable = false)
     private Utilisateur utilisateur;
 
+    @JsonIgnore
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "session_examen_id", nullable = false)
     private SessionExamen sessionExamen;
 
+    @JsonIgnore
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;

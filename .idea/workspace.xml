@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="c91eb27c-b5b7-4925-9bbc-50456eacd927" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/controller/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/dto/request/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/dto/response/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Cours.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Cours.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Examen.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Examen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Professeur.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Professeur.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Question.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Question.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Quiz.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Quiz.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Reponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Reponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Resultat.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Resultat.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/SessionExamen.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/SessionExamen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Utilisateur.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/entity/Utilisateur.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/exception/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/CoursRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/CoursRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ExamenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ExamenRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/QuestionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/QuestionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/QuizRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/QuizRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ReponseRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ReponseRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ResultatRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/ResultatRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/UtilisateurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/repository/UtilisateurRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/security/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/java/com/smartest/backend/service/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/resources/appliaction.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-backend/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-backend/src/main/resources/application.yaml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="SYNC" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="3C4XID306PkQVVUFMOoeBtDVbBv" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "Rebasing main",
+    "kotlin-language-version-configured": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c91eb27c-b5b7-4925-9bbc-50456eacd927" name="Changes" comment="" />
+      <created>1775645736659</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1775645736659</updated>
+    </task>
+    <servers />
+  </component>
+</project>

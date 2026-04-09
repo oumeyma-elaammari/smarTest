@@ -23,4 +23,9 @@ public interface ProfesseurRepository extends JpaRepository<Professeur, Long> {
     // Compter le nombre de cours par professeur
     @Query("SELECT p.id, p.nom, COUNT(c) FROM Professeur p LEFT JOIN p.cours c GROUP BY p.id")
     List<Object[]> countCoursByProfesseur();
+
+    Optional<Professeur> findByTokenVerification(String token);
+
+    Optional<Professeur> findByResetPasswordToken(String token);
+
 }

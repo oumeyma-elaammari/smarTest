@@ -1,5 +1,6 @@
 package com.smartest.backend.service;
 
+import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.response.AuthResponse;
 import com.smartest.backend.dto.LoginRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
@@ -57,6 +58,40 @@ public class AuthService {
         return "Inscription réussie !";
     }
 
+
+        // Envoyer email de confirmation
+        emailService.sendVerificationEmail(
+                request.getEmail(),
+                token,
+                "PROFESSEUR"
+        );
+
+//  REGISTER — STUDENT only
+    public String registerEtudiant(RegisterEtudiantRequest request) {
+
+        // Vérifier passwords
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new PasswordMismatchException();
+        }
+
+        // Vérifier email unique dans les deux tables
+        if (utilisateurRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyUsedException(request.getEmail());
+        }
+        if (professeurRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyUsedException(request.getEmail());
+        }
+
+        // Créer l'étudiant
+        Utilisateur etudiant = new Utilisateur();
+        etudiant.setNom(request.getNom());
+        etudiant.setEmail(request.getEmail());
+        etudiant.setPassword(passwordEncoder.encode(request.getPassword()));
+        etudiant.setRole(Role.ETUDIANT);
+
+        utilisateurRepository.save(etudiant);
+        return "Student registration successful !";
+    }
     // ══════════════════════════════════════════════════════════
     //  LOGIN — PROFESSOR or STUDENT
     // ══════════════════════════════════════════════════════════

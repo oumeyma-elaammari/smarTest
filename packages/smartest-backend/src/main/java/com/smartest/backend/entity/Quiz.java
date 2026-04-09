@@ -3,6 +3,7 @@ package com.smartest.backend.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,13 +14,12 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "quiz")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Quiz {
@@ -33,14 +33,20 @@ public class Quiz {
 
     private Integer duree;
 
+    @JsonIgnore
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "professeur_id", nullable = false)
     private Professeur professeur;
 
+    @JsonIgnore
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "cours_id")
     private Cours cours;
 
+    @JsonIgnore
+    @ToString.Exclude
     @ManyToMany
     @JoinTable(
             name = "quiz_question",
@@ -55,4 +61,5 @@ public class Quiz {
         this.duree = duree;
         this.professeur = professeur;
     }
+
 }
