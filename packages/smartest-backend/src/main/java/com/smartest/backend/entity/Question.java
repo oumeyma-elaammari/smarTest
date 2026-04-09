@@ -31,7 +31,6 @@ public class Question {
     private Difficulte difficulte;
 
     // ===== RELATIONS =====
-
     @JsonIgnore
     @ToString.Exclude
     @ManyToOne
@@ -66,4 +65,57 @@ public class Question {
         this.difficulte = difficulte;
         this.professeur = professeur;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getEnonce() {
+        return enonce;
+    }
+
+    public TypeQuestion getType() {
+        return type;
+    }
+
+    public Difficulte getDifficulte() {
+        return difficulte;
+    }
+
+    public Professeur getProfesseur() {
+        return professeur;
+    }
+
+    public Cours getCours() {
+        return cours;
+    }
+
+    public List<Reponse> getReponses() {
+        return reponses;
+    }
+
+    public void setEnonce(String enonce) {
+        this.enonce = enonce;
+    }
+
+    public void setType(TypeQuestion type) {
+        this.type = type;
+    }
+
+    public void setDifficulte(Difficulte difficulte) {
+        this.difficulte = difficulte;
+    }
+
+    public void setProfesseur(Professeur professeur) {
+        this.professeur = professeur;
+    }
+
+    public void setCours(Cours cours) {
+        this.cours = cours;
+    }
+
+    public void setReponses(List<Reponse> reponses) {
+        this.reponses = reponses;
+    }
+
 }
