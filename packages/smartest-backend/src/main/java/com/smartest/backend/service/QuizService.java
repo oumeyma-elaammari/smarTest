@@ -218,7 +218,7 @@ public class QuizService {
         // Convertir les questions
         if (quiz.getQuestions() != null && !quiz.getQuestions().isEmpty()) {
             List<QuestionResponse> questionDTOs = quiz.getQuestions().stream()
-                    .map(this::convertQuestionToResponseDTO)
+                    .map(this::convertQuestionToResponse)
                     .collect(Collectors.toList());
             dto.setQuestions(questionDTOs);
         }
@@ -229,7 +229,7 @@ public class QuizService {
     /**
      * Convertir une entité Question en QuestionResponseDTO
      */
-    private QuestionResponse convertQuestionToResponseDTO(Question question) {
+    private QuestionResponse convertQuestionToResponse(Question question) {
         QuestionResponse dto = new QuestionResponse();
         dto.setId(question.getId());
         dto.setEnonce(question.getEnonce());
@@ -239,7 +239,7 @@ public class QuizService {
         // Convertir les réponses
         if (question.getReponses() != null && !question.getReponses().isEmpty()) {
             List<ReponseResponse> reponseDTOs = question.getReponses().stream()
-                    .map(this::convertReponseToResponseDTO)
+                    .map(this::convertReponseToResponse)
                     .collect(Collectors.toList());
             dto.setReponses(reponseDTOs);
         }
@@ -250,7 +250,7 @@ public class QuizService {
     /**
      * Convertir une entité Reponse en ReponseResponseDTO
      */
-    private ReponseResponse convertReponseToResponseDTO(Reponse reponse) {
+    private ReponseResponse convertReponseToResponse(Reponse reponse) {
         ReponseResponse dto = new ReponseResponse();
         dto.setId(reponse.getId());
         dto.setContenu(reponse.getContenu());
