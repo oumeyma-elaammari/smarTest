@@ -1,8 +1,8 @@
 package com.smartest.backend.service;
 
-import com.smartest.backend.dto.request.RegisterRequest;
+import com.smartest.backend.dto.request.LoginRequest;
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
-import com.smartest.backend.dto.LoginRequest;
+import com.smartest.backend.dto.request.RegisterRequest;
 import com.smartest.backend.dto.response.AuthResponse;
 import com.smartest.backend.entity.Etudiant;
 import com.smartest.backend.entity.Professeur;
@@ -17,14 +17,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("AuthService — Tests complets")
 class AuthServiceTest {
 
     @Mock private ProfesseurRepository professeurRepository;
@@ -35,17 +36,17 @@ class AuthServiceTest {
 
     @InjectMocks private AuthService authService;
 
-    private RegisterRequest registerRequest;
-    private RegisterEtudiantRequest registerEtudiantRequest;
-    private LoginRequest loginRequest;
+    private RegisterRequest validProfRequest;
+    private RegisterEtudiantRequest validEtudiantRequest;
+    private LoginRequest loginProfRequest;
+    private LoginRequest loginEtudiantRequest;
     private Professeur professeur;
     private Etudiant etudiant;
 
     @BeforeEach
     void setUp() {
         professeur = new Professeur();
-        professeur.setId(1L);
-        professeur.setNom("Chahlal Ikram");
+        professeur.setNom("Ikram Laaroussi");
         professeur.setEmail("ikram@ensa.ma");
         professeur.setPassword("hashedPassword");
         professeur.setEmailVerifie(true);
@@ -54,7 +55,7 @@ class AuthServiceTest {
 
         etudiant = new Etudiant();
         etudiant.setNom("Nissrine El Aammari");
-switch        etudiant.setEmail("nissrine@ump.ac.ma");
+        etudiant.setEmail("nissrine@ump.ac.ma");
         etudiant.setPassword("hashedPassword");
         etudiant.setEmailVerifie(true);
         etudiant.setResetPasswordToken(null);
@@ -81,6 +82,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
         loginEtudiantRequest.setPassword("Ensa2025@");
     }
 
+    // ══════════════════════════════════════════════════════
     //  REGISTER PROFESSEUR
     // ══════════════════════════════════════════════════════
     @Nested
@@ -106,7 +108,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             when(professeurRepository.existsByEmail("ikram@ensa.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.register(validProfRequest))
-                .isInstanceOf(EmailAlreadyUsedException.class);
+                    .isInstanceOf(EmailAlreadyUsedException.class);
 
             verify(professeurRepository, never()).save(any());
             verify(emailService, never()).sendVerificationEmail(any(), any(), any());
@@ -118,7 +120,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             validProfRequest.setConfirmPassword("AutrePassword1!");
 
             assertThatThrownBy(() -> authService.register(validProfRequest))
-                .isInstanceOf(PasswordMismatchException.class);
+                    .isInstanceOf(PasswordMismatchException.class);
 
             verify(professeurRepository, never()).save(any());
         }
@@ -132,7 +134,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             authService.register(validProfRequest);
 
             verify(professeurRepository).save(argThat(p ->
-                !p.isEmailVerifie() && p.getTokenVerification() != null
+                    !p.isEmailVerifie() && p.getTokenVerification() != null
             ));
         }
 
@@ -145,7 +147,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             authService.register(validProfRequest);
 
             verify(emailService).sendVerificationEmail(
-                eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
+                    eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
         }
     }
 
@@ -176,7 +178,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             when(etudiantRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
-                .isInstanceOf(EmailAlreadyUsedException.class);
+                    .isInstanceOf(EmailAlreadyUsedException.class);
 
             verify(etudiantRepository, never()).save(any());
         }
@@ -188,7 +190,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             when(professeurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
-                .isInstanceOf(EmailAlreadyUsedException.class);
+                    .isInstanceOf(EmailAlreadyUsedException.class);
 
             verify(etudiantRepository, never()).save(any());
         }
@@ -199,7 +201,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             validEtudiantRequest.setConfirmPassword("AutrePassword1!");
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
-                .isInstanceOf(PasswordMismatchException.class);
+                    .isInstanceOf(PasswordMismatchException.class);
 
             verify(etudiantRepository, never()).save(any());
         }
@@ -214,7 +216,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             authService.registerEtudiant(validEtudiantRequest);
 
             verify(etudiantRepository).save(argThat(e ->
-                !e.isEmailVerifie() && e.getTokenVerification() != null
+                    !e.isEmailVerifie() && e.getTokenVerification() != null
             ));
         }
 
@@ -228,7 +230,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             authService.registerEtudiant(validEtudiantRequest);
 
             verify(emailService).sendVerificationEmail(
-                eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
+                    eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
         }
     }
 
@@ -245,7 +247,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             professeur.setEmailVerifie(false);
             professeur.setTokenVerification("valid-token-prof");
             when(professeurRepository.findByTokenVerification("valid-token-prof"))
-                .thenReturn(Optional.of(professeur));
+                    .thenReturn(Optional.of(professeur));
 
             authService.verifyEmail("valid-token-prof", "PROFESSEUR");
 
@@ -260,7 +262,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             etudiant.setEmailVerifie(false);
             etudiant.setTokenVerification("valid-token-etudiant");
             when(etudiantRepository.findByTokenVerification("valid-token-etudiant"))
-                .thenReturn(Optional.of(etudiant));
+                    .thenReturn(Optional.of(etudiant));
 
             authService.verifyEmail("valid-token-etudiant", "ETUDIANT");
 
@@ -273,20 +275,20 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
         @DisplayName("❌ Token invalide Professeur")
         void verifyEmail_Professeur_InvalidToken() {
             when(professeurRepository.findByTokenVerification("invalid-token"))
-                .thenReturn(Optional.empty());
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.verifyEmail("invalid-token", "PROFESSEUR"))
-                .isInstanceOf(InvalidTokenException.class);
+                    .isInstanceOf(InvalidTokenException.class);
         }
 
         @Test
         @DisplayName("❌ Token invalide Etudiant")
         void verifyEmail_Etudiant_InvalidToken() {
             when(etudiantRepository.findByTokenVerification("invalid-token"))
-                .thenReturn(Optional.empty());
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.verifyEmail("invalid-token", "ETUDIANT"))
-                .isInstanceOf(InvalidTokenException.class);
+                    .isInstanceOf(InvalidTokenException.class);
         }
     }
 
@@ -319,7 +321,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
 
             assertThatThrownBy(() -> authService.login(loginProfRequest))
-                .isInstanceOf(EmailNotVerifiedException.class);
+                    .isInstanceOf(EmailNotVerifiedException.class);
         }
 
         @Test
@@ -329,7 +331,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(loginProfRequest))
-                .isInstanceOf(InvalidPasswordException.class);
+                    .isInstanceOf(InvalidPasswordException.class);
         }
 
         @Test
@@ -343,7 +345,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             req.setPassword("Ensa2025@");
 
             assertThatThrownBy(() -> authService.login(req))
-                .isInstanceOf(AccountNotFoundException.class);
+                    .isInstanceOf(AccountNotFoundException.class);
         }
     }
 
@@ -375,7 +377,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
 
             assertThatThrownBy(() -> authService.login(loginEtudiantRequest))
-                .isInstanceOf(EmailNotVerifiedException.class);
+                    .isInstanceOf(EmailNotVerifiedException.class);
         }
 
         @Test
@@ -386,7 +388,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(loginEtudiantRequest))
-                .isInstanceOf(InvalidPasswordException.class);
+                    .isInstanceOf(InvalidPasswordException.class);
         }
 
         @Test
@@ -400,7 +402,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             req.setPassword("Ensa2025@");
 
             assertThatThrownBy(() -> authService.login(req))
-                .isInstanceOf(AccountNotFoundException.class);
+                    .isInstanceOf(AccountNotFoundException.class);
         }
     }
 
@@ -420,8 +422,8 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             authService.forgotPasswordEtudiant("nissrine@ump.ac.ma");
 
             verify(etudiantRepository).save(argThat(e ->
-                e.getResetPasswordToken() != null &&
-                e.getResetPasswordExpiry() != null
+                    e.getResetPasswordToken() != null &&
+                            e.getResetPasswordExpiry() != null
             ));
             verify(emailService).sendResetPasswordEmail(eq("nissrine@ump.ac.ma"), anyString());
         }
@@ -459,10 +461,10 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             authService.forgotPasswordEtudiant("nissrine@ump.ac.ma");
 
             verify(etudiantRepository).save(argThat(e ->
-                e.getResetPasswordToken() != null &&
-                !e.getResetPasswordToken().isEmpty() &&
-                e.getResetPasswordExpiry() != null &&
-                e.getResetPasswordExpiry().isAfter(LocalDateTime.now())
+                    e.getResetPasswordToken() != null &&
+                            !e.getResetPasswordToken().isEmpty() &&
+                            e.getResetPasswordExpiry() != null &&
+                            e.getResetPasswordExpiry().isAfter(LocalDateTime.now())
             ));
         }
     }
@@ -483,8 +485,8 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             authService.forgotPasswordProfesseur("ikram@ensa.ma");
 
             verify(professeurRepository).save(argThat(p ->
-                p.getResetPasswordToken() != null &&
-                p.getResetPasswordExpiry() != null
+                    p.getResetPasswordToken() != null &&
+                            p.getResetPasswordExpiry() != null
             ));
             verify(emailService).sendResetPasswordEmail(eq("ikram@ensa.ma"), anyString());
         }
@@ -527,15 +529,15 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             etudiant.setResetPasswordToken("valid-token");
             etudiant.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
             when(etudiantRepository.findByResetPasswordToken("valid-token"))
-                .thenReturn(Optional.of(etudiant));
+                    .thenReturn(Optional.of(etudiant));
             when(passwordEncoder.encode("NewPass2025@")).thenReturn("newHashedPassword");
 
             authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "NewPass2025@");
 
             verify(etudiantRepository).save(argThat(e ->
-                e.getPassword().equals("newHashedPassword") &&
-                e.getResetPasswordToken() == null &&
-                e.getResetPasswordExpiry() == null
+                    e.getPassword().equals("newHashedPassword") &&
+                            e.getResetPasswordToken() == null &&
+                            e.getResetPasswordExpiry() == null
             ));
         }
 
@@ -543,10 +545,10 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
         @DisplayName("❌ Token invalide")
         void resetPasswordEtudiant_InvalidToken() {
             when(etudiantRepository.findByResetPasswordToken("invalid-token"))
-                .thenReturn(Optional.empty());
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                authService.resetPasswordEtudiant("invalid-token", "NewPass2025@", "NewPass2025@")
+                    authService.resetPasswordEtudiant("invalid-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(etudiantRepository, never()).save(any());
@@ -558,10 +560,10 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             etudiant.setResetPasswordToken("expired-token");
             etudiant.setResetPasswordExpiry(LocalDateTime.now().minusMinutes(5));
             when(etudiantRepository.findByResetPasswordToken("expired-token"))
-                .thenReturn(Optional.of(etudiant));
+                    .thenReturn(Optional.of(etudiant));
 
             assertThatThrownBy(() ->
-                authService.resetPasswordEtudiant("expired-token", "NewPass2025@", "NewPass2025@")
+                    authService.resetPasswordEtudiant("expired-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(etudiantRepository, never()).save(any());
@@ -571,7 +573,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
         @DisplayName("❌ Mots de passe différents")
         void resetPasswordEtudiant_PasswordMismatch() {
             assertThatThrownBy(() ->
-                authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "AutrePass2025@")
+                    authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "AutrePass2025@")
             ).isInstanceOf(PasswordMismatchException.class);
 
             verify(etudiantRepository, never()).findByResetPasswordToken(any());
@@ -584,7 +586,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             etudiant.setResetPasswordToken("valid-token");
             etudiant.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
             when(etudiantRepository.findByResetPasswordToken("valid-token"))
-                .thenReturn(Optional.of(etudiant));
+                    .thenReturn(Optional.of(etudiant));
             when(passwordEncoder.encode(anyString())).thenReturn("newHashedPassword");
 
             authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "NewPass2025@");
@@ -607,15 +609,15 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             professeur.setResetPasswordToken("valid-token-prof");
             professeur.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
             when(professeurRepository.findByResetPasswordToken("valid-token-prof"))
-                .thenReturn(Optional.of(professeur));
+                    .thenReturn(Optional.of(professeur));
             when(passwordEncoder.encode("NewPass2025@")).thenReturn("newHashedPassword");
 
             authService.resetPasswordProfesseur("valid-token-prof", "NewPass2025@", "NewPass2025@");
 
             verify(professeurRepository).save(argThat(p ->
-                p.getPassword().equals("newHashedPassword") &&
-                p.getResetPasswordToken() == null &&
-                p.getResetPasswordExpiry() == null
+                    p.getPassword().equals("newHashedPassword") &&
+                            p.getResetPasswordToken() == null &&
+                            p.getResetPasswordExpiry() == null
             ));
         }
 
@@ -623,10 +625,10 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
         @DisplayName("❌ Token invalide")
         void resetPasswordProfesseur_InvalidToken() {
             when(professeurRepository.findByResetPasswordToken("invalid-token"))
-                .thenReturn(Optional.empty());
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                authService.resetPasswordProfesseur("invalid-token", "NewPass2025@", "NewPass2025@")
+                    authService.resetPasswordProfesseur("invalid-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(professeurRepository, never()).save(any());
@@ -638,10 +640,10 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             professeur.setResetPasswordToken("expired-token-prof");
             professeur.setResetPasswordExpiry(LocalDateTime.now().minusMinutes(5));
             when(professeurRepository.findByResetPasswordToken("expired-token-prof"))
-                .thenReturn(Optional.of(professeur));
+                    .thenReturn(Optional.of(professeur));
 
             assertThatThrownBy(() ->
-                authService.resetPasswordProfesseur("expired-token-prof", "NewPass2025@", "NewPass2025@")
+                    authService.resetPasswordProfesseur("expired-token-prof", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(professeurRepository, never()).save(any());
@@ -651,7 +653,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
         @DisplayName("❌ Mots de passe différents")
         void resetPasswordProfesseur_PasswordMismatch() {
             assertThatThrownBy(() ->
-                authService.resetPasswordProfesseur("valid-token", "NewPass2025@", "AutrePass2025@")
+                    authService.resetPasswordProfesseur("valid-token", "NewPass2025@", "AutrePass2025@")
             ).isInstanceOf(PasswordMismatchException.class);
 
             verify(professeurRepository, never()).findByResetPasswordToken(any());
@@ -664,7 +666,7 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
             professeur.setResetPasswordToken("valid-token-prof");
             professeur.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
             when(professeurRepository.findByResetPasswordToken("valid-token-prof"))
-                .thenReturn(Optional.of(professeur));
+                    .thenReturn(Optional.of(professeur));
             when(passwordEncoder.encode(anyString())).thenReturn("newHashedPassword");
 
             authService.resetPasswordProfesseur("valid-token-prof", "NewPass2025@", "NewPass2025@");
