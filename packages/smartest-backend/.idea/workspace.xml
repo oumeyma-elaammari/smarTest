@@ -42,6 +42,7 @@
       <change beforePath="$PROJECT_DIR$/src/main/resources/appliaction.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
