@@ -3,28 +3,14 @@ package com.smartest.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "utilisateur")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "etudiant")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class Etudiant {
-    @Column(unique = true)
-    private String resetPasswordToken;
-
-    private LocalDateTime resetPasswordExpiry;
-
-    @Column(nullable = false)
-    private boolean emailVerifie = false;
-
-    @Column(unique = true)
-    private String tokenVerification;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +25,16 @@ public class Etudiant {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private boolean emailVerifie = false;
+
+    @Column(unique = true)
+    private String tokenVerification;
+
+    @Column(unique = true)
+    private String resetPasswordToken;
+
+    private LocalDateTime resetPasswordExpiry;
 
     @JsonIgnore
     @ToString.Exclude

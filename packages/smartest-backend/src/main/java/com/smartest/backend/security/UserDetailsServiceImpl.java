@@ -21,8 +21,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
-
-        // Cherche dans Professeur
         var prof = professeurRepository.findByEmail(email);
         if (prof.isPresent()) {
             return User.builder()
@@ -31,8 +29,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     .roles("PROFESSEUR")
                     .build();
         }
-
-        // Cherche dans Etudiant
         var etudiant = etudiantRepository.findByEmail(email);
         if (etudiant.isPresent()) {
             return User.builder()
@@ -41,8 +37,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     .roles("ETUDIANT")
                     .build();
         }
-
-        throw new UsernameNotFoundException(
-                "Utilisateur introuvable : " + email);
+        throw new UsernameNotFoundException("Utilisateur introuvable : " + email);
     }
 }

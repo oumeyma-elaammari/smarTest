@@ -46,7 +46,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         professeur = new Professeur();
-        professeur.setNom("Chahlal Ikram");
+        professeur.setNom("Ikram Laaroussi");
         professeur.setEmail("ikram@ensa.ma");
         professeur.setPassword("hashedPassword");
         professeur.setEmailVerifie(true);
@@ -62,7 +62,7 @@ class AuthServiceTest {
         etudiant.setResetPasswordExpiry(null);
 
         validProfRequest = new RegisterRequest();
-        validProfRequest.setNom("Chahlal Ikram");
+        validProfRequest.setNom("Ikram Laaroussi");
         validProfRequest.setEmail("ikram@ensa.ma");
         validProfRequest.setPassword("Ensa2025@");
         validProfRequest.setConfirmPassword("Ensa2025@");
@@ -293,7 +293,7 @@ class AuthServiceTest {
     }
 
     // ══════════════════════════════════════════════════════
-    //  LOGIN PROFESSEUR
+    //  LOGIN
     // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("Login Professeur")
@@ -310,7 +310,7 @@ class AuthServiceTest {
 
             assertThat(response.getToken()).isEqualTo("jwt-token-prof");
             assertThat(response.getRole()).isEqualTo("PROFESSEUR");
-            assertThat(response.getNom()).isEqualTo("Chahlal Ikram");
+            assertThat(response.getNom()).isEqualTo("Ikram Laaroussi");
             assertThat(response.getEmail()).isEqualTo("ikram@ensa.ma");
         }
 
@@ -349,9 +349,6 @@ class AuthServiceTest {
         }
     }
 
-    // ══════════════════════════════════════════════════════
-    //  LOGIN ETUDIANT
-    // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("Login Etudiant")
     class LoginEtudiantTests {
