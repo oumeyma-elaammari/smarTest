@@ -1,8 +1,8 @@
 package com.smartest.backend.service;
 
-import com.smartest.backend.dto.LoginRequest;
-import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
+import com.smartest.backend.dto.request.RegisterEtudiantRequest;
+import com.smartest.backend.dto.LoginRequest;
 import com.smartest.backend.dto.response.AuthResponse;
 import com.smartest.backend.entity.Etudiant;
 import com.smartest.backend.entity.Professeur;
@@ -17,15 +17,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("AuthService — Tests complets")
 class AuthServiceTest {
 
     @Mock private ProfesseurRepository professeurRepository;
@@ -36,17 +35,17 @@ class AuthServiceTest {
 
     @InjectMocks private AuthService authService;
 
-    private RegisterRequest validProfRequest;
-    private RegisterEtudiantRequest validEtudiantRequest;
-    private LoginRequest loginProfRequest;
-    private LoginRequest loginEtudiantRequest;
+    private RegisterRequest registerRequest;
+    private RegisterEtudiantRequest registerEtudiantRequest;
+    private LoginRequest loginRequest;
     private Professeur professeur;
     private Etudiant etudiant;
 
     @BeforeEach
     void setUp() {
         professeur = new Professeur();
-        professeur.setNom("Ikram Laaroussi");
+        professeur.setId(1L);
+        professeur.setNom("Chahlal Ikram");
         professeur.setEmail("ikram@ensa.ma");
         professeur.setPassword("hashedPassword");
         professeur.setEmailVerifie(true);
@@ -82,7 +81,6 @@ switch        etudiant.setEmail("nissrine@ump.ac.ma");
         loginEtudiantRequest.setPassword("Ensa2025@");
     }
 
-    // ══════════════════════════════════════════════════════
     //  REGISTER PROFESSEUR
     // ══════════════════════════════════════════════════════
     @Nested

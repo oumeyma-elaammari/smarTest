@@ -23,7 +23,6 @@ public class AuthService {
     private final EtudiantRepository etudiantRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final EmailService emailService;
 
     public AuthService(
             ProfesseurRepository professeurRepository,
@@ -35,12 +34,11 @@ public class AuthService {
         this.etudiantRepository = etudiantRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.emailService = emailService;
     }
 
-    // ══════════════════════════════════════════════════════
-    //  REGISTER PROFESSEUR
-    // ══════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════
+    //  REGISTER — PROFESSOR only
+    // ══════════════════════════════════════════════════════════
     public String register(RegisterRequest request) {
 
         if (!request.getPassword().equals(request.getConfirmPassword()))
@@ -49,7 +47,11 @@ public class AuthService {
         if (professeurRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
 
-        String token = UUID.randomUUID().toString();
+        Professeur professor = new Professeur();
+        professor.setNom(request.getNom());
+        professor.setEmail(request.getEmail());
+        professor.setPassword(passwordEncoder.encode(request.getPassword()));
+        professor.setRole(Role.PROFESSEUR);
 
         Professeur professeur = new Professeur();
         professeur.setNom(request.getNom());
@@ -115,10 +117,9 @@ public class AuthService {
             etudiantRepository.save(etudiant);
         }
     }
-
-    // ══════════════════════════════════════════════════════
-    //  LOGIN
-    // ══════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════
+    //  LOGIN — PROFESSOR or STUDENT
+    // ══════════════════════════════════════════════════════════
     public AuthResponse login(LoginRequest request) {
 
         // ── PROFESSEUR ────────────────────────────────────
@@ -155,6 +156,7 @@ public class AuthService {
                     etudiant.get().getNom(), etudiant.get().getEmail());
         }
 
+        // ── CASE 3 : NOT FOUND ────────────────────────────────
         throw new AccountNotFoundException(request.getEmail());
     }
 

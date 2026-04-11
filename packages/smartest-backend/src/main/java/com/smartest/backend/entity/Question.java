@@ -1,6 +1,8 @@
 package com.smartest.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.smartest.backend.entity.enumeration.Difficulte;
+import com.smartest.backend.entity.enumeration.TypeQuestion;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class Question {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,10 +24,13 @@ public class Question {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String enonce;
 
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private TypeQuestion type;
 
-    private String difficulte;
+    @Enumerated(EnumType.STRING)
+    private Difficulte difficulte;
 
+    // ===== RELATIONS =====
     @JsonIgnore
     @ToString.Exclude
     @ManyToOne
@@ -42,7 +46,7 @@ public class Question {
     @JsonIgnore
     @ToString.Exclude
     @ManyToMany(mappedBy = "questions")
-    private List<Quiz> quizs = new ArrayList<>();
+    private List<Quiz> quizzes = new ArrayList<>();
 
     @JsonIgnore
     @ToString.Exclude
@@ -51,13 +55,67 @@ public class Question {
 
     @JsonIgnore
     @ToString.Exclude
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reponse> reponses = new ArrayList<>();
 
-    public Question(String enonce, String type, String difficulte, Professeur professeur) {
+    // constructeur personnalisé
+    public Question(String enonce, TypeQuestion type, Difficulte difficulte, Professeur professeur) {
         this.enonce = enonce;
         this.type = type;
         this.difficulte = difficulte;
         this.professeur = professeur;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getEnonce() {
+        return enonce;
+    }
+
+    public TypeQuestion getType() {
+        return type;
+    }
+
+    public Difficulte getDifficulte() {
+        return difficulte;
+    }
+
+    public Professeur getProfesseur() {
+        return professeur;
+    }
+
+    public Cours getCours() {
+        return cours;
+    }
+
+    public List<Reponse> getReponses() {
+        return reponses;
+    }
+
+    public void setEnonce(String enonce) {
+        this.enonce = enonce;
+    }
+
+    public void setType(TypeQuestion type) {
+        this.type = type;
+    }
+
+    public void setDifficulte(Difficulte difficulte) {
+        this.difficulte = difficulte;
+    }
+
+    public void setProfesseur(Professeur professeur) {
+        this.professeur = professeur;
+    }
+
+    public void setCours(Cours cours) {
+        this.cours = cours;
+    }
+
+    public void setReponses(List<Reponse> reponses) {
+        this.reponses = reponses;
+    }
+
 }

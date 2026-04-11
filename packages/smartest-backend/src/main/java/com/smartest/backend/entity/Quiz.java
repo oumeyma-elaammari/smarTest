@@ -61,4 +61,5 @@ public class Quiz {
         this.duree = duree;
         this.professeur = professeur;
     }
+
 }

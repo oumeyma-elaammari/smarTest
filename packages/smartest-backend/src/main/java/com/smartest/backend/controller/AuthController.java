@@ -4,7 +4,7 @@ import com.smartest.backend.dto.request.ForgotPasswordRequest;
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.request.ResetPasswordRequest;
 import com.smartest.backend.dto.response.AuthResponse;
-import com.smartest.backend.dto.LoginRequest;
+import com.smartest.backend.dto.request.LoginRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
 import com.smartest.backend.exception.*;
 import com.smartest.backend.service.AuthService;
