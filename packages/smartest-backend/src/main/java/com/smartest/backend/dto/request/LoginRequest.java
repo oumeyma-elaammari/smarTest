@@ -1,4 +1,4 @@
-package com.smartest.backend.dto;
+package com.smartest.backend.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;

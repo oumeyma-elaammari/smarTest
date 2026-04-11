@@ -5,12 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../../.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../.idea/workspace.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ForgotPasswordRequest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/RegisterEtudiantRequest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ResetPasswordRequest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/EmailNotVerifiedException.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/GlobalExceptionHandler.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/InvalidTokenException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthServiceTest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/EmailService.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/AuthControllerTest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/exception/GlobalExceptionHandlerTest.java" afterDir="false" />
@@ -21,6 +24,7 @@
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/LoginRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/LoginRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/AuthResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/AuthResponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Cours.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Cours.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Examen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Examen.java" afterDir="false" />
@@ -33,12 +37,14 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Utilisateur.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Etudiant.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/enumeration/Role.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/UtilisateurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/EtudiantRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtAuthFilter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/UserDetailsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/UserDetailsServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthService.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/appliaction.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" afterDir="false" />
@@ -203,9 +209,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.backend in backend" />
+        <item itemvalue="JUnit.AuthServiceTest" />
         <item itemvalue="JUnit.BackendApplicationTests" />
         <item itemvalue="Spring Boot.BackendApplication" />
-        <item itemvalue="JUnit.AuthServiceTest" />
         <item itemvalue="JUnit.db.migration in backend" />
       </list>
     </recent_temporary>
@@ -239,11 +245,6 @@
           <url>file://$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java</url>
           <line>26</line>
           <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/smartest/backend/service/AuthServiceTest.java</url>
-          <line>72</line>
-          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
