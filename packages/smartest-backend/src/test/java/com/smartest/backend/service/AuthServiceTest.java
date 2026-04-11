@@ -55,7 +55,7 @@ class AuthServiceTest {
 
         etudiant = new Etudiant();
         etudiant.setNom("Nissrine El Aammari");
-switch        etudiant.setEmail("nissrine@ump.ac.ma");
+        etudiant.setEmail("nissrine@ump.ac.ma");
         etudiant.setPassword("hashedPassword");
         etudiant.setEmailVerifie(true);
         etudiant.setResetPasswordToken(null);
