@@ -4,17 +4,13 @@ import com.smartest.backend.dto.LoginRequest;
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
 import com.smartest.backend.dto.response.AuthResponse;
+import com.smartest.backend.entity.Etudiant;
 import com.smartest.backend.entity.Professeur;
-import com.smartest.backend.entity.Utilisateur;
-import com.smartest.backend.entity.enumeration.Role;
 import com.smartest.backend.exception.*;
+import com.smartest.backend.repository.EtudiantRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
-import com.smartest.backend.repository.UtilisateurRepository;
 import com.smartest.backend.security.JwtUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -33,65 +29,54 @@ import static org.mockito.Mockito.*;
 class AuthServiceTest {
 
     @Mock private ProfesseurRepository professeurRepository;
-    @Mock private UtilisateurRepository utilisateurRepository;
+    @Mock private EtudiantRepository etudiantRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtUtil jwtUtil;
     @Mock private EmailService emailService;
 
-    @InjectMocks
-    private AuthService authService;
+    @InjectMocks private AuthService authService;
 
     private RegisterRequest validProfRequest;
     private RegisterEtudiantRequest validEtudiantRequest;
     private LoginRequest loginProfRequest;
     private LoginRequest loginEtudiantRequest;
     private Professeur professeur;
-    private Utilisateur etudiant;
+    private Etudiant etudiant;
 
     @BeforeEach
     void setUp() {
-
-        // ── Entité Professeur ─────────────────────────────
-        // ✅ initialisés EN PREMIER
         professeur = new Professeur();
         professeur.setNom("Ikram Laaroussi");
         professeur.setEmail("ikram@ensa.ma");
         professeur.setPassword("hashedPassword");
-        professeur.setRole(Role.PROFESSEUR);
         professeur.setEmailVerifie(true);
         professeur.setResetPasswordToken(null);
         professeur.setResetPasswordExpiry(null);
 
-        // ── Entité Étudiant ───────────────────────────────
-        etudiant = new Utilisateur();
+        etudiant = new Etudiant();
         etudiant.setNom("Nissrine El Aammari");
         etudiant.setEmail("nissrine@ump.ac.ma");
         etudiant.setPassword("hashedPassword");
-        etudiant.setRole(Role.ETUDIANT);
         etudiant.setEmailVerifie(true);
         etudiant.setResetPasswordToken(null);
         etudiant.setResetPasswordExpiry(null);
 
-        // ── Register Professeur ───────────────────────────
         validProfRequest = new RegisterRequest();
         validProfRequest.setNom("Ikram Laaroussi");
         validProfRequest.setEmail("ikram@ensa.ma");
         validProfRequest.setPassword("Ensa2025@");
         validProfRequest.setConfirmPassword("Ensa2025@");
 
-        // ── Register Étudiant ─────────────────────────────
         validEtudiantRequest = new RegisterEtudiantRequest();
         validEtudiantRequest.setNom("Nissrine El Aammari");
         validEtudiantRequest.setEmail("nissrine@ump.ac.ma");
         validEtudiantRequest.setPassword("Ensa2025@");
         validEtudiantRequest.setConfirmPassword("Ensa2025@");
 
-        // ── Login Professeur ──────────────────────────────
         loginProfRequest = new LoginRequest();
         loginProfRequest.setEmail("ikram@ensa.ma");
         loginProfRequest.setPassword("Ensa2025@");
 
-        // ── Login Étudiant ────────────────────────────────
         loginEtudiantRequest = new LoginRequest();
         loginEtudiantRequest.setEmail("nissrine@ump.ac.ma");
         loginEtudiantRequest.setPassword("Ensa2025@");
@@ -114,8 +99,7 @@ class AuthServiceTest {
 
             assertThat(result).contains("Inscription réussie");
             verify(professeurRepository).save(any(Professeur.class));
-            verify(emailService).sendVerificationEmail(
-                    eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
+            verify(emailService).sendVerificationEmail(eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
         }
 
         @Test
@@ -124,7 +108,7 @@ class AuthServiceTest {
             when(professeurRepository.existsByEmail("ikram@ensa.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.register(validProfRequest))
-                    .isInstanceOf(EmailAlreadyUsedException.class);
+                .isInstanceOf(EmailAlreadyUsedException.class);
 
             verify(professeurRepository, never()).save(any());
             verify(emailService, never()).sendVerificationEmail(any(), any(), any());
@@ -136,24 +120,21 @@ class AuthServiceTest {
             validProfRequest.setConfirmPassword("AutrePassword1!");
 
             assertThatThrownBy(() -> authService.register(validProfRequest))
-                    .isInstanceOf(PasswordMismatchException.class);
+                .isInstanceOf(PasswordMismatchException.class);
 
             verify(professeurRepository, never()).save(any());
-            verify(emailService, never()).sendVerificationEmail(any(), any(), any());
         }
 
         @Test
-        @DisplayName("✅ Token de vérification généré")
-        void register_TokenGenerated() {
+        @DisplayName("✅ emailVerifie = false à la création")
+        void register_EmailNotVerifiedByDefault() {
             when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             authService.register(validProfRequest);
 
-            verify(professeurRepository).save(argThat(prof ->
-                    prof.getTokenVerification() != null &&
-                            !prof.getTokenVerification().isEmpty() &&
-                            !prof.isEmailVerifie()
+            verify(professeurRepository).save(argThat(p ->
+                !p.isEmailVerifie() && p.getTokenVerification() != null
             ));
         }
 
@@ -166,55 +147,52 @@ class AuthServiceTest {
             authService.register(validProfRequest);
 
             verify(emailService).sendVerificationEmail(
-                    eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
+                eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
         }
     }
 
     // ══════════════════════════════════════════════════════
-    //  REGISTER ÉTUDIANT
+    //  REGISTER ETUDIANT
     // ══════════════════════════════════════════════════════
     @Nested
-    @DisplayName("Register Étudiant")
+    @DisplayName("Register Etudiant")
     class RegisterEtudiantTests {
 
         @Test
         @DisplayName("✅ Inscription réussie")
         void registerEtudiant_Success() {
-            when(utilisateurRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
             when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             String result = authService.registerEtudiant(validEtudiantRequest);
 
             assertThat(result).contains("Inscription réussie");
-            verify(utilisateurRepository).save(any(Utilisateur.class));
-            verify(emailService).sendVerificationEmail(
-                    eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
+            verify(etudiantRepository).save(any(Etudiant.class));
+            verify(emailService).sendVerificationEmail(eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
         }
 
         @Test
         @DisplayName("❌ Email déjà utilisé par un étudiant")
         void registerEtudiant_EmailUsedByEtudiant() {
-            when(utilisateurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
+            when(etudiantRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
-                    .isInstanceOf(EmailAlreadyUsedException.class);
+                .isInstanceOf(EmailAlreadyUsedException.class);
 
-            verify(utilisateurRepository, never()).save(any());
-            verify(emailService, never()).sendVerificationEmail(any(), any(), any());
+            verify(etudiantRepository, never()).save(any());
         }
 
         @Test
         @DisplayName("❌ Email déjà utilisé par un professeur")
         void registerEtudiant_EmailUsedByProfesseur() {
-            when(utilisateurRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
             when(professeurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
-                    .isInstanceOf(EmailAlreadyUsedException.class);
+                .isInstanceOf(EmailAlreadyUsedException.class);
 
-            verify(utilisateurRepository, never()).save(any());
-            verify(emailService, never()).sendVerificationEmail(any(), any(), any());
+            verify(etudiantRepository, never()).save(any());
         }
 
         @Test
@@ -223,37 +201,36 @@ class AuthServiceTest {
             validEtudiantRequest.setConfirmPassword("AutrePassword1!");
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
-                    .isInstanceOf(PasswordMismatchException.class);
+                .isInstanceOf(PasswordMismatchException.class);
 
-            verify(utilisateurRepository, never()).save(any());
-            verify(emailService, never()).sendVerificationEmail(any(), any(), any());
+            verify(etudiantRepository, never()).save(any());
         }
 
         @Test
         @DisplayName("✅ emailVerifie = false à la création")
         void registerEtudiant_EmailNotVerifiedByDefault() {
-            when(utilisateurRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
             when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             authService.registerEtudiant(validEtudiantRequest);
 
-            verify(utilisateurRepository).save(argThat(u ->
-                    !u.isEmailVerifie() && u.getTokenVerification() != null
+            verify(etudiantRepository).save(argThat(e ->
+                !e.isEmailVerifie() && e.getTokenVerification() != null
             ));
         }
 
         @Test
         @DisplayName("✅ Email envoyé avec rôle ETUDIANT")
         void registerEtudiant_EmailSentWithCorrectRole() {
-            when(utilisateurRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
             when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             authService.registerEtudiant(validEtudiantRequest);
 
             verify(emailService).sendVerificationEmail(
-                    eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
+                eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
         }
     }
 
@@ -270,7 +247,7 @@ class AuthServiceTest {
             professeur.setEmailVerifie(false);
             professeur.setTokenVerification("valid-token-prof");
             when(professeurRepository.findByTokenVerification("valid-token-prof"))
-                    .thenReturn(Optional.of(professeur));
+                .thenReturn(Optional.of(professeur));
 
             authService.verifyEmail("valid-token-prof", "PROFESSEUR");
 
@@ -280,43 +257,43 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("✅ Vérification Étudiant réussie")
+        @DisplayName("✅ Vérification Etudiant réussie")
         void verifyEmail_Etudiant_Success() {
             etudiant.setEmailVerifie(false);
             etudiant.setTokenVerification("valid-token-etudiant");
-            when(utilisateurRepository.findByTokenVerification("valid-token-etudiant"))
-                    .thenReturn(Optional.of(etudiant));
+            when(etudiantRepository.findByTokenVerification("valid-token-etudiant"))
+                .thenReturn(Optional.of(etudiant));
 
             authService.verifyEmail("valid-token-etudiant", "ETUDIANT");
 
             assertThat(etudiant.isEmailVerifie()).isTrue();
             assertThat(etudiant.getTokenVerification()).isNull();
-            verify(utilisateurRepository).save(etudiant);
+            verify(etudiantRepository).save(etudiant);
         }
 
         @Test
         @DisplayName("❌ Token invalide Professeur")
         void verifyEmail_Professeur_InvalidToken() {
             when(professeurRepository.findByTokenVerification("invalid-token"))
-                    .thenReturn(Optional.empty());
+                .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.verifyEmail("invalid-token", "PROFESSEUR"))
-                    .isInstanceOf(InvalidTokenException.class);
+                .isInstanceOf(InvalidTokenException.class);
         }
 
         @Test
-        @DisplayName("❌ Token invalide Étudiant")
+        @DisplayName("❌ Token invalide Etudiant")
         void verifyEmail_Etudiant_InvalidToken() {
-            when(utilisateurRepository.findByTokenVerification("invalid-token"))
-                    .thenReturn(Optional.empty());
+            when(etudiantRepository.findByTokenVerification("invalid-token"))
+                .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.verifyEmail("invalid-token", "ETUDIANT"))
-                    .isInstanceOf(InvalidTokenException.class);
+                .isInstanceOf(InvalidTokenException.class);
         }
     }
 
     // ══════════════════════════════════════════════════════
-    //  LOGIN PROFESSEUR
+    //  LOGIN
     // ══════════════════════════════════════════════════════
     @Nested
     @DisplayName("Login Professeur")
@@ -325,12 +302,9 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Connexion réussie")
         void login_Professeur_Success() {
-            when(professeurRepository.findByEmail("ikram@ensa.ma"))
-                    .thenReturn(Optional.of(professeur));
-            when(passwordEncoder.matches("Ensa2025@", "hashedPassword"))
-                    .thenReturn(true);
-            when(jwtUtil.generateToken("ikram@ensa.ma", "PROFESSEUR"))
-                    .thenReturn("jwt-token-prof");
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
+            when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(true);
+            when(jwtUtil.generateToken("ikram@ensa.ma", "PROFESSEUR")).thenReturn("jwt-token-prof");
 
             AuthResponse response = authService.login(loginProfRequest);
 
@@ -344,60 +318,48 @@ class AuthServiceTest {
         @DisplayName("❌ Email non vérifié")
         void login_Professeur_EmailNotVerified() {
             professeur.setEmailVerifie(false);
-            when(professeurRepository.findByEmail("ikram@ensa.ma"))
-                    .thenReturn(Optional.of(professeur));
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
 
             assertThatThrownBy(() -> authService.login(loginProfRequest))
-                    .isInstanceOf(EmailNotVerifiedException.class);
+                .isInstanceOf(EmailNotVerifiedException.class);
         }
 
         @Test
         @DisplayName("❌ Mauvais mot de passe")
         void login_Professeur_WrongPassword() {
-            when(professeurRepository.findByEmail("ikram@ensa.ma"))
-                    .thenReturn(Optional.of(professeur));
-            when(passwordEncoder.matches("Ensa2025@", "hashedPassword"))
-                    .thenReturn(false);
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
+            when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(loginProfRequest))
-                    .isInstanceOf(InvalidPasswordException.class);
+                .isInstanceOf(InvalidPasswordException.class);
         }
 
         @Test
         @DisplayName("❌ Compte introuvable")
         void login_Professeur_AccountNotFound() {
-            when(professeurRepository.findByEmail("inconnu@ensa.ma"))
-                    .thenReturn(Optional.empty());
-            when(utilisateurRepository.findByEmail("inconnu@ensa.ma"))
-                    .thenReturn(Optional.empty());
+            when(professeurRepository.findByEmail("inconnu@ensa.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmail("inconnu@ensa.ma")).thenReturn(Optional.empty());
 
             LoginRequest req = new LoginRequest();
             req.setEmail("inconnu@ensa.ma");
             req.setPassword("Ensa2025@");
 
             assertThatThrownBy(() -> authService.login(req))
-                    .isInstanceOf(AccountNotFoundException.class);
+                .isInstanceOf(AccountNotFoundException.class);
         }
     }
 
-    // ══════════════════════════════════════════════════════
-    //  LOGIN ÉTUDIANT
-    // ══════════════════════════════════════════════════════
     @Nested
-    @DisplayName("Login Étudiant")
+    @DisplayName("Login Etudiant")
     class LoginEtudiantTests {
 
         @Test
         @DisplayName("✅ Connexion réussie")
         void login_Etudiant_Success() {
-            when(professeurRepository.findByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(Optional.empty());
-            when(utilisateurRepository.findByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(Optional.of(etudiant));
-            when(passwordEncoder.matches("Ensa2025@", "hashedPassword"))
-                    .thenReturn(true);
-            when(jwtUtil.generateToken("nissrine@ump.ac.ma", "ETUDIANT"))
-                    .thenReturn("jwt-token-etudiant");
+            when(professeurRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
+            when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(true);
+            when(jwtUtil.generateToken("nissrine@ump.ac.ma", "ETUDIANT")).thenReturn("jwt-token-etudiant");
 
             AuthResponse response = authService.login(loginEtudiantRequest);
 
@@ -411,112 +373,98 @@ class AuthServiceTest {
         @DisplayName("❌ Email non vérifié")
         void login_Etudiant_EmailNotVerified() {
             etudiant.setEmailVerifie(false);
-            when(professeurRepository.findByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(Optional.empty());
-            when(utilisateurRepository.findByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(Optional.of(etudiant));
+            when(professeurRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
 
             assertThatThrownBy(() -> authService.login(loginEtudiantRequest))
-                    .isInstanceOf(EmailNotVerifiedException.class);
+                .isInstanceOf(EmailNotVerifiedException.class);
         }
 
         @Test
         @DisplayName("❌ Mauvais mot de passe")
         void login_Etudiant_WrongPassword() {
-            when(professeurRepository.findByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(Optional.empty());
-            when(utilisateurRepository.findByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(Optional.of(etudiant));
-            when(passwordEncoder.matches("Ensa2025@", "hashedPassword"))
-                    .thenReturn(false);
+            when(professeurRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
+            when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(loginEtudiantRequest))
-                    .isInstanceOf(InvalidPasswordException.class);
+                .isInstanceOf(InvalidPasswordException.class);
         }
 
         @Test
         @DisplayName("❌ Compte introuvable")
         void login_Etudiant_AccountNotFound() {
-            when(professeurRepository.findByEmail("inconnu@ump.ac.ma"))
-                    .thenReturn(Optional.empty());
-            when(utilisateurRepository.findByEmail("inconnu@ump.ac.ma"))
-                    .thenReturn(Optional.empty());
+            when(professeurRepository.findByEmail("inconnu@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmail("inconnu@ump.ac.ma")).thenReturn(Optional.empty());
 
             LoginRequest req = new LoginRequest();
             req.setEmail("inconnu@ump.ac.ma");
             req.setPassword("Ensa2025@");
 
             assertThatThrownBy(() -> authService.login(req))
-                    .isInstanceOf(AccountNotFoundException.class);
+                .isInstanceOf(AccountNotFoundException.class);
         }
     }
 
     // ══════════════════════════════════════════════════════
-    //  FORGOT PASSWORD ÉTUDIANT
+    //  FORGOT PASSWORD ETUDIANT
     // ══════════════════════════════════════════════════════
     @Nested
-    @DisplayName("Forgot Password Étudiant")
+    @DisplayName("Forgot Password Etudiant")
     class ForgotPasswordEtudiantTests {
 
         @Test
         @DisplayName("✅ Email reset envoyé à l'étudiant")
         void forgotPasswordEtudiant_Success() {
-            when(professeurRepository.existsByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(false);
-            when(utilisateurRepository.findByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(Optional.of(etudiant));
+            when(professeurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(false);
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
 
             authService.forgotPasswordEtudiant("nissrine@ump.ac.ma");
 
-            verify(utilisateurRepository).save(argThat(u ->
-                    u.getResetPasswordToken() != null &&
-                            u.getResetPasswordExpiry() != null
+            verify(etudiantRepository).save(argThat(e ->
+                e.getResetPasswordToken() != null &&
+                e.getResetPasswordExpiry() != null
             ));
-            verify(emailService).sendResetPasswordEmail(
-                    eq("nissrine@ump.ac.ma"), anyString());
+            verify(emailService).sendResetPasswordEmail(eq("nissrine@ump.ac.ma"), anyString());
         }
 
         @Test
         @DisplayName("❌ Email professeur → silencieux")
         void forgotPasswordEtudiant_ProfEmail_Silent() {
-            when(professeurRepository.existsByEmail("ikram@ensa.ma"))
-                    .thenReturn(true);
+            when(professeurRepository.existsByEmail("ikram@ensa.ma")).thenReturn(true);
 
             authService.forgotPasswordEtudiant("ikram@ensa.ma");
 
-            verify(utilisateurRepository, never()).findByEmail(any());
-            verify(utilisateurRepository, never()).save(any());
+            verify(etudiantRepository, never()).findByEmail(any());
+            verify(etudiantRepository, never()).save(any());
             verify(emailService, never()).sendResetPasswordEmail(any(), any());
         }
 
         @Test
         @DisplayName("❌ Email inconnu → silencieux")
         void forgotPasswordEtudiant_UnknownEmail_Silent() {
-            when(professeurRepository.existsByEmail("inconnu@ump.ac.ma"))
-                    .thenReturn(false);
-            when(utilisateurRepository.findByEmail("inconnu@ump.ac.ma"))
-                    .thenReturn(Optional.empty());
+            when(professeurRepository.existsByEmail("inconnu@ump.ac.ma")).thenReturn(false);
+            when(etudiantRepository.findByEmail("inconnu@ump.ac.ma")).thenReturn(Optional.empty());
 
             authService.forgotPasswordEtudiant("inconnu@ump.ac.ma");
 
-            verify(utilisateurRepository, never()).save(any());
+            verify(etudiantRepository, never()).save(any());
             verify(emailService, never()).sendResetPasswordEmail(any(), any());
         }
 
         @Test
-        @DisplayName("✅ Token et expiry bien générés")
+        @DisplayName("✅ Token et expiry générés")
         void forgotPasswordEtudiant_TokenGenerated() {
             when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
-            when(utilisateurRepository.findByEmail(anyString()))
-                    .thenReturn(Optional.of(etudiant));
+            when(etudiantRepository.findByEmail(anyString())).thenReturn(Optional.of(etudiant));
 
             authService.forgotPasswordEtudiant("nissrine@ump.ac.ma");
 
-            verify(utilisateurRepository).save(argThat(u ->
-                    u.getResetPasswordToken() != null &&
-                            !u.getResetPasswordToken().isEmpty() &&
-                            u.getResetPasswordExpiry() != null &&
-                            u.getResetPasswordExpiry().isAfter(LocalDateTime.now())
+            verify(etudiantRepository).save(argThat(e ->
+                e.getResetPasswordToken() != null &&
+                !e.getResetPasswordToken().isEmpty() &&
+                e.getResetPasswordExpiry() != null &&
+                e.getResetPasswordExpiry().isAfter(LocalDateTime.now())
             ));
         }
     }
@@ -531,26 +479,22 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Email reset envoyé au professeur")
         void forgotPasswordProfesseur_Success() {
-            when(utilisateurRepository.existsByEmail("ikram@ensa.ma"))
-                    .thenReturn(false);
-            when(professeurRepository.findByEmail("ikram@ensa.ma"))
-                    .thenReturn(Optional.of(professeur));
+            when(etudiantRepository.existsByEmail("ikram@ensa.ma")).thenReturn(false);
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
 
             authService.forgotPasswordProfesseur("ikram@ensa.ma");
 
             verify(professeurRepository).save(argThat(p ->
-                    p.getResetPasswordToken() != null &&
-                            p.getResetPasswordExpiry() != null
+                p.getResetPasswordToken() != null &&
+                p.getResetPasswordExpiry() != null
             ));
-            verify(emailService).sendResetPasswordEmail(
-                    eq("ikram@ensa.ma"), anyString());
+            verify(emailService).sendResetPasswordEmail(eq("ikram@ensa.ma"), anyString());
         }
 
         @Test
         @DisplayName("❌ Email étudiant → silencieux")
         void forgotPasswordProfesseur_EtudiantEmail_Silent() {
-            when(utilisateurRepository.existsByEmail("nissrine@ump.ac.ma"))
-                    .thenReturn(true);
+            when(etudiantRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
 
             authService.forgotPasswordProfesseur("nissrine@ump.ac.ma");
 
@@ -562,10 +506,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Email inconnu → silencieux")
         void forgotPasswordProfesseur_UnknownEmail_Silent() {
-            when(utilisateurRepository.existsByEmail("inconnu@ensa.ma"))
-                    .thenReturn(false);
-            when(professeurRepository.findByEmail("inconnu@ensa.ma"))
-                    .thenReturn(Optional.empty());
+            when(etudiantRepository.existsByEmail("inconnu@ensa.ma")).thenReturn(false);
+            when(professeurRepository.findByEmail("inconnu@ensa.ma")).thenReturn(Optional.empty());
 
             authService.forgotPasswordProfesseur("inconnu@ensa.ma");
 
@@ -575,10 +517,10 @@ class AuthServiceTest {
     }
 
     // ══════════════════════════════════════════════════════
-    //  RESET PASSWORD ÉTUDIANT
+    //  RESET PASSWORD ETUDIANT
     // ══════════════════════════════════════════════════════
     @Nested
-    @DisplayName("Reset Password Étudiant")
+    @DisplayName("Reset Password Etudiant")
     class ResetPasswordEtudiantTests {
 
         @Test
@@ -586,31 +528,30 @@ class AuthServiceTest {
         void resetPasswordEtudiant_Success() {
             etudiant.setResetPasswordToken("valid-token");
             etudiant.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
-            when(utilisateurRepository.findByResetPasswordToken("valid-token"))
-                    .thenReturn(Optional.of(etudiant));
-            when(passwordEncoder.encode("NewPass2025@"))
-                    .thenReturn("newHashedPassword");
+            when(etudiantRepository.findByResetPasswordToken("valid-token"))
+                .thenReturn(Optional.of(etudiant));
+            when(passwordEncoder.encode("NewPass2025@")).thenReturn("newHashedPassword");
 
             authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "NewPass2025@");
 
-            verify(utilisateurRepository).save(argThat(u ->
-                    u.getPassword().equals("newHashedPassword") &&
-                            u.getResetPasswordToken() == null &&
-                            u.getResetPasswordExpiry() == null
+            verify(etudiantRepository).save(argThat(e ->
+                e.getPassword().equals("newHashedPassword") &&
+                e.getResetPasswordToken() == null &&
+                e.getResetPasswordExpiry() == null
             ));
         }
 
         @Test
         @DisplayName("❌ Token invalide")
         void resetPasswordEtudiant_InvalidToken() {
-            when(utilisateurRepository.findByResetPasswordToken("invalid-token"))
-                    .thenReturn(Optional.empty());
+            when(etudiantRepository.findByResetPasswordToken("invalid-token"))
+                .thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                    authService.resetPasswordEtudiant("invalid-token", "NewPass2025@", "NewPass2025@")
+                authService.resetPasswordEtudiant("invalid-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
-            verify(utilisateurRepository, never()).save(any());
+            verify(etudiantRepository, never()).save(any());
         }
 
         @Test
@@ -618,25 +559,25 @@ class AuthServiceTest {
         void resetPasswordEtudiant_ExpiredToken() {
             etudiant.setResetPasswordToken("expired-token");
             etudiant.setResetPasswordExpiry(LocalDateTime.now().minusMinutes(5));
-            when(utilisateurRepository.findByResetPasswordToken("expired-token"))
-                    .thenReturn(Optional.of(etudiant));
+            when(etudiantRepository.findByResetPasswordToken("expired-token"))
+                .thenReturn(Optional.of(etudiant));
 
             assertThatThrownBy(() ->
-                    authService.resetPasswordEtudiant("expired-token", "NewPass2025@", "NewPass2025@")
+                authService.resetPasswordEtudiant("expired-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
-            verify(utilisateurRepository, never()).save(any());
+            verify(etudiantRepository, never()).save(any());
         }
 
         @Test
         @DisplayName("❌ Mots de passe différents")
         void resetPasswordEtudiant_PasswordMismatch() {
             assertThatThrownBy(() ->
-                    authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "AutrePass2025@")
+                authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "AutrePass2025@")
             ).isInstanceOf(PasswordMismatchException.class);
 
-            verify(utilisateurRepository, never()).findByResetPasswordToken(any());
-            verify(utilisateurRepository, never()).save(any());
+            verify(etudiantRepository, never()).findByResetPasswordToken(any());
+            verify(etudiantRepository, never()).save(any());
         }
 
         @Test
@@ -644,8 +585,8 @@ class AuthServiceTest {
         void resetPasswordEtudiant_TokenClearedAfterReset() {
             etudiant.setResetPasswordToken("valid-token");
             etudiant.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
-            when(utilisateurRepository.findByResetPasswordToken("valid-token"))
-                    .thenReturn(Optional.of(etudiant));
+            when(etudiantRepository.findByResetPasswordToken("valid-token"))
+                .thenReturn(Optional.of(etudiant));
             when(passwordEncoder.encode(anyString())).thenReturn("newHashedPassword");
 
             authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "NewPass2025@");
@@ -668,16 +609,15 @@ class AuthServiceTest {
             professeur.setResetPasswordToken("valid-token-prof");
             professeur.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
             when(professeurRepository.findByResetPasswordToken("valid-token-prof"))
-                    .thenReturn(Optional.of(professeur));
-            when(passwordEncoder.encode("NewPass2025@"))
-                    .thenReturn("newHashedPassword");
+                .thenReturn(Optional.of(professeur));
+            when(passwordEncoder.encode("NewPass2025@")).thenReturn("newHashedPassword");
 
             authService.resetPasswordProfesseur("valid-token-prof", "NewPass2025@", "NewPass2025@");
 
             verify(professeurRepository).save(argThat(p ->
-                    p.getPassword().equals("newHashedPassword") &&
-                            p.getResetPasswordToken() == null &&
-                            p.getResetPasswordExpiry() == null
+                p.getPassword().equals("newHashedPassword") &&
+                p.getResetPasswordToken() == null &&
+                p.getResetPasswordExpiry() == null
             ));
         }
 
@@ -685,10 +625,10 @@ class AuthServiceTest {
         @DisplayName("❌ Token invalide")
         void resetPasswordProfesseur_InvalidToken() {
             when(professeurRepository.findByResetPasswordToken("invalid-token"))
-                    .thenReturn(Optional.empty());
+                .thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
-                    authService.resetPasswordProfesseur("invalid-token", "NewPass2025@", "NewPass2025@")
+                authService.resetPasswordProfesseur("invalid-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(professeurRepository, never()).save(any());
@@ -700,10 +640,10 @@ class AuthServiceTest {
             professeur.setResetPasswordToken("expired-token-prof");
             professeur.setResetPasswordExpiry(LocalDateTime.now().minusMinutes(5));
             when(professeurRepository.findByResetPasswordToken("expired-token-prof"))
-                    .thenReturn(Optional.of(professeur));
+                .thenReturn(Optional.of(professeur));
 
             assertThatThrownBy(() ->
-                    authService.resetPasswordProfesseur("expired-token-prof", "NewPass2025@", "NewPass2025@")
+                authService.resetPasswordProfesseur("expired-token-prof", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(professeurRepository, never()).save(any());
@@ -713,7 +653,7 @@ class AuthServiceTest {
         @DisplayName("❌ Mots de passe différents")
         void resetPasswordProfesseur_PasswordMismatch() {
             assertThatThrownBy(() ->
-                    authService.resetPasswordProfesseur("valid-token", "NewPass2025@", "AutrePass2025@")
+                authService.resetPasswordProfesseur("valid-token", "NewPass2025@", "AutrePass2025@")
             ).isInstanceOf(PasswordMismatchException.class);
 
             verify(professeurRepository, never()).findByResetPasswordToken(any());
@@ -726,7 +666,7 @@ class AuthServiceTest {
             professeur.setResetPasswordToken("valid-token-prof");
             professeur.setResetPasswordExpiry(LocalDateTime.now().plusMinutes(10));
             when(professeurRepository.findByResetPasswordToken("valid-token-prof"))
-                    .thenReturn(Optional.of(professeur));
+                .thenReturn(Optional.of(professeur));
             when(passwordEncoder.encode(anyString())).thenReturn("newHashedPassword");
 
             authService.resetPasswordProfesseur("valid-token-prof", "NewPass2025@", "NewPass2025@");

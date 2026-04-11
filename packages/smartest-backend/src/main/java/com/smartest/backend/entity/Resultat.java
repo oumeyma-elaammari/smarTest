@@ -30,8 +30,8 @@ public class Resultat {
     @JsonIgnore
     @ToString.Exclude
     @ManyToOne
-    @JoinColumn(name = "utilisateur_id", nullable = false)
-    private Utilisateur utilisateur;
+    @JoinColumn(name = "etudiant_id", nullable = false)
+    private Etudiant etudiant;
 
     @JsonIgnore
     @ToString.Exclude
@@ -39,10 +39,10 @@ public class Resultat {
     @JoinColumn(name = "session_examen_id", nullable = false)
     private SessionExamen sessionExamen;
 
-    public Resultat(Float note, Float score, Utilisateur utilisateur, SessionExamen sessionExamen) {
+    public Resultat(Float note, Float score, Etudiant etudiant, SessionExamen sessionExamen) {
         this.note = note;
         this.score = score;
-        this.utilisateur = utilisateur;
+        this.etudiant = etudiant;
         this.sessionExamen = sessionExamen;
     }
 }

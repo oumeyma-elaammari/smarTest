@@ -3,7 +3,6 @@ package com.smartest.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import com.smartest.backend.entity.enumeration.Role;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,9 +39,6 @@ public class Professeur {
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
 
     @JsonIgnore          // évite la boucle JSON infinie
     @ToString.Exclude    // évite la boucle toString Lombok
