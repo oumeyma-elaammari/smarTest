@@ -31,8 +31,8 @@ public class Reponse {
     @JsonIgnore
     @ToString.Exclude
     @ManyToOne
-    @JoinColumn(name = "utilisateur_id", nullable = false)
-    private Utilisateur utilisateur;
+    @JoinColumn(name = "etudiant_id", nullable = false)
+    private Etudiant etudiant;
 
     @JsonIgnore
     @ToString.Exclude
@@ -46,11 +46,11 @@ public class Reponse {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    public Reponse(String contenu, Boolean correcte, Utilisateur utilisateur,
+    public Reponse(String contenu, Boolean correcte, Etudiant etudiant,
             SessionExamen sessionExamen, Question question) {
         this.contenu = contenu;
         this.correcte = correcte;
-        this.utilisateur = utilisateur;
+        this.etudiant = etudiant;
         this.sessionExamen = sessionExamen;
         this.question = question;
     }

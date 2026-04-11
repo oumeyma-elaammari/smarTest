@@ -12,10 +12,16 @@
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/GlobalExceptionHandler.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/InvalidTokenException.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/EmailService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/AuthControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/exception/GlobalExceptionHandlerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/security/UserDetailsServiceImplTest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/AuthServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/EmailServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/JwtUtilTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/AuthResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/AuthResponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Cours.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Cours.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Examen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Examen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Professeur.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Professeur.java" afterDir="false" />
@@ -24,15 +30,19 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Reponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Reponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/SessionExamen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/SessionExamen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Utilisateur.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Utilisateur.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Utilisateur.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Etudiant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/enumeration/Role.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/UtilisateurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/UtilisateurRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/UtilisateurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/EtudiantRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtAuthFilter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/UserDetailsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/UserDetailsServiceImpl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/appliaction.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,40 +96,42 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.BackendApplication.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.AuthServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.db.migration in backend.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.BackendApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;authentification&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/smarTest/packages/smartest-backend/src/main/java/com/smartest/backend/dto/request&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.AcpAgentsConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.BackendApplication.executor": "Run",
+    "JUnit.AuthServiceTest.executor": "Run",
+    "JUnit.BackendApplicationTests.executor": "Run",
+    "JUnit.backend in backend.executor": "Run",
+    "JUnit.db.migration in backend.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.BackendApplication.executor": "Run",
+    "git-widget-placeholder": "authentification",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\service" />
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\exception" />
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\security" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\request" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\resources\templates" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\resources\static" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\websocket\event" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\service" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\security" />
     </key>
   </component>
-  <component name="RunManager" selected="Spring Boot.BackendApplication">
+  <component name="RunManager" selected="JUnit.backend in backend">
     <configuration name="AuthServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <extension name="coverage">
@@ -131,6 +143,29 @@
       <option name="PACKAGE_NAME" value="com.smartest.backend.service" />
       <option name="MAIN_CLASS_NAME" value="com.smartest.backend.service.AuthServiceTest" />
       <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="BackendApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smartest.backend.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smartest.backend" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.BackendApplicationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="backend in backend" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/src/test/java/com/smartest/backend" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -167,6 +202,8 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.backend in backend" />
+        <item itemvalue="JUnit.BackendApplicationTests" />
         <item itemvalue="Spring Boot.BackendApplication" />
         <item itemvalue="JUnit.AuthServiceTest" />
         <item itemvalue="JUnit.db.migration in backend" />
@@ -202,6 +239,11 @@
           <url>file://$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java</url>
           <line>26</line>
           <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/java/com/smartest/backend/service/AuthServiceTest.java</url>
+          <line>72</line>
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

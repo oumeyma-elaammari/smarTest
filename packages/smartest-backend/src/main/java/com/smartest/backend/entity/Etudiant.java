@@ -3,7 +3,6 @@ package com.smartest.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import com.smartest.backend.entity.enumeration.Role;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,7 +14,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Utilisateur {
+public class Etudiant {
     @Column(unique = true)
     private String resetPasswordToken;
 
@@ -40,17 +39,14 @@ public class Utilisateur {
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
 
     @JsonIgnore
     @ToString.Exclude
-    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL)
     private List<Reponse> reponses = new ArrayList<>();
 
     @JsonIgnore
     @ToString.Exclude
-    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL)
     private List<Resultat> resultats = new ArrayList<>();
 }
