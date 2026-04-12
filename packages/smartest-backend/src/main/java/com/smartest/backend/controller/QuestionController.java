@@ -55,11 +55,20 @@ public class QuestionController {
         return questionService.getByCoursAndDifficulte(coursId, difficulte);
     }
 
+    //modifier
+    @PutMapping("/{id}")
+    public Question update(
+            @PathVariable Long id,
+            @RequestBody Question question,
+            @RequestParam(required = false) Long coursId
+    ) {
+        return questionService.updateQuestion(id, question, coursId);
+    }
+
     //  supprimer
-    // Dans QuestionController.java
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         questionService.delete(id);
-        return ResponseEntity.ok().build(); // ← retourne 200
+        return ResponseEntity.ok().build();
     }
 }

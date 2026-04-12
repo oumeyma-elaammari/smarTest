@@ -81,6 +81,43 @@ public class QuestionServiceTest {
         assertFalse(result.isEmpty());
     }
 
+
+    // TEST UPDATE
+    @Test
+    void testUpdateQuestion() {
+
+        // ancienne question en base
+        Question existing = new Question();
+        existing.setId(1L);
+        existing.setEnonce("Ancienne question");
+
+        // nouvelle donnée (update)
+        Question updated = new Question();
+        updated.setEnonce("Nouvelle question");
+        updated.setType(TypeQuestion.QCM);
+        updated.setDifficulte(Difficulte.FACILE);
+
+        //  cours
+        Cours cours = new Cours();
+        cours.setId(2L);
+
+        when(questionRepository.findById(1L))
+                .thenReturn(Optional.of(existing));
+
+        when(coursRepository.findById(2L))
+                .thenReturn(Optional.of(cours));
+
+        when(questionRepository.save(any()))
+                .thenReturn(existing);
+
+        Question result = questionService.updateQuestion(1L, updated, 2L);
+
+        assertNotNull(result);
+        assertEquals("Nouvelle question", result.getEnonce());
+        assertEquals(TypeQuestion.QCM, result.getType());
+        assertEquals(Difficulte.FACILE, result.getDifficulte());
+    }
+
     //  TEST DELETE
     @Test
     void testDelete() {
