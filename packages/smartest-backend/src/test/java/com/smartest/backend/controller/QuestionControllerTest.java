@@ -6,36 +6,49 @@ import com.smartest.backend.entity.enumeration.Difficulte;
 import com.smartest.backend.entity.enumeration.TypeQuestion;
 import com.smartest.backend.service.QuestionService;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.mockito.Mockito.when;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ExtendWith(MockitoExtension.class)  // ← pas de Spring, juste Mockito
 class QuestionControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean  // ← remplace @MockBean
+    @Mock
     private QuestionService questionService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private QuestionController questionController;  // ← le vrai contrôleur
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        // Construction manuelle de MockMvc — pas besoin de Spring Boot
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(questionController)
+                .build();
+    }
 
     @Test
     void testGetAllQuestions() throws Exception {
         Question q = new Question();
         q.setEnonce("Question test");
         when(questionService.getAll()).thenReturn(List.of(q));
+
         mockMvc.perform(get("/api/questions"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
@@ -45,6 +58,7 @@ class QuestionControllerTest {
     void testGetByType() throws Exception {
         when(questionService.getByType(TypeQuestion.QCM))
                 .thenReturn(List.of(new Question()));
+
         mockMvc.perform(get("/api/questions/type")
                         .param("type", "QCM"))
                 .andExpect(status().isOk());
@@ -56,11 +70,13 @@ class QuestionControllerTest {
         q.setEnonce("Nouvelle question");
         q.setType(TypeQuestion.QCM);
         q.setDifficulte(Difficulte.FACILE);
+
         when(questionService.createQuestion(
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.eq(1L),
                 org.mockito.ArgumentMatchers.eq(1L)
         )).thenReturn(q);
+
         mockMvc.perform(post("/api/questions")
                         .param("professeurId", "1")
                         .param("coursId", "1")
