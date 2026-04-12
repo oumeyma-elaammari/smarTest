@@ -6,6 +6,7 @@ import com.smartest.backend.entity.enumeration.TypeQuestion;
 import com.smartest.backend.service.QuestionService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -55,8 +56,10 @@ public class QuestionController {
     }
 
     //  supprimer
+    // Dans QuestionController.java
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         questionService.delete(id);
+        return ResponseEntity.ok().build(); // ← retourne 200
     }
 }

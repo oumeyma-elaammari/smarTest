@@ -89,6 +89,6 @@ class QuestionControllerTest {
     @Test
     void testDeleteQuestion() throws Exception {
         mockMvc.perform(delete("/api/questions/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()); // ← 200 au lieu de 204
     }
 }
