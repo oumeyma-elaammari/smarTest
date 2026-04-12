@@ -1,42 +1,60 @@
 package com.smartest.backend.service;
 
-import com.smartest.backend.dto.request.LoginRequest;
-import com.smartest.backend.dto.request.RegisterEtudiantRequest;
-
-import com.smartest.backend.dto.request.RegisterRequest;
-
-import com.smartest.backend.dto.response.AuthResponse;
-import com.smartest.backend.entity.Etudiant;
-import com.smartest.backend.entity.Professeur;
-import com.smartest.backend.exception.*;
-import com.smartest.backend.repository.EtudiantRepository;
-import com.smartest.backend.repository.ProfesseurRepository;
-import com.smartest.backend.security.JwtUtil;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.smartest.backend.dto.request.LoginRequest;
+import com.smartest.backend.dto.request.RegisterEtudiantRequest;
+import com.smartest.backend.dto.request.RegisterRequest;
+import com.smartest.backend.dto.response.AuthResponse;
+import com.smartest.backend.entity.Etudiant;
+import com.smartest.backend.entity.Professeur;
+import com.smartest.backend.exception.AccountNotFoundException;
+import com.smartest.backend.exception.EmailAlreadyUsedException;
+import com.smartest.backend.exception.EmailNotVerifiedException;
+import com.smartest.backend.exception.InvalidPasswordException;
+import com.smartest.backend.exception.InvalidTokenException;
+import com.smartest.backend.exception.PasswordMismatchException;
+import com.smartest.backend.repository.EtudiantRepository;
+import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.security.JwtUtil;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService — Tests complets")
 class AuthServiceTest {
 
-    @Mock private ProfesseurRepository professeurRepository;
-    @Mock private EtudiantRepository etudiantRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private JwtUtil jwtUtil;
-    @Mock private EmailService emailService;
+    @Mock
+    private ProfesseurRepository professeurRepository;
+    @Mock
+    private EtudiantRepository etudiantRepository;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtUtil jwtUtil;
+    @Mock
+    private EmailService emailService;
 
-    @InjectMocks private AuthService authService;
+    @InjectMocks
+    private AuthService authService;
 
     private RegisterRequest validProfRequest;
     private RegisterEtudiantRequest validEtudiantRequest;
@@ -135,8 +153,8 @@ class AuthServiceTest {
 
             authService.register(validProfRequest);
 
-            verify(professeurRepository).save(argThat(p ->
-                    !p.isEmailVerifie() && p.getTokenVerification() != null
+            verify(professeurRepository).save(argThat(p
+                    -> !p.isEmailVerifie() && p.getTokenVerification() != null
             ));
         }
 
@@ -217,8 +235,8 @@ class AuthServiceTest {
 
             authService.registerEtudiant(validEtudiantRequest);
 
-            verify(etudiantRepository).save(argThat(e ->
-                    !e.isEmailVerifie() && e.getTokenVerification() != null
+            verify(etudiantRepository).save(argThat(e
+                    -> !e.isEmailVerifie() && e.getTokenVerification() != null
             ));
         }
 
@@ -423,9 +441,9 @@ class AuthServiceTest {
 
             authService.forgotPasswordEtudiant("nissrine@ump.ac.ma");
 
-            verify(etudiantRepository).save(argThat(e ->
-                    e.getResetPasswordToken() != null &&
-                            e.getResetPasswordExpiry() != null
+            verify(etudiantRepository).save(argThat(e
+                    -> e.getResetPasswordToken() != null
+                    && e.getResetPasswordExpiry() != null
             ));
             verify(emailService).sendResetPasswordEmail(eq("nissrine@ump.ac.ma"), anyString());
         }
@@ -462,11 +480,11 @@ class AuthServiceTest {
 
             authService.forgotPasswordEtudiant("nissrine@ump.ac.ma");
 
-            verify(etudiantRepository).save(argThat(e ->
-                    e.getResetPasswordToken() != null &&
-                            !e.getResetPasswordToken().isEmpty() &&
-                            e.getResetPasswordExpiry() != null &&
-                            e.getResetPasswordExpiry().isAfter(LocalDateTime.now())
+            verify(etudiantRepository).save(argThat(e
+                    -> e.getResetPasswordToken() != null
+                    && !e.getResetPasswordToken().isEmpty()
+                    && e.getResetPasswordExpiry() != null
+                    && e.getResetPasswordExpiry().isAfter(LocalDateTime.now())
             ));
         }
     }
@@ -486,9 +504,9 @@ class AuthServiceTest {
 
             authService.forgotPasswordProfesseur("ikram@ensa.ma");
 
-            verify(professeurRepository).save(argThat(p ->
-                    p.getResetPasswordToken() != null &&
-                            p.getResetPasswordExpiry() != null
+            verify(professeurRepository).save(argThat(p
+                    -> p.getResetPasswordToken() != null
+                    && p.getResetPasswordExpiry() != null
             ));
             verify(emailService).sendResetPasswordEmail(eq("ikram@ensa.ma"), anyString());
         }
@@ -536,10 +554,10 @@ class AuthServiceTest {
 
             authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "NewPass2025@");
 
-            verify(etudiantRepository).save(argThat(e ->
-                    e.getPassword().equals("newHashedPassword") &&
-                            e.getResetPasswordToken() == null &&
-                            e.getResetPasswordExpiry() == null
+            verify(etudiantRepository).save(argThat(e
+                    -> e.getPassword().equals("newHashedPassword")
+                    && e.getResetPasswordToken() == null
+                    && e.getResetPasswordExpiry() == null
             ));
         }
 
@@ -549,8 +567,8 @@ class AuthServiceTest {
             when(etudiantRepository.findByResetPasswordToken("invalid-token"))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() ->
-                    authService.resetPasswordEtudiant("invalid-token", "NewPass2025@", "NewPass2025@")
+            assertThatThrownBy(()
+                    -> authService.resetPasswordEtudiant("invalid-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(etudiantRepository, never()).save(any());
@@ -564,8 +582,8 @@ class AuthServiceTest {
             when(etudiantRepository.findByResetPasswordToken("expired-token"))
                     .thenReturn(Optional.of(etudiant));
 
-            assertThatThrownBy(() ->
-                    authService.resetPasswordEtudiant("expired-token", "NewPass2025@", "NewPass2025@")
+            assertThatThrownBy(()
+                    -> authService.resetPasswordEtudiant("expired-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(etudiantRepository, never()).save(any());
@@ -574,8 +592,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Mots de passe différents")
         void resetPasswordEtudiant_PasswordMismatch() {
-            assertThatThrownBy(() ->
-                    authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "AutrePass2025@")
+            assertThatThrownBy(()
+                    -> authService.resetPasswordEtudiant("valid-token", "NewPass2025@", "AutrePass2025@")
             ).isInstanceOf(PasswordMismatchException.class);
 
             verify(etudiantRepository, never()).findByResetPasswordToken(any());
@@ -616,10 +634,10 @@ class AuthServiceTest {
 
             authService.resetPasswordProfesseur("valid-token-prof", "NewPass2025@", "NewPass2025@");
 
-            verify(professeurRepository).save(argThat(p ->
-                    p.getPassword().equals("newHashedPassword") &&
-                            p.getResetPasswordToken() == null &&
-                            p.getResetPasswordExpiry() == null
+            verify(professeurRepository).save(argThat(p
+                    -> p.getPassword().equals("newHashedPassword")
+                    && p.getResetPasswordToken() == null
+                    && p.getResetPasswordExpiry() == null
             ));
         }
 
@@ -629,8 +647,8 @@ class AuthServiceTest {
             when(professeurRepository.findByResetPasswordToken("invalid-token"))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() ->
-                    authService.resetPasswordProfesseur("invalid-token", "NewPass2025@", "NewPass2025@")
+            assertThatThrownBy(()
+                    -> authService.resetPasswordProfesseur("invalid-token", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(professeurRepository, never()).save(any());
@@ -644,8 +662,8 @@ class AuthServiceTest {
             when(professeurRepository.findByResetPasswordToken("expired-token-prof"))
                     .thenReturn(Optional.of(professeur));
 
-            assertThatThrownBy(() ->
-                    authService.resetPasswordProfesseur("expired-token-prof", "NewPass2025@", "NewPass2025@")
+            assertThatThrownBy(()
+                    -> authService.resetPasswordProfesseur("expired-token-prof", "NewPass2025@", "NewPass2025@")
             ).isInstanceOf(InvalidTokenException.class);
 
             verify(professeurRepository, never()).save(any());
@@ -654,8 +672,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Mots de passe différents")
         void resetPasswordProfesseur_PasswordMismatch() {
-            assertThatThrownBy(() ->
-                    authService.resetPasswordProfesseur("valid-token", "NewPass2025@", "AutrePass2025@")
+            assertThatThrownBy(()
+                    -> authService.resetPasswordProfesseur("valid-token", "NewPass2025@", "AutrePass2025@")
             ).isInstanceOf(PasswordMismatchException.class);
 
             verify(professeurRepository, never()).findByResetPasswordToken(any());
