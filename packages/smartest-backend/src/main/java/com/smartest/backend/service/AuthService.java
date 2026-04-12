@@ -2,6 +2,11 @@ package com.smartest.backend.service;
 
 import com.smartest.backend.dto.request.LoginRequest;
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
+<<<<<<< Updated upstream
+=======
+import com.smartest.backend.dto.response.AuthResponse;
+import com.smartest.backend.dto.request.LoginRequest;
+>>>>>>> Stashed changes
 import com.smartest.backend.dto.request.RegisterRequest;
 
 import com.smartest.backend.dto.response.AuthResponse;
@@ -55,6 +60,7 @@ public class AuthService {
 
         String token = UUID.randomUUID().toString();
 
+<<<<<<< Updated upstream
 
 
         Professeur professeur = new Professeur();
@@ -69,6 +75,15 @@ public class AuthService {
         return "Inscription réussie ! Vérifiez votre email.";
     }
 
+=======
+    professeurRepository.save(professor);
+    return "Inscription réussie !";
+}
+
+// ══════════════════════════════════════════════════════════
+//  REGISTER — STUDENT only
+// ══════════════════════════════════════════════════════════
+>>>>>>> Stashed changes
     public String registerEtudiant(RegisterEtudiantRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
