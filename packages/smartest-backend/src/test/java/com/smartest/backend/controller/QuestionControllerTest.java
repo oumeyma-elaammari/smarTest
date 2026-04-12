@@ -86,6 +86,32 @@ class QuestionControllerTest {
                 .andExpect(jsonPath("$.enonce").value("Nouvelle question"));
     }
 
+
+
+    @Test
+    void testUpdateQuestion() throws Exception {
+
+        Question q = new Question();
+        q.setEnonce("Question modifiée");
+        q.setType(TypeQuestion.QCM);
+        q.setDifficulte(Difficulte.MOYEN);
+
+        when(questionService.updateQuestion(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(2L)
+        )).thenReturn(q);
+
+        mockMvc.perform(put("/api/questions/1")
+                        .param("coursId", "2")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(q)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enonce").value("Question modifiée"));
+    }
+
+
+
     @Test
     void testDeleteQuestion() throws Exception {
         mockMvc.perform(delete("/api/questions/1"))

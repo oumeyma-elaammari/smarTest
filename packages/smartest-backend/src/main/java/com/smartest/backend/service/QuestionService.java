@@ -63,6 +63,28 @@ public class QuestionService {
         return questionRepository.findByCoursAndDifficulte(coursId, niveau);
     }
 
+
+    //modifier
+    public Question updateQuestion(Long id, Question updatedQuestion, Long coursId) {
+
+        Question existingQuestion = questionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Question non trouvée"));
+
+        //  Mise à jour des champs simples
+        existingQuestion.setEnonce(updatedQuestion.getEnonce());
+        existingQuestion.setType(updatedQuestion.getType());
+        existingQuestion.setDifficulte(updatedQuestion.getDifficulte());
+
+        //  Mise à jour du cours (optionnel)
+        if (coursId != null) {
+            Cours cours = coursRepository.findById(coursId)
+                    .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
+            existingQuestion.setCours(cours);
+        }
+
+        return questionRepository.save(existingQuestion);
+    }
+
     //  Supprimer
     public void delete(Long id) {
         questionRepository.deleteById(id);
