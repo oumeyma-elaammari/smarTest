@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="">
-<<<<<<< HEAD
-      <change beforePath="$PROJECT_DIR$/../../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.idea/workspace.xml" afterDir="false" />
-=======
+
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ForgotPasswordRequest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/RegisterEtudiantRequest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ResetPasswordRequest.java" afterDir="false" />
@@ -157,10 +155,7 @@
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\security" />
     </key>
   </component>
-<<<<<<< HEAD
-  <component name="RunManager" selected="Spring Boot.BackendApplication">
-    <configuration name="AuthServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-=======
+
   <component name="RunManager" selected="JUnit.AuthControllerTest">
     <configuration name="AuthControllerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="backend" />
@@ -233,17 +228,13 @@
     </configuration>
     <recent_temporary>
       <list>
-<<<<<<< HEAD
-        <item itemvalue="Spring Boot.BackendApplication" />
-        <item itemvalue="JUnit.AuthServiceTest" />
-        <item itemvalue="JUnit.db.migration in backend" />
-=======
+
         <item itemvalue="JUnit.AuthControllerTest" />
         <item itemvalue="JUnit.UserDetailsServiceImplTest" />
         <item itemvalue="JUnit.backend in backend" />
         <item itemvalue="JUnit.BackendApplicationTests" />
         <item itemvalue="JUnit.AuthServiceTest" />
->>>>>>> origin/main
+
       </list>
     </recent_temporary>
   </component>
