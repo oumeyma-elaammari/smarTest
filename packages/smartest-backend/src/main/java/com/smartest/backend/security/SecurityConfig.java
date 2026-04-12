@@ -40,9 +40,9 @@ public class SecurityConfig {
                                 "/auth/register/etudiant",
                                 "/auth/login",
                                 "/auth/verify-email",
-                                "/auth/forgot-password/etudiant",    // ← AJOUTEZ
-                                "/auth/forgot-password/professeur",  // ← AJOUTEZ
-                                "/auth/reset-password/etudiant",     // ← AJOUTEZ
+                                "/auth/forgot-password/etudiant",
+                                "/auth/forgot-password/professeur",
+                                "/auth/reset-password/etudiant",
                                 "/auth/reset-password/professeur"
                         ).permitAll()
                         .requestMatchers("/api/professeur/**").hasRole("PROFESSEUR")

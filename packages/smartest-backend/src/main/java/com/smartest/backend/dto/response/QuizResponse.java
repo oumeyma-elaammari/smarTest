@@ -17,5 +17,5 @@ public class QuizResponse {
     private String professeurNom;
     private Long coursId;
     private String coursTitre;
-    private List<QuestionResponse> questions;
+    //private List<QuestionResponse> questions;
 }

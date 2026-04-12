@@ -3,29 +3,14 @@ package com.smartest.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import com.smartest.backend.entity.enumeration.Role;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "utilisateur")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class Utilisateur {
-    @Column(unique = true)
-    private String resetPasswordToken;
-
-    private LocalDateTime resetPasswordExpiry;
-
-    @Column(nullable = false)
-    private boolean emailVerifie = false;
-
-    @Column(unique = true)
-    private String tokenVerification;
+@Table(name = "etudiant")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+public class Etudiant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,17 +25,24 @@ public class Utilisateur {
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private boolean emailVerifie = false;
+
+    @Column(unique = true)
+    private String tokenVerification;
+
+    @Column(unique = true)
+    private String resetPasswordToken;
+
+    private LocalDateTime resetPasswordExpiry;
 
     @JsonIgnore
     @ToString.Exclude
-    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL)
     private List<Reponse> reponses = new ArrayList<>();
 
     @JsonIgnore
     @ToString.Exclude
-    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL)
     private List<Resultat> resultats = new ArrayList<>();
 }

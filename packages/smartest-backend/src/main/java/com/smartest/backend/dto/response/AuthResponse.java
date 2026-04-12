@@ -1,11 +1,13 @@
 package com.smartest.backend.dto.response;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
-@Data
+
 @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
 public class AuthResponse {
 
     private String token;

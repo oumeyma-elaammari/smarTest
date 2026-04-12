@@ -5,7 +5,51 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="">
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/../../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.idea/workspace.xml" afterDir="false" />
+=======
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ForgotPasswordRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/RegisterEtudiantRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ResetPasswordRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/EmailNotVerifiedException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/exception/InvalidTokenException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/EmailService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/AuthControllerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/exception/GlobalExceptionHandlerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/security/UserDetailsServiceImplTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/AuthServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/EmailServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/JwtUtilTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/LoginRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/LoginRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/AuthResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/AuthResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Cours.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Cours.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Examen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Examen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Professeur.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Professeur.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Question.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Question.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Quiz.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Quiz.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Reponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Reponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/SessionExamen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/SessionExamen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Utilisateur.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Etudiant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/enumeration/Role.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ProfesseurRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/UtilisateurRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/EtudiantRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtAuthFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/JwtUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/UserDetailsServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/UserDetailsServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/appliaction.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/db.migration/scriptSQL.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" afterDir="false" />
+>>>>>>> origin/main
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,7 +57,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="63" />
+    <option name="cachedIndexableFilesCount" value="64" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -62,13 +106,22 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.BackendApplication.executor": "Run",
+<<<<<<< HEAD
     "JUnit.AuthServiceTest.executor": "Run",
+=======
+    "JUnit.AuthControllerTest.executor": "Debug",
+    "JUnit.AuthServiceTest.executor": "Run",
+    "JUnit.BackendApplicationTests.executor": "Run",
+    "JUnit.UserDetailsServiceImplTest.executor": "Run",
+    "JUnit.backend in backend.executor": "Run",
+>>>>>>> origin/main
     "JUnit.db.migration in backend.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+<<<<<<< HEAD
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.BackendApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
@@ -79,23 +132,53 @@
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
     "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices"
+=======
+    "Spring Boot.BackendApplication.executor": "Run",
+    "git-widget-placeholder": "authentification",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable"
+>>>>>>> origin/main
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\service" />
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\exception" />
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\security" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\request" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\resources\templates" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\resources\static" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\websocket\event" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\service" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\security" />
     </key>
   </component>
+<<<<<<< HEAD
   <component name="RunManager" selected="Spring Boot.BackendApplication">
     <configuration name="AuthServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+=======
+  <component name="RunManager" selected="JUnit.AuthControllerTest">
+    <configuration name="AuthControllerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smartest.backend.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smartest.backend.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.controller.AuthControllerTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthService" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+>>>>>>> origin/main
       <module name="backend" />
       <extension name="coverage">
         <pattern>
@@ -104,47 +187,63 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="com.smartest.backend.service" />
-      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.service.AuthServiceTest" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.service.AuthService" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="db.migration in backend" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="BackendApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="backend" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="db.migration.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="db.migration" />
-      <option name="MAIN_CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="TEST_OBJECT" value="package" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="BackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
-      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
-      <module name="backend" />
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.smartest.backend.BackendApplication" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.smartest.backend.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
+      <option name="PACKAGE_NAME" value="com.smartest.backend" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.BackendApplicationTests" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UserDetailsServiceImplTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smartest.backend.security.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smartest.backend.security" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.security.UserDetailsServiceImplTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="backend in backend" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/src/test/java/com/smartest/backend" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <recent_temporary>
       <list>
+<<<<<<< HEAD
         <item itemvalue="Spring Boot.BackendApplication" />
         <item itemvalue="JUnit.AuthServiceTest" />
         <item itemvalue="JUnit.db.migration in backend" />
+=======
+        <item itemvalue="JUnit.AuthControllerTest" />
+        <item itemvalue="JUnit.UserDetailsServiceImplTest" />
+        <item itemvalue="JUnit.backend in backend" />
+        <item itemvalue="JUnit.BackendApplicationTests" />
+        <item itemvalue="JUnit.AuthServiceTest" />
+>>>>>>> origin/main
       </list>
     </recent_temporary>
   </component>
