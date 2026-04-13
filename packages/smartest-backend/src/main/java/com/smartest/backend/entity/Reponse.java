@@ -11,6 +11,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.net.http.HttpResponse;
+
 @Entity
 @Table(name = "reponse")
 @Getter
@@ -53,5 +55,9 @@ public class Reponse {
         this.etudiant = etudiant;
         this.sessionExamen = sessionExamen;
         this.question = question;
+    }
+
+    public static HttpResponse<Object> status(int i) {
+        return Reponse.status(i);
     }
 }
