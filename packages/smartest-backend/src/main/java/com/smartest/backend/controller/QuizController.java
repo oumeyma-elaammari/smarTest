@@ -1,4 +1,4 @@
-/*package com.smartest.backend.controller;
+package com.smartest.backend.controller;
 
 import java.util.List;
 
@@ -57,4 +57,3 @@ public class QuizController {
         return ResponseEntity.ok(new MessageResponse("Quiz supprimé avec succès", true, 200));
     }
 }
-*/
