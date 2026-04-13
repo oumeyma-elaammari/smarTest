@@ -114,6 +114,12 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.13.2</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
