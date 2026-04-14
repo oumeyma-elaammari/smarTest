@@ -4,6 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="">
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ForgotPasswordRequest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/RegisterEtudiantRequest.java" afterDir="false" />
@@ -39,13 +40,16 @@
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/BackendApplicationTests.java" afterDir="false" />
     </list>
+=======
+    <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="" />
+>>>>>>> a2e4625889404e737da28b2590a42f6ad4d63221
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="64" />
+    <option name="cachedIndexableFilesCount" value="85" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -94,7 +98,11 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;Application.BackendApplication.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthControllerTest.executor&quot;: &quot;Run&quot;,
     &quot;JUnit.AuthServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.BackendApplicationTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserDetailsServiceImplTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.backend in backend.executor&quot;: &quot;Run&quot;,
     &quot;JUnit.db.migration in backend.executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
@@ -104,7 +112,7 @@
     &quot;Spring Boot.BackendApplication.executor&quot;: &quot;Run&quot;,
     &quot;git-widget-placeholder&quot;: &quot;authentification&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/smarTest/packages/smartest-backend/src/main/java/com/smartest/backend/dto/request&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service&quot;,
     &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
@@ -113,19 +121,34 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\service" />
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\exception" />
+      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\security" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\request" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\resources\templates" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\resources\static" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\websocket\event" />
-      <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\service" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\" />
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\security" />
     </key>
   </component>
-  <component name="RunManager" selected="Spring Boot.BackendApplication">
-    <configuration name="AuthServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="JUnit.AuthControllerTest">
+    <configuration name="AuthControllerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smartest.backend.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smartest.backend.controller" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.controller.AuthControllerTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthService" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <extension name="coverage">
         <pattern>
@@ -134,38 +157,56 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="com.smartest.backend.service" />
-      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.service.AuthServiceTest" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.service.AuthService" />
       <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="db.migration in backend" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="backend" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="db.migration.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="db.migration" />
-      <option name="MAIN_CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="TEST_OBJECT" value="package" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="BackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
-      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
-      <module name="backend" />
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.smartest.backend.BackendApplication" />
+    <configuration name="BackendApplicationTests" type="JUnit" factoryName="JUnit" temporary="true">
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.smartest.backend.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
+      <extension name="net.ashald.envfile">
+        <option name="IS_ENABLED" value="false" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smartest.backend" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.BackendApplicationTests" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="UserDetailsServiceImplTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smartest.backend.security.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smartest.backend.security" />
+      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.security.UserDetailsServiceImplTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="backend in backend" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/src/test/java/com/smartest/backend" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -177,9 +218,10 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Spring Boot.BackendApplication" />
-        <item itemvalue="JUnit.AuthServiceTest" />
-        <item itemvalue="JUnit.db.migration in backend" />
+        <item itemvalue="JUnit.BackendApplicationTests" />
+        <item itemvalue="JUnit.AuthControllerTest" />
+        <item itemvalue="JUnit.UserDetailsServiceImplTest" />
+        <item itemvalue="JUnit.backend in backend" />
       </list>
     </recent_temporary>
   </component>

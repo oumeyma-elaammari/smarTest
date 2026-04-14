@@ -1,0 +1,16 @@
+<Window x:Class="smartest_desktop.Views.DashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SmarTest — Dashboard Professeur"
+        Height="600" Width="900"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Background="#F9FAFB">
+        <TextBlock Text="Dashboard Professeur 🎓"
+                   FontSize="24"
+                   FontWeight="Bold"
+                   Foreground="#1a2e5a"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+    </Grid>
+</Window>

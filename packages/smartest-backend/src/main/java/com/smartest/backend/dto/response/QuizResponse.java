@@ -1,8 +1,9 @@
 package com.smartest.backend.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import java.util.List;
 
 @Data
@@ -18,4 +19,8 @@ public class QuizResponse {
     private Long coursId;
     private String coursTitre;
     private List<QuestionResponse> questions;
+
+    public void setQuestions(List<QuestionResponse> questions) {
+        this.questions = questions;
+    }
 }

@@ -235,8 +235,16 @@ public class QuizService {
         QuestionResponse dto = new QuestionResponse();
         dto.setId(question.getId());
         dto.setEnonce(question.getEnonce());
-        dto.setType(question.getType());
-        dto.setDifficulte(question.getDifficulte());
+
+        // Vérifier si type n'est pas null avant d'appeler name()
+        if (question.getType() != null) {
+            dto.setType(question.getType().name());
+        }
+
+        // Vérifier si difficulte n'est pas null avant d'appeler name()
+        if (question.getDifficulte() != null) {
+            dto.setDifficulte(question.getDifficulte().name());
+        }
 
         // Convertir les réponses
         if (question.getReponses() != null && !question.getReponses().isEmpty()) {
@@ -252,8 +260,8 @@ public class QuizService {
     /**
      * Convertir une entité Reponse en ReponseResponseDTO
      */
-    private ReponseResponseDTO convertReponseToResponseDTO(Reponse reponse) {
-        ReponseResponseDTO dto = new ReponseResponseDTO();
+    private ReponseResponse convertReponseToResponseDTO(Reponse reponse) {
+        ReponseResponse dto = new ReponseResponse();
         dto.setId(reponse.getId());
         dto.setContenu(reponse.getContenu());
         dto.setCorrecte(reponse.getCorrecte());

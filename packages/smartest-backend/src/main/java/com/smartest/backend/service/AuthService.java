@@ -38,11 +38,7 @@ public class AuthService {
         this.emailService = emailService;
     }
 
-    // ══════════════════════════════════════════════════════
-    //  REGISTER PROFESSEUR
-    // ══════════════════════════════════════════════════════
     public String register(RegisterRequest request) {
-
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
 
@@ -59,17 +55,11 @@ public class AuthService {
         professeur.setTokenVerification(token);
 
         professeurRepository.save(professeur);
-        emailService.sendVerificationEmail(
-                request.getEmail(), token, "PROFESSEUR");
-
+        emailService.sendVerificationEmail(request.getEmail(), token, "PROFESSEUR");
         return "Inscription réussie ! Vérifiez votre email.";
     }
 
-    // ══════════════════════════════════════════════════════
-    //  REGISTER ETUDIANT
-    // ══════════════════════════════════════════════════════
     public String registerEtudiant(RegisterEtudiantRequest request) {
-
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
 
@@ -89,17 +79,11 @@ public class AuthService {
         etudiant.setTokenVerification(token);
 
         etudiantRepository.save(etudiant);
-        emailService.sendVerificationEmail(
-                request.getEmail(), token, "ETUDIANT");
-
+        emailService.sendVerificationEmail(request.getEmail(), token, "ETUDIANT");
         return "Inscription réussie ! Vérifiez votre email.";
     }
 
-    // ══════════════════════════════════════════════════════
-    //  VERIFY EMAIL
-    // ══════════════════════════════════════════════════════
     public void verifyEmail(String token, String role) {
-
         if (role.equals("PROFESSEUR")) {
             var prof = professeurRepository.findByTokenVerification(token)
                     .orElseThrow(InvalidTokenException::new);
@@ -115,90 +99,62 @@ public class AuthService {
         }
     }
 
-    // ══════════════════════════════════════════════════════
-    //  LOGIN
-    // ══════════════════════════════════════════════════════
     public AuthResponse login(LoginRequest request) {
-
-        // ── PROFESSEUR ────────────────────────────────────
         var prof = professeurRepository.findByEmail(request.getEmail());
         if (prof.isPresent()) {
             if (!prof.get().isEmailVerifie())
                 throw new EmailNotVerifiedException();
-            if (!passwordEncoder.matches(
-                    request.getPassword(), prof.get().getPassword()))
+            if (!passwordEncoder.matches(request.getPassword(), prof.get().getPassword()))
                 throw new InvalidPasswordException();
 
-            String token = jwtUtil.generateToken(
-                    prof.get().getEmail(), "PROFESSEUR");
-
-            return new AuthResponse(
-                    token, "PROFESSEUR",
+            String token = jwtUtil.generateToken(prof.get().getEmail(), "PROFESSEUR");
+            return new AuthResponse(token, "PROFESSEUR",
                     prof.get().getNom(), prof.get().getEmail());
         }
 
-        // ── ETUDIANT ──────────────────────────────────────
         var etudiant = etudiantRepository.findByEmail(request.getEmail());
         if (etudiant.isPresent()) {
             if (!etudiant.get().isEmailVerifie())
                 throw new EmailNotVerifiedException();
-            if (!passwordEncoder.matches(
-                    request.getPassword(), etudiant.get().getPassword()))
+            if (!passwordEncoder.matches(request.getPassword(), etudiant.get().getPassword()))
                 throw new InvalidPasswordException();
 
-            String token = jwtUtil.generateToken(
-                    etudiant.get().getEmail(), "ETUDIANT");
-
-            return new AuthResponse(
-                    token, "ETUDIANT",
+            String token = jwtUtil.generateToken(etudiant.get().getEmail(), "ETUDIANT");
+            return new AuthResponse(token, "ETUDIANT",
                     etudiant.get().getNom(), etudiant.get().getEmail());
         }
 
         throw new AccountNotFoundException(request.getEmail());
     }
 
-    // ══════════════════════════════════════════════════════
-    //  FORGOT PASSWORD ETUDIANT
-    // ══════════════════════════════════════════════════════
     public void forgotPasswordEtudiant(String email) {
-
         if (professeurRepository.existsByEmail(email)) return;
 
         var etudiant = etudiantRepository.findByEmail(email);
         if (etudiant.isPresent()) {
             String token = UUID.randomUUID().toString();
-            LocalDateTime expiry = LocalDateTime.now().plusMinutes(15);
             etudiant.get().setResetPasswordToken(token);
-            etudiant.get().setResetPasswordExpiry(expiry);
+            etudiant.get().setResetPasswordExpiry(LocalDateTime.now().plusMinutes(15));
             etudiantRepository.save(etudiant.get());
             emailService.sendResetPasswordEmail(email, token);
         }
     }
 
-    // ══════════════════════════════════════════════════════
-    //  FORGOT PASSWORD PROFESSEUR
-    // ══════════════════════════════════════════════════════
     public void forgotPasswordProfesseur(String email) {
-
         if (etudiantRepository.existsByEmail(email)) return;
 
         var prof = professeurRepository.findByEmail(email);
         if (prof.isPresent()) {
             String token = UUID.randomUUID().toString();
-            LocalDateTime expiry = LocalDateTime.now().plusMinutes(15);
             prof.get().setResetPasswordToken(token);
-            prof.get().setResetPasswordExpiry(expiry);
+            prof.get().setResetPasswordExpiry(LocalDateTime.now().plusMinutes(15));
             professeurRepository.save(prof.get());
             emailService.sendResetPasswordEmail(email, token);
         }
     }
 
-    // ══════════════════════════════════════════════════════
-    //  RESET PASSWORD ETUDIANT
-    // ══════════════════════════════════════════════════════
     public void resetPasswordEtudiant(
             String token, String newPassword, String confirmPassword) {
-
         if (!newPassword.equals(confirmPassword))
             throw new PasswordMismatchException();
 
@@ -214,12 +170,8 @@ public class AuthService {
         etudiantRepository.save(etudiant);
     }
 
-    // ══════════════════════════════════════════════════════
-    //  RESET PASSWORD PROFESSEUR
-    // ══════════════════════════════════════════════════════
     public void resetPasswordProfesseur(
             String token, String newPassword, String confirmPassword) {
-
         if (!newPassword.equals(confirmPassword))
             throw new PasswordMismatchException();
 
