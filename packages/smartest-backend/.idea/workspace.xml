@@ -57,30 +57,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.BackendApplication.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.AuthControllerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.AuthServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.BackendApplicationTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.UserDetailsServiceImplTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.backend in backend.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.db.migration in backend.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;Spring Boot.BackendApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;authentification&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.AcpAgentsConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.BackendApplication.executor": "Run",
+    "JUnit.AuthControllerTest.executor": "Run",
+    "JUnit.AuthServiceTest.executor": "Run",
+    "JUnit.BackendApplicationTests.executor": "Run",
+    "JUnit.UserDetailsServiceImplTest.executor": "Run",
+    "JUnit.backend in backend.executor": "Run",
+    "JUnit.db.migration in backend.executor": "Run",
+    "JUnit.smartest.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.BackendApplication.executor": "Run",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\service" />
@@ -94,7 +94,7 @@
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\security" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="JUnit.AuthControllerTest">
     <configuration name="AuthControllerTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <extension name="coverage">
@@ -182,6 +182,13 @@
       <option name="filePath" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="JUnit.AuthControllerTest" />
+      <item itemvalue="JUnit.AuthService" />
+      <item itemvalue="JUnit.backend in backend" />
+      <item itemvalue="JUnit.BackendApplicationTests" />
+      <item itemvalue="JUnit.UserDetailsServiceImplTest" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.BackendApplicationTests" />
