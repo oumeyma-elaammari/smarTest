@@ -26,6 +26,10 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
@@ -110,6 +114,12 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.13.2</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
@@ -134,7 +144,11 @@
                     <execution>
                         <id>default-compile</id>
                         <phase>compile</phase>
-                        <goals><goal>compile</goal></goals>
+                        <goals>
+                            
+                        
+                            <goal>compile</goal>
+                        </goals>
                         <configuration>
                             <annotationProcessorPaths>
                                 <path>
@@ -145,9 +159,13 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>default-testCompile</id>
+                        <id>def
+                            ault-testCompile</id>
+                        
                         <phase>test-compile</phase>
-                        <goals><goal>testCompile</goal></goals>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
                         <configuration>
                             <annotationProcessorPaths>
                                 <path>

@@ -1,7 +1,7 @@
-/*package com.smartest.backend.service;
+package com.smartest.backend.service;
 
 import com.smartest.backend.dto.request.QuizRequest;
-//import com.smartest.backend.dto.response.QuestionResponse;
+import com.smartest.backend.dto.response.QuestionResponse;
 import com.smartest.backend.dto.response.QuizResponse;
 import com.smartest.backend.dto.response.ReponseResponse;
 import com.smartest.backend.entity.*;
@@ -23,7 +23,7 @@ public class QuizService {
 
     /**
      * Récupérer tous les quiz
-     *//*
+     */
     @Transactional(readOnly = true)
     public List<QuizResponse> getAllQuizs() {
         return quizRepository.findAll().stream()
@@ -33,7 +33,7 @@ public class QuizService {
 
     /**
      * Récupérer un quiz par son ID
-     *//*
+     */
     @Transactional(readOnly = true)
     public QuizResponse getQuizById(Long id) {
         Quiz quiz = quizRepository.findById(id)
@@ -43,7 +43,7 @@ public class QuizService {
 
     /**
      * Récupérer les quiz d'un professeur
-     *//*
+     */
     @Transactional(readOnly = true)
     public List<QuizResponse> getQuizsByProfesseur(Long professeurId) {
         List<Quiz> quizs = quizRepository.findByProfesseurId(professeurId);
@@ -54,7 +54,7 @@ public class QuizService {
 
     /**
      * Récupérer les quiz d'un cours
-     *//*
+     */
     @Transactional(readOnly = true)
     public List<QuizResponse> getQuizsByCours(Long coursId) {
         List<Quiz> quizs = quizRepository.findByCoursId(coursId);
@@ -65,7 +65,7 @@ public class QuizService {
 
     /**
      * Créer un nouveau quiz
-     *//*
+     */
     @Transactional
     public QuizResponse createQuiz(QuizRequest request) {
         // Vérifier l'existence du professeur
@@ -97,7 +97,7 @@ public class QuizService {
 
     /**
      * Mettre à jour un quiz existant
-     *//*
+     */
     @Transactional
     public QuizResponse updateQuiz(Long id, QuizRequest request) {
         Quiz quiz = quizRepository.findById(id)
@@ -135,7 +135,7 @@ public class QuizService {
 
     /**
      * Supprimer un quiz
-     *//*
+     */
     @Transactional
     public void deleteQuiz(Long id) {
         if (!quizRepository.existsById(id)) {
@@ -146,7 +146,7 @@ public class QuizService {
 
     /**
      * Ajouter une question à un quiz
-     *//*
+     */
     @Transactional
     public QuizResponse addQuestionToQuiz(Long quizId, Long questionId) {
         Quiz quiz = quizRepository.findById(quizId)
@@ -166,7 +166,7 @@ public class QuizService {
 
     /**
      * Supprimer une question d'un quiz
-     *//*
+     */
     @Transactional
     public QuizResponse removeQuestionFromQuiz(Long quizId, Long questionId) {
         Quiz quiz = quizRepository.findById(quizId)
@@ -180,7 +180,7 @@ public class QuizService {
 
     /**
      * Compter le nombre de questions dans un quiz
-     *//*
+     */
     @Transactional(readOnly = true)
     public Long countQuestionsByQuizId(Long quizId) {
         Quiz quiz = quizRepository.findById(quizId)
@@ -190,7 +190,7 @@ public class QuizService {
 
     /**
      * Vérifier si un quiz existe
-     *//*
+     */
     @Transactional(readOnly = true)
     public boolean existsById(Long id) {
         return quizRepository.existsById(id);
@@ -198,7 +198,7 @@ public class QuizService {
 
     /**
      * Convertir une entité Quiz en QuizResponseDTO
-   /  *//*
+     */
     private QuizResponse convertToResponseDTO(Quiz quiz) {
         QuizResponse dto = new QuizResponse();
         dto.setId(quiz.getId());
@@ -230,13 +230,21 @@ public class QuizService {
 
     /**
      * Convertir une entité Question en QuestionResponseDTO
-     *//*
+     */
     private QuestionResponse convertQuestionToResponseDTO(Question question) {
         QuestionResponse dto = new QuestionResponse();
         dto.setId(question.getId());
         dto.setEnonce(question.getEnonce());
-        dto.setType(question.getType().name());
-        dto.setDifficulte(question.getDifficulte().name());
+
+        // Vérifier si type n'est pas null avant d'appeler name()
+        if (question.getType() != null) {
+            dto.setType(question.getType().name());
+        }
+
+        // Vérifier si difficulte n'est pas null avant d'appeler name()
+        if (question.getDifficulte() != null) {
+            dto.setDifficulte(question.getDifficulte().name());
+        }
 
         // Convertir les réponses
         if (question.getReponses() != null && !question.getReponses().isEmpty()) {
@@ -251,15 +259,12 @@ public class QuizService {
 
     /**
      * Convertir une entité Reponse en ReponseResponseDTO
-
-
-    private ReponseResponseDTO convertReponseToResponseDTO(Reponse reponse) {
-        ReponseResponseDTO dto = new ReponseResponseDTO();
-
+     */
+    private ReponseResponse convertReponseToResponseDTO(Reponse reponse) {
+        ReponseResponse dto = new ReponseResponse();
         dto.setId(reponse.getId());
         dto.setContenu(reponse.getContenu());
         dto.setCorrecte(reponse.getCorrecte());
         return dto;
     }
 }
-*/
