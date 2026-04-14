@@ -1,20 +1,26 @@
 package com.smartest.backend.service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.smartest.backend.dto.request.LoginRequest;
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
 import com.smartest.backend.dto.response.AuthResponse;
 import com.smartest.backend.entity.Etudiant;
 import com.smartest.backend.entity.Professeur;
-import com.smartest.backend.exception.*;
+import com.smartest.backend.exception.AccountNotFoundException;
+import com.smartest.backend.exception.EmailAlreadyUsedException;
+import com.smartest.backend.exception.EmailNotVerifiedException;
+import com.smartest.backend.exception.InvalidPasswordException;
+import com.smartest.backend.exception.InvalidTokenException;
+import com.smartest.backend.exception.PasswordMismatchException;
 import com.smartest.backend.repository.EtudiantRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
 import com.smartest.backend.security.JwtUtil;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -39,16 +45,20 @@ public class AuthService {
     }
 
     public String register(RegisterRequest request) {
-        if (!request.getPassword().equals(request.getConfirmPassword()))
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new PasswordMismatchException();
-        if (professeurRepository.existsByEmail(request.getEmail()))
+        }
+        if (professeurRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyUsedException(request.getEmail());
+        }
 
         String token = UUID.randomUUID().toString();
+
         Professeur professeur = new Professeur();
         professeur.setNom(request.getNom());
         professeur.setEmail(request.getEmail());
         professeur.setPassword(passwordEncoder.encode(request.getPassword()));
+
         professeur.setEmailVerifie(false);
         professeur.setTokenVerification(token);
         professeurRepository.save(professeur);
@@ -57,14 +67,18 @@ public class AuthService {
     }
 
     public String registerEtudiant(RegisterEtudiantRequest request) {
-        if (!request.getPassword().equals(request.getConfirmPassword()))
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new PasswordMismatchException();
-        if (etudiantRepository.existsByEmail(request.getEmail()))
+        }
+        if (etudiantRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyUsedException(request.getEmail());
-        if (professeurRepository.existsByEmail(request.getEmail()))
+        }
+        if (professeurRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyUsedException(request.getEmail());
+        }
 
         String token = UUID.randomUUID().toString();
+
         Etudiant etudiant = new Etudiant();
         etudiant.setNom(request.getNom());
         etudiant.setEmail(request.getEmail());
@@ -95,20 +109,24 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         var prof = professeurRepository.findByEmail(request.getEmail());
         if (prof.isPresent()) {
-            if (!prof.get().isEmailVerifie())
+            if (!prof.get().isEmailVerifie()) {
                 throw new EmailNotVerifiedException();
-            if (!passwordEncoder.matches(request.getPassword(), prof.get().getPassword()))
+            }
+            if (!passwordEncoder.matches(request.getPassword(), prof.get().getPassword())) {
                 throw new InvalidPasswordException();
+            }
             String token = jwtUtil.generateToken(prof.get().getEmail(), "PROFESSEUR");
             return new AuthResponse(token, "PROFESSEUR", prof.get().getNom(), prof.get().getEmail());
         }
 
         var etudiant = etudiantRepository.findByEmail(request.getEmail());
         if (etudiant.isPresent()) {
-            if (!etudiant.get().isEmailVerifie())
+            if (!etudiant.get().isEmailVerifie()) {
                 throw new EmailNotVerifiedException();
-            if (!passwordEncoder.matches(request.getPassword(), etudiant.get().getPassword()))
+            }
+            if (!passwordEncoder.matches(request.getPassword(), etudiant.get().getPassword())) {
                 throw new InvalidPasswordException();
+            }
             String token = jwtUtil.generateToken(etudiant.get().getEmail(), "ETUDIANT");
             return new AuthResponse(token, "ETUDIANT", etudiant.get().getNom(), etudiant.get().getEmail());
         }
@@ -117,7 +135,9 @@ public class AuthService {
     }
 
     public void forgotPasswordEtudiant(String email) {
-        if (professeurRepository.existsByEmail(email)) return;
+        if (professeurRepository.existsByEmail(email)) {
+            return;
+        }
         var etudiant = etudiantRepository.findByEmail(email);
         if (etudiant.isPresent()) {
             String token = UUID.randomUUID().toString();
@@ -129,7 +149,9 @@ public class AuthService {
     }
 
     public void forgotPasswordProfesseur(String email) {
-        if (etudiantRepository.existsByEmail(email)) return;
+        if (etudiantRepository.existsByEmail(email)) {
+            return;
+        }
         var prof = professeurRepository.findByEmail(email);
         if (prof.isPresent()) {
             String token = UUID.randomUUID().toString();
@@ -141,12 +163,14 @@ public class AuthService {
     }
 
     public void resetPasswordEtudiant(String token, String newPassword, String confirmPassword) {
-        if (!newPassword.equals(confirmPassword))
+        if (!newPassword.equals(confirmPassword)) {
             throw new PasswordMismatchException();
+        }
         var etudiant = etudiantRepository.findByResetPasswordToken(token)
                 .orElseThrow(InvalidTokenException::new);
-        if (etudiant.getResetPasswordExpiry().isBefore(LocalDateTime.now()))
+        if (etudiant.getResetPasswordExpiry().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException();
+        }
         etudiant.setPassword(passwordEncoder.encode(newPassword));
         etudiant.setResetPasswordToken(null);
         etudiant.setResetPasswordExpiry(null);
@@ -154,15 +178,19 @@ public class AuthService {
     }
 
     public void resetPasswordProfesseur(String token, String newPassword, String confirmPassword) {
-        if (!newPassword.equals(confirmPassword))
+        if (!newPassword.equals(confirmPassword)) {
             throw new PasswordMismatchException();
+        }
         var prof = professeurRepository.findByResetPasswordToken(token)
                 .orElseThrow(InvalidTokenException::new);
-        if (prof.getResetPasswordExpiry().isBefore(LocalDateTime.now()))
+        if (prof.getResetPasswordExpiry().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException();
+        }
+
         prof.setPassword(passwordEncoder.encode(newPassword));
         prof.setResetPasswordToken(null);
         prof.setResetPasswordExpiry(null);
         professeurRepository.save(prof);
     }
+
 }
