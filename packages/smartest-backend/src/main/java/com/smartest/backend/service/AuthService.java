@@ -2,7 +2,7 @@ package com.smartest.backend.service;
 
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.response.AuthResponse;
-import com.smartest.backend.dto.LoginRequest;
+import com.smartest.backend.dto.request.LoginRequest;
 import com.smartest.backend.dto.request.RegisterRequest;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.enumeration.Role;
