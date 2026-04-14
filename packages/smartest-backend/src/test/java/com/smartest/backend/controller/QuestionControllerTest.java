@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)  // ← pas de Spring, juste Mockito
+@ExtendWith(MockitoExtension.class)
 class QuestionControllerTest {
 
     private MockMvc mockMvc;
@@ -31,7 +31,7 @@ class QuestionControllerTest {
     private QuestionService questionService;
 
     @InjectMocks
-    private QuestionController questionController;  // ← le vrai contrôleur
+    private QuestionController questionController;  //  le vrai contrôleur
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
