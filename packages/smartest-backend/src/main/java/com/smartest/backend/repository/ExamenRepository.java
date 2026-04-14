@@ -16,9 +16,6 @@ public interface ExamenRepository extends JpaRepository<Examen, Long> {
     // CORRIGÉ : utiliser "cours.id" au lieu de "coursId"
     List<Examen> findByCoursId(Long coursId);
 
-    // Alternative : syntaxe avec underscore
-    List<Examen> findByCours_Id(Long coursId);
-
     // Trouver les examens d'un professeur
     List<Examen> findByProfesseurId(Long professeurId);
 
