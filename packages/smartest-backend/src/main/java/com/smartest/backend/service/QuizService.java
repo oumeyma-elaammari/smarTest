@@ -238,12 +238,12 @@ public class QuizService {
 
         // Vérifier si type n'est pas null avant d'appeler name()
         if (question.getType() != null) {
-            dto.setType(question.getType().name());
+            dto.setType(question.getType());
         }
 
         // Vérifier si difficulte n'est pas null avant d'appeler name()
         if (question.getDifficulte() != null) {
-            dto.setDifficulte(question.getDifficulte().name());
+            dto.setDifficulte(question.getDifficulte());
         }
 
         // Convertir les réponses
