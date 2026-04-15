@@ -1,6 +1,7 @@
 <Window x:Class="smartest_desktop.Views.DashboardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
         Title="SmarTest — Dashboard Professeur"
         Height="600" Width="900"
         MinHeight="500" MinWidth="700"
@@ -9,12 +10,137 @@
         WindowStartupLocation="CenterScreen"
         Background="#F3F4F6">
 
-	<Grid Background="#F3F4F6">
-		<TextBlock Text="Dashboard Professeur 🎓"
-                   FontSize="24"
-                   FontWeight="Bold"
-                   Foreground="#1a2e5a"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"/>
+	<Window.DataContext>
+		<vm:DashboardViewModel />
+	</Window.DataContext>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="64"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<!-- ── NAVBAR ─────────────────────────────────────── -->
+		<Border Grid.Row="0"
+                Background="#1a2e5a">
+			<Border.Effect>
+				<DropShadowEffect Color="#000000" Opacity="0.15"
+                                  BlurRadius="8" ShadowDepth="2"/>
+			</Border.Effect>
+			<Grid Margin="24,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+
+				<!-- Logo -->
+				<TextBlock Grid.Column="0"
+                           Text="SMARTEST"
+                           FontSize="20" FontWeight="Bold"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                        />
+
+				<!-- Infos professeur -->
+				<StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+					<Ellipse Width="10" Height="10"
+                             Fill="#22c55e"
+                             Margin="0,0,8,0"/>
+					<TextBlock FontSize="13" Foreground="White" Opacity="0.9">
+						<Run Text="Connecté : "/>
+						<Run Text="{Binding Nom}" FontWeight="SemiBold"/>
+					</TextBlock>
+				</StackPanel>
+
+				<!-- Bouton Déconnexion -->
+				<Button Grid.Column="2"
+                        Height="36"
+                        Padding="16,0"
+                        Cursor="Hand"
+                        Command="{Binding LogoutCommand}"
+                        VerticalAlignment="Center">
+					<Button.Style>
+						<Style TargetType="Button">
+							<Setter Property="Background" Value="Transparent"/>
+							<Setter Property="Template">
+								<Setter.Value>
+									<ControlTemplate TargetType="Button">
+										<Border Background="{TemplateBinding Background}"
+                                                CornerRadius="6"
+												BorderBrush="#4D7FC4"              
+												BorderThickness="1">
+											<ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+										</Border>
+										<ControlTemplate.Triggers>
+											<Trigger Property="IsMouseOver" Value="True">
+												<Setter Property="Background" Value="#dc2626"/>
+											</Trigger>
+										</ControlTemplate.Triggers>
+									</ControlTemplate>
+								</Setter.Value>
+							</Setter>
+						</Style>
+					</Button.Style>
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Text="⏻" FontSize="14" Foreground="White" Margin="0,0,6,0"/>
+						<TextBlock Text="Déconnexion" FontSize="13"
+                                   FontWeight="SemiBold" Foreground="White"/>
+					</StackPanel>
+				</Button>
+			</Grid>
+		</Border>
+
+		<!-- ── CONTENU ────────────────────────────────────── -->
+		<Grid Grid.Row="1" Background="#F3F4F6">
+			<StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="500">
+
+				<!-- Icône et titre -->
+				<Border Background="White"
+                        CornerRadius="12"
+                        Padding="40">
+					<Border.Effect>
+						<DropShadowEffect Color="#000000" Opacity="0.06"
+                                          BlurRadius="16" ShadowDepth="2"/>
+					</Border.Effect>
+					<StackPanel HorizontalAlignment="Center">
+
+						<TextBlock Text="🎓"
+                                   FontSize="56"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,16"/>
+
+						<TextBlock FontSize="22" FontWeight="Bold"
+                                   Foreground="#1a2e5a"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,8">
+							<Run Text="Bienvenue, "/>
+							<Run Text="{Binding Nom}" />
+							<Run Text=" !"/>
+						</TextBlock>
+
+						<TextBlock Text="Espace Professeur — SmarTest"
+                                   FontSize="13" Foreground="#6B7280"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,24"/>
+
+						<!-- Ligne de séparation -->
+						<Separator Margin="0,0,0,24"/>
+
+						<TextBlock Text="Le dashboard complet sera disponible dans le Sprint 2."
+                                   FontSize="13" Foreground="#9CA3AF"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"/>
+					</StackPanel>
+				</Border>
+			</StackPanel>
+		</Grid>
 	</Grid>
 </Window>
