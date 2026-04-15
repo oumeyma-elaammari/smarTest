@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import api from '../api/axiosConfig'
 
 const registerSchema = z.object({
@@ -80,23 +80,20 @@ export default function Register() {
     const [error, setError] = useState<string | null>(null)
     const [passwordValue, setPasswordValue] = useState('')
 
-    const { register, handleSubmit, formState: { errors }, watch, trigger } = useForm<RegisterForm>({
+    const errorRef = useRef<string | null>(null)
+
+    const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
-        mode: 'onChange',
+        mode: 'onSubmit',
+        reValidateMode: 'onSubmit',
     })
 
-    const watchedPassword = watch('password', '')
-
-    useEffect(() => {
-        setPasswordValue(watchedPassword || '')
-    }, [watchedPassword])
-
     const onSubmit = async (data: RegisterForm) => {
-        setIsLoading(true)
+        errorRef.current = null
         setError(null)
+        setIsLoading(true)
 
         try {
-            // UN SEUL appel API
             await api.post('/auth/register/etudiant', {
                 nom: data.nom.trim(),
                 email: data.email.trim().toLowerCase(),
@@ -104,19 +101,23 @@ export default function Register() {
                 confirmPassword: data.confirmPassword,
             })
 
-            // Redirection vers page email-sent
             navigate('/email-sent')
 
         } catch (err: any) {
+            let msg: string
+
             if (!err?.response) {
-                setError(ERROR_MESSAGES.NETWORK_ERROR)
+                msg = ERROR_MESSAGES.NETWORK_ERROR
             } else {
                 const status = err.response?.status
-                if (status === 409) setError(ERROR_MESSAGES.EMAIL_USED)
-                else if (status >= 500) setError(ERROR_MESSAGES.SERVER_ERROR)
-                else setError(ERROR_MESSAGES.UNKNOWN)
+                if (status === 409) msg = ERROR_MESSAGES.EMAIL_USED
+                else if (status >= 500) msg = ERROR_MESSAGES.SERVER_ERROR
+                else msg = ERROR_MESSAGES.UNKNOWN
             }
-        } finally {
+
+            errorRef.current = msg
+            setError(msg)
+
             setIsLoading(false)
         }
     }
@@ -208,7 +209,7 @@ export default function Register() {
                         <div className="mt-3 h-1 w-20 rounded-full" style={{ backgroundColor: '#1a2e5a' }} />
                     </div>
 
-                    {/* Erreur */}
+                    {/* ✅ Erreur — reste affichée jusqu'à la prochaine soumission */}
                     {error && (
                         <div className="mb-4 px-4 py-3 rounded-lg flex items-start gap-2 text-sm"
                             style={{
@@ -241,7 +242,7 @@ export default function Register() {
 
                         {/* Email */}
                         <div>
-                            <label htmlFor="email" className="label">Email </label>
+                            <label htmlFor="email" className="label">Email</label>
                             <input
                                 {...register('email')}
                                 id="email"
@@ -265,9 +266,10 @@ export default function Register() {
                                     placeholder="* * * * * * * * *"
                                     autoComplete="new-password"
                                     disabled={isLoading}
+                                    // ✅ onChange simple — pas de trigger
                                     onChange={(e) => {
                                         register('password').onChange(e)
-                                        trigger('password')
+                                        setPasswordValue(e.target.value)
                                     }}
                                     className={`input pr-10 ${errors.password ? 'error' : ''}`}
                                 />
@@ -297,10 +299,6 @@ export default function Register() {
                                     placeholder="* * * * * * * * *"
                                     autoComplete="new-password"
                                     disabled={isLoading}
-                                    onChange={(e) => {
-                                        register('confirmPassword').onChange(e)
-                                        trigger('confirmPassword')
-                                    }}
                                     className={`input pr-10 ${errors.confirmPassword ? 'error' : ''}`}
                                 />
                                 <button
@@ -356,13 +354,6 @@ export default function Register() {
                     </p>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
-                }
-            `}</style>
         </main>
     )
 }
