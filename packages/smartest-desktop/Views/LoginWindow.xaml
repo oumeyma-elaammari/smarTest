@@ -3,7 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
         Title="SmarTest — Connexion Professeur"
-        Height="520" Width="440"
+        Height="600" Width="900"
+        MinHeight="500" MinWidth="700"
+        ResizeMode="CanResize"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="#F3F4F6">
