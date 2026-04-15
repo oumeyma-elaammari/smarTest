@@ -94,59 +94,79 @@ class EmailServiceTest {
     // ══════════════════════════════════════════════════════
     //  SEND RESET PASSWORD EMAIL
     // ══════════════════════════════════════════════════════
+
     @Nested
     @DisplayName("sendResetPasswordEmail")
     class SendResetPasswordEmailTests {
 
         @Test
-        @DisplayName("✅ Email de reset envoyé")
+        @DisplayName("✅ Email de reset envoyé — Etudiant")
         void sendResetPasswordEmail_Success() {
-            emailService.sendResetPasswordEmail("nissrine@ump.ac.ma", "reset-token-123");
+            // ✅ Ajoutez "ETUDIANT"
+            emailService.sendResetPasswordEmail("nissrine@ump.ac.ma", "reset-token-123", "ETUDIANT");
 
             verify(mailSender).send(messageCaptor.capture());
             SimpleMailMessage msg = messageCaptor.getValue();
 
             assertThat(msg.getTo()).contains("nissrine@ump.ac.ma");
             assertThat(msg.getSubject())
-                .isEqualTo("SmarTest — Réinitialisation de votre mot de passe");
+                    .isEqualTo("SmarTest — Réinitialisation de votre mot de passe");
             assertThat(msg.getText()).contains("reset-token-123");
             assertThat(msg.getText()).contains("http://localhost:5173/reset-password");
         }
 
         @Test
-        @DisplayName("✅ Lien contient le token")
+        @DisplayName("✅ Lien contient le token — Etudiant")
         void sendResetPasswordEmail_LinkContainsToken() {
-            emailService.sendResetPasswordEmail("ikram@ensa.ma", "my-reset-token");
+            // ✅ Ajoutez "ETUDIANT"
+            emailService.sendResetPasswordEmail("nissrine@ump.ac.ma", "my-reset-token", "ETUDIANT");
 
             verify(mailSender).send(messageCaptor.capture());
             assertThat(messageCaptor.getValue().getText())
-                .contains("token=my-reset-token");
+                    .contains("my-reset-token");
         }
 
         @Test
         @DisplayName("✅ From email correct")
         void sendResetPasswordEmail_FromEmailCorrect() {
-            emailService.sendResetPasswordEmail("ikram@ensa.ma", "reset-token");
+            // ✅ Ajoutez "PROFESSEUR"
+            emailService.sendResetPasswordEmail("ikram@ensa.ma", "reset-token", "PROFESSEUR");
 
             verify(mailSender).send(messageCaptor.capture());
             assertThat(messageCaptor.getValue().getFrom())
-                .isEqualTo("smarttest320@gmail.com");
+                    .isEqualTo("smarttest320@gmail.com");
         }
 
         @Test
         @DisplayName("✅ mailSender.send() appelé exactement une fois")
         void sendResetPasswordEmail_SendCalledOnce() {
-            emailService.sendResetPasswordEmail("ikram@ensa.ma", "reset-token");
+            // ✅ Ajoutez "ETUDIANT"
+            emailService.sendResetPasswordEmail("ikram@ensa.ma", "reset-token", "ETUDIANT");
             verify(mailSender, times(1)).send(any(SimpleMailMessage.class));
         }
 
         @Test
-        @DisplayName("✅ Message mentionne 15 minutes")
+        @DisplayName("✅ Message mentionne 15 minutes — Etudiant")
         void sendResetPasswordEmail_Mentions15Minutes() {
-            emailService.sendResetPasswordEmail("ikram@ensa.ma", "reset-token");
+            // ✅ Ajoutez "ETUDIANT"
+            emailService.sendResetPasswordEmail("ikram@ensa.ma", "reset-token", "ETUDIANT");
 
             verify(mailSender).send(messageCaptor.capture());
             assertThat(messageCaptor.getValue().getText()).contains("15 minutes");
+        }
+
+        @Test
+        @DisplayName("✅ Professeur reçoit le token directement")
+        void sendResetPasswordEmail_ProfesseurReceivesToken() {
+            // ✅ Test spécifique pour le professeur
+            emailService.sendResetPasswordEmail("ikram@ensa.ma", "prof-token-123", "PROFESSEUR");
+
+            verify(mailSender).send(messageCaptor.capture());
+            SimpleMailMessage msg = messageCaptor.getValue();
+
+            assertThat(msg.getText()).contains("prof-token-123");
+            // Le prof reçoit le token directement, pas un lien web
+            assertThat(msg.getText()).doesNotContain("localhost:5173");
         }
     }
 }
