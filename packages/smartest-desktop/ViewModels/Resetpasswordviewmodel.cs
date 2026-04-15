@@ -72,6 +72,10 @@ namespace smartest_desktop.ViewModels
         public ICommand ResetCommand { get; }
         public ICommand BackToLoginCommand { get; }
 
+        // ✅ Constructeur sans paramètre — DANS la classe
+        public ResetPasswordViewModel() : this("") { }
+
+        // ✅ Constructeur principal
         public ResetPasswordViewModel(string token = "")
         {
             Token = token;
@@ -86,7 +90,6 @@ namespace smartest_desktop.ViewModels
 
         private async Task ExecuteReset()
         {
-            // Validation
             if (string.IsNullOrWhiteSpace(Token))
             {
                 ErrorMessage = "Veuillez saisir le code de réinitialisation";
@@ -132,10 +135,7 @@ namespace smartest_desktop.ViewModels
                 return;
             }
 
-            // ✅ Succès — afficher message et rediriger vers login
             SuccessMessage = "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.";
-
-            // Attendre 2 secondes puis ouvrir login
             await Task.Delay(2000);
             OpenLogin();
         }
@@ -145,7 +145,6 @@ namespace smartest_desktop.ViewModels
             var login = new Views.LoginWindow();
             login.Show();
 
-            // Fermer la fenêtre actuelle
             foreach (System.Windows.Window w in WpfApp.Current.Windows)
             {
                 if (w is Views.ResetPasswordWindow)

@@ -122,7 +122,17 @@ namespace smartest_desktop.ViewModels
 
         private void OpenResetPassword()
         {
-            new Views.ResetPasswordWindow().ShowDialog();
+            var resetWindow = new Views.ResetPasswordWindow();
+            resetWindow.Show();
+
+            foreach (System.Windows.Window w in WpfApp.Current.Windows)
+            {
+                if (w is Views.ForgotPasswordWindow)
+                {
+                    w.Close();
+                    break;
+                }
+            }
         }
 
         private void CloseWindow()

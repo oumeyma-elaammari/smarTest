@@ -7,14 +7,14 @@
         ResizeMode="CanResize"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-		>
+        Background="#F3F4F6">
 
-    <Grid Background="#F9FAFB">
-        <TextBlock Text="Dashboard Professeur 🎓"
+	<Grid Background="#F3F4F6">
+		<TextBlock Text="Dashboard Professeur 🎓"
                    FontSize="24"
                    FontWeight="Bold"
                    Foreground="#1a2e5a"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"/>
-    </Grid>
+	</Grid>
 </Window>

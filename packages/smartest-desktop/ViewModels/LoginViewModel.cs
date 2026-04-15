@@ -112,7 +112,7 @@ namespace smartest_desktop.ViewModels
 
         private void OpenForgotPassword()
         {
-            new Views.ForgotPasswordWindow().ShowDialog();
+            new Views.ForgotPasswordWindow().Show();
         }
 
         private void OpenRegister()
