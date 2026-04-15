@@ -2,6 +2,7 @@ package com.smartest.backend.controller;
 
 import java.util.List;
 
+import com.smartest.backend.dto.response.ExamenResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -55,5 +56,24 @@ public class QuizController {
     public ResponseEntity<MessageResponse> deleteQuiz(@PathVariable Long id) {
         quizService.deleteQuiz(id);
         return ResponseEntity.ok(new MessageResponse("Quiz supprimé avec succès", true, 200));
+    }
+    /**
+     * POST /api/quizs/{quizId}/questions/{questionId} - Ajouter une question à un quiz
+     */
+    @PostMapping("/{quizId}/questions/{questionId}")
+    public ResponseEntity<QuizResponse> addQuestionToQuiz(
+            @PathVariable Long quizId,
+            @PathVariable Long questionId) {
+        return ResponseEntity.ok(quizService.addQuestionToQuiz(quizId, questionId));
+    }
+
+    /**
+     * DELETE /api/quizs/{quizId}/questions/{questionId} - Supprimer une question d'un quiz
+     */
+    @DeleteMapping("/{quizId}/questions/{questionId}")
+    public ResponseEntity<QuizResponse> removeQuestionFromQuiz(
+            @PathVariable Long quizId,
+            @PathVariable Long questionId) {
+        return ResponseEntity.ok(quizService.removeQuestionFromQuiz(quizId, questionId));
     }
 }
