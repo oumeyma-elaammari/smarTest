@@ -31,3 +31,7 @@ C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\refint
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.pdb
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.genruntimeconfig.cache
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\ref\smartest-desktop.dll
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\Emailverificationwindow.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\Resetpasswordwindow.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\Resetpasswordwindow.baml
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\Emailverificationwindow.baml

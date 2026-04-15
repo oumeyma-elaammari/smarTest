@@ -6,8 +6,8 @@ import Register from './pages/Register'
 import EmailSent from './pages/EmailSent'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
+import EmailVerification from './pages/EmailVerification'
 
-// Dashboard temporaire
 function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <>
@@ -31,18 +31,18 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/email-sent" element={<EmailSent />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+
+                <Route path="/verify-email" element={<EmailVerification />} />
+
                 <Route path="/dashboard" element={
                     <PrivateRoute>
                         <Dashboard />
                     </PrivateRoute>
                 } />
-
-                <Route path="/register" element={<Register />} />
-                <Route path="/email-sent" element={<EmailSent />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/reset-password" element={<ResetPassword />} />
-
-
             </Routes>
         </BrowserRouter>
     )

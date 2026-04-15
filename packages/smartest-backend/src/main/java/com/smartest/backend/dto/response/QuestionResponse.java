@@ -10,8 +10,8 @@ public class QuestionResponse {
 
     private Long id;
     private String enonce;
-    private TypeQuestion type;
-    private Difficulte difficulte;
+    private String type;
+    private String difficulte;
 
     private List<ReponseResponse> reponses;
 }
