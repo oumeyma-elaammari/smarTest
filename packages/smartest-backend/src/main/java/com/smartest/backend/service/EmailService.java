@@ -18,7 +18,6 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String toEmail, String token, String role) {
-        // ↑ role pour personnaliser le lien
         String link = "http://localhost:8081/auth/verify-email?token=" + token + "&role=" + role;
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -33,26 +32,40 @@ public class EmailService {
                         "Ce lien expire dans 24h.\n\n" +
                         "L'équipe SmarTest"
         );
-
         mailSender.send(message);
     }
 
-
-    public void sendResetPasswordEmail(String toEmail, String token) {
-        String link = "http://localhost:5173/reset-password?token=" + token;
+    // ✅ Méthode avec role pour différencier prof/étudiant
+    public void sendResetPasswordEmail(String toEmail, String token, String role) {
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
         message.setTo(toEmail);
         message.setSubject("SmarTest — Réinitialisation de votre mot de passe");
-        message.setText(
-                "Bonjour,\n\n" +
-                        "Vous avez demandé à réinitialiser votre mot de passe.\n\n" +
-                        "Cliquez sur le lien ci-dessous (valable 15 minutes) :\n\n" +
-                        link + "\n\n" +
-                        "Si vous n'avez pas fait cette demande, ignorez cet email.\n\n" +
-                        "L'équipe SmarTest"
-        );
+
+        if ("PROFESSEUR".equals(role)) {
+            message.setText(
+                    "Bonjour,\n\n" +
+                            "Vous avez demandé à réinitialiser votre mot de passe.\n\n" +
+                            "Votre code de réinitialisation (valable 15 minutes) :\n\n" +
+                            "━━━━━━━━━━━━━━━━━━━━━━\n" +
+                            token + "\n" +
+                            "━━━━━━━━━━━━━━━━━━━━━━\n\n" +
+                            "Copiez ce code dans l'application SmarTest Desktop.\n\n" +
+                            "Si vous n'avez pas fait cette demande, ignorez cet email.\n\n" +
+                            "L'équipe SmarTest"
+            );
+        } else {
+            String link = "http://localhost:5173/reset-password?token=" + token;
+            message.setText(
+                    "Bonjour,\n\n" +
+                            "Vous avez demandé à réinitialiser votre mot de passe.\n\n" +
+                            "Cliquez sur le lien ci-dessous (valable 15 minutes) :\n\n" +
+                            link + "\n\n" +
+                            "Si vous n'avez pas fait cette demande, ignorez cet email.\n\n" +
+                            "L'équipe SmarTest"
+            );
+        }
 
         mailSender.send(message);
     }

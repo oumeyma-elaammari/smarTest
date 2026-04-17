@@ -3,7 +3,6 @@ using smartest_desktop.Services;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using static System.Net.Mime.MediaTypeNames;
 using WpfApp = System.Windows.Application;  
 using WpfWindow = System.Windows.Window;
 
@@ -113,7 +112,7 @@ namespace smartest_desktop.ViewModels
 
         private void OpenForgotPassword()
         {
-            new Views.ForgotPasswordWindow().ShowDialog();
+            new Views.ForgotPasswordWindow().Show();
         }
 
         private void OpenRegister()

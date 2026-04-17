@@ -44,7 +44,8 @@ public class AuthService {
 
         if (professeurRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
-
+        if (etudiantRepository.existsByEmail(request.getEmail()))
+            throw new EmailAlreadyUsedException(request.getEmail());
         String token = UUID.randomUUID().toString();
 
         Professeur professeur = new Professeur();
@@ -136,7 +137,7 @@ public class AuthService {
             etudiant.get().setResetPasswordToken(token);
             etudiant.get().setResetPasswordExpiry(LocalDateTime.now().plusMinutes(15));
             etudiantRepository.save(etudiant.get());
-            emailService.sendResetPasswordEmail(email, token);
+            emailService.sendResetPasswordEmail(email, token, "ETUDIANT");
         }
     }
 
@@ -149,7 +150,7 @@ public class AuthService {
             prof.get().setResetPasswordToken(token);
             prof.get().setResetPasswordExpiry(LocalDateTime.now().plusMinutes(15));
             professeurRepository.save(prof.get());
-            emailService.sendResetPasswordEmail(email, token);
+            emailService.sendResetPasswordEmail(email, token, "PROFESSEUR");
         }
     }
 
