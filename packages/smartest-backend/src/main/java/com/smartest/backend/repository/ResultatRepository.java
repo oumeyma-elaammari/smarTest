@@ -11,34 +11,23 @@ import java.util.Optional;
 @Repository
 public interface ResultatRepository extends JpaRepository<Resultat, Long> {
 
-    // Trouver les résultats d'un étudiant
     List<Resultat> findByEtudiantId(Long etudiantId);
 
-    // Trouver les résultats d'une session d'examen
-    List<Resultat> findBySessionExamenId(Long sessionExamenId);
+    List<Resultat> findBySessionExamenId(Long sessionId);
 
-    // Trouver le meilleur résultat d'un étudiant pour un examen
-    @Query("SELECT r FROM Resultat r WHERE r.etudiant.id = :etudiantId AND r.sessionExamen.examen.id = :examenId ORDER BY r.note DESC")
-    Optional<Resultat> findBestResultByEtudiantAndExamen(@Param("etudiantId") Long etudiantId, @Param("examenId") Long examenId);
+    List<Resultat> findByEtudiantIdAndSessionExamenIsNull(Long etudiantId);
 
-    // Trouver le dernier résultat d'un étudiant pour un examen
-   // @Query("SELECT r FROM Resultat r WHERE r.etudiant.id = :etudiantId AND r.sessionExamen.examen.id = :examenId ORDER BY r.dateObtention DESC")
-   // Optional<Resultat> findLastResultByEtudiantAndExamen(@Param("etudiantId") Long etudiantId, @Param("examenId") Long examenId);
+    List<Resultat> findByEtudiantIdAndSessionExamenIsNotNull(Long etudiantId);
 
-    // Moyenne des notes pour un examen
-    @Query("SELECT COALESCE(AVG(r.note), 0) FROM Resultat r WHERE r.sessionExamen.examen.id = :examenId")
-    Double findAverageNoteByExamen(@Param("examenId") Long examenId);
+    boolean existsByEtudiantIdAndQuestionIdAndSessionExamenId(
+            Long etudiantId, Long questionId, Long sessionId
+    );
 
-    // Statistiques par examen
-    @Query("SELECT COALESCE(MAX(r.note), 0), COALESCE(MIN(r.note), 0), COALESCE(AVG(r.note), 0), COUNT(r) FROM Resultat r WHERE r.sessionExamen.examen.id = :examenId")
-    Object[] findStatsByExamen(@Param("examenId") Long examenId);
+    boolean existsByEtudiantIdAndQuestionIdAndSessionExamenIsNull(
+            Long etudiantId, Long questionId
+    );
 
-    // Vérifier si un étudiant a déjà passé un examen
-    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END FROM Resultat r WHERE r.etudiant.id = :etudiantId AND r.sessionExamen.examen.id = :examenId")
-    boolean existsByEtudiantIdAndSessionExamenExamenId(@Param("etudiantId") Long etudiantId, @Param("examenId") Long examenId);
+    List<Resultat> findByEtudiantIdAndSessionExamenId(Long etudiantId, Long sessionId);
 
-    // Supprimer tous les résultats d'un examen
-    void deleteBySessionExamenExamenId(Long examenId);
 
-    Optional<Resultat> findByEtudiantIdAndQuizId(Long etudiantId, Long quizId);
 }

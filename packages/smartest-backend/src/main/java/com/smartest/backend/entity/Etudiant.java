@@ -48,4 +48,7 @@ public class Etudiant {
     @ToString.Exclude
     @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL)
     private List<Resultat> resultats = new ArrayList<>();
+
+
+
 }
