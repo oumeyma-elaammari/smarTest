@@ -12,7 +12,6 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@stomp/stompjs": "^7.3.0",
-    "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.14.0",
     "lucide-react": "^1.7.0",
     "react": "^19.2.4",
@@ -27,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
