@@ -1,29 +1,37 @@
 package com.smartest.backend.dto.request;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuizRequest {
 
-    @NotBlank(message = "Le titre est obligatoire")
+    @NotBlank(message = "Le titre du quiz est obligatoire")
     private String titre;
 
-    @NotNull(message = "La durée est obligatoire")
+    @NotNull(message = "La durée du quiz est obligatoire")
     @Min(value = 1, message = "La durée doit être au moins 1 minute")
     private Integer duree;
 
-    @NotNull(message = "L'ID du professeur est obligatoire")
     private Long professeurId;
 
     private Long coursId;
 
-    private List<Long> questionsIds;
+    private String description;
+    private List<Long> questionsIds;  // ← Champ
+
+
+    public Iterable<Long> getQuestionsIds() {
+        return questionsIds;
+    }
 }

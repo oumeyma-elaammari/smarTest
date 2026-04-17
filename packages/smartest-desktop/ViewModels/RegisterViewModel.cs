@@ -1,7 +1,8 @@
-using System.Threading.Tasks;
-using System.Windows.Input;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
@@ -16,7 +17,7 @@ namespace smartest_desktop.ViewModels
         private string _errorMessage;
         private string _successMessage;
         private bool _isLoading;
-
+        public ICommand BackToLoginCommand { get; }
         public string Nom
         {
             get => _nom;
@@ -82,29 +83,51 @@ namespace smartest_desktop.ViewModels
             RegisterCommand = new RelayCommand(
                 async _ => await ExecuteRegister(),
                 _ => IsNotLoading);
+            BackToLoginCommand = new RelayCommand(_ => OpenLogin());
+
         }
+
+
+        private void OpenLogin()
+        {
+            var login = new Views.LoginWindow();
+            login.Show();
+
+            foreach (System.Windows.Window w in WpfApp.Current.Windows)
+            {
+                if (w is Views.RegisterWindow)
+                {
+                    w.Close();
+                    break;
+                }
+            }
+        }
+
 
         private async Task ExecuteRegister()
         {
-            // ── Validation ─────────────────────────────
+            // Validations
             if (string.IsNullOrWhiteSpace(Nom) ||
                 string.IsNullOrWhiteSpace(Email) ||
                 string.IsNullOrWhiteSpace(Password) ||
                 string.IsNullOrWhiteSpace(ConfirmPassword))
             {
                 ErrorMessage = "Veuillez remplir tous les champs";
+                SuccessMessage = null;
                 return;
             }
 
             if (Password != ConfirmPassword)
             {
                 ErrorMessage = "Les mots de passe ne correspondent pas";
+                SuccessMessage = null;
                 return;
             }
 
             if (Password.Length < 8)
             {
                 ErrorMessage = "Le mot de passe doit contenir au moins 8 caractères";
+                SuccessMessage = null;
                 return;
             }
 
@@ -126,10 +149,21 @@ namespace smartest_desktop.ViewModels
                 return;
             }
 
-            // ✅ Succès
-            SuccessMessage =
-                "Inscription réussie !\n" +
-                "Vérifiez votre email pour confirmer votre compte.";
+            // ✅ Succès — ouvrir la fenêtre de vérification email
+            var emailToPass = Email.Trim().ToLower();
+
+            // Fermer RegisterWindow et ouvrir EmailVerificationWindow
+            var verifyWindow = new Views.EmailVerificationWindow(emailToPass);
+            verifyWindow.Show();
+
+            foreach (System.Windows.Window w in WpfApp.Current.Windows)
+            {
+                if (w is Views.RegisterWindow)
+                {
+                    w.Close();
+                    break;
+                }
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.smartest.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartest.backend.dto.response.QuestionResponse;
 import com.smartest.backend.entity.Question;
 import com.smartest.backend.entity.enumeration.Difficulte;
 import com.smartest.backend.entity.enumeration.TypeQuestion;
@@ -57,7 +58,7 @@ class QuestionControllerTest {
     @Test
     void testGetByType() throws Exception {
         when(questionService.getByType(TypeQuestion.QCM))
-                .thenReturn(List.of(new Question()));
+                .thenReturn(List.of(new QuestionResponse()));
 
         mockMvc.perform(get("/api/questions/type")
                         .param("type", "QCM"))
@@ -91,10 +92,10 @@ class QuestionControllerTest {
     @Test
     void testUpdateQuestion() throws Exception {
 
-        Question q = new Question();
+        QuestionResponse q = new QuestionResponse();
         q.setEnonce("Question modifiée");
-        q.setType(TypeQuestion.QCM);
-        q.setDifficulte(Difficulte.MOYEN);
+        q.setType(String.valueOf(TypeQuestion.QCM));
+        q.setDifficulte(String.valueOf(Difficulte.MOYEN));
 
         when(questionService.updateQuestion(
                 org.mockito.ArgumentMatchers.eq(1L),

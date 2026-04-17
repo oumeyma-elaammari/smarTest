@@ -1,6 +1,8 @@
 
 package com.smartest.backend.service;
 
+import com.smartest.backend.dto.request.QuestionRequest;
+import com.smartest.backend.dto.response.QuestionResponse;
 import com.smartest.backend.entity.*;
 import com.smartest.backend.entity.enumeration.Difficulte;
 import com.smartest.backend.entity.enumeration.TypeQuestion;
@@ -29,6 +31,8 @@ public class QuestionServiceTest {
 
     @InjectMocks
     private QuestionService questionService;
+    private Question question;
+
 
     @BeforeEach
     void setup() {
@@ -76,7 +80,7 @@ public class QuestionServiceTest {
         when(questionRepository.findByType(TypeQuestion.QCM))
                 .thenReturn(List.of(new Question()));
 
-        List<Question> result = questionService.getByType(TypeQuestion.QCM);
+        List<QuestionResponse> result = questionService.getByType(TypeQuestion.QCM);
 
         assertFalse(result.isEmpty());
     }
@@ -85,47 +89,55 @@ public class QuestionServiceTest {
     // TEST UPDATE
     @Test
     void testUpdateQuestion() {
+        // Arrange
+        Question existingQuestion = new Question();
+        existingQuestion.setId(1L);
+        existingQuestion.setEnonce("Ancienne question");
+        existingQuestion.setType(TypeQuestion.valueOf(String.valueOf(TypeQuestion.QCM)));
+        existingQuestion.setDifficulte(Difficulte.valueOf(String.valueOf(Difficulte.MOYEN)));
 
-        // ancienne question en base
-        Question existing = new Question();
-        existing.setId(1L);
-        existing.setEnonce("Ancienne question");
+        QuestionRequest request = new QuestionRequest();
+        request.setEnonce("Nouvelle question");
+        request.setType("QCM");  // ← String
+        request.setDifficulte("DIFFICILE");
 
-        // nouvelle donnée (update)
-        Question updated = new Question();
-        updated.setEnonce("Nouvelle question");
-        updated.setType(TypeQuestion.QCM);
-        updated.setDifficulte(Difficulte.FACILE);
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(existingQuestion));
+        when(questionRepository.save(any(Question.class))).thenReturn(existingQuestion);
 
-        //  cours
-        Cours cours = new Cours();
-        cours.setId(2L);
+        // Act
+        QuestionResponse result = questionService.updateQuestion(1L, request, request.getCoursId());
 
-        when(questionRepository.findById(1L))
-                .thenReturn(Optional.of(existing));
-
-        when(coursRepository.findById(2L))
-                .thenReturn(Optional.of(cours));
-
-        when(questionRepository.save(any()))
-                .thenReturn(existing);
-
-        Question result = questionService.updateQuestion(1L, updated, 2L);
-
-        assertNotNull(result);
+        // Assert
         assertEquals("Nouvelle question", result.getEnonce());
-        assertEquals(TypeQuestion.QCM, result.getType());
-        assertEquals(Difficulte.FACILE, result.getDifficulte());
+
+        // ✅ CORRIGÉ : Comparer avec name() de l'Enum ou directement en String
+        assertEquals("QCM", result.getType());  // ← Compare String avec String
+        assertEquals("DIFFICILE", result.getDifficulte());
     }
 
     //  TEST DELETE
     @Test
-    void testDelete() {
+    void testDelete_Success() {
+        // Arrange
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(question));
+        doNothing().when(questionRepository).delete(question);
 
-        doNothing().when(questionRepository).deleteById(1L);
-
+        // Act
         questionService.delete(1L);
 
-        verify(questionRepository, times(1)).deleteById(1L);
+        // Assert
+        verify(questionRepository, times(1)).findById(1L);
+        verify(questionRepository, times(1)).delete(question);
+    }
+
+    @Test
+    void testDelete_QuestionNotFound() {
+        // Arrange
+        when(questionRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> questionService.delete(99L));
+        verify(questionRepository, times(1)).findById(99L);
+        verify(questionRepository, never()).delete(any());
     }
 }

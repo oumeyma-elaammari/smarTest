@@ -9,7 +9,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "professeur")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Professeur {
 
     @Id

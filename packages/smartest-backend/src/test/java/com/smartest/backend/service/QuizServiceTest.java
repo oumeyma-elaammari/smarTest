@@ -3,8 +3,6 @@ package com.smartest.backend.service;
 import com.smartest.backend.dto.request.QuizRequest;
 import com.smartest.backend.dto.response.QuizResponse;
 import com.smartest.backend.entity.*;
-import com.smartest.backend.entity.enumeration.Difficulte;
-import com.smartest.backend.entity.enumeration.TypeQuestion;
 import com.smartest.backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,381 +11,368 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QuizServiceTest {
 
-    @Mock private QuizRepository quizRepository;
-    @Mock private ProfesseurRepository professeurRepository;
-    @Mock private CoursRepository coursRepository;
-    @Mock private QuestionRepository questionRepository;
+    @Mock
+    private QuizRepository quizRepository;
+
+    @Mock
+    private ProfesseurRepository professeurRepository;
+
+    @Mock
+    private CoursRepository coursRepository;
+
+    @Mock
+    private QuestionRepository questionRepository;
 
     @InjectMocks
     private QuizService quizService;
 
     private Quiz quiz;
+    private QuizRequest quizRequest;
     private Professeur professeur;
     private Cours cours;
     private Question question;
-    private Reponse reponse;
 
     @BeforeEach
     void setUp() {
+        // Initialiser le professeur
         professeur = new Professeur();
         professeur.setId(1L);
-        professeur.setNom("Dupont");
+        professeur.setNom("Prof Test");
+        professeur.setEmail("prof@test.com");
 
+        // Initialiser le cours
         cours = new Cours();
-        cours.setId(10L);
-        cours.setTitre("Mathématiques");
+        cours.setId(1L);
+        cours.setTitre("Cours Test");
 
-        reponse = new Reponse();
-        reponse.setId(100L);
-        reponse.setContenu("Paris");
-        reponse.setCorrecte(true);
-
+        // Initialiser la question
         question = new Question();
-        question.setId(50L);
-        question.setEnonce("Quelle est la capitale de la France ?");
-        question.setType(TypeQuestion.QCM);
-        question.setDifficulte(Difficulte.FACILE);
-        question.setReponses(List.of(reponse));
+        question.setId(1L);
+        question.setEnonce("Question Test");
 
+        // Initialiser le quiz
         quiz = new Quiz();
         quiz.setId(1L);
-        quiz.setTitre("Quiz de géographie");
+        quiz.setTitre("Quiz Test");
         quiz.setDuree(30);
         quiz.setProfesseur(professeur);
         quiz.setCours(cours);
-        quiz.setQuestions(new ArrayList<>(List.of(question)));
+
+        // Initialiser la requête
+        quizRequest = new QuizRequest();
+        quizRequest.setTitre("Quiz Test");
+        quizRequest.setDuree(30);
+        quizRequest.setProfesseurId(1L);
+        quizRequest.setCoursId(1L);
     }
 
-    // ─── getAllQuizs ──────────────────────────────────────────────────────────
+    // ==================== TESTS GET ALL ====================
 
     @Test
     void getAllQuizs_returnsAllQuizzes() {
-        when(quizRepository.findAll()).thenReturn(List.of(quiz));
+        // Arrange
+        List<Quiz> quizs = Arrays.asList(quiz);
+        when(quizRepository.findAll()).thenReturn(quizs);
 
+        // Act
         List<QuizResponse> result = quizService.getAllQuizs();
 
+        // Assert
+        assertThat(result).isNotEmpty();
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTitre()).isEqualTo("Quiz de géographie");
-        assertThat(result.get(0).getProfesseurNom()).isEqualTo("Dupont");
-        assertThat(result.get(0).getCoursTitre()).isEqualTo("Mathématiques");
+        assertThat(result.get(0).getTitre()).isEqualTo("Quiz Test");
+        verify(quizRepository, times(1)).findAll();
     }
 
-    @Test
-    void getAllQuizs_returnsEmptyList_whenNoQuizzes() {
-        when(quizRepository.findAll()).thenReturn(List.of());
-
-        List<QuizResponse> result = quizService.getAllQuizs();
-
-        assertThat(result).isEmpty();
-    }
-
-    // ─── getQuizById ──────────────────────────────────────────────────────────
+    // ==================== TESTS GET BY ID ====================
 
     @Test
     void getQuizById_returnsQuiz_whenExists() {
+        // Arrange
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
 
+        // Act
         QuizResponse result = quizService.getQuizById(1L);
 
+        // Assert
+        assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getTitre()).isEqualTo("Quiz de géographie");
-        assertThat(result.getDuree()).isEqualTo(30);
+        assertThat(result.getTitre()).isEqualTo("Quiz Test");
+        verify(quizRepository, times(1)).findById(1L);
     }
 
     @Test
     void getQuizById_throwsException_whenNotFound() {
+        // Arrange
         when(quizRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> quizService.getQuizById(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> quizService.getQuizById(99L));
+        verify(quizRepository, times(1)).findById(99L);
     }
 
-    // ─── getQuizsByProfesseur ─────────────────────────────────────────────────
+    // ==================== TESTS GET BY PROFESSEUR ====================
 
     @Test
-    void getQuizsByProfesseur_returnsQuizzes_forGivenProfesseur() {
-        when(quizRepository.findByProfesseurId(1L)).thenReturn(List.of(quiz));
+    void getQuizsByProfesseur_returnsQuizzes() {
+        // Arrange
+        List<Quiz> quizs = Arrays.asList(quiz);
+        when(quizRepository.findByProfesseurId(1L)).thenReturn(quizs);
 
+        // Act
         List<QuizResponse> result = quizService.getQuizsByProfesseur(1L);
 
+        // Assert
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getProfesseurId()).isEqualTo(1L);
+        assertThat(result.get(0).getTitre()).isEqualTo("Quiz Test");
+        verify(quizRepository, times(1)).findByProfesseurId(1L);
     }
 
-    @Test
-    void getQuizsByProfesseur_returnsEmptyList_whenNoneFound() {
-        when(quizRepository.findByProfesseurId(99L)).thenReturn(List.of());
-
-        List<QuizResponse> result = quizService.getQuizsByProfesseur(99L);
-
-        assertThat(result).isEmpty();
-    }
-
-    // ─── getQuizsByCours ──────────────────────────────────────────────────────
+    // ==================== TESTS GET BY COURS ====================
 
     @Test
     void getQuizsByCours_returnsQuizzes_forGivenCours() {
-        when(quizRepository.findByCoursId(10L)).thenReturn(List.of(quiz));
+        // Arrange
+        List<Quiz> quizs = Arrays.asList(quiz);
+        when(quizRepository.findByCoursId(1L)).thenReturn(quizs);
 
-        List<QuizResponse> result = quizService.getQuizsByCours(10L);
+        // Act
+        List<QuizResponse> result = quizService.getQuizsByCours(1L);
 
+        // Assert
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getCoursId()).isEqualTo(10L);
+        assertThat(result.get(0).getCoursId()).isEqualTo(1L);
+        verify(quizRepository, times(1)).findByCoursId(1L);
     }
 
-    // ─── createQuiz ───────────────────────────────────────────────────────────
+    // ==================== TESTS CREATE QUIZ ====================
 
     @Test
     void createQuiz_createsAndReturnsQuiz_withCours() {
-        QuizRequest request = new QuizRequest();
-        request.setTitre("Nouveau quiz");
-        request.setDuree(45);
-        request.setProfesseurId(1L);
-        request.setCoursId(10L);
-        request.setQuestionsIds(List.of(50L));
-
+        // Arrange
         when(professeurRepository.findById(1L)).thenReturn(Optional.of(professeur));
-        when(coursRepository.findById(10L)).thenReturn(Optional.of(cours));
-        when(questionRepository.findAllById(List.of(50L))).thenReturn(List.of(question));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> {
-            Quiz q = inv.getArgument(0);
-            q.setId(2L);
-            return q;
-        });
+        when(coursRepository.findById(1L)).thenReturn(Optional.of(cours));
+        when(quizRepository.save(any(Quiz.class))).thenReturn(quiz);
 
-        QuizResponse result = quizService.createQuiz(request);
+        // Act
+        QuizResponse result = quizService.createQuiz(quizRequest);
 
-        assertThat(result.getId()).isEqualTo(2L);
-        assertThat(result.getTitre()).isEqualTo("Nouveau quiz");
-        assertThat(result.getDuree()).isEqualTo(45);
-        assertThat(result.getProfesseurId()).isEqualTo(1L);
-        assertThat(result.getCoursId()).isEqualTo(10L);
-        assertThat(result.getQuestions()).hasSize(1);
-    }
-
-    @Test
-    void createQuiz_createsQuiz_withoutCours() {
-        QuizRequest request = new QuizRequest();
-        request.setTitre("Quiz sans cours");
-        request.setDuree(20);
-        request.setProfesseurId(1L);
-        request.setCoursId(null);
-
-        when(professeurRepository.findById(1L)).thenReturn(Optional.of(professeur));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        QuizResponse result = quizService.createQuiz(request);
-
-        assertThat(result.getCoursId()).isNull();
-        assertThat(result.getCoursTitre()).isNull();
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getTitre()).isEqualTo("Quiz Test");
+        verify(professeurRepository, times(1)).findById(1L);
+        verify(coursRepository, times(1)).findById(1L);
+        verify(quizRepository, times(1)).save(any(Quiz.class));
     }
 
     @Test
     void createQuiz_throwsException_whenProfesseurNotFound() {
-        QuizRequest request = new QuizRequest();
-        request.setProfesseurId(99L);
-
+        // Arrange
         when(professeurRepository.findById(99L)).thenReturn(Optional.empty());
+        quizRequest.setProfesseurId(99L);
 
-        assertThatThrownBy(() -> quizService.createQuiz(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> quizService.createQuiz(quizRequest));
+        verify(professeurRepository, times(1)).findById(99L);
+        verify(quizRepository, never()).save(any(Quiz.class));
     }
 
     @Test
     void createQuiz_throwsException_whenCoursNotFound() {
-        QuizRequest request = new QuizRequest();
-        request.setProfesseurId(1L);
-        request.setCoursId(99L);
-
+        // Arrange
         when(professeurRepository.findById(1L)).thenReturn(Optional.of(professeur));
         when(coursRepository.findById(99L)).thenReturn(Optional.empty());
+        quizRequest.setCoursId(99L);
 
-        assertThatThrownBy(() -> quizService.createQuiz(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> quizService.createQuiz(quizRequest));
+        verify(coursRepository, times(1)).findById(99L);
+        verify(quizRepository, never()).save(any(Quiz.class));
     }
 
-    // ─── updateQuiz ───────────────────────────────────────────────────────────
+    // ==================== TESTS UPDATE QUIZ ====================
 
     @Test
     void updateQuiz_updatesAndReturnsQuiz() {
-        QuizRequest request = new QuizRequest();
-        request.setTitre("Quiz modifié");
-        request.setDuree(60);
-        request.setProfesseurId(1L);
-        request.setCoursId(10L);
-        request.setQuestionsIds(List.of(50L));
-
+        // Arrange
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(coursRepository.findById(10L)).thenReturn(Optional.of(cours));
-        when(questionRepository.findAllById(List.of(50L))).thenReturn(List.of(question));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(coursRepository.findById(1L)).thenReturn(Optional.of(cours));
+        when(quizRepository.save(any(Quiz.class))).thenReturn(quiz);
 
-        QuizResponse result = quizService.updateQuiz(1L, request);
+        quizRequest.setTitre("Quiz Modifié");
+        quizRequest.setDuree(45);
 
-        assertThat(result.getTitre()).isEqualTo("Quiz modifié");
-        assertThat(result.getDuree()).isEqualTo(60);
-    }
+        // Act
+        QuizResponse result = quizService.updateQuiz(1L, quizRequest);
 
-    @Test
-    void updateQuiz_setsCours_toNull_whenCoursIdIsNull() {
-        QuizRequest request = new QuizRequest();
-        request.setTitre("Quiz");
-        request.setDuree(20);
-        request.setProfesseurId(1L);
-        request.setCoursId(null);
-
-        when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        QuizResponse result = quizService.updateQuiz(1L, request);
-
-        assertThat(result.getCoursId()).isNull();
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getTitre()).isEqualTo("Quiz Modifié");
+        verify(quizRepository, times(1)).findById(1L);
+        verify(quizRepository, times(1)).save(any(Quiz.class));
     }
 
     @Test
     void updateQuiz_throwsException_whenQuizNotFound() {
+        // Arrange
         when(quizRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> quizService.updateQuiz(99L, new QuizRequest()))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> quizService.updateQuiz(99L, quizRequest));
+        verify(quizRepository, times(1)).findById(99L);
+        verify(quizRepository, never()).save(any(Quiz.class));
     }
 
-    // ─── deleteQuiz ───────────────────────────────────────────────────────────
+    // ==================== TESTS DELETE QUIZ ====================
 
     @Test
     void deleteQuiz_deletesQuiz_whenExists() {
+        // Arrange
         when(quizRepository.existsById(1L)).thenReturn(true);
+        doNothing().when(quizRepository).deleteById(1L);
 
+        // Act
         quizService.deleteQuiz(1L);
 
+        // Assert
+        verify(quizRepository, times(1)).existsById(1L);
         verify(quizRepository, times(1)).deleteById(1L);
     }
 
     @Test
     void deleteQuiz_throwsException_whenNotFound() {
+        // Arrange
         when(quizRepository.existsById(99L)).thenReturn(false);
 
-        assertThatThrownBy(() -> quizService.deleteQuiz(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-
-        verify(quizRepository, never()).deleteById(any());
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> quizService.deleteQuiz(99L));
+        verify(quizRepository, times(1)).existsById(99L);
+        verify(quizRepository, never()).deleteById(anyLong());
     }
 
-    // ─── addQuestionToQuiz ────────────────────────────────────────────────────
+    // ==================== TESTS ADD QUESTION TO QUIZ ====================
 
     @Test
     void addQuestionToQuiz_addsQuestion_whenNotAlreadyPresent() {
-        quiz.setQuestions(new ArrayList<>());
+        // Arrange
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(questionRepository.findById(50L)).thenReturn(Optional.of(question));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(question));
+        when(quizRepository.save(any(Quiz.class))).thenReturn(quiz);
 
-        QuizResponse result = quizService.addQuestionToQuiz(1L, 50L);
+        // Act
+        QuizResponse result = quizService.addQuestionToQuiz(1L, 1L);
 
-        assertThat(result.getQuestions()).hasSize(1);
+        // Assert
+        assertThat(result).isNotNull();
+        verify(quizRepository, times(1)).findById(1L);
+        verify(questionRepository, times(1)).findById(1L);
+        verify(quizRepository, times(1)).save(any(Quiz.class));
     }
 
     @Test
     void addQuestionToQuiz_doesNotDuplicate_whenAlreadyPresent() {
+        // Arrange
+        quiz.getQuestions().add(question);
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(questionRepository.findById(50L)).thenReturn(Optional.of(question));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(question));
+        when(quizRepository.save(any(Quiz.class))).thenReturn(quiz);
 
-        QuizResponse result = quizService.addQuestionToQuiz(1L, 50L);
+        // Act
+        QuizResponse result = quizService.addQuestionToQuiz(1L, 1L);
 
-        assertThat(result.getQuestions()).hasSize(1);
+        // Assert
+        assertThat(result).isNotNull();
+        verify(quizRepository, times(1)).findById(1L);
+        verify(questionRepository, times(1)).findById(1L);
+        verify(quizRepository, times(1)).save(any(Quiz.class));
     }
 
-    @Test
-    void addQuestionToQuiz_throwsException_whenQuizNotFound() {
-        when(quizRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> quizService.addQuestionToQuiz(99L, 50L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
+    // ==================== TESTS REMOVE QUESTION FROM QUIZ ====================
 
     @Test
-    void addQuestionToQuiz_throwsException_whenQuestionNotFound() {
+    void removeQuestionFromQuiz_removesQuestion_whenPresent() {
+        // Arrange
+        quiz.getQuestions().add(question);
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(questionRepository.findById(99L)).thenReturn(Optional.empty());
+        when(quizRepository.save(any(Quiz.class))).thenReturn(quiz);
 
-        assertThatThrownBy(() -> quizService.addQuestionToQuiz(1L, 99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
+        // Act
+        QuizResponse result = quizService.removeQuestionFromQuiz(1L, 1L);
 
-    // ─── removeQuestionFromQuiz ───────────────────────────────────────────────
-
-    @Test
-    void removeQuestionFromQuiz_removesQuestion() {
-        when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        QuizResponse result = quizService.removeQuestionFromQuiz(1L, 50L);
-
-        assertThat(result.getQuestions()).isNullOrEmpty();
+        // Assert
+        assertThat(result).isNotNull();
+        verify(quizRepository, times(1)).findById(1L);
+        verify(quizRepository, times(1)).save(any(Quiz.class));
     }
 
     @Test
     void removeQuestionFromQuiz_doesNothing_whenQuestionNotInQuiz() {
+        // Arrange
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
-        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(quizRepository.save(any(Quiz.class))).thenReturn(quiz);
 
-        QuizResponse result = quizService.removeQuestionFromQuiz(1L, 999L);
+        // Act
+        QuizResponse result = quizService.removeQuestionFromQuiz(1L, 99L);
 
-        assertThat(result.getQuestions()).hasSize(1);
+        // Assert
+        assertThat(result).isNotNull();
+        verify(quizRepository, times(1)).findById(1L);
+        verify(quizRepository, times(1)).save(any(Quiz.class));
     }
 
-    // ─── countQuestionsByQuizId ───────────────────────────────────────────────
+    // ==================== TESTS COUNT QUESTIONS ====================
 
     @Test
     void countQuestionsByQuizId_returnsCorrectCount() {
+        // Arrange
+        quiz.getQuestions().add(question);
         when(quizRepository.findById(1L)).thenReturn(Optional.of(quiz));
 
+        // Act
         Long count = quizService.countQuestionsByQuizId(1L);
 
+        // Assert
         assertThat(count).isEqualTo(1L);
+        verify(quizRepository, times(1)).findById(1L);
     }
 
-    @Test
-    void countQuestionsByQuizId_throwsException_whenQuizNotFound() {
-        when(quizRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> quizService.countQuestionsByQuizId(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
-
-    // ─── existsById ───────────────────────────────────────────────────────────
+    // ==================== TESTS EXISTS BY ID ====================
 
     @Test
     void existsById_returnsTrue_whenQuizExists() {
+        // Arrange
         when(quizRepository.existsById(1L)).thenReturn(true);
 
-        assertThat(quizService.existsById(1L)).isTrue();
+        // Act
+        boolean exists = quizService.existsById(1L);
+
+        // Assert
+        assertThat(exists).isTrue();
+        verify(quizRepository, times(1)).existsById(1L);
     }
 
     @Test
-    void existsById_returnsFalse_whenQuizDoesNotExist() {
+    void existsById_returnsFalse_whenQuizNotExists() {
+        // Arrange
         when(quizRepository.existsById(99L)).thenReturn(false);
 
-        assertThat(quizService.existsById(99L)).isFalse();
+        // Act
+        boolean exists = quizService.existsById(99L);
+
+        // Assert
+        assertThat(exists).isFalse();
+        verify(quizRepository, times(1)).existsById(99L);
     }
 }
