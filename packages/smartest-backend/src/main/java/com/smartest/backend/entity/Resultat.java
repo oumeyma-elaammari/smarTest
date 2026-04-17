@@ -19,9 +19,11 @@ public class Resultat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Float note;
+    private Double note;
 
     private Float score;
+
+    private String statut;
 
     @JsonIgnore
     @ToString.Exclude
@@ -38,10 +40,22 @@ public class Resultat {
     @Column(name = "date_obtention")
     private LocalDateTime dateObtention;
 
-    public Resultat(Float note, Float score, Etudiant etudiant, SessionExamen sessionExamen) {
+    @ManyToOne
+    @JoinColumn(name = "quiz_id")
+    private Quiz quiz;
+
+    public Resultat(Double note, Float score, Etudiant etudiant, SessionExamen sessionExamen) {
         this.note = note;
         this.score = score;
         this.etudiant = etudiant;
         this.sessionExamen = sessionExamen;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
+    }
+
+    public void setQuiz(Quiz quiz) {
+        this.quiz = quiz;
     }
 }

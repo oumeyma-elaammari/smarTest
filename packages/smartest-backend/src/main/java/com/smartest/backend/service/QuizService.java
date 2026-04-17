@@ -9,6 +9,8 @@ import com.smartest.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,33 +70,31 @@ public class QuizService {
      */
     @Transactional
     public QuizResponse createQuiz(QuizRequest request) {
-        // Vérifier l'existence du professeur
-        Professeur professeur = professeurRepository.findById(request.getProfesseurId())
-                .orElseThrow(() -> new RuntimeException("Professeur non trouvé avec l'id: " + request.getProfesseurId()));
 
-        // Créer le quiz
+        // 1. Vérifier que le professeur existe
+        Professeur professeur = professeurRepository.findById(request.getProfesseurId())
+                .orElseThrow(() -> new RuntimeException("Professeur non trouvé"));
+
+        // 2. Vérifier que le cours existe (si fourni)
+        Cours cours = null;
+        if (request.getCoursId() != null) {
+            cours = coursRepository.findById(request.getCoursId())
+                    .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
+        }
+
+        // 3. Créer le quiz
         Quiz quiz = new Quiz();
         quiz.setTitre(request.getTitre());
         quiz.setDuree(request.getDuree());
         quiz.setProfesseur(professeur);
+        quiz.setCours(cours);
 
-        // Associer le cours si présent
-        if (request.getCoursId() != null) {
-            Cours cours = coursRepository.findById(request.getCoursId())
-                    .orElseThrow(() -> new RuntimeException("Cours non trouvé avec l'id: " + request.getCoursId()));
-            quiz.setCours(cours);
-        }
-
-        // Ajouter les questions si présentes
-        if (request.getQuestionsIds() != null && !request.getQuestionsIds().isEmpty()) {
-            List<Question> questions = questionRepository.findAllById(request.getQuestionsIds());
-            quiz.setQuestions(questions);
-        }
-
+        // 4. Sauvegarder
         Quiz savedQuiz = quizRepository.save(quiz);
+
+        // 5. Convertir et retourner (NE DOIT PAS RETOURNER NULL)
         return convertToResponseDTO(savedQuiz);
     }
-
     /**
      * Mettre à jour un quiz existant
      */
@@ -238,12 +238,12 @@ public class QuizService {
 
         // Vérifier si type n'est pas null avant d'appeler name()
         if (question.getType() != null) {
-            dto.setType(question.getType());
+            dto.setType(String.valueOf(question.getType()));
         }
 
         // Vérifier si difficulte n'est pas null avant d'appeler name()
         if (question.getDifficulte() != null) {
-            dto.setDifficulte(question.getDifficulte());
+            dto.setDifficulte(String.valueOf(question.getDifficulte()));
         }
 
         // Convertir les réponses
@@ -266,5 +266,21 @@ public class QuizService {
         dto.setContenu(reponse.getContenu());
         dto.setCorrecte(reponse.getCorrecte());
         return dto;
+    }
+    @Transactional
+    public QuizResponse addMultipleQuestionsToQuiz(Long quizId, List<Long> questionsIds) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'id: " + quizId));
+
+        List<Question> questions = questionRepository.findAllById(questionsIds);
+
+        for (Question question : questions) {
+            if (!quiz.getQuestions().contains(question)) {
+                quiz.getQuestions().add(question);
+            }
+        }
+
+        Quiz updatedQuiz = quizRepository.save(quiz);
+        return convertToResponseDTO(updatedQuiz);
     }
 }

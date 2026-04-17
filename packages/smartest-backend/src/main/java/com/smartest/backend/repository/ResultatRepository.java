@@ -39,4 +39,6 @@ public interface ResultatRepository extends JpaRepository<Resultat, Long> {
 
     // Supprimer tous les résultats d'un examen
     void deleteBySessionExamenExamenId(Long examenId);
+
+    Optional<Resultat> findByEtudiantIdAndQuizId(Long etudiantId, Long quizId);
 }
