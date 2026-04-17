@@ -71,9 +71,20 @@ public class QuizController {
      * DELETE /api/quizs/{quizId}/questions/{questionId} - Supprimer une question d'un quiz
      */
     @DeleteMapping("/{quizId}/questions/{questionId}")
-    public ResponseEntity<QuizResponse> removeQuestionFromQuiz(
+    public ResponseEntity<MessageResponse> removeQuestionFromQuiz(
             @PathVariable Long quizId,
             @PathVariable Long questionId) {
-        return ResponseEntity.ok(quizService.removeQuestionFromQuiz(quizId, questionId));
+        quizService.removeQuestionFromQuiz(quizId, questionId);
+        return ResponseEntity.ok(new MessageResponse("Question supprimée du quiz avec succès", true));
+    }
+
+    /**
+     * POST /api/quizs/{quizId}/questions - Ajouter plusieurs questions à un quiz
+     */
+    @PostMapping("/{quizId}/questions")
+    public ResponseEntity<QuizResponse> addMultipleQuestionsToQuiz(
+            @PathVariable Long quizId,
+            @RequestBody List<Long> questionsIds) {
+        return ResponseEntity.ok(quizService.addMultipleQuestionsToQuiz(quizId, questionsIds));
     }
 }

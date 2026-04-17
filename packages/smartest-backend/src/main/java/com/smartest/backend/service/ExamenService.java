@@ -211,8 +211,9 @@ public class ExamenService {
         QuestionResponse dto = new QuestionResponse();
         dto.setId(question.getId());
         dto.setEnonce(question.getEnonce());
-        dto.setType(question.getType() != null ? question.getType().name() : null);
-        dto.setDifficulte(question.getDifficulte() != null ? question.getDifficulte().name() : null);
+        dto.setType(String.valueOf(question.getType()));
+        dto.setDifficulte(String.valueOf(question.getDifficulte()));
+
         if (question.getReponses() != null && !question.getReponses().isEmpty()) {
             List<ReponseResponse> reponseDTOs = question.getReponses().stream()
                     .map(this::convertReponseToResponse)
