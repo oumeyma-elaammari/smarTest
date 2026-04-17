@@ -4,17 +4,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.smartest.backend.entity.*;
+import com.smartest.backend.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.smartest.backend.dto.request.SessionExamenRequest;
 import com.smartest.backend.dto.response.SessionExamenResponse;
-import com.smartest.backend.entity.Examen;
-import com.smartest.backend.entity.SessionExamen;
-import com.smartest.backend.repository.ExamenRepository;
-import com.smartest.backend.repository.SessionExamenRepository;
 
 import lombok.RequiredArgsConstructor;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,12 @@ public class SessionExamenService {
     private final SessionExamenRepository sessionExamenRepository;
     private final ExamenRepository examenRepository;
 
+    private final ResultatRepository resultatRepository;
+    private final QuestionRepository questionRepository;
+    private final ReponseRepository reponseRepository;
+
+    @Autowired
+    private EtudiantRepository etudiantRepository;
     /**
      * Récupérer toutes les sessions
      */
@@ -221,4 +228,27 @@ public class SessionExamenService {
 
         return dto;
     }
-}
+
+    public double corrigerExamen(Long sessionId) {
+
+        SessionExamen session = sessionExamenRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+
+        // 🔴 vérifier session terminée
+        if (!"TERMINE".equals(session.getStatut())) {
+            throw new RuntimeException("L'examen n'est pas terminé");
+        }
+
+        List<Resultat> resultats = resultatRepository.findBySessionExamenId(sessionId);
+
+        int total = resultats.size();
+        int correct = 0;
+
+        for (Resultat r : resultats) {
+            if (Boolean.TRUE.equals(r.getCorrecte())) {
+                correct++;
+            }
+        }
+
+        return total == 0 ? 0 : (double) correct / total * 100;
+    }}

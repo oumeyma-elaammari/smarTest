@@ -1,9 +1,7 @@
 package com.smartest.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "reponse")
@@ -21,15 +19,20 @@ public class Reponse {
 
     private Boolean correcte;
 
-    @ManyToOne
-    @JoinColumn(name = "etudiant_id")  // ← Vérifiez ce nom
-    private Etudiant etudiant;          // ← Au lieu de "utilisateur"
+    // ❌ SUPPRIMÉ (très important)
+    // private Etudiant etudiant;
+    // private SessionExamen sessionExamen;
+
 
     @ManyToOne
-    @JoinColumn(name = "session_examen_id")
-    private SessionExamen sessionExamen;
+    @JoinColumn(name = "etudiant_id")
+    private Etudiant etudiant;  // ← rajouter ceci
 
     @ManyToOne
     @JoinColumn(name = "question_id")
     private Question question;
+
+    @ManyToOne
+    @JoinColumn(name = "session_examen_id")
+    private SessionExamen sessionExamen; // ← manquant
 }

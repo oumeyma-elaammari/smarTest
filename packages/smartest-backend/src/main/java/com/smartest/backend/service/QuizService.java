@@ -21,6 +21,8 @@ public class QuizService {
     private final CoursRepository coursRepository;
     private final QuestionRepository questionRepository;
 
+    private final ResultatRepository resultatRepository;
+
     /**
      * Récupérer tous les quiz
      */
@@ -266,5 +268,21 @@ public class QuizService {
         dto.setContenu(reponse.getContenu());
         dto.setCorrecte(reponse.getCorrecte());
         return dto;
+    }
+
+
+    public int calculerScoreQuiz(Long etudiantId) {
+
+        List<Resultat> resultats = resultatRepository.findByEtudiantId(etudiantId);
+
+        int score = 0;
+
+        for (Resultat r : resultats) {
+            if (r.getCorrecte()) {
+                score++;
+            }
+        }
+
+        return score;
     }
 }
