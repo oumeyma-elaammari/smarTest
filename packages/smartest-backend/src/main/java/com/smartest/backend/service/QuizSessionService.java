@@ -116,26 +116,40 @@ public class QuizSessionService {
      * Enregistrer le résultat final du quiz
      */
     private Double enregistrerResultatFinal(Long etudiantId, Quiz quiz, Long nbCorrectes, int totalQuestions, Double note) {
-        // Récupérer l'étudiant
         Etudiant etudiant = etudiantRepository.findById(etudiantId)
                 .orElseThrow(() -> new RuntimeException("Étudiant non trouvé"));
 
-        // Vérifier si un résultat existe déjà
-        Resultat resultat = resultatRepository.findByEtudiantIdAndQuizId(etudiantId, quiz.getId())
-                .orElse(new Resultat());
+        // Pour chaque question du quiz, enregistrer un Resultat
+        quiz.getQuestions().forEach(question -> {
+            boolean dejaSauvegarde = resultatRepository
+                    .existsByEtudiantIdAndQuestionIdAndSessionExamenIsNull(etudiantId, question.getId());
 
-        resultat.setNote(note);
-        resultat.setScore((float) nbCorrectes.intValue());
-        resultat.setStatut("CALCULEE");
-        resultat.setEtudiant(etudiant);
-        resultat.setQuiz(quiz);
+            if (!dejaSauvegarde) {
+                // Récupérer la ReponseEtudiant correspondante
+                ReponseEtudiant reponseEtudiant = reponseEtudiantRepository
+                        .findByEtudiantIdAndQuestionId(etudiantId, question.getId())
+                        .orElse(null);
 
-        resultatRepository.save(resultat);
+                Resultat resultat = new Resultat();
+                resultat.setEtudiant(etudiant);
+                resultat.setQuestion(question);
+                resultat.setSessionExamen(null); // quiz, pas examen
+                resultat.setCorrecte(reponseEtudiant != null && reponseEtudiant.getEstCorrecte());
+
+                // Associer la Reponse choisie si elle existe
+                if (reponseEtudiant != null) {
+                    question.getReponses().stream()
+                            .filter(r -> r.getContenu().equalsIgnoreCase(reponseEtudiant.getReponseTexte()))
+                            .findFirst()
+                            .ifPresent(resultat::setReponse);
+                }
+
+                resultatRepository.save(resultat);
+            }
+        });
 
         return note;
-    }
-
-    /**
+    }    /**
      * Générer un message de fin personnalisé
      */
     private String getMessageFinal(Double note, int score, int totalQuestions) {

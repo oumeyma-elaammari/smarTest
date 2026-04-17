@@ -202,4 +202,7 @@ public interface ReponseEtudiantRepository extends JpaRepository<ReponseEtudiant
      * Vérifier si un étudiant a déjà répondu correctement à une question
      */
     boolean existsByEtudiantIdAndQuestionIdAndEstCorrecteTrue(Long etudiantId, Long questionId);
+
+
+    Optional<ReponseEtudiant> findByEtudiantIdAndQuestionId(Long etudiantId, Long questionId);
 }

@@ -5,96 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuizCorrectionController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/StatistiqueController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/QuestionRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ReponseEtudiantRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/SoumissionReponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/CorrectionImmediateResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/CorrectionResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/StatistiqueQuestionResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/StatistiquesQuizResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/ReponseEtudiant.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/StatistiqueQuestion.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ReponseEtudiantRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/StatistiqueQuestionRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizCorrectionService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizSessionService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/StatistiqueService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/QuizCorrectionControllerTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuizCorrectionServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuestionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuestionController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuizController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuizController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/QuizRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/QuizRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/QuestionResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/QuestionResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/QuizResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/QuizResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/ReponseResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/ReponseResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Question.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Question.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Quiz.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Quiz.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ReponseRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ReponseRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ReponseRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ReponseRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ResultatRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ResultatRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/ExamenService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/ExamenService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuestionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuestionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/QuestionControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/QuestionControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuestionServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuestionServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuizServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuizServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/ProjectEvaluation/smartest-desktop.metadata.v10.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/ProjectEvaluation/smartest-desktop.projects.v10.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/ProjectEvaluation/smartest-desktop.strings.v10.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/VSWorkspaceState.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/slnx.sqlite" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/DesignTimeBuild/.dtbcache.v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/257c5853-8928-4ccf-ac21-64bf10d64243.vsidx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/2bc476c4-2edd-43c6-a9a2-224100328e65.vsidx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/48a48a61-8d3b-4ca6-8438-451e31762d35.vsidx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/a4f3a3a6-cf17-48f9-aac0-61d4c5a8884b.vsidx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/ca7db534-23fd-46e6-8ee6-ecd93a9cb3b1.vsidx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/v18/.futdcache.v2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/v18/.suo" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/v18/.wsuo" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/v18/DocumentLayout.backup.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop.slnx/v18/DocumentLayout.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop/CopilotIndices/18.4.114.215/CodeChunks.db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/.vs/smartest-desktop/CopilotIndices/18.4.114.215/SemanticSymbols.db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/App.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/App.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/GeneratedInternalTypeHelper.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/GeneratedInternalTypeHelper.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/MainWindow.baml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/MainWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/MainWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/ForgotPasswordWindow.baml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/ForgotPasswordWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/ForgotPasswordWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/LoginWindow.baml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/LoginWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/LoginWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/RegisterWindow.baml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/RegisterWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/Views/RegisterWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/apphost.exe" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/apphost.exe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfo.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.assets.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.AssemblyReference.cache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.FileListAbsolute.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.FileListAbsolute.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop_MarkupCompile.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop_MarkupCompile.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop_MarkupCompile.lref" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop_MarkupCompile.lref" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/App.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/App.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/GeneratedInternalTypeHelper.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/GeneratedInternalTypeHelper.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/MainWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/MainWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/DashboardWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/DashboardWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/ForgotPasswordWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/ForgotPasswordWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/LoginWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/LoginWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/RegisterWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/Views/RegisterWindow.g.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfo.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.assets.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.csproj.AssemblyReference.cache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop_MarkupCompile.cache" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop_MarkupCompile.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop_MarkupCompile.lref" beforeDir="false" afterPath="$PROJECT_DIR$/../smartest-desktop/obj/Release/net8.0-windows/smartest-desktop_MarkupCompile.lref" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizSessionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizSessionService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -183,7 +98,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "Spring Boot.BackendApplication.executor": "Run",
-    "git-widget-placeholder": "quiz",
+    "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service",
     "project.structure.last.edited": "SDKs",
@@ -205,23 +120,7 @@
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\security" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.SessionExamenServiceTest">
-    <configuration name="QuestionServiceTest.testDelete_QuestionNotFound" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="backend" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.smartest.backend.service.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="com.smartest.backend.service" />
-      <option name="MAIN_CLASS_NAME" value="com.smartest.backend.service.QuestionServiceTest" />
-      <option name="METHOD_NAME" value="testDelete_QuestionNotFound" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
+  <component name="RunManager" selected="Spring Boot.BackendApplication">
     <configuration name="QuestionServiceTest.testDelete_Success" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <extension name="coverage">
@@ -283,20 +182,34 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="BackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UnknownPolicyInFreeMode" />
+      <module name="backend" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.smartest.backend.BackendApplication" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smartest.backend.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <list>
-      <item itemvalue="JUnit.QuestionServiceTest.testDelete_QuestionNotFound" />
       <item itemvalue="JUnit.QuestionServiceTest.testDelete_Success" />
       <item itemvalue="JUnit.QuizCorrectionServiceTest" />
       <item itemvalue="JUnit.QuizServiceTest" />
       <item itemvalue="JUnit.SessionExamenServiceTest" />
+      <item itemvalue="Spring Boot.BackendApplication" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Spring Boot.BackendApplication" />
         <item itemvalue="JUnit.SessionExamenServiceTest" />
         <item itemvalue="JUnit.QuizServiceTest" />
         <item itemvalue="JUnit.QuizCorrectionServiceTest" />
         <item itemvalue="JUnit.QuestionServiceTest.testDelete_Success" />
-        <item itemvalue="JUnit.QuestionServiceTest.testDelete_QuestionNotFound" />
       </list>
     </recent_temporary>
   </component>
