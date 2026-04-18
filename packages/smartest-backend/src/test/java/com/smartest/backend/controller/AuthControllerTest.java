@@ -233,7 +233,7 @@ class AuthControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             assertThat(response.getHeaders().getLocation().toString())
-                    .isEqualTo("http://localhost:5173/login?verified=true");
+                    .isEqualTo("http://localhost:5173/verify-email?status=success");
         }
 
         @Test
@@ -247,7 +247,7 @@ class AuthControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FOUND);
             assertThat(response.getHeaders().getLocation().toString())
-                    .isEqualTo("http://localhost:5173/login?verified=false");
+                    .isEqualTo("http://localhost:5173/verify-email?status=error");
         }
     }
 

@@ -30,4 +30,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     //  stats propre
     @Query("SELECT q.type as type, COUNT(q) as count FROM Question q GROUP BY q.type")
     List<QuestionStats> countQuestionsByType();
+
+    List<Question> findByCoursIdAndDifficulte(Long coursId, Difficulte difficulte);
 }

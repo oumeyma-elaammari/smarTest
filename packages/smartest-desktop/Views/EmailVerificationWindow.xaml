@@ -1,0 +1,102 @@
+<Window x:Class="smartest_desktop.Views.EmailVerificationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
+        Title="SmarTest — Vérification Email"
+        Height="600" Width="900"
+        MinHeight="500" MinWidth="700"
+        ResizeMode="CanResize"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F4F6">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Grid Background="#F3F4F6">
+        <Border Background="White" CornerRadius="12" Padding="40"
+                Width="480" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" Opacity="0.08" BlurRadius="20" ShadowDepth="4"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="SmarTest" FontSize="26" FontWeight="Bold" Foreground="#1a2e5a" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                <TextBlock Text="Vérification de votre email" FontSize="13" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,24"/>
+                <Border Background="#EFF6FF" CornerRadius="50" Width="80" Height="80" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <TextBlock Text="✉" FontSize="36" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="Email de confirmation envoyé !" FontSize="16" FontWeight="Bold" Foreground="#1a2e5a" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                <TextBlock FontSize="13" Foreground="#6B7280" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    Un lien de confirmation a été envoyé à
+                    <Run Text="{Binding Email}" FontWeight="SemiBold" Foreground="#1a2e5a"/>
+                    . Cliquez sur ce lien pour activer votre compte.
+                </TextBlock>
+                <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="📌 Instructions" FontWeight="SemiBold" FontSize="12" Foreground="#1a2e5a" Margin="0,0,0,6"/>
+                        <TextBlock FontSize="12" Foreground="#1E40AF" TextWrapping="Wrap">
+                            1. Ouvrez votre boîte email&#x0a;2. Cliquez sur le lien de confirmation&#x0a;3. Revenez ici pour vous connecter
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+                <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,14" Visibility="{Binding HasSuccess, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding SuccessMessage}" Foreground="#16A34A" FontSize="12" TextWrapping="Wrap"/>
+                </Border>
+                <Border Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,14" Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#DC2626" FontSize="12" TextWrapping="Wrap"/>
+                </Border>
+                <Button Height="42" Foreground="White" FontWeight="SemiBold" FontSize="13" BorderThickness="0" Cursor="Hand" Command="{Binding GoToLoginCommand}" Margin="0,0,0,12">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#1a2e5a"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#15244a"/></Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                    <TextBlock Text="J'ai confirmé mon email — Se connecter"/>
+                </Button>
+                <Button Height="42" Foreground="#1a2e5a" FontWeight="SemiBold" FontSize="13" Cursor="Hand" Command="{Binding ResendEmailCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="6" BorderBrush="#D1D5DB" BorderThickness="1">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#F9FAFB"/></Trigger>
+                                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.6"/></Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                    <TextBlock>
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Renvoyer l'email de confirmation"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLoading}" Value="True"><Setter Property="Text" Value="Envoi en cours..."/></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

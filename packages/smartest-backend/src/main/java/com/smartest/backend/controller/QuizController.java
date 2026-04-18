@@ -1,7 +1,8 @@
-/*package com.smartest.backend.controller;
+package com.smartest.backend.controller;
 
 import java.util.List;
 
+import com.smartest.backend.dto.response.ExamenResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -56,5 +57,34 @@ public class QuizController {
         quizService.deleteQuiz(id);
         return ResponseEntity.ok(new MessageResponse("Quiz supprimé avec succès", true, 200));
     }
+    /**
+     * POST /api/quizs/{quizId}/questions/{questionId} - Ajouter une question à un quiz
+     */
+    @PostMapping("/{quizId}/questions/{questionId}")
+    public ResponseEntity<QuizResponse> addQuestionToQuiz(
+            @PathVariable Long quizId,
+            @PathVariable Long questionId) {
+        return ResponseEntity.ok(quizService.addQuestionToQuiz(quizId, questionId));
+    }
+
+    /**
+     * DELETE /api/quizs/{quizId}/questions/{questionId} - Supprimer une question d'un quiz
+     */
+    @DeleteMapping("/{quizId}/questions/{questionId}")
+    public ResponseEntity<MessageResponse> removeQuestionFromQuiz(
+            @PathVariable Long quizId,
+            @PathVariable Long questionId) {
+        quizService.removeQuestionFromQuiz(quizId, questionId);
+        return ResponseEntity.ok(new MessageResponse("Question supprimée du quiz avec succès", true));
+    }
+
+    /**
+     * POST /api/quizs/{quizId}/questions - Ajouter plusieurs questions à un quiz
+     */
+    @PostMapping("/{quizId}/questions")
+    public ResponseEntity<QuizResponse> addMultipleQuestionsToQuiz(
+            @PathVariable Long quizId,
+            @RequestBody List<Long> questionsIds) {
+        return ResponseEntity.ok(quizService.addMultipleQuestionsToQuiz(quizId, questionsIds));
+    }
 }
-*/

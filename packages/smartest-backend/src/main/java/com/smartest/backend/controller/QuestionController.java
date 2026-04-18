@@ -1,5 +1,7 @@
 package com.smartest.backend.controller;
 
+import com.smartest.backend.dto.request.QuestionRequest;
+import com.smartest.backend.dto.response.QuestionResponse;
 import com.smartest.backend.entity.Question;
 import com.smartest.backend.entity.enumeration.Difficulte;
 import com.smartest.backend.entity.enumeration.TypeQuestion;
@@ -36,19 +38,19 @@ public class QuestionController {
 
     //  par type
     @GetMapping("/type")
-    public List<Question> getByType(@RequestParam TypeQuestion type) {
+    public List<QuestionResponse> getByType(@RequestParam TypeQuestion type) {
         return questionService.getByType(type);
     }
 
     //  par difficulté
     @GetMapping("/difficulte")
-    public List<Question> getByDiff(@RequestParam Difficulte difficulte) {
+    public List<QuestionResponse> getByDiff(@RequestParam Difficulte difficulte) {
         return questionService.getByDifficulte(difficulte);
     }
 
     //  par cours + difficulté
     @GetMapping("/cours")
-    public List<Question> getByCours(
+    public List<QuestionResponse> getByCours(
             @RequestParam Long coursId,
             @RequestParam Difficulte difficulte
     ) {
@@ -57,9 +59,9 @@ public class QuestionController {
 
     //modifier
     @PutMapping("/{id}")
-    public Question update(
+    public QuestionResponse update(
             @PathVariable Long id,
-            @RequestBody Question question,
+            @RequestBody QuestionRequest question,
             @RequestParam(required = false) Long coursId
     ) {
         return questionService.updateQuestion(id, question, coursId);

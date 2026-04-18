@@ -1,48 +1,39 @@
 package com.smartest.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 @Entity
-@Table(name = "resultat")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Resultat {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Float note;
 
-    private Float score;
-
-    @JsonIgnore
-    @ToString.Exclude
     @ManyToOne
-    @JoinColumn(name = "etudiant_id", nullable = false)
-    private Etudiant etudiant;
+    @JoinColumn(name = "question_id")
+    private Question question;
 
-    @JsonIgnore
-    @ToString.Exclude
     @ManyToOne
-    @JoinColumn(name = "session_examen_id", nullable = false)
+    @JoinColumn(name = "reponse_id")
+    private Reponse reponse;
+
+    private Boolean correcte;
+
+    @ManyToOne
+    @JoinColumn(name = "session_examen_id")
     private SessionExamen sessionExamen;
 
-    public Resultat(Float note, Float score, Etudiant etudiant, SessionExamen sessionExamen) {
-        this.note = note;
-        this.score = score;
-        this.etudiant = etudiant;
-        this.sessionExamen = sessionExamen;
-    }
+    @ManyToOne
+    @JoinColumn(name = "etudiant_id")
+    private Etudiant etudiant;
+
+
 }

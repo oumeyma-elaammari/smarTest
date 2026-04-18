@@ -24,11 +24,15 @@ public class Question {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String enonce;
 
+    // ✅ CORRECTION : Utiliser les types Enum
     @Enumerated(EnumType.STRING)
     private TypeQuestion type;
 
     @Enumerated(EnumType.STRING)
     private Difficulte difficulte;
+
+    @Column(columnDefinition = "TEXT")
+    private String explication;  // ← Ajouté pour l'explication pédagogique
 
     // ===== RELATIONS =====
     @JsonIgnore
@@ -58,13 +62,15 @@ public class Question {
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reponse> reponses = new ArrayList<>();
 
-    // constructeur personnalisé
+    // Constructeur personnalisé
     public Question(String enonce, TypeQuestion type, Difficulte difficulte, Professeur professeur) {
         this.enonce = enonce;
         this.type = type;
         this.difficulte = difficulte;
         this.professeur = professeur;
     }
+
+    // ==================== GETTERS ET SETTERS ====================
 
     public Long getId() {
         return id;
@@ -82,6 +88,10 @@ public class Question {
         return difficulte;
     }
 
+    public String getExplication() {
+        return explication;
+    }
+
     public Professeur getProfesseur() {
         return professeur;
     }
@@ -92,6 +102,10 @@ public class Question {
 
     public List<Reponse> getReponses() {
         return reponses;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public void setEnonce(String enonce) {
@@ -106,6 +120,10 @@ public class Question {
         this.difficulte = difficulte;
     }
 
+    public void setExplication(String explication) {
+        this.explication = explication;
+    }
+
     public void setProfesseur(Professeur professeur) {
         this.professeur = professeur;
     }
@@ -117,5 +135,4 @@ public class Question {
     public void setReponses(List<Reponse> reponses) {
         this.reponses = reponses;
     }
-
 }

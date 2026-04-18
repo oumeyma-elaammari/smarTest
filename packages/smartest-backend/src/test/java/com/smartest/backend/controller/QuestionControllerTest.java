@@ -1,6 +1,7 @@
 package com.smartest.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartest.backend.dto.response.QuestionResponse;
 import com.smartest.backend.entity.Question;
 import com.smartest.backend.entity.enumeration.Difficulte;
 import com.smartest.backend.entity.enumeration.TypeQuestion;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)  // ← pas de Spring, juste Mockito
+@ExtendWith(MockitoExtension.class)
 class QuestionControllerTest {
 
     private MockMvc mockMvc;
@@ -31,7 +32,7 @@ class QuestionControllerTest {
     private QuestionService questionService;
 
     @InjectMocks
-    private QuestionController questionController;  // ← le vrai contrôleur
+    private QuestionController questionController;  //  le vrai contrôleur
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -57,7 +58,7 @@ class QuestionControllerTest {
     @Test
     void testGetByType() throws Exception {
         when(questionService.getByType(TypeQuestion.QCM))
-                .thenReturn(List.of(new Question()));
+                .thenReturn(List.of(new QuestionResponse()));
 
         mockMvc.perform(get("/api/questions/type")
                         .param("type", "QCM"))
@@ -91,10 +92,10 @@ class QuestionControllerTest {
     @Test
     void testUpdateQuestion() throws Exception {
 
-        Question q = new Question();
+        QuestionResponse q = new QuestionResponse();
         q.setEnonce("Question modifiée");
-        q.setType(TypeQuestion.QCM);
-        q.setDifficulte(Difficulte.MOYEN);
+        q.setType(String.valueOf(TypeQuestion.QCM));
+        q.setDifficulte(String.valueOf(Difficulte.MOYEN));
 
         when(questionService.updateQuestion(
                 org.mockito.ArgumentMatchers.eq(1L),

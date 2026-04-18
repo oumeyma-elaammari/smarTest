@@ -1,21 +1,18 @@
 package com.smartest.backend.dto.request;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ReponseRequest {
 
-    @NotBlank(message = "Le contenu de la réponse est obligatoire")
-    private String contenu;
-
-    private Boolean correcte = false;
-
-    @NotNull(message = "L'ID de la question est obligatoire")
+    // Pour la soumission d'une réponse par l'étudiant
     private Long questionId;
+    private Long reponseId;
+    private Long etudiantId;
+    private Long sessionId;
+
+    // Pour la création/modification d'une réponse par le professeur
+    private String contenu;
+    private Boolean correcte;
 }

@@ -1,20 +1,11 @@
 package com.smartest.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Table(name = "reponse")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Reponse {
@@ -28,30 +19,20 @@ public class Reponse {
 
     private Boolean correcte;
 
-    @JsonIgnore
-    @ToString.Exclude
-    @ManyToOne
-    @JoinColumn(name = "etudiant_id", nullable = false)
-    private Etudiant etudiant;
+    // ❌ SUPPRIMÉ (très important)
+    // private Etudiant etudiant;
+    // private SessionExamen sessionExamen;
 
-    @JsonIgnore
-    @ToString.Exclude
-    @ManyToOne
-    @JoinColumn(name = "session_examen_id", nullable = false)
-    private SessionExamen sessionExamen;
 
-    @JsonIgnore
-    @ToString.Exclude
     @ManyToOne
-    @JoinColumn(name = "question_id", nullable = false)
+    @JoinColumn(name = "etudiant_id")
+    private Etudiant etudiant;  // ← rajouter ceci
+
+    @ManyToOne
+    @JoinColumn(name = "question_id")
     private Question question;
 
-    public Reponse(String contenu, Boolean correcte, Etudiant etudiant,
-            SessionExamen sessionExamen, Question question) {
-        this.contenu = contenu;
-        this.correcte = correcte;
-        this.etudiant = etudiant;
-        this.sessionExamen = sessionExamen;
-        this.question = question;
-    }
+    @ManyToOne
+    @JoinColumn(name = "session_examen_id")
+    private SessionExamen sessionExamen; // ← manquant
 }

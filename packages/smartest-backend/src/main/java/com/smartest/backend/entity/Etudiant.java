@@ -9,7 +9,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "etudiant")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Etudiant {
 
     @Id
@@ -45,4 +48,7 @@ public class Etudiant {
     @ToString.Exclude
     @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL)
     private List<Resultat> resultats = new ArrayList<>();
+
+
+
 }

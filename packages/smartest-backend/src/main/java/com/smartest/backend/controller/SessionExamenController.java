@@ -129,4 +129,10 @@ public class SessionExamenController {
     public ResponseEntity<Boolean> isExamenEnCours(@PathVariable Long examenId) {
         return ResponseEntity.ok(sessionExamenService.isExamenEnCours(examenId));
     }
+
+
+    @PostMapping("/corriger/{sessionId}")
+    public ResponseEntity<Double> corrigerExamen(@PathVariable Long sessionId) {
+        return ResponseEntity.ok(sessionExamenService.corrigerExamen(sessionId));
+    }
 }

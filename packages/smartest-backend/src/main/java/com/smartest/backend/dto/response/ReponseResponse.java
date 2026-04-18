@@ -1,6 +1,7 @@
 package com.smartest.backend.dto.response;
 
 import com.smartest.backend.entity.Reponse;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ReponseResponse {
 
     private Long id;
