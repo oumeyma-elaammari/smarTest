@@ -19,4 +19,9 @@ public interface ReponseRepository extends JpaRepository<Reponse, Long> {
 
     //  Vérifier si une question a au moins une bonne réponse
     boolean existsByQuestionIdAndCorrecteTrue(Long questionId);
+
+
+    void deleteByQuestionId(Long questionId);
+
+    
 }
