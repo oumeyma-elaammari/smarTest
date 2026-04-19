@@ -18,18 +18,19 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     List<Question> findByProfesseurId(Long professeurId);
 
-    List<Question> findByCoursId(Long coursId);
+    //List<Question> findByCoursId(Long coursId);
 
     //  version dynamique
-    @Query("SELECT q FROM Question q WHERE q.cours.id = :coursId AND q.difficulte = :niveau")
-    List<Question> findByCoursAndDifficulte(
-            @Param("coursId") Long coursId,
-            @Param("niveau") Difficulte niveau
-    );
+    //@Query("SELECT q FROM Question q WHERE q.cours.id = :coursId AND q.difficulte = :niveau")
+    //List<Question> findByCoursAndDifficulte(
+            //@Param("coursId") Long coursId,
+            //@Param("niveau") Difficulte niveau
+    //);
 
     //  stats propre
     @Query("SELECT q.type as type, COUNT(q) as count FROM Question q GROUP BY q.type")
     List<QuestionStats> countQuestionsByType();
 
-    List<Question> findByCoursIdAndDifficulte(Long coursId, Difficulte difficulte);
+    //List<Question> findByCoursIdAndDifficulte(Long coursId, Difficulte difficulte);
 }
+

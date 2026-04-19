@@ -29,8 +29,8 @@ public class StatistiqueQuestion {
     private Quiz quiz;
 
     @ManyToOne
-    @JoinColumn(name = "examen_id")
-    private Examen examen;
+    @JoinColumn(name = "examen_Publie_id")
+    private ExamenPublie examenPublie;
 
     @ManyToOne
     @JoinColumn(name = "session_examen_id")

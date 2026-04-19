@@ -1,10 +1,9 @@
 package com.smartest.backend.service;
 
-import com.smartest.backend.dto.request.QuizRequest;
-import com.smartest.backend.dto.response.QuestionResponse;
-import com.smartest.backend.dto.response.QuizResponse;
-import com.smartest.backend.dto.response.ReponseResponse;
+import com.smartest.backend.dto.request.*;
+import com.smartest.backend.dto.response.*;
 import com.smartest.backend.entity.*;
+import com.smartest.backend.entity.enumeration.StatutQuiz;
 import com.smartest.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,267 +18,162 @@ public class QuizService {
 
     private final QuizRepository quizRepository;
     private final ProfesseurRepository professeurRepository;
-    private final CoursRepository coursRepository;
     private final QuestionRepository questionRepository;
 
-    /**
-     * Récupérer tous les quiz
-     */
-    @Transactional(readOnly = true)
+    private final ResultatRepository resultatRepository;
+    private final ReponseRepository reponseRepository;
+    private final EtudiantRepository etudiantRepository;
+
+    // ================= GET =================
+
     public List<QuizResponse> getAllQuizs() {
-        return quizRepository.findAll().stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
+        return quizRepository.findAll()
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 
-    /**
-     * Récupérer un quiz par son ID
-     */
-    @Transactional(readOnly = true)
     public QuizResponse getQuizById(Long id) {
         Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'id: " + id));
-        return convertToResponseDTO(quiz);
+                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+        return convertToDTO(quiz);
     }
 
-    /**
-     * Récupérer les quiz d'un professeur
-     */
-    @Transactional(readOnly = true)
-    public List<QuizResponse> getQuizsByProfesseur(Long professeurId) {
-        List<Quiz> quizs = quizRepository.findByProfesseurId(professeurId);
-        return quizs.stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }
+    // ⚠️ supprimé findByProfesseurId (non existant)
 
-    /**
-     * Récupérer les quiz d'un cours
-     */
-    @Transactional(readOnly = true)
-    public List<QuizResponse> getQuizsByCours(Long coursId) {
-        List<Quiz> quizs = quizRepository.findByCoursId(coursId);
-        return quizs.stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }
+    // ================= CREATE =================
 
-    /**
-     * Créer un nouveau quiz
-     */
     @Transactional
     public QuizResponse createQuiz(QuizRequest request) {
 
-        // 1. Vérifier que le professeur existe
         Professeur professeur = professeurRepository.findById(request.getProfesseurId())
                 .orElseThrow(() -> new RuntimeException("Professeur non trouvé"));
 
-        // 2. Vérifier que le cours existe (si fourni)
-        Cours cours = null;
-        if (request.getCoursId() != null) {
-            cours = coursRepository.findById(request.getCoursId())
-                    .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
-        }
-
-        // 3. Créer le quiz
         Quiz quiz = new Quiz();
         quiz.setTitre(request.getTitre());
         quiz.setDuree(request.getDuree());
         quiz.setProfesseur(professeur);
-        quiz.setCours(cours);
 
-        // 4. Sauvegarder
-        Quiz savedQuiz = quizRepository.save(quiz);
+        // statut par défaut
+        quiz.setStatut(StatutQuiz.BROUILLON);
 
-        // 5. Convertir et retourner (NE DOIT PAS RETOURNER NULL)
-        return convertToResponseDTO(savedQuiz);
+        return convertToDTO(quizRepository.save(quiz));
     }
-    /**
-     * Mettre à jour un quiz existant
-     */
-    @Transactional
-    public QuizResponse updateQuiz(Long id, QuizRequest request) {
+
+    // ================= PUBLICATION =================
+
+    public void publierQuiz(Long id) {
+
         Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'id: " + id));
+                .orElseThrow(() -> new RuntimeException("Quiz introuvable"));
 
-        // Mettre à jour les champs
-        quiz.setTitre(request.getTitre());
-        quiz.setDuree(request.getDuree());
+        quiz.setStatut(StatutQuiz.PUBLIE);
+        quiz.setDatePublication(LocalDateTime.now());
 
-        // Mettre à jour le professeur si nécessaire
-        if (request.getProfesseurId() != null && !quiz.getProfesseur().getId().equals(request.getProfesseurId())) {
-            Professeur professeur = professeurRepository.findById(request.getProfesseurId())
-                    .orElseThrow(() -> new RuntimeException("Professeur non trouvé avec l'id: " + request.getProfesseurId()));
-            quiz.setProfesseur(professeur);
-        }
-
-        // Mettre à jour le cours si nécessaire
-        if (request.getCoursId() != null) {
-            Cours cours = coursRepository.findById(request.getCoursId())
-                    .orElseThrow(() -> new RuntimeException("Cours non trouvé avec l'id: " + request.getCoursId()));
-            quiz.setCours(cours);
-        } else {
-            quiz.setCours(null);
-        }
-
-        // Mettre à jour les questions si nécessaire
-        if (request.getQuestionsIds() != null) {
-            List<Question> questions = questionRepository.findAllById(request.getQuestionsIds());
-            quiz.setQuestions(questions);
-        }
-
-        Quiz updatedQuiz = quizRepository.save(quiz);
-        return convertToResponseDTO(updatedQuiz);
+        quizRepository.save(quiz);
     }
 
-    /**
-     * Supprimer un quiz
-     */
+    public List<QuizResponse> getQuizPublies() {
+        return quizRepository.findPublies()
+                .stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    // ================= LOGIC =================
+
+    public boolean isPremiereTentative(Long quizId, Long etudiantId) {
+        return !resultatRepository.existsByEtudiantIdAndQuizId(etudiantId, quizId);
+    }
+
     @Transactional
-    public void deleteQuiz(Long id) {
-        if (!quizRepository.existsById(id)) {
-            throw new RuntimeException("Quiz non trouvé avec l'id: " + id);
+    public ResultatQuizResponse soumettreQuiz(Long quizId, SoumissionQuizRequest request) {
+
+        Etudiant etudiant = etudiantRepository.findById(request.getEtudiantId())
+                .orElseThrow(() -> new RuntimeException("Etudiant introuvable"));
+
+        boolean premiere = isPremiereTentative(quizId, etudiant.getId());
+
+        int total = request.getReponses().size();
+        int correct = 0;
+
+        for (ReponseQuizDTO dto : request.getReponses()) {
+
+            Reponse r = reponseRepository.findById(dto.getReponseId())
+                    .orElseThrow(() -> new RuntimeException("Réponse introuvable"));
+
+            if (Boolean.TRUE.equals(r.getCorrecte())) correct++;
+
+            Resultat res = new Resultat();
+            res.setEtudiant(etudiant);
+            res.setQuestion(r.getQuestion());
+            res.setReponse(r);
+            res.setCorrecte(r.getCorrecte());
+            res.setQuizId(quizId);
+            res.setDatePassage(LocalDateTime.now());
+            res.setEstPremiereTentative(premiere);
+
+            resultatRepository.save(res);
         }
-        quizRepository.deleteById(id);
+
+        double score = total == 0 ? 0.0 : ((double) correct / total) * 100;
+
+        ResultatQuizResponse response = new ResultatQuizResponse();
+        response.setScore(score);
+        response.setBonnesReponses(correct);
+        response.setTotalQuestions(total);
+        response.setEstPremiereTentative(premiere);
+
+        return response;
     }
 
-    /**
-     * Ajouter une question à un quiz
-     */
-    @Transactional
-    public QuizResponse addQuestionToQuiz(Long quizId, Long questionId) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'id: " + quizId));
+    // ================= DTO =================
 
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question non trouvée avec l'id: " + questionId));
+    private QuizResponse convertToDTO(Quiz quiz) {
 
-        // Vérifier que la question n'est pas déjà dans le quiz
-        if (!quiz.getQuestions().contains(question)) {
-            quiz.getQuestions().add(question);
-        }
-
-        Quiz updatedQuiz = quizRepository.save(quiz);
-        return convertToResponseDTO(updatedQuiz);
-    }
-
-    /**
-     * Supprimer une question d'un quiz
-     */
-    @Transactional
-    public QuizResponse removeQuestionFromQuiz(Long quizId, Long questionId) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'id: " + quizId));
-
-        quiz.getQuestions().removeIf(q -> q.getId().equals(questionId));
-
-        Quiz updatedQuiz = quizRepository.save(quiz);
-        return convertToResponseDTO(updatedQuiz);
-    }
-
-    /**
-     * Compter le nombre de questions dans un quiz
-     */
-    @Transactional(readOnly = true)
-    public Long countQuestionsByQuizId(Long quizId) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'id: " + quizId));
-        return (long) quiz.getQuestions().size();
-    }
-
-    /**
-     * Vérifier si un quiz existe
-     */
-    @Transactional(readOnly = true)
-    public boolean existsById(Long id) {
-        return quizRepository.existsById(id);
-    }
-
-    /**
-     * Convertir une entité Quiz en QuizResponseDTO
-     */
-    private QuizResponse convertToResponseDTO(Quiz quiz) {
         QuizResponse dto = new QuizResponse();
+
         dto.setId(quiz.getId());
         dto.setTitre(quiz.getTitre());
         dto.setDuree(quiz.getDuree());
 
-        // Informations du professeur
         if (quiz.getProfesseur() != null) {
             dto.setProfesseurId(quiz.getProfesseur().getId());
             dto.setProfesseurNom(quiz.getProfesseur().getNom());
         }
 
-        // Informations du cours
-        if (quiz.getCours() != null) {
-            dto.setCoursId(quiz.getCours().getId());
-            dto.setCoursTitre(quiz.getCours().getTitre());
-        }
-
-        // Convertir les questions
-        if (quiz.getQuestions() != null && !quiz.getQuestions().isEmpty()) {
-            List<QuestionResponse> questionDTOs = quiz.getQuestions().stream()
-                    .map(this::convertQuestionToResponseDTO)
-                    .collect(Collectors.toList());
-            dto.setQuestions(questionDTOs);
-        }
+        // ⚠️ IMPORTANT : PAS DE statut/datePublication car pas dans DTO
 
         return dto;
     }
 
-    /**
-     * Convertir une entité Question en QuestionResponseDTO
-     */
-    private QuestionResponse convertQuestionToResponseDTO(Question question) {
-        QuestionResponse dto = new QuestionResponse();
-        dto.setId(question.getId());
-        dto.setEnonce(question.getEnonce());
-
-        // Vérifier si type n'est pas null avant d'appeler name()
-        if (question.getType() != null) {
-            dto.setType(String.valueOf(question.getType()));
-        }
-
-        // Vérifier si difficulte n'est pas null avant d'appeler name()
-        if (question.getDifficulte() != null) {
-            dto.setDifficulte(String.valueOf(question.getDifficulte()));
-        }
-
-        // Convertir les réponses
-        if (question.getReponses() != null && !question.getReponses().isEmpty()) {
-            List<ReponseResponse> reponseDTOs = question.getReponses().stream()
-                    .map(this::convertReponseToResponseDTO)
-                    .collect(Collectors.toList());
-            dto.setReponses(reponseDTOs);
-        }
-
-        return dto;
-    }
-
-    /**
-     * Convertir une entité Reponse en ReponseResponseDTO
-     */
-    private ReponseResponse convertReponseToResponseDTO(Reponse reponse) {
-        ReponseResponse dto = new ReponseResponse();
-        dto.setId(reponse.getId());
-        dto.setContenu(reponse.getContenu());
-        dto.setCorrecte(reponse.getCorrecte());
-        return dto;
-    }
     @Transactional
-    public QuizResponse addMultipleQuestionsToQuiz(Long quizId, List<Long> questionsIds) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé avec l'id: " + quizId));
-
-        List<Question> questions = questionRepository.findAllById(questionsIds);
-
-        for (Question question : questions) {
-            if (!quiz.getQuestions().contains(question)) {
-                quiz.getQuestions().add(question);
-            }
-        }
-
-        Quiz updatedQuiz = quizRepository.save(quiz);
-        return convertToResponseDTO(updatedQuiz);
+    public void deleteQuiz(Long quizId) {
+        quizRepository.deleteById(quizId);
     }
+
+    @Transactional
+    public QuizResponse addQuestionToQuiz(Long quizId, Long questionId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question non trouvée"));
+
+        quiz.getQuestions().add(question);
+        quizRepository.save(quiz);
+
+        return convertToDTO(quiz);
+    }
+
+    @Transactional
+    public void removeQuestionFromQuiz(Long quizId, Long questionId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question non trouvée"));
+
+        quiz.getQuestions().remove(question);
+        quizRepository.save(quiz);
+    }
+
 }

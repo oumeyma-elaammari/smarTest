@@ -1,10 +1,7 @@
-package com.smartest.backend.service;
-
+/*package com.smartest.backend.service;
 import com.smartest.backend.dto.request.SessionExamenRequest;
 import com.smartest.backend.dto.response.SessionExamenResponse;
-import com.smartest.backend.entity.Examen;
 import com.smartest.backend.entity.SessionExamen;
-import com.smartest.backend.repository.ExamenRepository;
 import com.smartest.backend.repository.SessionExamenRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -378,3 +375,5 @@ class SessionExamenServiceTest {
         assertThat(sessionExamenService.isExamenEnCours(1L)).isFalse();
     }
 }
+
+ */

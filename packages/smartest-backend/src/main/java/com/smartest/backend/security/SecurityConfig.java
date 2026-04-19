@@ -32,7 +32,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
 
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ ici
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -45,6 +45,14 @@ public class SecurityConfig {
                                 "/auth/reset-password/etudiant",
                                 "/auth/reset-password/professeur"
                         ).permitAll()
+
+                        // ✅ AJOUTS demandés
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/api/quiz/publies").hasRole("ETUDIANT")
+                        .requestMatchers("/api/quiz/*/soumettre").hasRole("ETUDIANT")
+                        .requestMatchers("/api/quiz/*/publier").hasRole("PROFESSEUR")
+                        .requestMatchers("/api/examens-publies/**").authenticated()
+
                         .requestMatchers("/api/professeur/**").hasRole("PROFESSEUR")
                         .requestMatchers("/api/etudiant/**").hasRole("ETUDIANT")
                         .anyRequest().authenticated()

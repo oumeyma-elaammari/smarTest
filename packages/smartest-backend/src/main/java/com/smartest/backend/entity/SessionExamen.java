@@ -37,26 +37,31 @@ public class SessionExamen {
 
     private String statut;
 
-    @JsonIgnore
-    @ToString.Exclude
-    @ManyToOne
-    @JoinColumn(name = "examen_id", nullable = false)
-    private Examen examen;
+
 
     @JsonIgnore
     @ToString.Exclude
     @OneToMany(mappedBy = "sessionExamen", cascade = CascadeType.ALL)
     private List<Reponse> reponses = new ArrayList<>();
 
+
+    @ManyToOne
+    @JoinColumn(name = "examen_publie_id")
+    private ExamenPublie examenPublie;
+
     @JsonIgnore
     @ToString.Exclude
     @OneToMany(mappedBy = "sessionExamen", cascade = CascadeType.ALL)
     private List<Resultat> resultats = new ArrayList<>();
 
-    public SessionExamen(LocalDateTime dateDebut, LocalDateTime dateFin, String statut, Examen examen) {
+
+    public SessionExamen(LocalDateTime dateDebut, LocalDateTime dateFin, String statut, ExamenPublie examenPublie) {
         this.dateDebut = dateDebut;
         this.dateFin = dateFin;
         this.statut = statut;
-        this.examen = examen;
+        this.examenPublie = examenPublie;
     }
+
+
+
 }
