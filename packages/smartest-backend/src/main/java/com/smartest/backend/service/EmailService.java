@@ -35,7 +35,20 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    // ✅ Méthode avec role pour différencier prof/étudiant
+    public void sendVerificationCode(String email, String code) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("SmarTest — Code de vérification");
+        message.setText(
+                "Bonjour,\n\n" +
+                        "Votre code de vérification est : " + code + "\n\n" +
+                        "Ce code expire dans 15 minutes.\n\n" +
+                        "L'équipe SmarTest"
+        );
+        mailSender.send(message);
+    }
+
+
     public void sendResetPasswordEmail(String toEmail, String token, String role) {
 
         SimpleMailMessage message = new SimpleMailMessage();

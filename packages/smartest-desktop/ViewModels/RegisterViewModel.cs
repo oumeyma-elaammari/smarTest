@@ -2,7 +2,6 @@ using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
@@ -17,59 +16,28 @@ namespace smartest_desktop.ViewModels
         private string _errorMessage;
         private string _successMessage;
         private bool _isLoading;
-        public ICommand BackToLoginCommand { get; }
-        public string Nom
-        {
-            get => _nom;
-            set => SetProperty(ref _nom, value);
-        }
 
-        public string Email
-        {
-            get => _email;
-            set => SetProperty(ref _email, value);
-        }
-
-        public string Password
-        {
-            get => _password;
-            set => SetProperty(ref _password, value);
-        }
-
-        public string ConfirmPassword
-        {
-            get => _confirmPassword;
-            set => SetProperty(ref _confirmPassword, value);
-        }
+        public string Nom { get => _nom; set => SetProperty(ref _nom, value); }
+        public string Email { get => _email; set => SetProperty(ref _email, value); }
+        public string Password { get => _password; set => SetProperty(ref _password, value); }
+        public string ConfirmPassword { get => _confirmPassword; set => SetProperty(ref _confirmPassword, value); }
 
         public string ErrorMessage
         {
             get => _errorMessage;
-            set
-            {
-                SetProperty(ref _errorMessage, value);
-                OnPropertyChanged(nameof(HasError));
-            }
+            set { SetProperty(ref _errorMessage, value); OnPropertyChanged(nameof(HasError)); }
         }
 
         public string SuccessMessage
         {
             get => _successMessage;
-            set
-            {
-                SetProperty(ref _successMessage, value);
-                OnPropertyChanged(nameof(HasSuccess));
-            }
+            set { SetProperty(ref _successMessage, value); OnPropertyChanged(nameof(HasSuccess)); }
         }
 
         public bool IsLoading
         {
             get => _isLoading;
-            set
-            {
-                SetProperty(ref _isLoading, value);
-                OnPropertyChanged(nameof(IsNotLoading));
-            }
+            set { SetProperty(ref _isLoading, value); OnPropertyChanged(nameof(IsNotLoading)); }
         }
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
@@ -77,40 +45,23 @@ namespace smartest_desktop.ViewModels
         public bool IsNotLoading => !IsLoading;
 
         public ICommand RegisterCommand { get; }
+        public ICommand BackToLoginCommand { get; }
 
         public RegisterViewModel()
         {
             RegisterCommand = new RelayCommand(
                 async _ => await ExecuteRegister(),
                 _ => IsNotLoading);
-            BackToLoginCommand = new RelayCommand(_ => OpenLogin());
 
+            // ✅ Ferme RegisterWindow, rouvre LoginWindow
+            BackToLoginCommand = new RelayCommand(_ =>
+                NavigationService.NavigateTo<Views.LoginWindow, Views.RegisterWindow>());
         }
-
-
-        private void OpenLogin()
-        {
-            var login = new Views.LoginWindow();
-            login.Show();
-
-            foreach (System.Windows.Window w in WpfApp.Current.Windows)
-            {
-                if (w is Views.RegisterWindow)
-                {
-                    w.Close();
-                    break;
-                }
-            }
-        }
-
 
         private async Task ExecuteRegister()
         {
-            // Validations
-            if (string.IsNullOrWhiteSpace(Nom) ||
-                string.IsNullOrWhiteSpace(Email) ||
-                string.IsNullOrWhiteSpace(Password) ||
-                string.IsNullOrWhiteSpace(ConfirmPassword))
+            if (string.IsNullOrWhiteSpace(Nom) || string.IsNullOrWhiteSpace(Email) ||
+                string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(ConfirmPassword))
             {
                 ErrorMessage = "Veuillez remplir tous les champs";
                 SuccessMessage = null;
@@ -136,10 +87,7 @@ namespace smartest_desktop.ViewModels
             SuccessMessage = null;
 
             var error = await _authService.RegisterAsync(
-                Nom.Trim(),
-                Email.Trim().ToLower(),
-                Password,
-                ConfirmPassword);
+                Nom.Trim(), Email.Trim().ToLower(), Password, ConfirmPassword);
 
             IsLoading = false;
 
@@ -149,21 +97,10 @@ namespace smartest_desktop.ViewModels
                 return;
             }
 
-            // ✅ Succès — ouvrir la fenêtre de vérification email
             var emailToPass = Email.Trim().ToLower();
-
-            // Fermer RegisterWindow et ouvrir EmailVerificationWindow
             var verifyWindow = new Views.EmailVerificationWindow(emailToPass);
-            verifyWindow.Show();
 
-            foreach (System.Windows.Window w in WpfApp.Current.Windows)
-            {
-                if (w is Views.RegisterWindow)
-                {
-                    w.Close();
-                    break;
-                }
-            }
+            NavigationService.NavigateTo<Views.RegisterWindow>(verifyWindow);
         }
     }
 }

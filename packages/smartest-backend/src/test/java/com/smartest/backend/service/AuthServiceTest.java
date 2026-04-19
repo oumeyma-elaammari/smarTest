@@ -114,7 +114,8 @@ class AuthServiceTest {
 
             assertThat(result).contains("Inscription réussie");
             verify(professeurRepository).save(any(Professeur.class));
-            verify(emailService).sendVerificationEmail(eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
+            // ✅ Professeur → sendVerificationCode (code 6 chiffres, pas de lien web)
+            verify(emailService).sendVerificationCode(eq("ikram@ensa.ma"), anyString());
         }
 
         @Test
@@ -126,7 +127,7 @@ class AuthServiceTest {
                     .isInstanceOf(EmailAlreadyUsedException.class);
 
             verify(professeurRepository, never()).save(any());
-            verify(emailService, never()).sendVerificationEmail(any(), any(), any());
+            verify(emailService, never()).sendVerificationCode(any(), any());
         }
 
         @Test
@@ -167,7 +168,7 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("✅ Email envoyé avec rôle PROFESSEUR")
+        @DisplayName("✅ Code envoyé par email (sans lien web)")
         void register_EmailSentWithCorrectRole() {
             when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
             when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
@@ -175,8 +176,8 @@ class AuthServiceTest {
 
             authService.register(validProfRequest);
 
-            verify(emailService).sendVerificationEmail(
-                    eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
+            // ✅ Professeur → sendVerificationCode (code 6 chiffres, pas de lien web)
+            verify(emailService).sendVerificationCode(eq("ikram@ensa.ma"), anyString());
         }
     }
 
@@ -198,6 +199,7 @@ class AuthServiceTest {
 
             assertThat(result).contains("Inscription réussie");
             verify(etudiantRepository).save(any(Etudiant.class));
+            // Etudiant → conserve l'ancien système (lien web)
             verify(emailService).sendVerificationEmail(eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
         }
 
@@ -457,7 +459,6 @@ class AuthServiceTest {
                     e.getResetPasswordToken() != null &&
                             e.getResetPasswordExpiry() != null
             ));
-            // ✅ 3 arguments
             verify(emailService).sendResetPasswordEmail(
                     eq("nissrine@ump.ac.ma"), anyString(), eq("ETUDIANT"));
         }
@@ -471,7 +472,6 @@ class AuthServiceTest {
 
             verify(etudiantRepository, never()).findByEmail(any());
             verify(etudiantRepository, never()).save(any());
-            // ✅ 3 arguments
             verify(emailService, never()).sendResetPasswordEmail(any(), any(), any());
         }
 
@@ -484,7 +484,6 @@ class AuthServiceTest {
             authService.forgotPasswordEtudiant("inconnu@ump.ac.ma");
 
             verify(etudiantRepository, never()).save(any());
-            // ✅ 3 arguments
             verify(emailService, never()).sendResetPasswordEmail(any(), any(), any());
         }
 
@@ -524,7 +523,6 @@ class AuthServiceTest {
                     p.getResetPasswordToken() != null &&
                             p.getResetPasswordExpiry() != null
             ));
-            // ✅ 3 arguments
             verify(emailService).sendResetPasswordEmail(
                     eq("ikram@ensa.ma"), anyString(), eq("PROFESSEUR"));
         }
@@ -538,7 +536,6 @@ class AuthServiceTest {
 
             verify(professeurRepository, never()).findByEmail(any());
             verify(professeurRepository, never()).save(any());
-            // ✅ 3 arguments
             verify(emailService, never()).sendResetPasswordEmail(any(), any(), any());
         }
 
@@ -551,7 +548,6 @@ class AuthServiceTest {
             authService.forgotPasswordProfesseur("inconnu@ensa.ma");
 
             verify(professeurRepository, never()).save(any());
-            // ✅ 3 arguments
             verify(emailService, never()).sendResetPasswordEmail(any(), any(), any());
         }
     }

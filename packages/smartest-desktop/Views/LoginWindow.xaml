@@ -10,9 +10,7 @@
         WindowStartupLocation="CenterScreen"
         Background="#F3F4F6">
 
-    <Window.DataContext>
-        <vm:LoginViewModel />
-    </Window.DataContext>
+   
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>

@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Newtonsoft.Json;
 using smartest_desktop.Models;
 
@@ -14,10 +15,7 @@ namespace smartest_desktop.Services
 
         public AuthService()
         {
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri(BaseUrl)
-            };
+            _httpClient = new HttpClient { BaseAddress = new Uri(BaseUrl) };
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
@@ -25,11 +23,10 @@ namespace smartest_desktop.Services
             new StringContent(
                 JsonConvert.SerializeObject(data),
                 Encoding.UTF8,
-                "application/json"
-            );
+                "application/json");
 
         // ══════════════════════════════════════════════
-        //  REGISTER PROFESSEUR
+        //  REGISTER
         // ══════════════════════════════════════════════
         public async Task<string> RegisterAsync(
             string nom, string email,
@@ -38,12 +35,10 @@ namespace smartest_desktop.Services
             try
             {
                 var body = new { nom, email, password, confirmPassword };
-                var response = await _httpClient
-                    .PostAsync("/auth/register", ToJson(body));
+                var response = await _httpClient.PostAsync("/auth/register", ToJson(body));
                 var content = await response.Content.ReadAsStringAsync();
 
-                if (response.IsSuccessStatusCode)
-                    return null;
+                if (response.IsSuccessStatusCode) return null;
 
                 return (int)response.StatusCode switch
                 {
@@ -57,10 +52,53 @@ namespace smartest_desktop.Services
             {
                 return "Impossible de contacter le serveur. Vérifiez que le backend est lancé";
             }
-            catch (Exception ex)
+            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+        }
+
+        // ══════════════════════════════════════════════
+        //  VERIFY EMAIL PAR CODE 6 CHIFFRES
+        // ══════════════════════════════════════════════
+        public async Task<string> VerifyEmailByCodeAsync(string email, string code)
+        {
+            try
             {
-                return $"Erreur : {ex.Message}";
+                var url = $"/auth/verify-email/code?email={Uri.EscapeDataString(email)}&code={code}";
+                var response = await _httpClient.PostAsync(url, null);
+
+                if (response.IsSuccessStatusCode) return null;
+
+                return (int)response.StatusCode switch
+                {
+                    400 => "Code invalide ou expiré. Vérifiez le code reçu par email.",
+                    _ => "Erreur lors de la vérification. Réessayez."
+                };
             }
+            catch (HttpRequestException)
+            {
+                return "Impossible de contacter le serveur.";
+            }
+            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+        }
+
+        // ══════════════════════════════════════════════
+        //  RENVOYER LE CODE
+        // ══════════════════════════════════════════════
+        public async Task<string> ResendVerificationCodeAsync(string email)
+        {
+            try
+            {
+                var url = $"/auth/verify-email/resend?email={Uri.EscapeDataString(email)}";
+                var response = await _httpClient.PostAsync(url, null);
+
+                if (response.IsSuccessStatusCode) return null;
+
+                return "Impossible de renvoyer le code.";
+            }
+            catch (HttpRequestException)
+            {
+                return "Impossible de contacter le serveur.";
+            }
+            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
         }
 
         // ══════════════════════════════════════════════
@@ -72,8 +110,7 @@ namespace smartest_desktop.Services
             try
             {
                 var body = new { email, password };
-                var response = await _httpClient
-                    .PostAsync("/auth/login", ToJson(body));
+                var response = await _httpClient.PostAsync("/auth/login", ToJson(body));
                 var content = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -81,19 +118,17 @@ namespace smartest_desktop.Services
                     var auth = JsonConvert.DeserializeObject<AuthResponse>(content);
 
                     if (auth?.Role != "PROFESSEUR")
-                        return (null, "Ce compte n'est pas un compte professeur. Utilisez l'application web pour les étudiants");
+                        return (null, "Ce compte n'est pas un compte professeur.");
 
                     return (auth, null);
                 }
 
-                // ✅ Lire le message du backend pour distinguer les erreurs
                 int status = (int)response.StatusCode;
                 string serverMsg = content?.Trim('"').ToLower() ?? "";
 
                 string error;
                 if (status == 401)
                 {
-                    // Distinguer "mot de passe incorrect" vs "compte introuvable"
                     if (serverMsg.Contains("introuvable") || serverMsg.Contains("not found"))
                         error = "Aucun compte trouvé avec cet email";
                     else if (serverMsg.Contains("password") || serverMsg.Contains("mot de passe"))
@@ -102,21 +137,13 @@ namespace smartest_desktop.Services
                         error = "Email ou mot de passe incorrect";
                 }
                 else if (status == 403)
-                {
-                    error = "Email non confirmé. Vérifiez votre boîte mail et cliquez sur le lien de confirmation";
-                }
+                    error = "Email non confirmé. Vérifiez votre boîte mail.";
                 else if (status == 400)
-                {
                     error = ParseValidationError(content);
-                }
                 else if (status >= 500)
-                {
                     error = "Erreur serveur. Réessayez plus tard";
-                }
                 else
-                {
                     error = $"Erreur inattendue ({status})";
-                }
 
                 return (null, error);
             }
@@ -124,14 +151,11 @@ namespace smartest_desktop.Services
             {
                 return (null, "Impossible de contacter le serveur.");
             }
-            catch (Exception ex)
-            {
-                return (null, $"Erreur : {ex.Message}");
-            }
+            catch (Exception ex) { return (null, $"Erreur : {ex.Message}"); }
         }
 
         // ══════════════════════════════════════════════
-        //  FORGOT PASSWORD PROFESSEUR
+        //  FORGOT PASSWORD
         // ══════════════════════════════════════════════
         public async Task<string> ForgotPasswordAsync(string email)
         {
@@ -140,11 +164,10 @@ namespace smartest_desktop.Services
                 var body = new { email };
                 var response = await _httpClient.PostAsync(
                     "/auth/forgot-password/professeur", ToJson(body));
+
+                if (response.IsSuccessStatusCode) return null;
+
                 var content = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                    return null;
-
                 return (int)response.StatusCode switch
                 {
                     400 => "Format d'email invalide",
@@ -154,16 +177,13 @@ namespace smartest_desktop.Services
             }
             catch (HttpRequestException)
             {
-                return "Impossible de contacter le serveur. Vérifiez que le backend est lancé";
+                return "Impossible de contacter le serveur.";
             }
-            catch (Exception ex)
-            {
-                return $"Erreur : {ex.Message}";
-            }
+            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
         }
 
         // ══════════════════════════════════════════════
-        //  RESET PASSWORD PROFESSEUR
+        //  RESET PASSWORD
         // ══════════════════════════════════════════════
         public async Task<string> ResetPasswordAsync(
             string token, string newPassword, string confirmPassword)
@@ -173,55 +193,44 @@ namespace smartest_desktop.Services
                 var body = new { token, newPassword, confirmPassword };
                 var response = await _httpClient.PostAsync(
                     "/auth/reset-password/professeur", ToJson(body));
+
+                if (response.IsSuccessStatusCode) return null;
+
                 var content = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                    return null;
-
                 string serverMsg = content?.Trim('"').ToLower() ?? "";
 
                 return (int)response.StatusCode switch
                 {
                     400 when serverMsg.Contains("expir") =>
-                        "Ce code a expiré. Faites une nouvelle demande de réinitialisation",
+                        "Ce code a expiré. Faites une nouvelle demande",
                     400 when serverMsg.Contains("correspond") =>
                         "Les mots de passe ne correspondent pas",
-                    400 =>
-                        "Code invalide ou expiré. Vérifiez le code reçu par email",
-                    500 =>
-                        "Erreur serveur. Réessayez plus tard",
-                    _ =>
-                        $"Erreur ({(int)response.StatusCode}). Réessayez"
+                    400 => "Code invalide ou expiré.",
+                    500 => "Erreur serveur. Réessayez plus tard",
+                    _ => $"Erreur ({(int)response.StatusCode}). Réessayez"
                 };
             }
             catch (HttpRequestException)
             {
-                return "Impossible de contacter le serveur. Vérifiez que le backend est lancé";
+                return "Impossible de contacter le serveur.";
             }
-            catch (Exception ex)
-            {
-                return $"Erreur : {ex.Message}";
-            }
+            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
         }
 
         // ══════════════════════════════════════════════
-        //  HELPER — Parser les erreurs de validation
+        //  HELPER
         // ══════════════════════════════════════════════
         private string ParseValidationError(string content)
         {
             if (string.IsNullOrEmpty(content)) return "Données invalides";
-
             try
             {
-                // Le backend retourne un Map<String, String> pour les erreurs de validation
-                var errors = JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, string>>(content);
-
+                var errors = JsonConvert.DeserializeObject<
+                    System.Collections.Generic.Dictionary<string, string>>(content);
                 if (errors != null && errors.Count > 0)
                     return string.Join("\n", errors.Values);
             }
             catch { }
-
-            // Si c'est une simple string
             return content.Trim('"');
         }
     }

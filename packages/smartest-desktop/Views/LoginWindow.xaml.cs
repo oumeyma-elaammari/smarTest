@@ -9,6 +9,7 @@ namespace smartest_desktop.Views
         public LoginWindow()
         {
             InitializeComponent();
+            DataContext = new LoginViewModel();
         }
 
         private void PasswordBox_PasswordChanged(
