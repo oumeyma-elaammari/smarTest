@@ -20,6 +20,6 @@ public class SessionExamenRequest {
 
     private String statut;
 
-    @NotNull(message = "L'ID de l'examen est obligatoire")
-    private Long examenId;
+    @NotNull(message = "L'ID de l'examen publié est obligatoire")
+    private Long examenPublieId;
 }

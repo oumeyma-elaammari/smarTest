@@ -9,11 +9,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.smartest.backend.entity.Quiz;
+import com.smartest.backend.entity.enumeration.StatutQuiz;
 
 @Repository
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
-    // CORRIGÉ : utiliser "cours.id" au lieu de "coursId"
+    /*// CORRIGÉ : utiliser "cours.id" au lieu de "coursId"
     List<Quiz> findByCoursId(Long coursId);
 
     // Alternative : findByCours_Id (même résultat)
@@ -34,4 +35,18 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     // Supprimer les quiz d'un cours
     void deleteByCoursId(Long coursId);
+*/
+
+    List<Quiz> findByStatut(StatutQuiz statut);
+
+    // 🔥 version simple
+    @Query("SELECT q FROM Quiz q WHERE q.statut = 'PUBLIE'")
+    List<Quiz> findPublies();
+
+    List<Quiz> findByProfesseurId(Long professeurId);
+
+
+
+
+
 }

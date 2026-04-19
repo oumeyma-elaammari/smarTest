@@ -1,10 +1,10 @@
 package com.smartest.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -16,24 +16,28 @@ public class Resultat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @ManyToOne
-    @JoinColumn(name = "question_id")
     private Question question;
 
     @ManyToOne
-    @JoinColumn(name = "reponse_id")
     private Reponse reponse;
 
     private Boolean correcte;
 
     @ManyToOne
-    @JoinColumn(name = "session_examen_id")
     private SessionExamen sessionExamen;
 
     @ManyToOne
-    @JoinColumn(name = "etudiant_id")
     private Etudiant etudiant;
 
+    // 🔥 NOUVEAUX CHAMPS
 
+    private Double score;   // % ou points
+    private Double note;    // note finale
+
+    private LocalDateTime datePassage;
+
+    private Boolean estPremiereTentative;
+
+    private Long quizId; // null si examen
 }

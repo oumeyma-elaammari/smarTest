@@ -78,4 +78,14 @@ public class ResultatService {
     public List<Resultat> getHistoriqueExamen(Long etudiantId, Long sessionId) {
         return resultatRepository.findByEtudiantIdAndSessionExamenId(etudiantId, sessionId);
     }
+
+    public List<Resultat> getMesResultatsQuiz(Long etudiantId) {
+        return resultatRepository.findByEtudiantIdAndSessionExamenIsNull(etudiantId);
+    }
+
+    public List<Resultat> getMesResultatsExamens(Long etudiantId) {
+        return resultatRepository.findByEtudiantIdAndSessionExamenIsNotNull(etudiantId);
+    }
+
+
 }

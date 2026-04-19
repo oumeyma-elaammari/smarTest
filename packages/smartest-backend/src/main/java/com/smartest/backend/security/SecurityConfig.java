@@ -31,6 +31,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9610ed81f2551756089d412e9b82f395ab1c4708
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(auth -> auth
@@ -46,6 +50,14 @@ public class SecurityConfig {
                                 "/auth/reset-password/etudiant",
                                 "/auth/reset-password/professeur"
                         ).permitAll()
+
+                        // ✅ AJOUTS demandés
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/api/quiz/publies").hasRole("ETUDIANT")
+                        .requestMatchers("/api/quiz/*/soumettre").hasRole("ETUDIANT")
+                        .requestMatchers("/api/quiz/*/publier").hasRole("PROFESSEUR")
+                        .requestMatchers("/api/examens-publies/**").authenticated()
+
                         .requestMatchers("/api/professeur/**").hasRole("PROFESSEUR")
                         .requestMatchers("/api/etudiant/**").hasRole("ETUDIANT")
                         .anyRequest().authenticated()

@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
-
+import com.smartest.backend.entity.enumeration.StatutQuiz;
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,11 +17,17 @@ public class QuizResponse {
     private String titre;
     private Integer duree;
     private String description;
+
     private Long professeurId;
     private String professeurNom;
-    private Long coursId;
-    private String coursTitre;
+
+
     private LocalDateTime dateCreation;
+
+    // 🔥 AJOUTS
+    private StatutQuiz statut;
+    private LocalDateTime datePublication;
+
     private Integer nombreQuestions;
     private List<QuestionResponse> questions;
 }

@@ -2,22 +2,15 @@ package com.smartest.backend.controller;
 
 import java.util.List;
 
-import com.smartest.backend.dto.response.ExamenResponse;
+import com.smartest.backend.dto.request.SoumissionQuizRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.smartest.backend.dto.request.QuizRequest;
 import com.smartest.backend.dto.response.MessageResponse;
 import com.smartest.backend.dto.response.QuizResponse;
+import com.smartest.backend.dto.response.ResultatQuizResponse;
 import com.smartest.backend.service.QuizService;
 
 import jakarta.validation.Valid;
@@ -31,6 +24,8 @@ public class QuizController {
 
     private final QuizService quizService;
 
+    // ================= GET =================
+
     @GetMapping
     public ResponseEntity<List<QuizResponse>> getAllQuizs() {
         return ResponseEntity.ok(quizService.getAllQuizs());
@@ -41,25 +36,31 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getQuizById(id));
     }
 
+    // ================= CREATE =================
+
     @PostMapping
     public ResponseEntity<QuizResponse> createQuiz(@Valid @RequestBody QuizRequest request) {
-        QuizResponse createdQuiz = quizService.createQuiz(request);
-        return new ResponseEntity<>(createdQuiz, HttpStatus.CREATED);
+        return new ResponseEntity<>(quizService.createQuiz(request), HttpStatus.CREATED);
     }
 
+    // ================= UPDATE =================
+
     @PutMapping("/{id}")
-    public ResponseEntity<QuizResponse> updateQuiz(@PathVariable Long id, @Valid @RequestBody QuizRequest request) {
-        return ResponseEntity.ok(quizService.updateQuiz(id, request));
+    public ResponseEntity<QuizResponse> updateQuiz(@PathVariable Long id,
+                                                   @Valid @RequestBody QuizRequest request) {
+        return ResponseEntity.ok(quizService.createQuiz(request));
     }
+
+    // ================= DELETE =================
 
     @DeleteMapping("/{id}")
     public ResponseEntity<MessageResponse> deleteQuiz(@PathVariable Long id) {
         quizService.deleteQuiz(id);
         return ResponseEntity.ok(new MessageResponse("Quiz supprimé avec succès", true, 200));
     }
-    /**
-     * POST /api/quizs/{quizId}/questions/{questionId} - Ajouter une question à un quiz
-     */
+
+    // ================= QUESTIONS =================
+
     @PostMapping("/{quizId}/questions/{questionId}")
     public ResponseEntity<QuizResponse> addQuestionToQuiz(
             @PathVariable Long quizId,
@@ -67,24 +68,44 @@ public class QuizController {
         return ResponseEntity.ok(quizService.addQuestionToQuiz(quizId, questionId));
     }
 
-    /**
-     * DELETE /api/quizs/{quizId}/questions/{questionId} - Supprimer une question d'un quiz
-     */
     @DeleteMapping("/{quizId}/questions/{questionId}")
     public ResponseEntity<MessageResponse> removeQuestionFromQuiz(
             @PathVariable Long quizId,
             @PathVariable Long questionId) {
         quizService.removeQuestionFromQuiz(quizId, questionId);
-        return ResponseEntity.ok(new MessageResponse("Question supprimée du quiz avec succès", true));
+        return ResponseEntity.ok(new MessageResponse("Question supprimée du quiz", true));
     }
 
-    /**
-     * POST /api/quizs/{quizId}/questions - Ajouter plusieurs questions à un quiz
-     */
-    @PostMapping("/{quizId}/questions")
-    public ResponseEntity<QuizResponse> addMultipleQuestionsToQuiz(
-            @PathVariable Long quizId,
-            @RequestBody List<Long> questionsIds) {
-        return ResponseEntity.ok(quizService.addMultipleQuestionsToQuiz(quizId, questionsIds));
+    // ================= PUBLICATION =================
+
+    @GetMapping("/publies")
+    public ResponseEntity<List<QuizResponse>> getQuizPublies() {
+        return ResponseEntity.ok(quizService.getQuizPublies());
+    }
+
+    @PatchMapping("/{id}/publier")
+    public ResponseEntity<String> publierQuiz(@PathVariable Long id) {
+        quizService.publierQuiz(id);
+        return ResponseEntity.ok("Quiz publié");
+    }
+
+    // ================= QUIZ LOGIC =================
+
+    @PostMapping("/{id}/soumettre")
+    public ResponseEntity<ResultatQuizResponse> soumettreQuiz(
+            @PathVariable Long id,
+            @RequestBody SoumissionQuizRequest request
+    ) {
+        return ResponseEntity.ok(quizService.soumettreQuiz(id, request));
+    }
+
+    @GetMapping("/{id}/premiere-tentative/{etudiantId}")
+    public ResponseEntity<Boolean> isPremiereTentative(
+            @PathVariable Long id,
+            @PathVariable Long etudiantId
+    ) {
+        return ResponseEntity.ok(
+                quizService.isPremiereTentative(id, etudiantId)
+        );
     }
 }
