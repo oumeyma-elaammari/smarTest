@@ -39,8 +39,8 @@ public class SecurityConfig {
                                 "/auth/register/etudiant",
                                 "/auth/login",
                                 "/auth/verify-email",
-                                "/auth/verify-email/code",    // ✅ nouveau
-                                "/auth/verify-email/resend",  // ✅ nouveau
+                                "/auth/verify-email/code",
+                                "/auth/verify-email/resend",
                                 "/auth/forgot-password/etudiant",
                                 "/auth/forgot-password/professeur",
                                 "/auth/reset-password/etudiant",
