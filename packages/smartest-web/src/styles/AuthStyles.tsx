@@ -10,7 +10,7 @@ export const pageStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#f0f3f9',
+    background: '#F4F6FB',
     padding: '1.5rem',
     fontFamily: "'DM Sans', sans-serif",
 }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("smartest-desktop")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57e186d871e8b7acdf5c84c56bd8b5ef321d6a4e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+337d98cc1340cb3ed2de86ed28206b706ad90da0")]
 [assembly: System.Reflection.AssemblyProductAttribute("smartest-desktop")]
 [assembly: System.Reflection.AssemblyTitleAttribute("smartest-desktop")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

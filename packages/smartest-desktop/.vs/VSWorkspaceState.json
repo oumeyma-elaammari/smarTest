@@ -1,11 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Data\\LocalEntities",
     "\\Services",
     "\\Views",
-    "\\Views\\styles"
+    "\\Views\\Styles"
   ],
-  "SelectedNode": "\\Views\\DashboardWindow.xaml.cs",
+  "SelectedNode": "\\Views\\ResetPasswordWindow.xaml",
   "PreviewInSolutionExplorer": false
 }
