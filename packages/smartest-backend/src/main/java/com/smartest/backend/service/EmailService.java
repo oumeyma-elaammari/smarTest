@@ -37,6 +37,7 @@ public class EmailService {
 
     public void sendVerificationCode(String email, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
         message.setTo(email);
         message.setSubject("SmarTest — Code de vérification");
         message.setText(

@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\User\smarTest\packages\smartest-desktop\App.xaml
-7-805947744
+81444243025
 
 31-1637701106
 226592162556
-MainWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\LoginWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;
+MainWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\LoginWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;Views\Styles\AuthStyles.xaml;
 
 False
 

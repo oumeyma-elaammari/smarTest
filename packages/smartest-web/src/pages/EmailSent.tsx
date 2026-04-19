@@ -1,113 +1,77 @@
 import { Link } from 'react-router-dom'
-import { Mail, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Mail } from 'lucide-react'
+import {
+    pageStyle, cardStyle, brandStyle, brandSubStyle, backLinkStyle, Footer,
+} from '../styles/AuthStyles'
+
+const steps = [
+    { step: '1', text: 'Ouvrez votre boîte mail académique' },
+    { step: '2', text: 'Cherchez un email de SmarTest' },
+    { step: '3', text: <>Cliquez sur <strong>"Confirmer mon email"</strong></> },
+    { step: '4', text: 'Connectez-vous à la plateforme' },
+]
 
 export default function EmailSent() {
     return (
-        <main className="flex min-h-screen items-center justify-center bg-background p-4">
-            <div className="card w-full max-w-[420px] text-center">
+        <main style={pageStyle}>
+            <div style={{ ...cardStyle, maxWidth: 450, textAlign: 'center' }}>
 
-                {/* Icône */}
-                <div className="flex justify-center mb-6">
-                    <div style={{
-                        width: '72px',
-                        height: '72px',
-                        borderRadius: '50%',
-                        backgroundColor: '#eff6ff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}>
-                        <Mail size={32} color="#1a2e5a" />
-                    </div>
+                <h1 style={brandStyle}>SmarTest</h1>
+                <p style={brandSubStyle}>Plateforme d'évaluation</p>
+
+                <div style={{
+                    width: 76, height: 76, borderRadius: '50%',
+                    background: '#e8eef8', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 1.5rem',
+                }}>
+                    <Mail size={34} color="#1a2e5a" strokeWidth={1.8} />
                 </div>
 
-                {/* Titre */}
-                <h1 style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 700,
-                    color: 'var(--foreground)',
-                    marginBottom: '0.75rem',
-                }}>
+                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.5rem', color: '#0f1e3d', marginBottom: 8 }}>
                     Vérifiez votre email
-                </h1>
+                </h2>
+                <div style={{ width: 40, height: 2, background: '#1a2e5a', borderRadius: 2, margin: '0.75rem auto 1rem' }} />
 
-                {/* Message */}
-                <p className="text-muted" style={{
-                    fontSize: '0.875rem',
-                    lineHeight: '1.6',
-                    marginBottom: '0.5rem',
-                }}>
+                <p style={{ fontSize: '0.83rem', color: '#6b7a99', lineHeight: 1.65, marginBottom: '1.5rem' }}>
                     Un email de confirmation a été envoyé à votre adresse académique.
-                </p>
-                <p className="text-muted" style={{
-                    fontSize: '0.875rem',
-                    lineHeight: '1.6',
-                    marginBottom: '2rem',
-                }}>
-                    Cliquez sur le lien dans l'email pour activer votre compte et accéder à la plateforme.
+                    Suivez les étapes ci-dessous pour activer votre compte.
                 </p>
 
-                {/* Étapes */}
                 <div style={{
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '0.5rem',
-                    padding: '1rem',
-                    marginBottom: '1.5rem',
-                    textAlign: 'left',
+                    background: '#f6f8fc', border: '1px solid #e2e8f4',
+                    borderRadius: 12, padding: '1.25rem', marginBottom: '1.75rem',
+                    textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.875rem',
                 }}>
-                    {[
-                        { step: '1', text: 'Ouvrez votre boîte mail académique' },
-                        { step: '2', text: 'Cherchez un email de SmarTest' },
-                        { step: '3', text: 'Cliquez sur "Confirmer mon email"' },
-                        { step: '4', text: 'Connectez-vous à la plateforme' },
-                    ].map(({ step, text }) => (
-                        <div key={step} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.75rem',
-                            marginBottom: step === '4' ? 0 : '0.75rem',
-                        }}>
+                    {steps.map(({ step, text }, i) => (
+                        <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', position: 'relative' }}>
+                            {i < steps.length - 1 && (
+                                <div style={{
+                                    position: 'absolute', left: 12, top: 26,
+                                    width: 2, height: 'calc(100% + 14px)', background: '#e2e8f4',
+                                }} />
+                            )}
                             <div style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                backgroundColor: '#1a2e5a',
-                                color: 'white',
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                            }}>
-                                {step}
-                            </div>
-                            <span style={{ fontSize: '0.875rem', color: 'var(--foreground)' }}>
-                                {text}
-                            </span>
+                                width: 26, height: 26, borderRadius: '50%',
+                                background: '#0f1e3d', color: '#fff',
+                                fontSize: '0.72rem', fontWeight: 600,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0, position: 'relative', zIndex: 1,
+                            }}>{step}</div>
+                            <span style={{ fontSize: '0.83rem', color: '#2d3a52', lineHeight: 1.4 }}>{text}</span>
                         </div>
                     ))}
                 </div>
 
-                {/* Lien retour login */}
-                <Link
-                    to="/login"
-                    style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        fontSize: '0.875rem',
-                        color: '#1a2e5a',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                    onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                <Link to="/login" style={backLinkStyle}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f0f3f9'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                    <ArrowLeft size={16} />
+                    <ArrowLeft size={15} />
                     Retour à la connexion
                 </Link>
+
+                <Footer />
             </div>
         </main>
     )

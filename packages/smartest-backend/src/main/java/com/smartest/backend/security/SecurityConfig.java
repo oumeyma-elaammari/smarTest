@@ -31,7 +31,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+<<<<<<< HEAD
+=======
 
+>>>>>>> 9610ed81f2551756089d412e9b82f395ab1c4708
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(auth -> auth
@@ -40,6 +43,8 @@ public class SecurityConfig {
                                 "/auth/register/etudiant",
                                 "/auth/login",
                                 "/auth/verify-email",
+                                "/auth/verify-email/code",
+                                "/auth/verify-email/resend",
                                 "/auth/forgot-password/etudiant",
                                 "/auth/forgot-password/professeur",
                                 "/auth/reset-password/etudiant",
@@ -80,10 +85,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        // ✅ Autoriser React web + app desktop (qui n'a pas d'origine)
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
