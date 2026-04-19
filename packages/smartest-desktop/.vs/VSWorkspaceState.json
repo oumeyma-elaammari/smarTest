@@ -1,11 +1,13 @@
 {
   "ExpandedNodes": [
     "",
+    "\\Data",
+    "\\Data\\LocalEntities",
     "\\Helpers",
     "\\Services",
     "\\ViewModels",
     "\\Views"
   ],
-  "SelectedNode": "\\ViewModels\\RegisterViewModel.cs",
+  "SelectedNode": "\\Data\\LocalEntities\\CoursLocal.cs",
   "PreviewInSolutionExplorer": false
 }
