@@ -2,7 +2,6 @@ using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
@@ -11,6 +10,7 @@ namespace smartest_desktop.ViewModels
         private readonly AuthService _authService = new AuthService();
 
         private string _email;
+        private string _code;
         private string _errorMessage;
         private string _successMessage;
         private bool _isLoading;
@@ -21,92 +21,96 @@ namespace smartest_desktop.ViewModels
             set => SetProperty(ref _email, value);
         }
 
+        public string Code
+        {
+            get => _code;
+            set => SetProperty(ref _code, value);
+        }
+
         public string ErrorMessage
         {
             get => _errorMessage;
-            set
-            {
-                SetProperty(ref _errorMessage, value);
-                OnPropertyChanged(nameof(HasError));
-            }
+            set { SetProperty(ref _errorMessage, value); OnPropertyChanged(nameof(HasError)); }
         }
 
         public string SuccessMessage
         {
             get => _successMessage;
-            set
-            {
-                SetProperty(ref _successMessage, value);
-                OnPropertyChanged(nameof(HasSuccess));
-            }
+            set { SetProperty(ref _successMessage, value); OnPropertyChanged(nameof(HasSuccess)); }
         }
 
         public bool IsLoading
         {
             get => _isLoading;
-            set
-            {
-                SetProperty(ref _isLoading, value);
-                OnPropertyChanged(nameof(IsNotLoading));
-            }
+            set { SetProperty(ref _isLoading, value); OnPropertyChanged(nameof(IsNotLoading)); }
         }
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
         public bool HasSuccess => !string.IsNullOrEmpty(SuccessMessage);
         public bool IsNotLoading => !IsLoading;
 
-        public ICommand GoToLoginCommand { get; }
+        public ICommand VerifyCommand { get; }
         public ICommand ResendEmailCommand { get; }
+        public ICommand GoToLoginCommand { get; }
 
         public EmailVerificationViewModel(string email)
         {
             Email = email;
 
-            GoToLoginCommand = new RelayCommand(
-                _ => OpenLogin());
+            VerifyCommand = new RelayCommand(
+                async _ => await VerifyCode(),
+                _ => IsNotLoading);
 
             ResendEmailCommand = new RelayCommand(
-                async _ => await ResendEmail(),
+                async _ => await ResendCode(),
                 _ => IsNotLoading);
+
+            GoToLoginCommand = new RelayCommand(_ =>
+                NavigationService.NavigateTo<Views.LoginWindow, Views.EmailVerificationWindow>());
         }
 
-        private async Task ResendEmail()
+        private async Task VerifyCode()
         {
-            if (string.IsNullOrWhiteSpace(Email)) return;
+            if (string.IsNullOrWhiteSpace(Code) || Code.Trim().Length != 6)
+            {
+                ErrorMessage = "Veuillez saisir le code à 6 chiffres reçu par email.";
+                SuccessMessage = null;
+                return;
+            }
 
             IsLoading = true;
             ErrorMessage = null;
             SuccessMessage = null;
 
-            // Ré-inscription pour renvoyer l'email — appel forget password
-            // ou on peut appeler un endpoint dédié si disponible
-            var error = await _authService.ForgotPasswordAsync(Email);
+            var error = await _authService.VerifyEmailByCodeAsync(Email, Code.Trim());
 
             IsLoading = false;
 
             if (error != null)
             {
-                ErrorMessage = "Impossible de renvoyer l'email. Réessayez.";
+                ErrorMessage = error;
+                return;
             }
-            else
-            {
-                SuccessMessage = "Email renvoyé ! Vérifiez votre boîte mail.";
-            }
+
+            SuccessMessage = "Email vérifié ! Redirection vers la connexion...";
+            await Task.Delay(1500);
+            NavigationService.NavigateTo<Views.LoginWindow, Views.EmailVerificationWindow>();
         }
 
-        private void OpenLogin()
+        private async Task ResendCode()
         {
-            var login = new Views.LoginWindow();
-            login.Show();
+            IsLoading = true;
+            ErrorMessage = null;
+            SuccessMessage = null;
 
-            foreach (System.Windows.Window w in WpfApp.Current.Windows)
-            {
-                if (w is Views.EmailVerificationWindow)
-                {
-                    w.Close();
-                    break;
-                }
-            }
+            var error = await _authService.ResendVerificationCodeAsync(Email);
+
+            IsLoading = false;
+
+            if (error != null)
+                ErrorMessage = "Impossible de renvoyer le code. Réessayez.";
+            else
+                SuccessMessage = "Nouveau code envoyé ! Vérifiez votre boîte mail.";
         }
     }
 }

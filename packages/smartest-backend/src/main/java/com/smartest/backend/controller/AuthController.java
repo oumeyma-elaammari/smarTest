@@ -60,11 +60,13 @@ public class AuthController {
         }
     }
 
+    // ══════════════════════════════════════════════
+    //  Ancien système — lien web (conservé pour étudiants)
+    // ══════════════════════════════════════════════
     @GetMapping("/verify-email")
     public ResponseEntity<Void> verifyEmail(
             @RequestParam String token,
             @RequestParam String role) {
-
         try {
             authService.verifyEmail(token, role);
             String redirectUrl = "http://localhost:5173/verify-email?status=success";
@@ -77,7 +79,37 @@ public class AuthController {
                     .header("Location", redirectUrl)
                     .build();
         }
-    }  // ✅
+    }
+
+    // ══════════════════════════════════════════════
+    //  Nouveau système — code 6 chiffres (desktop)
+    // ══════════════════════════════════════════════
+    @PostMapping("/verify-email/code")
+    public ResponseEntity<String> verifyEmailByCode(
+            @RequestParam String email,
+            @RequestParam String code) {
+        try {
+            authService.verifyEmailByCode(email, code);
+            return ResponseEntity.ok("Email vérifié avec succès.");
+        } catch (InvalidTokenException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Code invalide ou expiré.");
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    //  Renvoyer le code de vérification
+    // ══════════════════════════════════════════════
+    @PostMapping("/verify-email/resend")
+    public ResponseEntity<String> resendVerificationCode(@RequestParam String email) {
+        try {
+            authService.resendVerificationCode(email);
+            return ResponseEntity.ok("Code renvoyé avec succès.");
+        } catch (InvalidTokenException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Compte introuvable.");
+        }
+    }
 
     @PostMapping("/forgot-password/etudiant")
     public ResponseEntity<String> forgotPasswordEtudiant(@RequestBody ForgotPasswordRequest request) {

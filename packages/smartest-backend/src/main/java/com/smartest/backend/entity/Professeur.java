@@ -54,4 +54,7 @@ public class Professeur {
     @JsonIgnore @ToString.Exclude
     @OneToMany(mappedBy = "professeur", cascade = CascadeType.ALL)
     private List<Examen> examens = new ArrayList<>();
+
+    private LocalDateTime tokenVerificationExpiry;
+
 }

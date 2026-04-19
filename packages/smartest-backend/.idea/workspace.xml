@@ -103,50 +103,50 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.BackendApplication.executor": "Run",
-    "JUnit.AuthControllerTest.executor": "Run",
-    "JUnit.AuthServiceTest.executor": "Run",
-    "JUnit.BackendApplicationTests.executor": "Run",
-    "JUnit.ExamenControllerTest.executor": "Run",
-    "JUnit.ExamenServiceTest.executor": "Run",
-    "JUnit.QuestionControllerTest.executor": "Run",
-    "JUnit.QuestionControllerTest.testUpdateQuestion.executor": "Run",
-    "JUnit.QuestionServiceTest.executor": "Run",
-    "JUnit.QuestionServiceTest.testDelete.executor": "Debug",
-    "JUnit.QuestionServiceTest.testDelete_QuestionNotFound.executor": "Run",
-    "JUnit.QuestionServiceTest.testDelete_Success.executor": "Run",
-    "JUnit.QuestionServiceTest.testUpdateQuestion.executor": "Run",
-    "JUnit.QuizControllerTest.executor": "Run",
-    "JUnit.QuizCorrectionControllerTest.calculerScore_returns200_withZeroScore_whenAucuneBonneReponse.executor": "Run",
-    "JUnit.QuizCorrectionControllerTest.corrigerReponse_returns200_whenReponseIncorrecte.executor": "Run",
-    "JUnit.QuizCorrectionControllerTest.corrigerReponse_returns500_whenQuestionNotFound.executor": "Run",
-    "JUnit.QuizCorrectionControllerTest.executor": "Run",
-    "JUnit.QuizCorrectionServiceTest.executor": "Run",
-    "JUnit.QuizServiceTest.createQuiz_createsAndReturnsQuiz_withCours.executor": "Run",
-    "JUnit.QuizServiceTest.executor": "Run",
-    "JUnit.SessionExamenControllerTest.executor": "Run",
-    "JUnit.SessionExamenServiceTest.executor": "Run",
-    "JUnit.UserDetailsServiceImplTest.executor": "Run",
-    "JUnit.backend in backend.executor": "Run",
-    "JUnit.db.migration in backend.executor": "Run",
-    "JUnit.java in backend.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Spring Boot.BackendApplication.executor": "Run",
-    "git-widget-placeholder": "authentification",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service",
-    "project.structure.last.edited": "SDKs",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.BackendApplication.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.BackendApplicationTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ExamenControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ExamenServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuestionControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuestionControllerTest.testUpdateQuestion.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuestionServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuestionServiceTest.testDelete.executor&quot;: &quot;Debug&quot;,
+    &quot;JUnit.QuestionServiceTest.testDelete_QuestionNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuestionServiceTest.testDelete_Success.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuestionServiceTest.testUpdateQuestion.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizCorrectionControllerTest.calculerScore_returns200_withZeroScore_whenAucuneBonneReponse.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizCorrectionControllerTest.corrigerReponse_returns200_whenReponseIncorrecte.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizCorrectionControllerTest.corrigerReponse_returns500_whenQuestionNotFound.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizCorrectionControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizCorrectionServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizServiceTest.createQuiz_createsAndReturnsQuiz_withCours.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.QuizServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.SessionExamenControllerTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.SessionExamenServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserDetailsServiceImplTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.backend in backend.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.db.migration in backend.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.java in backend.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.BackendApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;authentification&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.AcpAgentsConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\service" />
@@ -160,7 +160,7 @@
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\main\java\com\smartest\backend\dto\response\security" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.java in backend">
+  <component name="RunManager" selected="Spring Boot.BackendApplication">
     <configuration name="QuizCorrectionServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <extension name="coverage">
@@ -237,8 +237,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.java in backend" />
         <item itemvalue="Spring Boot.BackendApplication" />
+        <item itemvalue="JUnit.java in backend" />
         <item itemvalue="JUnit.SessionExamenServiceTest" />
         <item itemvalue="JUnit.QuizServiceTest" />
         <item itemvalue="JUnit.QuizCorrectionServiceTest" />
