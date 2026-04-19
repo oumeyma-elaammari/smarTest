@@ -1,16 +1,16 @@
 package com.smartest.backend.entity;
 
+import com.smartest.backend.entity.enumeration.StatutQuiz;
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import lombok.*;
-
 @Entity
-@Table(name = "quiz")
-@Data  // ← Génère automatiquement tous les getters et setters
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Quiz {
@@ -19,24 +19,22 @@ public class Quiz {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 200)
     private String titre;
-
     private Integer duree;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    // 🔥 NOUVEAU
+    @Enumerated(EnumType.STRING)
+    private StatutQuiz statut;   // BROUILLON / PUBLIE
 
-    @Column(name = "date_creation")
-    private LocalDateTime dateCreation;
+    // 🔥 NOUVEAU
+    private LocalDateTime datePublication;
 
     @ManyToOne
-    @JoinColumn(name = "professeur_id")
     private Professeur professeur;
 
-    @ManyToOne
-    @JoinColumn(name = "cours_id")
-    private Cours cours;
+
+    //@ManyToMany
+    //private List<Question> questions;
 
     @ManyToMany
     @JoinTable(
@@ -46,8 +44,4 @@ public class Quiz {
     )
     private List<Question> questions = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        dateCreation = LocalDateTime.now();
-    }
 }

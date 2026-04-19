@@ -29,5 +29,10 @@ public interface ResultatRepository extends JpaRepository<Resultat, Long> {
 
     List<Resultat> findByEtudiantIdAndSessionExamenId(Long etudiantId, Long sessionId);
 
+    // vérifier si déjà fait quiz
+    boolean existsByEtudiantIdAndQuizId(Long etudiantId, Long quizId);
+
+    // récupérer résultats d’un quiz
+    List<Resultat> findByQuizId(Long quizId);
 
 }

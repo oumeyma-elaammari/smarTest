@@ -38,10 +38,10 @@ public class Professeur {
     private String resetPasswordToken;
 
     private LocalDateTime resetPasswordExpiry;
+    private LocalDateTime tokenVerificationExpiry;
 
-    @JsonIgnore @ToString.Exclude
-    @OneToMany(mappedBy = "professeur", cascade = CascadeType.ALL)
-    private List<Cours> cours = new ArrayList<>();
+
+
 
     @JsonIgnore @ToString.Exclude
     @OneToMany(mappedBy = "professeur", cascade = CascadeType.ALL)
@@ -55,6 +55,6 @@ public class Professeur {
     @OneToMany(mappedBy = "professeur", cascade = CascadeType.ALL)
     private List<Examen> examens = new ArrayList<>();
 
-    private LocalDateTime tokenVerificationExpiry;
 
+    private List<ExamenPublie> examenPublies = new ArrayList<>();
 }

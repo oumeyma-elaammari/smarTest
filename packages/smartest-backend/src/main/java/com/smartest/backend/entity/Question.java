@@ -41,11 +41,7 @@ public class Question {
     @JoinColumn(name = "professeur_id", nullable = false)
     private Professeur professeur;
 
-    @JsonIgnore
-    @ToString.Exclude
-    @ManyToOne
-    @JoinColumn(name = "cours_id")
-    private Cours cours;
+
 
     @JsonIgnore
     @ToString.Exclude
@@ -55,7 +51,7 @@ public class Question {
     @JsonIgnore
     @ToString.Exclude
     @ManyToMany(mappedBy = "questions")
-    private List<Examen> examens = new ArrayList<>();
+    private List<ExamenPublie> examenPublies = new ArrayList<>();
 
     @JsonIgnore
     @ToString.Exclude
@@ -96,9 +92,6 @@ public class Question {
         return professeur;
     }
 
-    public Cours getCours() {
-        return cours;
-    }
 
     public List<Reponse> getReponses() {
         return reponses;
@@ -128,9 +121,6 @@ public class Question {
         this.professeur = professeur;
     }
 
-    public void setCours(Cours cours) {
-        this.cours = cours;
-    }
 
     public void setReponses(List<Reponse> reponses) {
         this.reponses = reponses;

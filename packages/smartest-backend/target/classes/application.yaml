@@ -16,8 +16,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        hbm2ddl:
-          auto: update
+        
         jdbc:
           time_zone: UTC
 

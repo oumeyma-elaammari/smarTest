@@ -76,4 +76,16 @@ public class ResultatController {
                 resultatService.getHistoriqueExamen(etudiantId, sessionId)
         );
     }
+
+    // 🔹 résultats quiz uniquement
+    @GetMapping("/etudiant/{id}/quiz")
+    public ResponseEntity<List<Resultat>> getResultatsQuiz(@PathVariable Long id) {
+        return ResponseEntity.ok(resultatService.getMesResultatsQuiz(id));
+    }
+
+    // 🔹 résultats examens uniquement
+    @GetMapping("/etudiant/{id}/examens")
+    public ResponseEntity<List<Resultat>> getResultatsExamens(@PathVariable Long id) {
+        return ResponseEntity.ok(resultatService.getMesResultatsExamens(id));
+    }
 }
