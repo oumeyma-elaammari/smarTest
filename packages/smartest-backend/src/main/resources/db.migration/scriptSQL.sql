@@ -9,14 +9,15 @@ USE smartest_db;
 -- TABLE : professeur
 -- =====================================================
 CREATE TABLE professeur (
-                            id                    BIGINT PRIMARY KEY AUTO_INCREMENT,
-                            nom                   VARCHAR(100)  NOT NULL,
-                            email                 VARCHAR(150)  UNIQUE NOT NULL,
-                            password              VARCHAR(255)  NOT NULL,
-                            email_verifie         BOOLEAN       NOT NULL DEFAULT FALSE,
-                            token_verification    VARCHAR(255)  UNIQUE,
-                            reset_password_token  VARCHAR(255)  UNIQUE,
-                            reset_password_expiry DATETIME
+                            id                          BIGINT PRIMARY KEY AUTO_INCREMENT,
+                            nom                         VARCHAR(100)  NOT NULL,
+                            email                       VARCHAR(150)  UNIQUE NOT NULL,
+                            password                    VARCHAR(255)  NOT NULL,
+                            email_verifie               BOOLEAN       NOT NULL DEFAULT FALSE,
+                            token_verification          VARCHAR(255)  UNIQUE,
+                            token_verification_expiry   DATETIME,
+                            reset_password_token        VARCHAR(255)  UNIQUE,
+                            reset_password_expiry       DATETIME
 );
 
 -- =====================================================

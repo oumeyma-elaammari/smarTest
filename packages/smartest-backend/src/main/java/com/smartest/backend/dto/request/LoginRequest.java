@@ -9,6 +9,6 @@ public class LoginRequest {
     private String email;
 
     @NotBlank(message = "Le mot de passe est obligatoire")
-    @Size(min = 8, message = "Mot de passe trop court")
+    @Size(min = 8)
     private String password;
 }

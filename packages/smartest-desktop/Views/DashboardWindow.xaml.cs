@@ -1,5 +1,5 @@
 using System.Windows;
-
+using smartest_desktop.ViewModels;
 namespace smartest_desktop.Views
 {
     public partial class DashboardWindow : Window
@@ -7,6 +7,8 @@ namespace smartest_desktop.Views
         public DashboardWindow()
         {
             InitializeComponent();
+            DataContext = new DashboardViewModel(); 
+
         }
     }
 }
