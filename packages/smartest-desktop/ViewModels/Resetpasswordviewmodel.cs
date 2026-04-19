@@ -1,8 +1,8 @@
+
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
@@ -17,52 +17,26 @@ namespace smartest_desktop.ViewModels
         private string _successMessage;
         private bool _isLoading;
 
-        public string Token
-        {
-            get => _token;
-            set => SetProperty(ref _token, value);
-        }
-
-        public string NewPassword
-        {
-            get => _newPassword;
-            set => SetProperty(ref _newPassword, value);
-        }
-
-        public string ConfirmPassword
-        {
-            get => _confirmPassword;
-            set => SetProperty(ref _confirmPassword, value);
-        }
+        public string Token { get => _token; set => SetProperty(ref _token, value); }
+        public string NewPassword { get => _newPassword; set => SetProperty(ref _newPassword, value); }
+        public string ConfirmPassword { get => _confirmPassword; set => SetProperty(ref _confirmPassword, value); }
 
         public string ErrorMessage
         {
             get => _errorMessage;
-            set
-            {
-                SetProperty(ref _errorMessage, value);
-                OnPropertyChanged(nameof(HasError));
-            }
+            set { SetProperty(ref _errorMessage, value); OnPropertyChanged(nameof(HasError)); }
         }
 
         public string SuccessMessage
         {
             get => _successMessage;
-            set
-            {
-                SetProperty(ref _successMessage, value);
-                OnPropertyChanged(nameof(HasSuccess));
-            }
+            set { SetProperty(ref _successMessage, value); OnPropertyChanged(nameof(HasSuccess)); }
         }
 
         public bool IsLoading
         {
             get => _isLoading;
-            set
-            {
-                SetProperty(ref _isLoading, value);
-                OnPropertyChanged(nameof(IsNotLoading));
-            }
+            set { SetProperty(ref _isLoading, value); OnPropertyChanged(nameof(IsNotLoading)); }
         }
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
@@ -72,10 +46,8 @@ namespace smartest_desktop.ViewModels
         public ICommand ResetCommand { get; }
         public ICommand BackToLoginCommand { get; }
 
-        // ✅ Constructeur sans paramètre — DANS la classe
         public ResetPasswordViewModel() : this("") { }
 
-        // ✅ Constructeur principal
         public ResetPasswordViewModel(string token = "")
         {
             Token = token;
@@ -84,8 +56,9 @@ namespace smartest_desktop.ViewModels
                 async _ => await ExecuteReset(),
                 _ => IsNotLoading);
 
-            BackToLoginCommand = new RelayCommand(
-                _ => OpenLogin());
+            BackToLoginCommand = new RelayCommand(_ =>
+                // ✅ Une seule ligne
+                NavigationService.NavigateTo<Views.LoginWindow, Views.ResetPasswordWindow>());
         }
 
         private async Task ExecuteReset()
@@ -123,9 +96,7 @@ namespace smartest_desktop.ViewModels
             SuccessMessage = null;
 
             var error = await _authService.ResetPasswordAsync(
-                Token.Trim(),
-                NewPassword,
-                ConfirmPassword);
+                Token.Trim(), NewPassword, ConfirmPassword);
 
             IsLoading = false;
 
@@ -137,22 +108,8 @@ namespace smartest_desktop.ViewModels
 
             SuccessMessage = "Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.";
             await Task.Delay(2000);
-            OpenLogin();
-        }
 
-        private void OpenLogin()
-        {
-            var login = new Views.LoginWindow();
-            login.Show();
-
-            foreach (System.Windows.Window w in WpfApp.Current.Windows)
-            {
-                if (w is Views.ResetPasswordWindow)
-                {
-                    w.Close();
-                    break;
-                }
-            }
+            NavigationService.NavigateTo<Views.LoginWindow, Views.ResetPasswordWindow>();
         }
     }
 }

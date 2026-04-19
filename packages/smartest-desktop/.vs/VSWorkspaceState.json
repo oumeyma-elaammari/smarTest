@@ -1,12 +1,13 @@
 {
   "ExpandedNodes": [
     "",
+    "\\Data",
+    "\\Data\\LocalEntities",
     "\\Helpers",
-    "\\Models",
     "\\Services",
     "\\ViewModels",
     "\\Views"
   ],
-  "SelectedNode": "\\Views\\ForgotPasswordWindow.xaml",
+  "SelectedNode": "\\Data\\LocalEntities\\CoursLocal.cs",
   "PreviewInSolutionExplorer": false
 }

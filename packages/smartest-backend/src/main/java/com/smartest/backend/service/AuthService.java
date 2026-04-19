@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -38,6 +39,17 @@ public class AuthService {
         this.emailService = emailService;
     }
 
+    // ══════════════════════════════════════════════
+    //  HELPER — Générer un code à 6 chiffres
+    // ══════════════════════════════════════════════
+    private String generateCode() {
+        return String.format("%06d", new Random().nextInt(999999));
+    }
+
+    // ══════════════════════════════════════════════
+    //  REGISTER PROFESSEUR
+    //  → envoie un code 6 chiffres par email
+    // ══════════════════════════════════════════════
     public String register(RegisterRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
@@ -46,17 +58,24 @@ public class AuthService {
             throw new EmailAlreadyUsedException(request.getEmail());
         if (etudiantRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
-        String token = UUID.randomUUID().toString();
+
+        // ✅ Code 6 chiffres au lieu d'un UUID
+        String code = generateCode();
 
         Professeur professeur = new Professeur();
         professeur.setNom(request.getNom());
         professeur.setEmail(request.getEmail());
         professeur.setPassword(passwordEncoder.encode(request.getPassword()));
         professeur.setEmailVerifie(false);
-        professeur.setTokenVerification(token);
+        professeur.setTokenVerification(code);
+        // ✅ Expiration 15 minutes
+        professeur.setTokenVerificationExpiry(LocalDateTime.now().plusMinutes(15));
 
         professeurRepository.save(professeur);
-        emailService.sendVerificationEmail(request.getEmail(), token, "PROFESSEUR");
+
+        // ✅ Envoyer le code par email (pas un lien)
+        emailService.sendVerificationCode(request.getEmail(), code);
+
         return "Inscription réussie ! Vérifiez votre email.";
     }
 
@@ -66,7 +85,6 @@ public class AuthService {
 
         if (etudiantRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
-
         if (professeurRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
 
@@ -84,12 +102,17 @@ public class AuthService {
         return "Inscription réussie ! Vérifiez votre email.";
     }
 
+    // ══════════════════════════════════════════════
+    //  VERIFY EMAIL — ancien système (lien web)
+    //  conservé pour les étudiants
+    // ══════════════════════════════════════════════
     public void verifyEmail(String token, String role) {
         if (role.equals("PROFESSEUR")) {
             var prof = professeurRepository.findByTokenVerification(token)
                     .orElseThrow(InvalidTokenException::new);
             prof.setEmailVerifie(true);
             prof.setTokenVerification(null);
+            prof.setTokenVerificationExpiry(null);
             professeurRepository.save(prof);
         } else {
             var etudiant = etudiantRepository.findByTokenVerification(token)
@@ -100,6 +123,48 @@ public class AuthService {
         }
     }
 
+    // ══════════════════════════════════════════════
+    //  VERIFY EMAIL PAR CODE — nouveau système desktop
+    // ══════════════════════════════════════════════
+    public void verifyEmailByCode(String email, String code) {
+        var prof = professeurRepository.findByEmail(email)
+                .orElseThrow(InvalidTokenException::new);
+
+        // Vérifier que le code correspond
+        if (!code.equals(prof.getTokenVerification()))
+            throw new InvalidTokenException();
+
+        // Vérifier que le code n'est pas expiré
+        if (prof.getTokenVerificationExpiry() == null ||
+                prof.getTokenVerificationExpiry().isBefore(LocalDateTime.now()))
+            throw new InvalidTokenException();
+
+        prof.setEmailVerifie(true);
+        prof.setTokenVerification(null);
+        prof.setTokenVerificationExpiry(null);
+        professeurRepository.save(prof);
+    }
+
+    // ══════════════════════════════════════════════
+    //  RENVOYER LE CODE de vérification
+    // ══════════════════════════════════════════════
+    public void resendVerificationCode(String email) {
+        var prof = professeurRepository.findByEmail(email)
+                .orElseThrow(InvalidTokenException::new);
+
+        if (prof.isEmailVerifie()) return; // déjà vérifié
+
+        String code = generateCode();
+        prof.setTokenVerification(code);
+        prof.setTokenVerificationExpiry(LocalDateTime.now().plusMinutes(15));
+        professeurRepository.save(prof);
+
+        emailService.sendVerificationCode(email, code);
+    }
+
+    // ══════════════════════════════════════════════
+    //  LOGIN
+    // ══════════════════════════════════════════════
     public AuthResponse login(LoginRequest request) {
         var prof = professeurRepository.findByEmail(request.getEmail());
         if (prof.isPresent()) {
@@ -128,9 +193,11 @@ public class AuthService {
         throw new AccountNotFoundException(request.getEmail());
     }
 
+    // ══════════════════════════════════════════════
+    //  FORGOT / RESET PASSWORD
+    // ══════════════════════════════════════════════
     public void forgotPasswordEtudiant(String email) {
         if (professeurRepository.existsByEmail(email)) return;
-
         var etudiant = etudiantRepository.findByEmail(email);
         if (etudiant.isPresent()) {
             String token = UUID.randomUUID().toString();
@@ -143,7 +210,6 @@ public class AuthService {
 
     public void forgotPasswordProfesseur(String email) {
         if (etudiantRepository.existsByEmail(email)) return;
-
         var prof = professeurRepository.findByEmail(email);
         if (prof.isPresent()) {
             String token = UUID.randomUUID().toString();
@@ -154,34 +220,24 @@ public class AuthService {
         }
     }
 
-    public void resetPasswordEtudiant(
-            String token, String newPassword, String confirmPassword) {
-        if (!newPassword.equals(confirmPassword))
-            throw new PasswordMismatchException();
-
+    public void resetPasswordEtudiant(String token, String newPassword, String confirmPassword) {
+        if (!newPassword.equals(confirmPassword)) throw new PasswordMismatchException();
         var etudiant = etudiantRepository.findByResetPasswordToken(token)
                 .orElseThrow(InvalidTokenException::new);
-
         if (etudiant.getResetPasswordExpiry().isBefore(LocalDateTime.now()))
             throw new InvalidTokenException();
-
         etudiant.setPassword(passwordEncoder.encode(newPassword));
         etudiant.setResetPasswordToken(null);
         etudiant.setResetPasswordExpiry(null);
         etudiantRepository.save(etudiant);
     }
 
-    public void resetPasswordProfesseur(
-            String token, String newPassword, String confirmPassword) {
-        if (!newPassword.equals(confirmPassword))
-            throw new PasswordMismatchException();
-
+    public void resetPasswordProfesseur(String token, String newPassword, String confirmPassword) {
+        if (!newPassword.equals(confirmPassword)) throw new PasswordMismatchException();
         var prof = professeurRepository.findByResetPasswordToken(token)
                 .orElseThrow(InvalidTokenException::new);
-
         if (prof.getResetPasswordExpiry().isBefore(LocalDateTime.now()))
             throw new InvalidTokenException();
-
         prof.setPassword(passwordEncoder.encode(newPassword));
         prof.setResetPasswordToken(null);
         prof.setResetPasswordExpiry(null);
