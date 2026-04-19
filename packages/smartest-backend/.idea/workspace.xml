@@ -4,50 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/ExamenController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuestionController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuizController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/QuizController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/ResultatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/ResultatController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/SessionExamenController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/controller/SessionExamenController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/ExamenRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/QuizRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/QuizRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/SessionExamenRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/request/SessionExamenRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/ExamenResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/QuizResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/QuizResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/ReponseResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/dto/response/ReponseResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Cours.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Examen.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Professeur.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Professeur.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Question.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Question.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Quiz.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Quiz.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/Resultat.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/SessionExamen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/SessionExamen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/StatistiqueQuestion.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/entity/StatistiqueQuestion.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/CoursRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ExamenRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuestionRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuizRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/QuizRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ResultatRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/ResultatRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/repository/SessionExamenRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/security/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/ExamenService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuestionService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizSessionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/QuizSessionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/ResultatService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/ResultatService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/SessionExamenService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/smartest/backend/service/SessionExamenService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/ExamenControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/ExamenControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/QuestionControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/QuestionControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/QuizControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/QuizControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/SessionExamenControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/controller/SessionExamenControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/ExamenServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/ExamenServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuestionServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuestionServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuizServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/QuizServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/SessionExamenServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/smartest/backend/service/SessionExamenServiceTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="d76b9d6c-810c-42e4-a2d2-b04c6a8f789f" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -101,51 +58,51 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.BackendApplication.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.AuthControllerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.AuthServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.BackendApplicationTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.ExamenControllerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.ExamenServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuestionControllerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuestionControllerTest.testUpdateQuestion.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuestionServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuestionServiceTest.testDelete.executor&quot;: &quot;Debug&quot;,
-    &quot;JUnit.QuestionServiceTest.testDelete_QuestionNotFound.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuestionServiceTest.testDelete_Success.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuestionServiceTest.testUpdateQuestion.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizControllerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizCorrectionControllerTest.calculerScore_returns200_withZeroScore_whenAucuneBonneReponse.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizCorrectionControllerTest.corrigerReponse_returns200_whenReponseIncorrecte.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizCorrectionControllerTest.corrigerReponse_returns500_whenQuestionNotFound.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizCorrectionControllerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizCorrectionServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizServiceTest.createQuiz_createsAndReturnsQuiz_withCours.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.QuizServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.SessionExamenControllerTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.SessionExamenServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.UserDetailsServiceImplTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.backend in backend.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.db.migration in backend.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;Spring Boot.BackendApplication.executor&quot;: &quot;Run&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.AcpAgentsConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.BackendApplication.executor": "Run",
+    "JUnit.AuthControllerTest.executor": "Run",
+    "JUnit.AuthServiceTest.executor": "Run",
+    "JUnit.BackendApplicationTests.executor": "Run",
+    "JUnit.ExamenControllerTest.executor": "Run",
+    "JUnit.ExamenServiceTest.executor": "Run",
+    "JUnit.QuestionControllerTest.executor": "Run",
+    "JUnit.QuestionControllerTest.testUpdateQuestion.executor": "Run",
+    "JUnit.QuestionServiceTest.executor": "Run",
+    "JUnit.QuestionServiceTest.testDelete.executor": "Debug",
+    "JUnit.QuestionServiceTest.testDelete_QuestionNotFound.executor": "Run",
+    "JUnit.QuestionServiceTest.testDelete_Success.executor": "Run",
+    "JUnit.QuestionServiceTest.testUpdateQuestion.executor": "Run",
+    "JUnit.QuizControllerTest.executor": "Run",
+    "JUnit.QuizCorrectionControllerTest.calculerScore_returns200_withZeroScore_whenAucuneBonneReponse.executor": "Run",
+    "JUnit.QuizCorrectionControllerTest.corrigerReponse_returns200_whenReponseIncorrecte.executor": "Run",
+    "JUnit.QuizCorrectionControllerTest.corrigerReponse_returns500_whenQuestionNotFound.executor": "Run",
+    "JUnit.QuizCorrectionControllerTest.executor": "Run",
+    "JUnit.QuizCorrectionServiceTest.executor": "Run",
+    "JUnit.QuizServiceTest.createQuiz_createsAndReturnsQuiz_withCours.executor": "Run",
+    "JUnit.QuizServiceTest.executor": "Run",
+    "JUnit.SessionExamenControllerTest.executor": "Run",
+    "JUnit.SessionExamenServiceTest.executor": "Run",
+    "JUnit.UserDetailsServiceImplTest.executor": "Run",
+    "JUnit.backend in backend.executor": "Run",
+    "JUnit.db.migration in backend.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.BackendApplication.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "question",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/User/smarTest/packages/smartest-backend/src/test/java/com/smartest/backend/service",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\User\smarTest\packages\smartest-backend\src\test\java\com\smartest\backend\service" />
