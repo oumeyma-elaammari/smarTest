@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
 
 namespace smartest_desktop.Views
@@ -58,6 +59,11 @@ namespace smartest_desktop.Views
                 ConfirmPasswordBox.Visibility = Visibility.Visible;
                 EyeIcon2.Text = "🔓";
             }
+        }
+
+        private void BackToWelcome_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.NavigateTo<MainWindow, RegisterWindow>();
         }
     }
 }
