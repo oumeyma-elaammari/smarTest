@@ -225,7 +225,7 @@
          PAGE LABEL BADGE
     ══════════════════════════════════════════ -->
     <Style x:Key="PageLabel" TargetType="Border">
-        <Setter Property="Background" Value="#e8eef8"/>
+        <Setter Property="Background" Value="#F8FAFC"/>
         <Setter Property="CornerRadius" Value="20"/>
         <Setter Property="Padding" Value="10,3"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>

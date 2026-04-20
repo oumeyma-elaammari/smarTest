@@ -14,10 +14,22 @@
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="/Views/Styles/AuthStyles.xaml"/>
 			</ResourceDictionary.MergedDictionaries>
+			<BooleanToVisibilityConverter x:Key="BoolToVis"/>
 		</ResourceDictionary>
 	</Window.Resources>
 
 	<Grid Background="#f0f3f9">
+
+		<!-- Flèche retour accueil -->
+		<Button Background="Transparent" BorderThickness="0"
+                Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="24,16,0,0" Click="BackToWelcome_Click"
+                ToolTip="Retour à l'accueil">
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Text="←" FontSize="16" Foreground="#8899b8" Margin="0,0,6,0"/>
+				<TextBlock Text="Accueil" FontSize="12" Foreground="#8899b8" VerticalAlignment="Center"/>
+			</StackPanel>
+		</Button>
 
 		<!-- Glow décoratif -->
 		<Ellipse Width="400" Height="400" HorizontalAlignment="Right"
@@ -38,8 +50,6 @@
 				<TextBlock Text="SmarTest" Style="{StaticResource BrandTitle}"/>
 				<TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
 
-				<!-- Badge + Titre -->
-
 				<TextBlock Text="Bon retour !" FontFamily="Georgia" FontSize="22"
                            Foreground="#0f1e3d" HorizontalAlignment="Center" Margin="0,0,0,0"/>
 				<Border Style="{StaticResource AccentLine}"/>
@@ -57,12 +67,32 @@
                          Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0,0,0,12"/>
 
-				<!-- Mot de passe -->
+				<!-- Mot de passe avec œil -->
 				<TextBlock Text="Mot de passe" Style="{StaticResource FieldLabel}"/>
-				<PasswordBox x:Name="PasswordBox"
-                             Style="{StaticResource InputPassword}"
-                             PasswordChanged="PasswordBox_PasswordChanged"
-                             Margin="0,0,0,6"/>
+				<Grid Margin="0,0,0,6">
+					<PasswordBox x:Name="PasswordBox"
+                                 Style="{StaticResource InputPassword}"
+                                 PasswordChanged="PasswordBox_PasswordChanged"/>
+					<!-- TextBox visible quand ShowPassword = True -->
+					<TextBox x:Name="PasswordTextBox"
+                             Style="{StaticResource InputBox}"
+                             Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                             Visibility="Collapsed"
+                             Padding="10,0,36,0"/>
+					<!-- Bouton œil -->
+					<Button x:Name="TogglePasswordBtn"
+                            Width="30" Height="30"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Click="TogglePassword_Click"
+                            ToolTip="Afficher / masquer le mot de passe">
+						<TextBlock x:Name="EyeIcon" Text="🔓" FontSize="15" Foreground="#0f1e3d"/>
+					</Button>
+				</Grid>
 
 				<!-- Mot de passe oublié -->
 				<TextBlock HorizontalAlignment="Right" Margin="0,0,0,18">

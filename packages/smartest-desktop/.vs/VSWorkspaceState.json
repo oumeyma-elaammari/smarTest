@@ -1,11 +1,13 @@
 {
   "ExpandedNodes": [
     "",
+    "\\Data",
     "\\Data\\LocalEntities",
     "\\Services",
+    "\\ViewModels",
     "\\Views",
-    "\\Views\\styles"
+    "\\Views\\Styles"
   ],
-  "SelectedNode": "\\Views\\DashboardWindow.xaml.cs",
+  "SelectedNode": "\\Views\\RegisterWindow.xaml.cs",
   "PreviewInSolutionExplorer": false
 }
