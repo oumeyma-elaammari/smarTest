@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
     "",
+    "\\Data",
+    "\\Data\\LocalEntities",
     "\\Services",
+    "\\ViewModels",
     "\\Views",
     "\\Views\\Styles"
   ],
