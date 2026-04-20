@@ -22,6 +22,23 @@ namespace smartest_desktop.Data.LocalEntities
 
         public DateTime DateImport { get; set; } = DateTime.Now;
 
+        // ═══════════════════════════════════════════════════════
+        //  PROPRIÉTÉS AJOUTÉES pour corriger les erreurs
+        // ═══════════════════════════════════════════════════════
+
+        [MaxLength(100)]
+        public string Categorie { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string TypeFichier { get; set; } = string.Empty;
+
+        public long TailleFichier { get; set; } = 0;
+
+        public string NomFichier { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string Statut { get; set; } = "Actif";
+
         // ── Navigation ──────────────────────────────────────────
         public List<QuestionLocale> Questions { get; set; } = new();
 

@@ -38,7 +38,7 @@ namespace smartest_desktop.Services
                 var response = await _httpClient.PostAsync("/auth/register", ToJson(body));
                 var content = await response.Content.ReadAsStringAsync();
 
-                if (response.IsSuccessStatusCode) return null;
+                if (response.IsSuccessStatusCode) return null!;
 
                 return (int)response.StatusCode switch
                 {
@@ -65,7 +65,7 @@ namespace smartest_desktop.Services
                 var url = $"/auth/verify-email/code?email={Uri.EscapeDataString(email)}&code={code}";
                 var response = await _httpClient.PostAsync(url, null);
 
-                if (response.IsSuccessStatusCode) return null;
+                if (response.IsSuccessStatusCode) return null!;
 
                 return (int)response.StatusCode switch
                 {
@@ -90,7 +90,7 @@ namespace smartest_desktop.Services
                 var url = $"/auth/verify-email/resend?email={Uri.EscapeDataString(email)}";
                 var response = await _httpClient.PostAsync(url, null);
 
-                if (response.IsSuccessStatusCode) return null;
+                if (response.IsSuccessStatusCode) return null!;
 
                 return "Impossible de renvoyer le code.";
             }
@@ -102,9 +102,9 @@ namespace smartest_desktop.Services
         }
 
         // ══════════════════════════════════════════════
-        //  LOGIN
+        //  LOGIN - CORRIGÉ
         // ══════════════════════════════════════════════
-        public async Task<(AuthResponse auth, string error)> LoginAsync(
+        public async Task<(AuthResponse? auth, string error)> LoginAsync(
             string email, string password)
         {
             try
@@ -120,7 +120,7 @@ namespace smartest_desktop.Services
                     if (auth?.Role != "PROFESSEUR")
                         return (null, "Ce compte n'est pas un compte professeur.");
 
-                    return (auth, null);
+                    return (auth, null!);
                 }
 
                 int status = (int)response.StatusCode;
@@ -165,7 +165,7 @@ namespace smartest_desktop.Services
                 var response = await _httpClient.PostAsync(
                     "/auth/forgot-password/professeur", ToJson(body));
 
-                if (response.IsSuccessStatusCode) return null;
+                if (response.IsSuccessStatusCode) return null!;
 
                 var content = await response.Content.ReadAsStringAsync();
                 return (int)response.StatusCode switch
@@ -194,7 +194,7 @@ namespace smartest_desktop.Services
                 var response = await _httpClient.PostAsync(
                     "/auth/reset-password/professeur", ToJson(body));
 
-                if (response.IsSuccessStatusCode) return null;
+                if (response.IsSuccessStatusCode) return null!;
 
                 var content = await response.Content.ReadAsStringAsync();
                 string serverMsg = content?.Trim('"').ToLower() ?? "";
