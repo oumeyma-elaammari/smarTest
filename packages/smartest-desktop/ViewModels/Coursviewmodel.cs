@@ -1,32 +1,101 @@
 ﻿using Microsoft.Win32;
+using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Helpers;
-using smartest_desktop.Services;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CategorieItem — wrapper exposant IsActive et PeutSupprimer comme propriétés
+    // pour éviter tout Binding sur Value dans les DataTrigger (limitation WPF).
+    // ═══════════════════════════════════════════════════════════════════════════
+    public class CategorieItem : BaseViewModel
+    {
+        private string _nom = string.Empty;
+        public string Nom
+        {
+            get => _nom;
+            set
+            {
+                SetProperty(ref _nom, value);
+                OnPropertyChanged(nameof(PeutSupprimer));
+            }
+        }
+
+        private bool _isActive;
+        public bool IsActive
+        {
+            get => _isActive;
+            set => SetProperty(ref _isActive, value);
+        }
+
+        public bool PeutSupprimer => Nom != "Tous les cours";
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CoursViewModel
+    // ═══════════════════════════════════════════════════════════════════════════
     public class CoursViewModel : BaseViewModel
     {
-        // ══════════════════════════════════════════════════════════
-        //  Services
-        // ══════════════════════════════════════════════════════════
-        private readonly LocalCoursService _coursService;
-        private readonly ImportService _importService;
+        private readonly LocalDbContext _db;
 
-        // ══════════════════════════════════════════════════════════
-        //  PROPRIÉTÉS — Liste des cours
-        // ══════════════════════════════════════════════════════════
-
-        private ObservableCollection<CoursLocal> _cours = new();
-        public ObservableCollection<CoursLocal> Cours
+        // ── Prof info ──────────────────────────────────────────────────────────
+        private string _professeurNom = string.Empty;
+        public string ProfesseurNom
         {
-            get => _cours;
-            set => SetProperty(ref _cours, value);
+            get => _professeurNom;
+            set => SetProperty(ref _professeurNom, value);
+        }
+
+        private string _professeurEmail = string.Empty;
+        public string ProfesseurEmail
+        {
+            get => _professeurEmail;
+            set => SetProperty(ref _professeurEmail, value);
+        }
+
+        // ── Categories ────────────────────────────────────────────────────────
+        public ObservableCollection<CategorieItem> Categories { get; set; } = new();
+        public Dictionary<string, ObservableCollection<CoursLocal>> CoursParCategorie { get; set; } = new();
+
+        private string _categorieSelectionnee = "Tous les cours";
+        public string CategorieSelectionnee
+        {
+            get => _categorieSelectionnee;
+            set
+            {
+                foreach (var cat in Categories)
+                    cat.IsActive = cat.Nom == value;
+
+                SetProperty(ref _categorieSelectionnee, value);
+                RefreshCoursDisplay();
+            }
+        }
+
+        private string _nouvelleCategorie = string.Empty;
+        public string NouvelleCategorie
+        {
+            get => _nouvelleCategorie;
+            set => SetProperty(ref _nouvelleCategorie, value);
+        }
+
+        // ── Cours list ────────────────────────────────────────────────────────
+        private ObservableCollection<CoursLocal> _coursFiltres = new();
+        public ObservableCollection<CoursLocal> CoursFiltres
+        {
+            get => _coursFiltres;
+            set
+            {
+                SetProperty(ref _coursFiltres, value);
+                OnPropertyChanged(nameof(HasAnyCours));
+                OnPropertyChanged(nameof(HasNoCours));
+            }
         }
 
         private CoursLocal? _coursSelectionne;
@@ -36,242 +105,145 @@ namespace smartest_desktop.ViewModels
             set
             {
                 SetProperty(ref _coursSelectionne, value);
-                // Mise à jour automatique de l'aperçu
-                OnPropertyChanged(nameof(ContenuApercu));
-                OnPropertyChanged(nameof(NombreQuestions));
-                OnPropertyChanged(nameof(StatistiquesTexte));
                 OnPropertyChanged(nameof(HasCoursSelectionne));
-            }
-        }
-
-        // ══════════════════════════════════════════════════════════
-        //  PROPRIÉTÉS — Aperçu et infos
-        // ══════════════════════════════════════════════════════════
-
-        /// <summary>Aperçu du contenu du cours sélectionné</summary>
-        public string ContenuApercu
-        {
-            get
-            {
-                if (CoursSelectionne == null)
-                    return "Sélectionnez un cours pour voir son contenu.";
-
-                // Charger le contenu complet depuis SQLite
-                var cours = _coursService.GetById(CoursSelectionne.Id);
-                return cours?.Contenu ?? "(contenu vide)";
-            }
-        }
-
-        /// <summary>Nombre de questions du cours sélectionné</summary>
-        public int NombreQuestions =>
-            CoursSelectionne == null
-                ? 0
-                : _coursService.NombreQuestions(CoursSelectionne.Id);
-
-        /// <summary>Statistiques du contenu (mots, lignes)</summary>
-        public string StatistiquesTexte
-        {
-            get
-            {
-                if (CoursSelectionne == null) return string.Empty;
-                var cours = _coursService.GetById(CoursSelectionne.Id);
-                if (cours == null) return string.Empty;
-
-                var (mots, lignes, chars) = ImportService.Statistiques(cours.Contenu);
-                return $"{mots} mots  •  {lignes} lignes  •  {chars} caractères";
+                OnPropertyChanged(nameof(HasNoCoursSelectionne));
             }
         }
 
         public bool HasCoursSelectionne => CoursSelectionne != null;
+        public bool HasNoCoursSelectionne => CoursSelectionne == null;
+        public bool HasAnyCours => CoursFiltres.Count > 0;
+        public bool HasNoCours => CoursFiltres.Count == 0;
 
-        // ══════════════════════════════════════════════════════════
-        //  PROPRIÉTÉS — Recherche
-        // ══════════════════════════════════════════════════════════
-
-        private string _recherche = string.Empty;
-        public string Recherche
+        // ── State ─────────────────────────────────────────────────────────────
+        private string _errorMessage = string.Empty;
+        public string ErrorMessage
         {
-            get => _recherche;
-            set
-            {
-                SetProperty(ref _recherche, value);
-                ExecuteRecherche();
-            }
+            get => _errorMessage;
+            set { SetProperty(ref _errorMessage, value); OnPropertyChanged(nameof(HasError)); }
         }
 
-        // ══════════════════════════════════════════════════════════
-        //  PROPRIÉTÉS — Import en cours
-        // ══════════════════════════════════════════════════════════
+        private string _successMessage = string.Empty;
+        public string SuccessMessage
+        {
+            get => _successMessage;
+            set { SetProperty(ref _successMessage, value); OnPropertyChanged(nameof(HasSuccess)); }
+        }
 
         private bool _isLoading;
         public bool IsLoading
         {
             get => _isLoading;
-            set
-            {
-                SetProperty(ref _isLoading, value);
-                OnPropertyChanged(nameof(IsNotLoading));
-            }
-        }
-        public bool IsNotLoading => !_isLoading;
-
-        private string _messageStatut = string.Empty;
-        public string MessageStatut
-        {
-            get => _messageStatut;
-            set => SetProperty(ref _messageStatut, value);
+            set { SetProperty(ref _isLoading, value); OnPropertyChanged(nameof(IsNotLoading)); }
         }
 
-        private bool _hasError;
-        public bool HasError
-        {
-            get => _hasError;
-            set => SetProperty(ref _hasError, value);
-        }
+        public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+        public bool HasSuccess => !string.IsNullOrEmpty(SuccessMessage);
+        public bool IsNotLoading => !IsLoading;
 
-        // ══════════════════════════════════════════════════════════
-        //  COMMANDES
-        // ══════════════════════════════════════════════════════════
-
-        public ICommand ImporterPdfCommand { get; }
-        public ICommand ImporterWordCommand { get; }
-        public ICommand ImporterFichierCommand { get; }  // tous formats
+        // ── Commands ──────────────────────────────────────────────────────────
+        public ICommand SelectionnerCategorieCommand { get; }
+        public ICommand SelectionnerCoursCommand { get; }
+        public ICommand AjouterCategorieCommand { get; }
+        public ICommand SupprimerCategorieCommand { get; }
+        public ICommand ImporterCommand { get; }
         public ICommand SupprimerCommand { get; }
-        public ICommand ModifierTitreCommand { get; }
-        public ICommand RafraichirCommand { get; }
-        public ICommand OuvrirQuestionsCommand { get; }
+        public ICommand RetourDashboardCommand { get; }
+        public ICommand LogoutCommand { get; }
 
-        // ══════════════════════════════════════════════════════════
-        //  CONSTRUCTEUR
-        // ══════════════════════════════════════════════════════════
+        public event Action? NavigateToDashboardRequested;
 
+        // ── Constructor ───────────────────────────────────────────────────────
         public CoursViewModel()
         {
-            _coursService = new LocalCoursService();
-            _importService = new ImportService();
+            _db = App.LocalDb;
 
-            // Initialiser les commandes
-            ImporterPdfCommand = new RelayCommand(_ => ExecuteImporterPdf(), _ => IsNotLoading);
-            ImporterWordCommand = new RelayCommand(_ => ExecuteImporterWord(), _ => IsNotLoading);
-            ImporterFichierCommand = new RelayCommand(_ => ExecuteImporterFichier(), _ => IsNotLoading);
-            SupprimerCommand = new RelayCommand(_ => ExecuteSupprimer(), _ => HasCoursSelectionne);
-            ModifierTitreCommand = new RelayCommand(_ => ExecuteModifierTitre(), _ => HasCoursSelectionne);
-            RafraichirCommand = new RelayCommand(_ => ChargerCours());
-            OuvrirQuestionsCommand = new RelayCommand(_ => ExecuteOuvrirQuestions(), _ => HasCoursSelectionne);
+            ProfesseurNom = WpfApp.Current.Properties["Nom"]?.ToString() ?? "Professeur";
+            ProfesseurEmail = WpfApp.Current.Properties["Email"]?.ToString() ?? string.Empty;
 
-            // Charger la liste au démarrage
-            ChargerCours();
+            SelectionnerCategorieCommand = new RelayCommand(
+                param =>
+                {
+                    if (param is CategorieItem item)
+                        CategorieSelectionnee = item.Nom;
+                });
+
+            SelectionnerCoursCommand = new RelayCommand(
+                param => CoursSelectionne = param as CoursLocal);
+
+            AjouterCategorieCommand = new RelayCommand(
+                _ => AjouterCategorie(),
+                _ => !string.IsNullOrWhiteSpace(NouvelleCategorie));
+
+            SupprimerCategorieCommand = new RelayCommand(
+                param =>
+                {
+                    if (param is CategorieItem item)
+                        _ = SupprimerCategorie(item.Nom);
+                },
+                param => param is CategorieItem item && item.PeutSupprimer);
+
+            ImporterCommand = new RelayCommand(
+                async _ => await ImporterCours(),
+                _ => IsNotLoading);
+
+            SupprimerCommand = new RelayCommand(
+                async _ => await SupprimerCours(),
+                _ => CoursSelectionne != null && IsNotLoading);
+
+            RetourDashboardCommand = new RelayCommand(
+                _ => NavigateToDashboardRequested?.Invoke());
+
+            LogoutCommand = new RelayCommand(
+                _ => ExecuteLogout());
+
+            Categories.Add(new CategorieItem { Nom = "Tous les cours", IsActive = true });
+            CoursParCategorie["Tous les cours"] = new ObservableCollection<CoursLocal>();
+            CoursFiltres = new ObservableCollection<CoursLocal>();
+
+            _ = ChargerCours();
         }
 
-        // ══════════════════════════════════════════════════════════
-        //  CHARGEMENT
-        // ══════════════════════════════════════════════════════════
+        // ── Helpers ───────────────────────────────────────────────────────────
+        private CategorieItem? TrouverCategorie(string nom)
+            => Categories.FirstOrDefault(c => c.Nom == nom);
 
-        private void ChargerCours()
+        private void AjouterCategorieInterne(string nom)
         {
+            if (TrouverCategorie(nom) != null) return;
+            Categories.Add(new CategorieItem { Nom = nom, IsActive = false });
+            CoursParCategorie[nom] = new ObservableCollection<CoursLocal>();
+        }
+
+        // ── Data loading ──────────────────────────────────────────────────────
+        private async Task ChargerCours()
+        {
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+
             try
             {
-                var liste = _coursService.GetAllSansQuestions();
-                Cours = new ObservableCollection<CoursLocal>(liste);
-                MessageStatut = $"{Cours.Count} cours chargé(s)";
-                HasError = false;
+                var liste = await Task.Run(() => _db.Cours.ToList());
+
+                foreach (var cat in CoursParCategorie.Keys.ToList())
+                    CoursParCategorie[cat].Clear();
+
+                foreach (var cat in Categories.Where(c => c.Nom != "Tous les cours").ToList())
+                    Categories.Remove(cat);
+
+                foreach (var cours in liste)
+                {
+                    CoursParCategorie["Tous les cours"].Add(cours);
+                    string cat = string.IsNullOrWhiteSpace(cours.Categorie) ? "Non catégorisé" : cours.Categorie;
+                    AjouterCategorieInterne(cat);
+                    CoursParCategorie[cat].Add(cours);
+                }
+
+                RefreshCoursDisplay();
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                HasError = true;
-                MessageStatut = $"Erreur chargement : {ex.Message}";
-            }
-        }
-
-        // ══════════════════════════════════════════════════════════
-        //  IMPORT PDF
-        // ══════════════════════════════════════════════════════════
-
-        private void ExecuteImporterPdf()
-        {
-            var dialog = new OpenFileDialog
-            {
-                Title = "Importer un cours PDF",
-                Filter = "Fichiers PDF|*.pdf",
-            };
-
-            if (dialog.ShowDialog() != true) return;
-
-            ExecuteImport(dialog.FileName);
-        }
-
-        // ══════════════════════════════════════════════════════════
-        //  IMPORT WORD
-        // ══════════════════════════════════════════════════════════
-
-        private void ExecuteImporterWord()
-        {
-            var dialog = new OpenFileDialog
-            {
-                Title = "Importer un cours Word",
-                Filter = "Fichiers Word|*.docx",
-            };
-
-            if (dialog.ShowDialog() != true) return;
-
-            ExecuteImport(dialog.FileName);
-        }
-
-        // ══════════════════════════════════════════════════════════
-        //  IMPORT TOUS FORMATS
-        // ══════════════════════════════════════════════════════════
-
-        private void ExecuteImporterFichier()
-        {
-            var dialog = new OpenFileDialog
-            {
-                Title = "Importer un cours",
-                Filter = ImportService.FiltreOpenFileDialog,
-            };
-
-            if (dialog.ShowDialog() != true) return;
-
-            ExecuteImport(dialog.FileName);
-        }
-
-        // ══════════════════════════════════════════════════════════
-        //  LOGIQUE COMMUNE D'IMPORT
-        // ══════════════════════════════════════════════════════════
-
-        private void ExecuteImport(string cheminFichier)
-        {
-            try
-            {
-                IsLoading = true;
-                HasError = false;
-                MessageStatut = "Import en cours...";
-
-                // Demander un titre personnalisé
-                string nomFichier = System.IO.Path.GetFileNameWithoutExtension(cheminFichier);
-                string titre = Microsoft.VisualBasic.Interaction.InputBox(
-                    "Titre du cours (laisser vide pour utiliser le nom du fichier) :",
-                    "Titre du cours",
-                    nomFichier
-                );
-
-                // Import
-                var cours = _importService.ImporterFichier(cheminFichier, titre);
-
-                // Rafraîchir la liste
-                ChargerCours();
-
-                // Sélectionner le nouveau cours
-                CoursSelectionne = Cours.FirstOrDefault(c => c.Id == cours.Id);
-
-                var (mots, _, _) = ImportService.Statistiques(cours.Contenu);
-                MessageStatut = $"✅ Cours importé : '{cours.Titre}' ({mots} mots)";
-            }
-            catch (Exception ex)
-            {
-                HasError = true;
-                MessageStatut = $"❌ {ex.Message}";
-                MessageBox.Show(ex.Message, "Erreur d'import",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                ErrorMessage = $"Erreur chargement : {ex.Message}";
             }
             finally
             {
@@ -279,114 +251,233 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        // ══════════════════════════════════════════════════════════
-        //  MODIFIER TITRE
-        // ══════════════════════════════════════════════════════════
-
-        private void ExecuteModifierTitre()
+        private void RefreshCoursDisplay()
         {
-            if (CoursSelectionne == null) return;
+            CoursFiltres.Clear();
+            if (CoursParCategorie.TryGetValue(CategorieSelectionnee, out var collection))
+                foreach (var c in collection)
+                    CoursFiltres.Add(c);
 
-            string nouveauTitre = Microsoft.VisualBasic.Interaction.InputBox(
-                "Nouveau titre du cours :",
-                "Modifier le titre",
-                CoursSelectionne.Titre
-            );
-
-            if (string.IsNullOrWhiteSpace(nouveauTitre)) return;
-            if (nouveauTitre == CoursSelectionne.Titre) return;
-
-            try
-            {
-                _coursService.Modifier(CoursSelectionne.Id, nouveauTitre);
-                ChargerCours();
-                MessageStatut = $"✅ Titre modifié : '{nouveauTitre}'";
-            }
-            catch (Exception ex)
-            {
-                HasError = true;
-                MessageStatut = $"❌ {ex.Message}";
-            }
+            OnPropertyChanged(nameof(HasAnyCours));
+            OnPropertyChanged(nameof(HasNoCours));
         }
 
-        // ══════════════════════════════════════════════════════════
-        //  SUPPRIMER
-        // ══════════════════════════════════════════════════════════
-
-        private void ExecuteSupprimer()
+        // ── Category management ───────────────────────────────────────────────
+        private void AjouterCategorie()
         {
-            if (CoursSelectionne == null) return;
+            if (string.IsNullOrWhiteSpace(NouvelleCategorie)) return;
+            string nom = NouvelleCategorie.Trim();
 
-            int nbQuestions = _coursService.NombreQuestions(CoursSelectionne.Id);
+            if (TrouverCategorie(nom) != null)
+            {
+                ErrorMessage = "Cette catégorie existe déjà !";
+                SuccessMessage = string.Empty;
+                return;
+            }
 
-            // Message d'avertissement si des questions sont liées
-            string message = nbQuestions > 0
-                ? $"Supprimer '{CoursSelectionne.Titre}' ?\n\n" +
-                  $"⚠️ {nbQuestions} question(s) associée(s) seront également supprimées."
-                : $"Supprimer '{CoursSelectionne.Titre}' ?";
+            AjouterCategorieInterne(nom);
+            SuccessMessage = $"Catégorie \"{nom}\" créée !";
+            ErrorMessage = string.Empty;
+            NouvelleCategorie = string.Empty;
+        }
+
+        private async Task SupprimerCategorie(string nomCategorie)
+        {
+            if (nomCategorie == "Tous les cours") return;
 
             var result = MessageBox.Show(
-                message,
-                "Confirmer la suppression",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question
-            );
+                $"Supprimer la catégorie \"{nomCategorie}\" ?\nLes cours seront déplacés vers \"Non catégorisé\".",
+                "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
 
+            const string fallback = "Non catégorisé";
+            AjouterCategorieInterne(fallback);
+
+            foreach (var cours in CoursParCategorie[nomCategorie].ToList())
+            {
+                cours.Categorie = fallback;
+                CoursParCategorie[fallback].Add(cours);
+
+                var coursDb = await _db.Cours.FindAsync(cours.Id);
+                if (coursDb != null)
+                    coursDb.Categorie = fallback;
+            }
+
+            var item = TrouverCategorie(nomCategorie);
+            if (item != null) Categories.Remove(item);
+            CoursParCategorie.Remove(nomCategorie);
+
+            CategorieSelectionnee = "Tous les cours";
+            SuccessMessage = "Catégorie supprimée.";
+            ErrorMessage = string.Empty;
+
+            await _db.SaveChangesAsync();
+        }
+
+        // ── Import ────────────────────────────────────────────────────────────
+        private async Task ImporterCours()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Importer un cours",
+                Filter = "Documents|*.pdf;*.docx;*.txt|PDF|*.pdf|Word|*.docx|Texte|*.txt",
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() != true) return;
+
+            IsLoading = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+
             try
             {
-                int id = CoursSelectionne.Id;
-                string titre = CoursSelectionne.Titre;
-                CoursSelectionne = null;
+                string chemin = dialog.FileName;
+                string nom = Path.GetFileNameWithoutExtension(chemin);
+                string extension = Path.GetExtension(chemin).ToLower();
+                long taille = new FileInfo(chemin).Length;
+                string contenu = string.Empty;
 
-                _coursService.Supprimer(id);
-                ChargerCours();
-                MessageStatut = $"✅ Cours supprimé : '{titre}'";
+                await Task.Run(() =>
+                {
+                    contenu = extension switch
+                    {
+                        ".txt" => File.ReadAllText(chemin),
+                        ".pdf" => ExtraireTextePdf(chemin),
+                        ".docx" => ExtraireTexteDocx(chemin),
+                        _ => File.ReadAllText(chemin)
+                    };
+                });
+
+                string categorieCible = CategorieSelectionnee != "Tous les cours"
+                    ? CategorieSelectionnee
+                    : "Non catégorisé";
+
+                var cours = new CoursLocal
+                {
+                    Titre = nom,
+                    Contenu = contenu,
+                    CheminFichier = chemin,
+                    DateImport = System.DateTime.Now,
+                    TypeFichier = extension.TrimStart('.').ToUpper(),
+                    TailleFichier = taille,
+                    Categorie = categorieCible
+                };
+
+                _db.Cours.Add(cours);
+                await _db.SaveChangesAsync();
+
+                CoursParCategorie["Tous les cours"].Add(cours);
+                AjouterCategorieInterne(categorieCible);
+                CoursParCategorie[categorieCible].Add(cours);
+
+                RefreshCoursDisplay();
+                SuccessMessage = $"Cours \"{nom}\" importé dans \"{categorieCible}\" !";
+                ErrorMessage = string.Empty;
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
-                HasError = true;
-                MessageStatut = $"❌ {ex.Message}";
+                ErrorMessage = $"Erreur import : {ex.Message}";
+                SuccessMessage = string.Empty;
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
-        // ══════════════════════════════════════════════════════════
-        //  OUVRIR QUESTIONS
-        // ══════════════════════════════════════════════════════════
-
-        private void ExecuteOuvrirQuestions()
+        // ── Delete course ─────────────────────────────────────────────────────
+        private async Task SupprimerCours()
         {
             if (CoursSelectionne == null) return;
 
-            // Sera implémenté dans EPIC 3
-            // Ouvre QuestionWindow avec ce cours présélectionné
-            MessageBox.Show(
-                $"Génération de questions pour :\n'{CoursSelectionne.Titre}'\n\n(Disponible dans EPIC 3)",
-                "Questions",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information
-            );
+            var result = MessageBox.Show(
+                $"Supprimer le cours \"{CoursSelectionne.Titre}\" ?",
+                "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            IsLoading = true;
+
+            try
+            {
+                var toDelete = CoursSelectionne;
+                _db.Cours.Remove(toDelete);
+                await _db.SaveChangesAsync();
+
+                foreach (var kvp in CoursParCategorie)
+                    kvp.Value.Remove(toDelete);
+
+                CoursFiltres.Remove(toDelete);
+                CoursSelectionne = null;
+                SuccessMessage = "Cours supprimé.";
+                ErrorMessage = string.Empty;
+
+                OnPropertyChanged(nameof(HasAnyCours));
+                OnPropertyChanged(nameof(HasNoCours));
+            }
+            catch (System.Exception ex)
+            {
+                ErrorMessage = $"Erreur suppression : {ex.Message}";
+                SuccessMessage = string.Empty;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
-        // ══════════════════════════════════════════════════════════
-        //  RECHERCHE
-        // ══════════════════════════════════════════════════════════
+        // ── Logout ────────────────────────────────────────────────────────────
+        private void ExecuteLogout()
+        {
+            var result = MessageBox.Show(
+                "Voulez-vous vraiment vous déconnecter ?",
+                "Déconnexion", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-        private void ExecuteRecherche()
+            if (result != MessageBoxResult.Yes) return;
+
+            WpfApp.Current.Properties["Token"] = null;
+            WpfApp.Current.Properties["Nom"] = null;
+            WpfApp.Current.Properties["Email"] = null;
+
+            var login = new Views.LoginWindow();
+            login.Show();
+
+            foreach (Window w in WpfApp.Current.Windows)
+            {
+                if (w is Views.CoursWindow) { w.Close(); break; }
+            }
+        }
+
+        // ── Text extractors ───────────────────────────────────────────────────
+        private string ExtraireTextePdf(string chemin)
         {
             try
             {
-                var resultats = _coursService.Rechercher(Recherche);
-                Cours = new ObservableCollection<CoursLocal>(resultats);
-                MessageStatut = string.IsNullOrWhiteSpace(Recherche)
-                    ? $"{Cours.Count} cours chargé(s)"
-                    : $"{Cours.Count} résultat(s) pour '{Recherche}'";
+                var sb = new System.Text.StringBuilder();
+                using var doc = UglyToad.PdfPig.PdfDocument.Open(chemin);
+                foreach (var page in doc.GetPages())
+                    sb.AppendLine(page.Text);
+                return sb.ToString();
             }
-            catch (Exception ex)
+            catch
             {
-                HasError = true;
-                MessageStatut = $"❌ {ex.Message}";
+                return $"[Contenu PDF — {Path.GetFileName(chemin)}]";
+            }
+        }
+
+        private string ExtraireTexteDocx(string chemin)
+        {
+            try
+            {
+                using var doc = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(chemin, false);
+                var body = doc.MainDocumentPart?.Document?.Body;
+                return body?.InnerText ?? string.Empty;
+            }
+            catch
+            {
+                return $"[Contenu DOCX — {Path.GetFileName(chemin)}]";
             }
         }
     }
