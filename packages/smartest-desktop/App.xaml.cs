@@ -1,5 +1,4 @@
 ﻿using smartest_desktop.Data;
-using smartest_desktop.Views;
 using System;
 using System.Windows;
 
@@ -20,9 +19,9 @@ namespace smartest_desktop
 
                 ShutdownMode = ShutdownMode.OnLastWindowClose;
 
-                var login = new LoginWindow();
-                MainWindow = login;
-                login.Show();
+                var welcome = new MainWindow();
+                MainWindow = welcome;
+                welcome.Show();
             }
             catch (Exception ex)
             {

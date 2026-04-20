@@ -1,12 +1,208 @@
 ﻿<Window x:Class="smartest_desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:smartest_desktop"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="SmarTest — Bienvenue"
+        Height="700" Width="1100"
+        MinHeight="560" MinWidth="900"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen"
+        Background="#f0f3f9">
 
-    </Grid>
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/Views/Styles/AuthStyles.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</Window.Resources>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<!-- Glows décoratifs -->
+		<Ellipse Width="500" Height="500"
+                 HorizontalAlignment="Right" VerticalAlignment="Top"
+                 Margin="0,-200,-120,0"
+                 Fill="#4f8ef7" Opacity="0.05"
+                 Grid.RowSpan="3"/>
+		<Ellipse Width="350" Height="350"
+                 HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                 Margin="-80,0,0,-120"
+                 Fill="#0f1e3d" Opacity="0.03"
+                 Grid.RowSpan="3"/>
+
+		<!-- NAVBAR -->
+		<Border Grid.Row="0" Background="White"
+                BorderBrush="#e2e8f4" BorderThickness="0,0,0,1"
+                Padding="56,0" Height="48">
+			<Grid>
+				<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+					<Ellipse Width="8" Height="8" Fill="#4f8ef7" Margin="0,0,10,0"/>
+					<TextBlock FontFamily="Georgia" FontSize="20" FontWeight="Bold"
+                               Foreground="#0f1e3d" VerticalAlignment="Center">
+						Smar<Run Foreground="#4f8ef7">Test</Run>
+					</TextBlock>
+				</StackPanel>
+				<Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Background="#f8fafd" CornerRadius="20"
+                        BorderBrush="#e2e8f4" BorderThickness="1"
+                        Padding="14,4">
+					<TextBlock Text="ENSA · GÉNIE INFORMATIQUE · 2025–2026"
+                               FontSize="10" Foreground="#8899b8" FontWeight="SemiBold"/>
+				</Border>
+			</Grid>
+		</Border>
+
+		<!-- HERO -->
+		<Grid Grid.Row="1">
+			<StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+
+				<!-- Badge -->
+				<Border Background="#eef3fd" CornerRadius="20"
+                        BorderBrush="#d0ddf5" BorderThickness="1"
+                        Padding="18,6" HorizontalAlignment="Center"
+                        Margin="0,0,0,24">
+					<StackPanel Orientation="Horizontal">
+						<Ellipse Width="6" Height="6" Fill="#4f8ef7"
+                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
+						<TextBlock Text="PLATEFORME D'ÉVALUATION INTELLIGENTE"
+                                   FontSize="10" Foreground="#4f8ef7" FontWeight="Bold"/>
+					</StackPanel>
+				</Border>
+
+				<!-- Titre -->
+				<TextBlock FontFamily="Georgia" FontSize="52" FontWeight="Bold"
+                           HorizontalAlignment="Center" Margin="0,0,0,6">
+					<Run Foreground="#0f1e3d">Smar</Run>
+					<Run Foreground="#4f8ef7">Test</Run>
+				</TextBlock>
+
+				<!-- Sous-titre -->
+				<TextBlock Text="SYSTÈME SÉCURISÉ DE GESTION DES QUIZ &amp; EXAMENS"
+                           FontSize="11" Foreground="#8899b8" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Margin="0,0,0,14"/>
+
+				<!-- Ligne accent -->
+				<Border Width="44" Height="2" Background="#0f1e3d"
+                        CornerRadius="2" HorizontalAlignment="Center"
+                        Margin="0,0,0,22"/>
+
+				<!-- Description -->
+				<TextBlock HorizontalAlignment="Center" FontSize="14"
+                           Foreground="#6b7a99" TextWrapping="Wrap"
+                           MaxWidth="500" TextAlignment="Center"
+                           LineHeight="26" Margin="0,0,0,36">
+					Créez et supervisez vos évaluations avec une IA
+					<Run Foreground="#0f1e3d" FontWeight="SemiBold">100% locale</Run>
+					— vos données pédagogiques ne quittent
+					<Run Foreground="#0f1e3d" FontWeight="SemiBold">jamais</Run>
+					votre poste.
+				</TextBlock>
+
+				<!-- Boutons -->
+				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                            Margin="0,0,0,44">
+					<Button Style="{StaticResource PrimaryBtn}"
+                            Command="{Binding GoToLoginCommand}"
+                            Width="180" Margin="0,0,12,0"
+                            Background="#0f1e3d" Height="46">
+						<TextBlock Text="Se connecter" FontSize="13"/>
+					</Button>
+					<Button Style="{StaticResource SecondaryBtn}"
+                            Command="{Binding GoToRegisterCommand}"
+                            Width="230" Height="46">
+						<TextBlock Text="Créer un compte professeur" FontSize="13"/>
+					</Button>
+				</StackPanel>
+
+				<!-- Feature cards -->
+				<UniformGrid Columns="3" Width="780">
+					<Border Background="White" CornerRadius="14"
+                            BorderBrush="#e2e8f4" BorderThickness="1"
+                            Padding="20,22" Margin="0,0,8,0">
+						<StackPanel>
+							<Border Width="42" Height="42" CornerRadius="11"
+                                    Background="#eef3fd" BorderBrush="#d0ddf5"
+                                    BorderThickness="1" HorizontalAlignment="Center"
+                                    Margin="0,0,0,12">
+								<TextBlock Text="🤖" FontSize="18"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+							</Border>
+							<TextBlock Text="IA locale Ollama"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#0f1e3d"
+                                       HorizontalAlignment="Center" Margin="0,0,0,6"/>
+							<TextBlock Text="Génération automatique de questions QCM, V/F et rédaction sans appel externe"
+                                       FontSize="11" Foreground="#8899b8"
+                                       TextWrapping="Wrap" TextAlignment="Center"
+                                       LineHeight="17"/>
+						</StackPanel>
+					</Border>
+
+					<Border Background="White" CornerRadius="14"
+                            BorderBrush="#e2e8f4" BorderThickness="1"
+                            Padding="20,22" Margin="4,0,4,0">
+						<StackPanel>
+							<Border Width="42" Height="42" CornerRadius="11"
+                                    Background="#eef3fd" BorderBrush="#d0ddf5"
+                                    BorderThickness="1" HorizontalAlignment="Center"
+                                    Margin="0,0,0,12">
+								<TextBlock Text="🔒" FontSize="18"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+							</Border>
+							<TextBlock Text="Données confidentielles"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#0f1e3d"
+                                       HorizontalAlignment="Center" Margin="0,0,0,6"/>
+							<TextBlock Text="Cours et questions stockés exclusivement en local — zéro cloud"
+                                       FontSize="11" Foreground="#8899b8"
+                                       TextWrapping="Wrap" TextAlignment="Center"
+                                       LineHeight="17"/>
+						</StackPanel>
+					</Border>
+
+					<Border Background="White" CornerRadius="14"
+                            BorderBrush="#e2e8f4" BorderThickness="1"
+                            Padding="20,22" Margin="8,0,0,0">
+						<StackPanel>
+							<Border Width="42" Height="42" CornerRadius="11"
+                                    Background="#eef3fd" BorderBrush="#d0ddf5"
+                                    BorderThickness="1" HorizontalAlignment="Center"
+                                    Margin="0,0,0,12">
+								<TextBlock Text="⚡" FontSize="18"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+							</Border>
+							<TextBlock Text="Supervision en temps réel"
+                                       FontSize="12" FontWeight="Bold"
+                                       Foreground="#0f1e3d"
+                                       HorizontalAlignment="Center" Margin="0,0,0,6"/>
+							<TextBlock Text="Contrôle direct des sessions d'examen et correction automatique"
+                                       FontSize="11" Foreground="#8899b8"
+                                       TextWrapping="Wrap" TextAlignment="Center"
+                                       LineHeight="17"/>
+						</StackPanel>
+					</Border>
+				</UniformGrid>
+
+			</StackPanel>
+		</Grid>
+
+		<!-- FOOTER -->
+		<Border Grid.Row="2" Background="White"
+                BorderBrush="#e2e8f4" BorderThickness="0,1,0,0"
+                Padding="0,14">
+			<TextBlock Text="SmarTest — ENSA Oujda · Génie Informatique · 2025–2026"
+                       FontSize="11" Foreground="#aab4cc"
+                       HorizontalAlignment="Center"/>
+		</Border>
+
+	</Grid>
 </Window>

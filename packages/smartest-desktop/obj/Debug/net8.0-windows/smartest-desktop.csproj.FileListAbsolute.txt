@@ -5,7 +5,6 @@ C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\RegisterWindow.g.cs
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\App.g.cs
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop_MarkupCompile.cache
-C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop_MarkupCompile.lref
 C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\smartest-desktop.exe
 C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\smartest-desktop.deps.json
 C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\smartest-desktop.runtimeconfig.json

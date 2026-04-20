@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
 
 namespace smartest_desktop.Views
@@ -22,7 +23,6 @@ namespace smartest_desktop.Views
         {
             if (PasswordBox.Visibility == Visibility.Visible)
             {
-                // Passer en mode texte clair
                 PasswordTextBox.Text = PasswordBox.Password;
                 PasswordBox.Visibility = Visibility.Collapsed;
                 PasswordTextBox.Visibility = Visibility.Visible;
@@ -30,12 +30,16 @@ namespace smartest_desktop.Views
             }
             else
             {
-                // Repasser en mode masqué
                 PasswordBox.Password = PasswordTextBox.Text;
                 PasswordTextBox.Visibility = Visibility.Collapsed;
                 PasswordBox.Visibility = Visibility.Visible;
                 EyeIcon.Text = "🔓";
             }
+        }
+
+        private void BackToWelcome_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.NavigateTo<MainWindow, LoginWindow>();
         }
     }
 }
