@@ -136,6 +136,7 @@ export default function Register() {
 
                 <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
 
+
                     <div style={{ marginBottom: '1.75rem' }}>
                         <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#4f8ef7', marginBottom: '0.5rem' }}>
                             Espace étudiant

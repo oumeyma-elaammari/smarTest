@@ -71,7 +71,6 @@ export default function Login() {
     return (
         <main style={pageStyle}>
             <div style={cardStyle}>
-
                 <h1 style={brandStyle}>SmarTest</h1>
                 <p style={brandSubStyle}>Plateforme d'évaluation</p>
 
