@@ -38,7 +38,7 @@ public class Professeur {
     private String resetPasswordToken;
 
     private LocalDateTime resetPasswordExpiry;
-    private LocalDateTime tokenVerificationExpiry;
+   private LocalDateTime tokenVerificationExpiry;
 
 
 
