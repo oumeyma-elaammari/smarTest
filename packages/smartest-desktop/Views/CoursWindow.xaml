@@ -17,7 +17,6 @@
 	<Window.Resources>
 		<BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-		<!-- Card style avec ombre -->
 		<Style x:Key="Card" TargetType="Border">
 			<Setter Property="Background" Value="White"/>
 			<Setter Property="CornerRadius" Value="14"/>
@@ -30,7 +29,6 @@
 			</Setter>
 		</Style>
 
-		<!-- Cours card hover -->
 		<Style x:Key="CoursCardStyle" TargetType="Border">
 			<Setter Property="Background" Value="White"/>
 			<Setter Property="CornerRadius" Value="12"/>
@@ -56,7 +54,6 @@
 			</Style.Triggers>
 		</Style>
 
-		<!-- Delete button -->
 		<Style x:Key="DeleteBtnStyle" TargetType="Border">
 			<Setter Property="CornerRadius" Value="9"/>
 			<Setter Property="Padding" Value="16,10"/>
@@ -72,7 +69,6 @@
 			</Style.Triggers>
 		</Style>
 
-		<!-- Primary button -->
 		<Style x:Key="PrimaryBtnStyle" TargetType="Border">
 			<Setter Property="CornerRadius" Value="9"/>
 			<Setter Property="Padding" Value="16,10"/>
@@ -85,15 +81,10 @@
 			</Style.Triggers>
 		</Style>
 
-		<!-- CategorieItem DataTemplate -->
 		<DataTemplate x:Key="CategorieTemplate" DataType="{x:Type vm:CategorieItem}">
 			<Border x:Name="CatBorder"
-                    CornerRadius="9"
-                    Padding="12,0"
-                    Height="40"
-                    Cursor="Hand"
-                    Margin="0,1"
-                    Background="Transparent">
+                    CornerRadius="9" Padding="12,0" Height="40"
+                    Cursor="Hand" Margin="0,1" Background="Transparent">
 				<Border.InputBindings>
 					<MouseBinding MouseAction="LeftClick"
                                   Command="{Binding DataContext.SelectionnerCategorieCommand,
@@ -107,27 +98,16 @@
 						<ColumnDefinition Width="Auto"/>
 					</Grid.ColumnDefinitions>
 
-					<TextBlock x:Name="FolderIcon"
-                               Grid.Column="0"
-                               Text="📁"
-                               FontSize="13"
-                               VerticalAlignment="Center"
-                               Margin="0,0,8,0"/>
+					<TextBlock x:Name="FolderIcon" Grid.Column="0" Text="📁"
+                               FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
-					<TextBlock x:Name="CatName"
-                               Grid.Column="1"
-                               Text="{Binding Nom}"
-                               FontSize="12"
-                               Foreground="#1A1A1A"
-                               VerticalAlignment="Center"
+					<TextBlock x:Name="CatName" Grid.Column="1" Text="{Binding Nom}"
+                               FontSize="12" Foreground="#1A1A1A" VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis"/>
 
-					<Border x:Name="DeleteCatBtn"
-                            Grid.Column="2"
-                            Width="24" Height="24"
-                            CornerRadius="6"
-                            Cursor="Hand"
-                            Visibility="Collapsed"
+					<Border x:Name="DeleteCatBtn" Grid.Column="2"
+                            Width="24" Height="24" CornerRadius="6"
+                            Cursor="Hand" Visibility="Collapsed"
                             ToolTip="Supprimer la catégorie">
 						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick"
@@ -146,19 +126,16 @@
 							</Style>
 						</Border.Style>
 						<TextBlock Text="🗑" FontSize="11"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
 					</Border>
 				</Grid>
 			</Border>
-
 			<DataTemplate.Triggers>
 				<DataTrigger Binding="{Binding IsActive}" Value="True">
 					<Setter TargetName="CatBorder" Property="Background" Value="#1A1A1A"/>
 					<Setter TargetName="CatName"   Property="Foreground" Value="White"/>
 					<Setter TargetName="FolderIcon" Property="Foreground" Value="White"/>
 				</DataTrigger>
-
 				<MultiDataTrigger>
 					<MultiDataTrigger.Conditions>
 						<Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=Border, AncestorLevel=1}, Path=IsMouseOver}" Value="True"/>
@@ -166,7 +143,6 @@
 					</MultiDataTrigger.Conditions>
 					<Setter TargetName="CatBorder" Property="Background" Value="#EBEBEA"/>
 				</MultiDataTrigger>
-
 				<MultiDataTrigger>
 					<MultiDataTrigger.Conditions>
 						<Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=Border, AncestorLevel=1}, Path=IsMouseOver}" Value="True"/>
@@ -184,8 +160,9 @@
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 
-		<!-- Header avec flèche de retour et logo -->
-		<Border Grid.Row="0" Background="White" BorderBrush="#E8E7E3" BorderThickness="0,0,0,1" Padding="24,16">
+		<!-- ══ HEADER ══ -->
+		<Border Grid.Row="0" Background="White" BorderBrush="#E8E7E3"
+                BorderThickness="0,0,0,1" Padding="24,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"/>
@@ -193,23 +170,15 @@
 					<ColumnDefinition Width="Auto"/>
 				</Grid.ColumnDefinitions>
 
-				<!-- Flèche retour -->
-				<Border Grid.Column="0"
-                        Width="36" Height="36"
-                        CornerRadius="8"
-                        Background="#F0EFE8"
-                        Cursor="Hand"
-                        Margin="0,0,20,0">
+				<Border Grid.Column="0" Width="36" Height="36" CornerRadius="8"
+                        Background="#F0EFE8" Cursor="Hand" Margin="0,0,20,0">
 					<Border.InputBindings>
 						<MouseBinding MouseAction="LeftClick" Command="{Binding RetourDashboardCommand}"/>
 					</Border.InputBindings>
-					<TextBlock Text="←" FontSize="18" FontWeight="300"
-                               Foreground="#1A1A1A"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
+					<TextBlock Text="←" FontSize="18" FontWeight="300" Foreground="#1A1A1A"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
 				</Border>
 
-				<!-- Logo -->
 				<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
 					<Border Width="8" Height="8" CornerRadius="4" Background="#1A1A1A"
                             VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -220,28 +189,23 @@
 					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#ABABAB" Margin="16,2,0,0"/>
 				</StackPanel>
 
-				<!-- Prof info -->
 				<Border Grid.Column="2" Background="#F0EFE8" CornerRadius="10" Padding="12,8">
 					<StackPanel>
-						<TextBlock Text="{Binding ProfesseurNom}" FontSize="12" FontWeight="600" Foreground="#1A1A1A"/>
+						<TextBlock Text="{Binding ProfesseurNom}"  FontSize="12" FontWeight="600" Foreground="#1A1A1A"/>
 						<TextBlock Text="{Binding ProfesseurEmail}" FontSize="10" Foreground="#ABABAB"/>
 					</StackPanel>
 				</Border>
 			</Grid>
 		</Border>
 
-		<!-- ══════════════════════════════════════════
-             CONTENU PRINCIPAL (2 colonnes)
-        ══════════════════════════════════════════ -->
+		<!-- ══ CONTENU PRINCIPAL ══ -->
 		<Grid Grid.Row="1">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="300"/>
 				<ColumnDefinition Width="*"/>
 			</Grid.ColumnDefinitions>
 
-			<!-- ══════════════════════════════════════════
-                 COLONNE 1 — Catégories
-            ══════════════════════════════════════════ -->
+			<!-- ── COLONNE 1 — Catégories ── -->
 			<Border Grid.Column="0" Background="#FAFAF9" BorderBrush="#E8E7E3" BorderThickness="0,0,1,0">
 				<Grid Margin="24,28,24,28">
 					<Grid.RowDefinitions>
@@ -251,13 +215,11 @@
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
 
-					<!-- Header Catégories -->
 					<StackPanel Grid.Row="0" Margin="0,0,0,20">
 						<TextBlock Text="Catégories" FontSize="16" FontWeight="700" Foreground="#1A1A1A"/>
 						<TextBlock Text="Organisez vos cours" FontSize="12" Foreground="#ABABAB" Margin="0,4,0,0"/>
 					</StackPanel>
 
-					<!-- Add category -->
 					<Border Grid.Row="1" Margin="0,0,0,20" Background="White"
                             CornerRadius="10" BorderBrush="#E8E7E3" BorderThickness="1" Padding="12,10">
 						<Grid>
@@ -265,12 +227,9 @@
 								<ColumnDefinition Width="*"/>
 								<ColumnDefinition Width="Auto"/>
 							</Grid.ColumnDefinitions>
-
 							<Grid Grid.Column="0">
-								<TextBlock Text="Nouvelle catégorie…"
-                                           FontSize="12" Foreground="#CACACA"
-                                           VerticalAlignment="Center" Margin="4,0"
-                                           IsHitTestVisible="False">
+								<TextBlock Text="Nouvelle catégorie…" FontSize="12" Foreground="#CACACA"
+                                           VerticalAlignment="Center" Margin="4,0" IsHitTestVisible="False">
 									<TextBlock.Style>
 										<Style TargetType="TextBlock">
 											<Setter Property="Visibility" Value="Collapsed"/>
@@ -283,20 +242,12 @@
 									</TextBlock.Style>
 								</TextBlock>
 								<TextBox Text="{Binding NouvelleCategorie, UpdateSourceTrigger=PropertyChanged}"
-                                         BorderThickness="0"
-                                         Background="Transparent"
-                                         FontSize="12"
-                                         Foreground="#1A1A1A"
-                                         VerticalAlignment="Center"
-                                         Padding="2,0"
-                                         CaretBrush="#1A1A1A"/>
+                                         BorderThickness="0" Background="Transparent"
+                                         FontSize="12" Foreground="#1A1A1A"
+                                         VerticalAlignment="Center" Padding="2,0" CaretBrush="#1A1A1A"/>
 							</Grid>
-
-							<Border Grid.Column="1"
-                                    Width="28" Height="28"
-                                    CornerRadius="7"
-                                    Cursor="Hand"
-                                    Margin="6,0,0,0">
+							<Border Grid.Column="1" Width="28" Height="28" CornerRadius="7"
+                                    Cursor="Hand" Margin="6,0,0,0">
 								<Border.InputBindings>
 									<MouseBinding MouseAction="LeftClick" Command="{Binding AjouterCategorieCommand}"/>
 								</Border.InputBindings>
@@ -310,34 +261,27 @@
 										</Style.Triggers>
 									</Style>
 								</Border.Style>
-								<TextBlock Text="+" FontSize="16" FontWeight="600"
-                                           Foreground="White"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
+								<TextBlock Text="+" FontSize="16" FontWeight="600" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
 						</Grid>
 					</Border>
 
-					<!-- Category list -->
 					<ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" MaxHeight="300">
 						<ItemsControl ItemsSource="{Binding Categories}"
                                       ItemTemplate="{StaticResource CategorieTemplate}"/>
 					</ScrollViewer>
-
-					
 				</Grid>
 			</Border>
 
-			<!-- ══════════════════════════════════════════
-                 COLONNE 2 — Liste des cours + Aperçu
-            ══════════════════════════════════════════ -->
+			<!-- ── COLONNE 2 — Liste cours + Aperçu ── -->
 			<Grid Grid.Column="1">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="380"/>
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 
-				<!-- Sous-colonne 1 : Liste des cours -->
+				<!-- Sous-colonne : Liste des cours -->
 				<Border Grid.Column="0" Background="#F5F4F0" BorderBrush="#E8E7E3" BorderThickness="0,0,1,0">
 					<Grid Margin="24,28,24,28">
 						<Grid.RowDefinitions>
@@ -347,13 +291,11 @@
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
 
-						<!-- Header -->
 						<Grid Grid.Row="0" Margin="0,0,0,16">
 							<Grid.ColumnDefinitions>
 								<ColumnDefinition Width="*"/>
 								<ColumnDefinition Width="Auto"/>
 							</Grid.ColumnDefinitions>
-
 							<StackPanel>
 								<TextBlock Text="{Binding CategorieSelectionnee}"
                                            FontSize="16" FontWeight="700" Foreground="#1A1A1A"
@@ -361,10 +303,7 @@
 								<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,4,0,0"
                                            Text="{Binding CoursFiltres.Count, StringFormat='{}{0} cours', FallbackValue='0 cours'}"/>
 							</StackPanel>
-
-							<Border Grid.Column="1"
-                                    Style="{StaticResource PrimaryBtnStyle}"
-                                    Padding="14,9">
+							<Border Grid.Column="1" Style="{StaticResource PrimaryBtnStyle}" Padding="14,9">
 								<Border.InputBindings>
 									<MouseBinding MouseAction="LeftClick" Command="{Binding ImporterCommand}"/>
 								</Border.InputBindings>
@@ -375,22 +314,22 @@
 							</Border>
 						</Grid>
 
-						<!-- Messages -->
 						<StackPanel Grid.Row="1" Margin="0,0,0,16">
 							<Border CornerRadius="8" Padding="12,10"
                                     Background="#FDF0F0" BorderBrush="#F5C6C6" BorderThickness="1"
                                     Margin="0,0,0,8"
                                     Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-								<TextBlock Text="{Binding ErrorMessage}" FontSize="11" Foreground="#C84B4B" TextWrapping="Wrap"/>
+								<TextBlock Text="{Binding ErrorMessage}" FontSize="11"
+                                           Foreground="#C84B4B" TextWrapping="Wrap"/>
 							</Border>
 							<Border CornerRadius="8" Padding="12,10"
                                     Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1"
                                     Visibility="{Binding HasSuccess, Converter={StaticResource BoolToVis}}">
-								<TextBlock Text="{Binding SuccessMessage}" FontSize="11" Foreground="#16A34A" TextWrapping="Wrap"/>
+								<TextBlock Text="{Binding SuccessMessage}" FontSize="11"
+                                           Foreground="#16A34A" TextWrapping="Wrap"/>
 							</Border>
 						</StackPanel>
 
-						<!-- Loading -->
 						<Border Grid.Row="2" Margin="0,0,0,12"
                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
 							<StackPanel Orientation="Horizontal">
@@ -399,7 +338,6 @@
 							</StackPanel>
 						</Border>
 
-						<!-- Cours list -->
 						<ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
 							<StackPanel>
 								<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -412,7 +350,6 @@
                                                FontSize="11" Foreground="#CACACA"
                                                HorizontalAlignment="Center" Margin="0,4,0,0"/>
 								</StackPanel>
-
 								<ItemsControl ItemsSource="{Binding CoursFiltres}">
 									<ItemsControl.ItemTemplate>
 										<DataTemplate>
@@ -429,33 +366,21 @@
 														<ColumnDefinition Width="*"/>
 														<ColumnDefinition Width="Auto"/>
 													</Grid.ColumnDefinitions>
-
-													<Border Grid.Column="0"
-                                                            Width="36" Height="36"
-                                                            Background="#F5F4F0"
-                                                            CornerRadius="9"
-                                                            Margin="0,0,12,0">
+													<Border Grid.Column="0" Width="36" Height="36"
+                                                            Background="#F5F4F0" CornerRadius="9" Margin="0,0,12,0">
 														<TextBlock Text="📄" FontSize="15"
-                                                                   HorizontalAlignment="Center"
-                                                                   VerticalAlignment="Center"/>
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
 													</Border>
-
 													<StackPanel Grid.Column="1" VerticalAlignment="Center">
-														<TextBlock Text="{Binding Titre}"
-                                                                   FontSize="12" FontWeight="600"
-                                                                   Foreground="#1A1A1A"
-                                                                   TextTrimming="CharacterEllipsis"/>
+														<TextBlock Text="{Binding Titre}" FontSize="12" FontWeight="600"
+                                                                   Foreground="#1A1A1A" TextTrimming="CharacterEllipsis"/>
 														<TextBlock FontSize="10" Foreground="#ABABAB" Margin="0,3,0,0"
                                                                    Text="{Binding DateImport, StringFormat='Importé le {0:dd MMM yyyy}', FallbackValue=''}"/>
 													</StackPanel>
-
-													<Border Grid.Column="2"
-                                                            CornerRadius="6" Padding="8,4"
-                                                            Background="#F0EFE8"
-                                                            VerticalAlignment="Center">
+													<Border Grid.Column="2" CornerRadius="6" Padding="8,4"
+                                                            Background="#F0EFE8" VerticalAlignment="Center">
 														<TextBlock Text="{Binding TypeFichier}"
-                                                                   FontSize="10" FontWeight="600"
-                                                                   Foreground="#6B6B6B"/>
+                                                                   FontSize="10" FontWeight="600" Foreground="#6B6B6B"/>
 													</Border>
 												</Grid>
 											</Border>
@@ -467,8 +392,10 @@
 					</Grid>
 				</Border>
 
-				<!-- Sous-colonne 2 : Aperçu du cours -->
+				<!-- Sous-colonne : Aperçu du cours -->
 				<Grid Grid.Column="1" Background="#F8F8F6">
+
+					<!-- Aucun cours sélectionné -->
 					<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                                 Visibility="{Binding HasNoCoursSelectionne, Converter={StaticResource BoolToVis}}">
 						<TextBlock Text="📖" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
@@ -476,14 +403,12 @@
                                    FontSize="15" FontWeight="600"
                                    Foreground="#1A1A1A" HorizontalAlignment="Center"/>
 						<TextBlock Text="Cliquez sur un cours dans la liste pour en voir l'aperçu"
-                                   FontSize="12" Foreground="#ABABAB"
-                                   HorizontalAlignment="Center"
-                                   TextWrapping="Wrap"
-                                   MaxWidth="260"
-                                   TextAlignment="Center"
+                                   FontSize="12" Foreground="#ABABAB" HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" MaxWidth="260" TextAlignment="Center"
                                    Margin="0,8,0,0"/>
 					</StackPanel>
 
+					<!-- Cours sélectionné -->
 					<Grid Margin="32,32,32,32"
                           Visibility="{Binding HasCoursSelectionne, Converter={StaticResource BoolToVis}}">
 						<Grid.RowDefinitions>
@@ -493,13 +418,13 @@
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
 
+						<!-- Titre -->
 						<TextBlock Grid.Row="0"
                                    Text="{Binding CoursSelectionne.Titre}"
-                                   FontSize="20" FontWeight="700"
-                                   Foreground="#1A1A1A"
-                                   TextTrimming="CharacterEllipsis"
-                                   Margin="0,0,0,12"/>
+                                   FontSize="20" FontWeight="700" Foreground="#1A1A1A"
+                                   TextTrimming="CharacterEllipsis" Margin="0,0,0,12"/>
 
+						<!-- Badges méta -->
 						<StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,24">
 							<Border CornerRadius="7" Padding="10,5" Background="#F0EFE8" Margin="0,0,8,0">
 								<TextBlock Text="{Binding CoursSelectionne.TypeFichier}"
@@ -507,12 +432,15 @@
 							</Border>
 							<Border CornerRadius="7" Padding="10,5" Background="#F5F4F0">
 								<TextBlock FontSize="11" Foreground="#ABABAB"
-                                           Text="{Binding CoursSelectionne.DateImport, StringFormat='Importé le {0:dd MMM yyyy}', TargetNullValue='', FallbackValue=''}"/>
+                                           Text="{Binding CoursSelectionne.DateImport,
+                                                  StringFormat='Importé le {0:dd MMM yyyy}',
+                                                  TargetNullValue='', FallbackValue=''}"/>
 							</Border>
 						</StackPanel>
 
+						<!-- Actions — uniquement Supprimer (Générer quiz déplacé dans Quiz & Examens) -->
 						<StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,24">
-							<Border Style="{StaticResource DeleteBtnStyle}" Margin="0,0,12,0">
+							<Border Style="{StaticResource DeleteBtnStyle}">
 								<Border.InputBindings>
 									<MouseBinding MouseAction="LeftClick" Command="{Binding SupprimerCommand}"/>
 								</Border.InputBindings>
@@ -521,22 +449,14 @@
 									<TextBlock Text="Supprimer" FontSize="12" FontWeight="500" Foreground="#C84B4B"/>
 								</StackPanel>
 							</Border>
-
-							<Border Style="{StaticResource PrimaryBtnStyle}">
-								<StackPanel Orientation="Horizontal">
-									<TextBlock Text="✎" FontSize="12" Foreground="White" Margin="0,0,6,0"/>
-									<TextBlock Text="Générer un quiz" FontSize="12" FontWeight="500" Foreground="White"/>
-								</StackPanel>
-							</Border>
 						</StackPanel>
 
+						<!-- Contenu du cours -->
 						<Border Grid.Row="3" Style="{StaticResource Card}" Padding="24,20">
 							<ScrollViewer VerticalScrollBarVisibility="Auto">
 								<TextBlock Text="{Binding CoursSelectionne.Contenu}"
-                                           FontSize="12"
-                                           Foreground="#444444"
-                                           TextWrapping="Wrap"
-                                           LineHeight="20"/>
+                                           FontSize="12" Foreground="#444444"
+                                           TextWrapping="Wrap" LineHeight="20"/>
 							</ScrollViewer>
 						</Border>
 					</Grid>

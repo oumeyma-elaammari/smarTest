@@ -5,10 +5,13 @@ namespace smartest_desktop.Views
 {
     public partial class QuizWindow : Window
     {
-        public QuizWindow()
+        public QuizWindow(string contenuCours)
         {
             InitializeComponent();
-            DataContext = new QuizViewModel();
+            DataContext = new QuizViewModel(contenuCours);
         }
+
+        public QuizWindow() : this(string.Empty) { }
+
     }
 }

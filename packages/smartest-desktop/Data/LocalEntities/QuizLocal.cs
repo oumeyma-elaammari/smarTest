@@ -5,39 +5,42 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace smartest_desktop.Data.LocalEntities
 {
-    [Table("quiz_local")]
+    /// <summary>
+    /// Quiz sauvegardé en base locale après validation par le professeur.
+    /// Statut : "Brouillon" → "Validé" → "Publié"
+    /// </summary>
     public class QuizLocal
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(200)]
         public string Titre { get; set; } = string.Empty;
 
-        public int Duree { get; set; } = 30;
-
-        public string Description { get; set; } = string.Empty;
-
-        /// <summary>BROUILLON | PUBLIE</summary>
-        [MaxLength(20)]
-        public string Statut { get; set; } = "BROUILLON";
+        /// <summary>"Facile", "Moyen" ou "Difficile"</summary>
+        public string Difficulte { get; set; } = "Moyen";
 
         public DateTime DateCreation { get; set; } = DateTime.Now;
 
-        /// <summary>
-        /// ID du quiz côté backend après publication.
-        /// null = pas encore publié.
-        /// </summary>
-        public long? BackendId { get; set; }
+        public int NombreQuestions { get; set; }
 
-        // ── Relation Many-to-Many avec CoursLocal ────────────────
-        // Un quiz peut couvrir PLUSIEURS cours
-        // EF Core crée automatiquement la table :
-        //   quiz_local_cours (QuizLocalId, CoursLocalId)
-        public List<CoursLocal> Cours { get; set; } = new();
+        /// <summary>FK vers CoursLocal (nullable — le cours peut avoir été supprimé)</summary>
+        public int? CoursSourceId { get; set; }
 
-        public override string ToString() => Titre;
+        /// <summary>Titre du cours dénormalisé pour affichage rapide</summary>
+        public string CoursSourceTitre { get; set; } = string.Empty;
+
+        /// <summary>"Brouillon" | "Validé" | "Publié"</summary>
+        public string Statut { get; set; } = "Brouillon";
+
+        public List<QuestionLocale> Questions { get; set; } = new();
+
+        public string Description { get; set; } = string.Empty;
+        //public CoursLocal? Cours { get; set; }
+
+
+        public List<CoursLocal> Cours { get; set; } = new();  // Correction : relation Many-to-Many
+
     }
+
 }

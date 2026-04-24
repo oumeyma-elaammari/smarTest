@@ -98,9 +98,11 @@ namespace smartest_desktop.Data
 
                 // Relation : Quiz ↔ Cours (Many-to-Many)
                 // Table liaison : quiz_local_cours
+                // Relation : Quiz ↔ Cours (Many-to-Many)
                 entity.HasMany(q => q.Cours)
-                      .WithMany()
+                      .WithMany(c => c.Quiz)   // Correction : ajouter navigation côté CoursLocal
                       .UsingEntity(j => j.ToTable("quiz_local_cours"));
+
             });
 
             // ── ExamenLocal ───────────────────────────────────────

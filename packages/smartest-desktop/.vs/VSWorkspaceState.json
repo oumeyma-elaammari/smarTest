@@ -3,11 +3,12 @@
     "",
     "\\Data",
     "\\Data\\LocalEntities",
+    "\\Helpers",
+    "\\Models",
     "\\Services",
     "\\ViewModels",
-    "\\Views",
-    "\\Views\\Styles"
+    "\\Views"
   ],
-  "SelectedNode": "\\Views\\RegisterWindow.xaml.cs",
+  "SelectedNode": "\\Views\\DashboardWindow.xaml",
   "PreviewInSolutionExplorer": false
 }

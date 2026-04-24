@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="1d521c0e-82c4-497a-968c-c3108b727461" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/VSWorkspaceState.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/.vs/VSWorkspaceState.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/slnx.sqlite" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/.vs/slnx.sqlite" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/2892dcae-a2d8-4ef5-9978-7c8eaeb29f21.vsidx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/4e8e456b-25a6-4a6c-a88f-50d0e0343a47.vsidx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/53e0ec89-6066-48c3-b537-6cac490fe2ac.vsidx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/63a9c407-a4d4-444e-9d99-c1e41abe6a8a.vsidx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/FileContentIndex/6d2b85b1-42d6-439b-a380-2448201b2fa6.vsidx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/v18/.wsuo" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/v18/.wsuo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/v18/DocumentLayout.backup.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/v18/DocumentLayout.backup.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/v18/DocumentLayout.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop.slnx/v18/DocumentLayout.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop/v18/workspaceFileList.bin" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/.vs/smartest-desktop/v18/workspaceFileList.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/App.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/App.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalDbContext.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalDbContext.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalEntities/CoursLocal.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalEntities/CoursLocal.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalEntities/QuestionLocale.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalEntities/QuizLocal.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalEntities/QuizLocal.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalEntities/ReponseLocale.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Data/LocalEntities/ReponseLocale.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Helpers/RelayCommand.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Helpers/RelayCommand.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Models/Question.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Models/Question.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Services/OllamaService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Services/OllamaService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/BaseViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/BaseViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/Coursviewmodel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/Coursviewmodel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/Dashboardviewmodel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/Dashboardviewmodel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/QuizViewModel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/ViewModels/QuizViewModel.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Views/CoursWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Views/CoursWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Views/Courswindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Views/Courswindow.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Views/DashboardWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Views/DashboardWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Views/QuizWindow.xaml" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Views/QuizWindow.xaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/Views/QuizWindow.xaml.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/Views/QuizWindow.xaml.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/bin/Debug/net8.0-windows/smartest-desktop.dll" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/bin/Debug/net8.0-windows/smartest-desktop.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/bin/Debug/net8.0-windows/smartest-desktop.exe" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/bin/Debug/net8.0-windows/smartest-desktop.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/bin/Debug/net8.0-windows/smartest-desktop.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/bin/Debug/net8.0-windows/smartest-desktop.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/App.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/App.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/MainWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/MainWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/Courswindow.g.i.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/Courswindow.g.i.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.baml" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.baml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.g.i.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/DashboardWindow.g.i.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/EmailVerificationWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/EmailVerificationWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/ForgotPasswordWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/ForgotPasswordWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/LoginWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/LoginWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/RegisterWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/RegisterWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/ResetPasswordWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/Views/ResetPasswordWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/apphost.exe" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/apphost.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/ref/smartest-desktop.dll" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/ref/smartest-desktop.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/refint/smartest-desktop.dll" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/refint/smartest-desktop.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.AssemblyReference.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.AssemblyReference.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.CoreCompileInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.CoreCompileInputs.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.FileListAbsolute.txt" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.csproj.FileListAbsolute.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.dll" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.g.resources" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.g.resources" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.genruntimeconfig.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.genruntimeconfig.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.sourcelink.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop.sourcelink.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop_MarkupCompile.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Debug/net8.0-windows/smartest-desktop_MarkupCompile.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/Views/DashboardWindow.baml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/Views/DashboardWindow.g.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/Views/DashboardWindow.g.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.AssemblyInfoInputs.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.GeneratedMSBuildEditorConfig.editorconfig" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.assets.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.assets.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.csproj.AssemblyReference.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop.csproj.AssemblyReference.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop_MarkupCompile.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/Release/net8.0-windows/smartest-desktop_MarkupCompile.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/project.assets.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/project.assets.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/project.nuget.cache" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/project.nuget.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/smartest-desktop.csproj.nuget.dgspec.json" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/smartest-desktop.csproj.nuget.dgspec.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/smartest-desktop/obj/smartest-desktop.csproj.nuget.g.props" beforeDir="false" afterPath="$PROJECT_DIR$/packages/smartest-desktop/obj/smartest-desktop.csproj.nuget.g.props" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3CgTrNr6XeWQkW9JlpUlgu1v6IB" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/pc/Desktop/pfaa/smarTest&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\pc\Desktop\pfaa\smarTest\packages\smartest-desktop\Views" />
+    </key>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1d521c0e-82c4-497a-968c-c3108b727461" name="Changes" comment="" />
+      <created>1776806411009</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1776806411009</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

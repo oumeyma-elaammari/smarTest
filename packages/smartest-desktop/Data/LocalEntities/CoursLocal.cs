@@ -43,5 +43,8 @@ namespace smartest_desktop.Data.LocalEntities
         public List<QuestionLocale> Questions { get; set; } = new();
 
         public override string ToString() => Titre;
+
+        public List<QuizLocal> Quiz { get; set; } = new();
+
     }
 }

@@ -1,0 +1,9 @@
+\[ \
+  {
+    "enonce": "Question ?",
+    "optionA": "La classification est une tâche de l'apprentissage supervisé qui consiste à prédire une catégorie.",
+    "optionB": "La régression est une tâche de l'apprentissage supervisé qui consiste à prédire une valeur numérique.",
+    "optionC": "L'algorithme des k plus proches voisins (k-NN) est un algorithme d'analyse de données utilisé pour classer les objets en fonction de leur proximité avec les objets déjà classés.",
+    "optionD": "La perceptron est une réduction de l'algorithme des k plus proches voisins (k-NN) qui utilise plusieurs neurones pour analyser les données et prendre une décision finale.",
+    "reponseCorrecte": "B",
+    "explication": "La classification est une tâche de l'apprentissage supervisé qui consiste à prédire une catégorie en fonction des caractéristiques d'un objet. La régression est une tâche de l'apprentissage supervisé qui consiste à prédire une valeur numérique en fonction des données d'apprentissage. L'algorithme des k plus proches voisins (k-NN) est un algorithme d'analyse de données utilisé pour classer les objets en fonction de leur proximité avec les objets déjà classés, tandis que la perceptron est une réduction de l'algorithme des k plus proches voisins (k-NN) qui utilise plusieurs neurones pour analyser les données et prendre une décision finale."

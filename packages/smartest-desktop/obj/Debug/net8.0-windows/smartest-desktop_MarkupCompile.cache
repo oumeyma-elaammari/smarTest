@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\
+C:\Users\pc\Desktop\pfaa\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\
 smartest_desktop
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-C:\Users\User\smarTest\packages\smartest-desktop\App.xaml
-81444243025
+C:\Users\pc\Desktop\pfaa\smarTest\packages\smartest-desktop\App.xaml
+13659552954
 
-32-610477384
-226592162556
-MainWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\LoginWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;Views\Styles\AuthStyles.xaml;
+43893060153
+2261910871989
+MainWindow.xaml;Views\CoursWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\LoginWindow.xaml;Views\QuizExamenWindow.xaml;Views\QuizGenerationWindow.xaml;Views\QuizResultWindow.xaml;Views\QuizWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;Views\Styles\AuthStyles.xaml;
 
 False
 

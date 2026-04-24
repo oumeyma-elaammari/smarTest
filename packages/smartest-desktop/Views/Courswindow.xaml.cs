@@ -11,22 +11,13 @@ namespace smartest_desktop.Views
 
             if (DataContext is CoursViewModel vm)
             {
-                vm.NavigateToDashboardRequested += OnNavigateToDashboardRequested;
+                vm.NavigateToDashboardRequested += () =>
+                {
+                    var dashboard = new DashboardWindow();
+                    dashboard.Show();
+                    this.Close();
+                };
             }
-        }
-
-        private void OnNavigateToDashboardRequested()
-        {
-            var dashboard = new DashboardWindow();
-            dashboard.Show();
-            this.Close();
-        }
-
-        private void BtnDashboard_Click(object sender, RoutedEventArgs e)
-        {
-            var dashboard = new DashboardWindow();
-            dashboard.Show();
-            this.Close();
         }
     }
 }

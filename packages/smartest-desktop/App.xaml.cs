@@ -1,5 +1,6 @@
 ﻿using smartest_desktop.Data;
 using System;
+using System.IO;
 using System.Windows;
 
 namespace smartest_desktop
@@ -10,10 +11,22 @@ namespace smartest_desktop
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
+            // Gestion des exceptions globales
+            AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
+            {
+                var ex = (Exception)ev.ExceptionObject;
+                MessageBox.Show($"{ex.Message}\n\n{ex.StackTrace}", "Erreur critique");
+            };
+
+            DispatcherUnhandledException += (s, ev) =>
+            {
+                MessageBox.Show($"{ev.Exception.Message}\n\n{ev.Exception.StackTrace}", "Erreur WPF");
+                ev.Handled = true;
+            };
 
             try
             {
+                // Initialisation de la base locale
                 LocalDb = new LocalDbContext();
                 LocalDb.Database.EnsureCreated();
 
@@ -33,6 +46,8 @@ namespace smartest_desktop
 
                 Shutdown();
             }
+
+            base.OnStartup(e);
         }
 
         protected override void OnExit(ExitEventArgs e)

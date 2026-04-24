@@ -12,8 +12,7 @@ using WpfApp = System.Windows.Application;
 namespace smartest_desktop.ViewModels
 {
     // ═══════════════════════════════════════════════════════════════════════════
-    // CategorieItem — wrapper exposant IsActive et PeutSupprimer comme propriétés
-    // pour éviter tout Binding sur Value dans les DataTrigger (limitation WPF).
+    // CategorieItem
     // ═══════════════════════════════════════════════════════════════════════════
     public class CategorieItem : BaseViewModel
     {
@@ -39,7 +38,7 @@ namespace smartest_desktop.ViewModels
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // CoursViewModel
+    // CoursViewModel  —  GenererQuizCommand SUPPRIMÉ (déplacé dans QuizExamenWindow)
     // ═══════════════════════════════════════════════════════════════════════════
     public class CoursViewModel : BaseViewModel
     {
@@ -72,7 +71,6 @@ namespace smartest_desktop.ViewModels
             {
                 foreach (var cat in Categories)
                     cat.IsActive = cat.Nom == value;
-
                 SetProperty(ref _categorieSelectionnee, value);
                 RefreshCoursDisplay();
             }
@@ -161,12 +159,11 @@ namespace smartest_desktop.ViewModels
             ProfesseurNom = WpfApp.Current.Properties["Nom"]?.ToString() ?? "Professeur";
             ProfesseurEmail = WpfApp.Current.Properties["Email"]?.ToString() ?? string.Empty;
 
-            SelectionnerCategorieCommand = new RelayCommand(
-                param =>
-                {
-                    if (param is CategorieItem item)
-                        CategorieSelectionnee = item.Nom;
-                });
+            SelectionnerCategorieCommand = new RelayCommand(param =>
+            {
+                if (param is CategorieItem item)
+                    CategorieSelectionnee = item.Nom;
+            });
 
             SelectionnerCoursCommand = new RelayCommand(
                 param => CoursSelectionne = param as CoursLocal);
@@ -194,8 +191,7 @@ namespace smartest_desktop.ViewModels
             RetourDashboardCommand = new RelayCommand(
                 _ => NavigateToDashboardRequested?.Invoke());
 
-            LogoutCommand = new RelayCommand(
-                _ => ExecuteLogout());
+            LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
             Categories.Add(new CategorieItem { Nom = "Tous les cours", IsActive = true });
             CoursParCategorie["Tous les cours"] = new ObservableCollection<CoursLocal>();
@@ -220,7 +216,6 @@ namespace smartest_desktop.ViewModels
         {
             IsLoading = true;
             ErrorMessage = string.Empty;
-
             try
             {
                 var liste = await Task.Run(() => _db.Cours.ToList());
@@ -298,10 +293,8 @@ namespace smartest_desktop.ViewModels
             {
                 cours.Categorie = fallback;
                 CoursParCategorie[fallback].Add(cours);
-
                 var coursDb = await _db.Cours.FindAsync(cours.Id);
-                if (coursDb != null)
-                    coursDb.Categorie = fallback;
+                if (coursDb != null) coursDb.Categorie = fallback;
             }
 
             var item = TrouverCategorie(nomCategorie);
@@ -399,7 +392,6 @@ namespace smartest_desktop.ViewModels
             if (result != MessageBoxResult.Yes) return;
 
             IsLoading = true;
-
             try
             {
                 var toDelete = CoursSelectionne;

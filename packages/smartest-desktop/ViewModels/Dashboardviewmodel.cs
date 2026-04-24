@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using WpfApp = System.Windows.Application;
 
+
 namespace smartest_desktop.ViewModels
 {
     public class DashboardViewModel : BaseViewModel
@@ -53,6 +54,7 @@ namespace smartest_desktop.ViewModels
 
         public ICommand LogoutCommand { get; }
         public ICommand OpenCoursCommand { get; }
+        public ICommand OpenQuizCommand { get; }
 
         public DashboardViewModel()
         {
@@ -63,6 +65,10 @@ namespace smartest_desktop.ViewModels
 
             LogoutCommand = new RelayCommand(_ => ExecuteLogout());
             OpenCoursCommand = new RelayCommand(_ => ExecuteOpenCours());
+
+
+            // ✅ AJOUT ICI
+            OpenQuizCommand = new RelayCommand(_ => ExecuteOpenQuiz());
 
             _ = ChargerDonnees();
         }
@@ -122,6 +128,7 @@ namespace smartest_desktop.ViewModels
         }
         public bool HasNoCours => TotalCours == 0;
 
+
         private void ExecuteLogout()
         {
             var result = MessageBox.Show(
@@ -144,5 +151,31 @@ namespace smartest_desktop.ViewModels
                 if (w is Views.DashboardWindow) { w.Close(); break; }
             }
         }
+
+
+        private void ExecuteOpenQuiz()
+        {
+            try
+            {
+                var hub = new Views.QuizExamenWindow();
+                hub.Show();
+                Application.Current.MainWindow = hub;
+
+                foreach (Window w in WpfApp.Current.Windows)
+                {
+                    if (w is Views.DashboardWindow)
+                    {
+                        w.Close();
+                        break;
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
     }
 }

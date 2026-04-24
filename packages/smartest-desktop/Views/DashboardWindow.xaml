@@ -27,15 +27,12 @@
 				</Trigger>
 			</Style.Triggers>
 		</Style>
-
 		<Style x:Key="Card" TargetType="Border">
 			<Setter Property="Background" Value="White"/>
 			<Setter Property="CornerRadius" Value="14"/>
 			<Setter Property="BorderBrush" Value="#E8E7E3"/>
 			<Setter Property="BorderThickness" Value="1"/>
 		</Style>
-
-		<!-- Converters -->
 		<BooleanToVisibilityConverter x:Key="BoolToVis"/>
 	</Window.Resources>
 
@@ -45,7 +42,7 @@
 			<ColumnDefinition Width="*"/>
 		</Grid.ColumnDefinitions>
 
-		<!-- SIDEBAR -->
+		<!-- ══ SIDEBAR ══ -->
 		<Border Grid.Column="0" Background="#FAFAF9" BorderBrush="#E8E7E3" BorderThickness="0,0,1,0">
 			<Grid>
 				<Grid.RowDefinitions>
@@ -54,9 +51,11 @@
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
 
+				<!-- Logo -->
 				<StackPanel Grid.Row="0" Margin="22,30,22,36">
 					<StackPanel Orientation="Horizontal">
-						<Border Width="8" Height="8" CornerRadius="4" Background="#1A1A1A" VerticalAlignment="Center" Margin="0,0,8,0"/>
+						<Border Width="8" Height="8" CornerRadius="4" Background="#1A1A1A"
+                                VerticalAlignment="Center" Margin="0,0,8,0"/>
 						<TextBlock FontSize="17" FontWeight="700" Foreground="#1A1A1A">
 							<Run Text="Smar"/>
 							<Run Text="Test" Foreground="#6B6B6B"/>
@@ -65,14 +64,20 @@
 					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#ABABAB" Margin="16,5,0,0"/>
 				</StackPanel>
 
+				<!-- Nav items -->
 				<StackPanel Grid.Row="1" Margin="12,0">
-					<Border CornerRadius="10" Height="42" Padding="14,0" Background="#1A1A1A" Margin="0,1">
+
+					<!-- Tableau de bord — actif -->
+					<Border CornerRadius="10" Height="42" Padding="14,0"
+                            Background="#1A1A1A" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 							<TextBlock Text="⊞" FontSize="14" Foreground="#FFFFFF" Margin="0,0,10,0"/>
-							<TextBlock Text="Tableau de bord" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+							<TextBlock Text="Tableau de bord" FontSize="13"
+                                       FontWeight="SemiBold" Foreground="#FFFFFF"/>
 						</StackPanel>
 					</Border>
 
+					<!-- Mes cours -->
 					<Border Style="{StaticResource NavItem}" Margin="0,1">
 						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenCoursCommand}"/>
@@ -83,13 +88,18 @@
 						</StackPanel>
 					</Border>
 
+					<!-- Quiz et examens — connecté à OpenQuizCommand -->
 					<Border Style="{StaticResource NavItem}" Margin="0,1">
+						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenQuizCommand}"/>
+						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 							<TextBlock Text="✎" FontSize="14" Foreground="#6B6B6B" Margin="0,0,10,0"/>
 							<TextBlock Text="Quiz et examens" FontSize="13" Foreground="#444444"/>
 						</StackPanel>
 					</Border>
 
+					<!-- Sessions actives -->
 					<Border Style="{StaticResource NavItem}" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 							<TextBlock Text="◎" FontSize="14" Foreground="#6B6B6B" Margin="0,0,10,0"/>
@@ -97,6 +107,7 @@
 						</StackPanel>
 					</Border>
 
+					<!-- Statistiques -->
 					<Border Style="{StaticResource NavItem}" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 							<TextBlock Text="▦" FontSize="14" Foreground="#6B6B6B" Margin="0,0,10,0"/>
@@ -104,6 +115,7 @@
 						</StackPanel>
 					</Border>
 
+					<!-- Paramètres -->
 					<Border Style="{StaticResource NavItem}" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 							<TextBlock Text="⚙" FontSize="13" Foreground="#6B6B6B" Margin="0,0,10,0"/>
@@ -112,14 +124,14 @@
 					</Border>
 				</StackPanel>
 
+				<!-- User info + Déconnexion -->
 				<StackPanel Grid.Row="2" Margin="12,0,12,24">
 					<Border Background="#F0EFE8" CornerRadius="12" Padding="14,12" Margin="0,0,0,8">
 						<StackPanel>
-							<TextBlock Text="{Binding Nom}" FontSize="13" FontWeight="600" Foreground="#1A1A1A"/>
+							<TextBlock Text="{Binding Nom}"   FontSize="13" FontWeight="600" Foreground="#1A1A1A"/>
 							<TextBlock Text="{Binding Email}" FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"/>
 						</StackPanel>
 					</Border>
-
 					<Border Style="{StaticResource NavItem}" Margin="0,1">
 						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick" Command="{Binding LogoutCommand}"/>
@@ -133,7 +145,7 @@
 			</Grid>
 		</Border>
 
-		<!-- MAIN CONTENT -->
+		<!-- ══ MAIN CONTENT ══ -->
 		<ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
 			<StackPanel Margin="40,36,40,40">
 
@@ -150,20 +162,22 @@
 						</TextBlock>
 						<TextBlock Text="Tableau de bord" FontSize="26" FontWeight="700" Foreground="#1A1A1A"/>
 					</StackPanel>
-
 					<Border Grid.Column="1" Background="White" CornerRadius="10" Padding="16,10"
-                            BorderBrush="#E8E7E3" BorderThickness="1" VerticalAlignment="Center" Cursor="Hand">
+                            BorderBrush="#E8E7E3" BorderThickness="1"
+                            VerticalAlignment="Center" Cursor="Hand">
 						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenCoursCommand}"/>
 						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="+" FontSize="15" FontWeight="700" Foreground="#1A1A1A" Margin="0,0,8,0"/>
-							<TextBlock Text="Importer un cours" FontSize="13" FontWeight="500" Foreground="#1A1A1A"/>
+							<TextBlock Text="+" FontSize="15" FontWeight="700"
+                                       Foreground="#1A1A1A" Margin="0,0,8,0"/>
+							<TextBlock Text="Importer un cours" FontSize="13"
+                                       FontWeight="500" Foreground="#1A1A1A"/>
 						</StackPanel>
 					</Border>
 				</Grid>
 
-				<!-- Stats Cards (sans DataTrigger problématique) -->
+				<!-- Stats Cards -->
 				<Grid Margin="0,0,0,28">
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*"/>
@@ -172,30 +186,31 @@
 						<ColumnDefinition Width="14"/>
 						<ColumnDefinition Width="*"/>
 					</Grid.ColumnDefinitions>
-
 					<Border Grid.Column="0" Style="{StaticResource Card}" Padding="22,20">
 						<StackPanel>
-							<TextBlock Text="{Binding TotalCours, FallbackValue=0}" FontSize="32" FontWeight="700" Foreground="#1A1A1A"/>
-							<TextBlock Text="Cours importés" FontSize="12" Foreground="#ABABAB" Margin="0,4,0,0"/>
+							<TextBlock Text="{Binding TotalCours, FallbackValue=0}"
+                                       FontSize="32" FontWeight="700" Foreground="#1A1A1A"/>
+							<TextBlock Text="Cours importés" FontSize="12"
+                                       Foreground="#ABABAB" Margin="0,4,0,0"/>
 						</StackPanel>
 					</Border>
-
 					<Border Grid.Column="2" Style="{StaticResource Card}" Padding="22,20">
 						<StackPanel>
 							<TextBlock Text="0" FontSize="32" FontWeight="700" Foreground="#1A1A1A"/>
-							<TextBlock Text="Examens créés" FontSize="12" Foreground="#ABABAB" Margin="0,4,0,0"/>
+							<TextBlock Text="Examens créés" FontSize="12"
+                                       Foreground="#ABABAB" Margin="0,4,0,0"/>
 						</StackPanel>
 					</Border>
-
 					<Border Grid.Column="4" Style="{StaticResource Card}" Padding="22,20">
 						<StackPanel>
 							<TextBlock Text="0" FontSize="32" FontWeight="700" Foreground="#1A1A1A"/>
-							<TextBlock Text="Quiz créés" FontSize="12" Foreground="#ABABAB" Margin="0,4,0,0"/>
+							<TextBlock Text="Quiz créés" FontSize="12"
+                                       Foreground="#ABABAB" Margin="0,4,0,0"/>
 						</StackPanel>
 					</Border>
 				</Grid>
 
-				<!-- Mes Cours section (SANS DataTrigger problématique) -->
+				<!-- Cours récents -->
 				<Border Style="{StaticResource Card}" Padding="28,24">
 					<StackPanel>
 						<Grid Margin="0,0,0,22">
@@ -204,15 +219,16 @@
 								<ColumnDefinition Width="Auto"/>
 							</Grid.ColumnDefinitions>
 							<StackPanel>
-								<TextBlock Text="Mes cours récents" FontSize="15" FontWeight="600" Foreground="#1A1A1A"/>
+								<TextBlock Text="Mes cours récents" FontSize="15"
+                                           FontWeight="600" Foreground="#1A1A1A"/>
 								<TextBlock FontSize="12" Foreground="#ABABAB" Margin="0,4,0,0">
 									<Run Text="{Binding TotalCours, FallbackValue=0}"/>
 									<Run Text=" cours au total"/>
 								</TextBlock>
 							</StackPanel>
-
 							<Border Grid.Column="1" CornerRadius="8" Padding="14,7" Cursor="Hand"
-                                    Background="Transparent" BorderBrush="#E8E7E3" BorderThickness="1" VerticalAlignment="Center">
+                                    BorderBrush="#E8E7E3" BorderThickness="1"
+                                    VerticalAlignment="Center">
 								<Border.Style>
 									<Style TargetType="Border">
 										<Setter Property="Background" Value="Transparent"/>
@@ -226,7 +242,8 @@
 								<Border.InputBindings>
 									<MouseBinding MouseAction="LeftClick" Command="{Binding OpenCoursCommand}"/>
 								</Border.InputBindings>
-								<TextBlock Text="Voir tous les cours →" FontSize="12" Foreground="#444444" FontWeight="500"/>
+								<TextBlock Text="Voir tous les cours →" FontSize="12"
+                                           Foreground="#444444" FontWeight="500"/>
 							</Border>
 						</Grid>
 
@@ -242,21 +259,24 @@
 												<ColumnDefinition Width="*"/>
 												<ColumnDefinition Width="Auto"/>
 											</Grid.ColumnDefinitions>
-
-											<Border Grid.Column="0" Width="38" Height="38" Background="#F5F4F0" CornerRadius="9" Margin="0,0,16,0">
-												<TextBlock Text="▤" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#6B6B6B"/>
+											<Border Grid.Column="0" Width="38" Height="38"
+                                                    Background="#F5F4F0" CornerRadius="9" Margin="0,0,16,0">
+												<TextBlock Text="▤" FontSize="15"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" Foreground="#6B6B6B"/>
 											</Border>
-
 											<StackPanel Grid.Column="1" VerticalAlignment="Center">
-												<TextBlock Text="{Binding Titre}" FontSize="13" FontWeight="500" Foreground="#1A1A1A"/>
+												<TextBlock Text="{Binding Titre}" FontSize="13"
+                                                           FontWeight="500" Foreground="#1A1A1A"/>
 												<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0">
 													<Run Text="Importé le "/>
 													<Run Text="{Binding DateImport, StringFormat='{}{0:dd MMM yyyy}'}"/>
 												</TextBlock>
 											</StackPanel>
-
-											<Border Grid.Column="2" CornerRadius="7" Padding="10,5" Background="#F5F4F0" VerticalAlignment="Center">
-												<TextBlock Text="{Binding DateImport, StringFormat='{}{0:dd/MM/yy}'}" FontSize="11" Foreground="#6B6B6B"/>
+											<Border Grid.Column="2" CornerRadius="7" Padding="10,5"
+                                                    Background="#F5F4F0" VerticalAlignment="Center">
+												<TextBlock Text="{Binding DateImport, StringFormat='{}{0:dd/MM/yy}'}"
+                                                           FontSize="11" Foreground="#6B6B6B"/>
 											</Border>
 										</Grid>
 									</Border>
@@ -264,10 +284,10 @@
 							</ItemsControl.ItemTemplate>
 						</ItemsControl>
 
-						<!-- Message si aucun cours - SIMPLIFIÉ sans DataTrigger problématique -->
 						<StackPanel Margin="0,24" HorizontalAlignment="Center"
                                     Visibility="{Binding HasNoCours, Converter={StaticResource BoolToVis}}">
-							<TextBlock Text="Accédez rapidement à vos derniers cours" FontSize="14" Foreground="#ABABAB" HorizontalAlignment="Center"/>
+							<TextBlock Text="Accédez rapidement à vos derniers cours"
+                                       FontSize="14" Foreground="#ABABAB" HorizontalAlignment="Center"/>
 						</StackPanel>
 					</StackPanel>
 				</Border>
