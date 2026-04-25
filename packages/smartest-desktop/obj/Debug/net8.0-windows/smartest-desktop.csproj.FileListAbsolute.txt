@@ -151,3 +151,7 @@ C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ResetPasswordWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.g.resources
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\styles\AuthStyles.baml
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\CoursWindow.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\GeneratedInternalTypeHelper.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop_MarkupCompile.lref
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\CoursWindow.baml

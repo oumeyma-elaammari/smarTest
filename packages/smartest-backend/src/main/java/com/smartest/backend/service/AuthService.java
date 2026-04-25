@@ -48,7 +48,6 @@ public class AuthService {
 
     // ══════════════════════════════════════════════
     //  REGISTER PROFESSEUR
-    //  → envoie un code 6 chiffres par email
     // ══════════════════════════════════════════════
     public String register(RegisterRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword()))
@@ -59,7 +58,7 @@ public class AuthService {
         if (etudiantRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
 
-        // ✅ Code 6 chiffres au lieu d'un UUID
+
         String code = generateCode();
 
         Professeur professeur = new Professeur();
@@ -68,12 +67,12 @@ public class AuthService {
         professeur.setPassword(passwordEncoder.encode(request.getPassword()));
         professeur.setEmailVerifie(false);
         professeur.setTokenVerification(code);
-        // ✅ Expiration 15 minutes
+        // Expiration 15 minutes
         professeur.setTokenVerificationExpiry(LocalDateTime.now().plusMinutes(15));
 
         professeurRepository.save(professeur);
 
-        // ✅ Envoyer le code par email (pas un lien)
+        // Envoyer le code par email (pas un lien)
         emailService.sendVerificationCode(request.getEmail(), code);
 
         return "Inscription réussie ! Vérifiez votre email.";
@@ -152,7 +151,7 @@ public class AuthService {
         var prof = professeurRepository.findByEmail(email)
                 .orElseThrow(InvalidTokenException::new);
 
-        if (prof.isEmailVerifie()) return; // déjà vérifié
+        if (prof.isEmailVerifie()) return;
 
         String code = generateCode();
         prof.setTokenVerification(code);

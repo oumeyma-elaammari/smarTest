@@ -36,6 +36,8 @@ namespace smartest_desktop.Data.LocalEntities
 
         public string NomFichier { get; set; } = string.Empty;
 
+
+
         [MaxLength(50)]
         public string Statut { get; set; } = "Actif";
 

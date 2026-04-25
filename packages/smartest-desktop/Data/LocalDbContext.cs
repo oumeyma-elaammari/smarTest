@@ -40,6 +40,11 @@ namespace smartest_desktop.Data
                 entity.Property(c => c.Titre).IsRequired().HasMaxLength(200);
                 entity.Property(c => c.Contenu).HasColumnType("TEXT");
                 entity.Property(c => c.CheminFichier).HasMaxLength(500);
+                entity.Property(c => c.Categorie).HasMaxLength(100);
+                entity.Property(c => c.TypeFichier).HasMaxLength(50);
+                entity.Property(c => c.TailleFichier).HasDefaultValue(0L);
+                entity.Property(c => c.NomFichier).HasMaxLength(500);
+                entity.Property(c => c.Statut).HasMaxLength(50).HasDefaultValue("Actif");
             });
 
             // ── QuestionLocale ────────────────────────────────────
