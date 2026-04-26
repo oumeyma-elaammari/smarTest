@@ -7,6 +7,6 @@
     "\\ViewModels",
     "\\Views"
   ],
-  "SelectedNode": "\\Views\\ForgotPasswordWindow.xaml",
+  "SelectedNode": "\\MainWindow.xaml.cs",
   "PreviewInSolutionExplorer": false
 }

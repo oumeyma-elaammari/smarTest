@@ -34,3 +34,7 @@ C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\ref\sm
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.dll
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\refint\smartest-desktop.dll
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.pdb
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\EmailVerificationWindow.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ResetPasswordWindow.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\EmailVerificationWindow.baml
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ResetPasswordWindow.baml
