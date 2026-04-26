@@ -1,206 +1,158 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 import api from '../api/axiosConfig'
+import {
+    pageStyle, cardStyle, brandStyle, brandSubStyle,
+    inputStyle, submitBtnStyle,
+    Alert, Field, EyeBtn, BackLink, Footer,
+} from '../styles/AuthStyles'
 
 const schema = z.object({
     newPassword: z
         .string()
         .min(8, "Minimum 8 caractères")
-        .regex(/[A-Z]/, "Doit contenir au moins une majuscule")
-        .regex(/[0-9]/, "Doit contenir au moins un chiffre")
-        .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, "Doit contenir au moins un caractère spécial"),
+        .regex(/[A-Z]/, "Au moins une majuscule")
+        .regex(/[0-9]/, "Au moins un chiffre")
+        .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, "Au moins un caractère spécial"),
     confirmPassword: z.string().min(1, "La confirmation est obligatoire"),
-}).refine(data => data.newPassword === data.confirmPassword, {
+}).refine(d => d.newPassword === d.confirmPassword, {
     message: "Les mots de passe ne correspondent pas",
     path: ["confirmPassword"],
 })
-
 type ResetForm = z.infer<typeof schema>
 
 export default function ResetPassword() {
     const navigate = useNavigate()
-    const [searchParams] = useSearchParams()
-    const token = searchParams.get('token')
+    const [searchParams]  = useSearchParams()
+    const token           = searchParams.get('token')
 
-    const [isLoading, setIsLoading] = useState(false)
-    const [success, setSuccess] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const [isLoading, setIsLoading]       = useState(false)
+    const [success, setSuccess]           = useState(false)
+    const [error, setError]               = useState<string | null>(null)
     const [showPassword, setShowPassword] = useState(false)
-    const [showConfirm, setShowConfirm] = useState(false)
+    const [showConfirm, setShowConfirm]   = useState(false)
 
     const { register, handleSubmit, formState: { errors } } = useForm<ResetForm>({
         resolver: zodResolver(schema),
         mode: 'onSubmit',
     })
 
-    // Token manquant
-    if (!token) {
-        return (
-            <main className="flex min-h-screen items-center justify-center bg-background p-4">
-                <div className="card w-full max-w-[400px] text-center">
-                    <AlertCircle size={40} color="#dc2626" className="mx-auto mb-4" />
-                    <h1 className="font-bold text-lg mb-2">Lien invalide</h1>
-                    <p className="text-muted text-sm mb-4">
-                        Ce lien de réinitialisation est invalide ou a expiré.
-                    </p>
-                    <Link to="/forgot-password" className="btn-primary"
-                        style={{ display: 'inline-block', textDecoration: 'none' }}>
-                        Demander un nouveau lien
-                    </Link>
+    // ── Token manquant ──
+    if (!token) return (
+        <main style={pageStyle}>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+                <h1 style={brandStyle}>SmarTest</h1>
+                <p style={brandSubStyle}>Plateforme d'évaluation</p>
+                <div style={{
+                    width: 56, height: 56, borderRadius: '50%',
+                    background: '#fcebeb', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    margin: '1rem auto',
+                }}>
+                    <AlertCircle size={26} color="#a32d2d" />
                 </div>
-            </main>
-        )
-    }
+                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0f1e3d', marginBottom: 8 }}>
+                    Lien invalide
+                </h2>
+                <p style={{ fontSize: '0.8rem', color: '#6b7a99', marginBottom: '1.25rem', lineHeight: 1.6 }}>
+                    Ce lien de réinitialisation est invalide ou a expiré.
+                </p>
+                <Link to="/forgot-password" style={{
+                    display: 'block', ...submitBtnStyle,
+                    textDecoration: 'none', textAlign: 'center',
+                    lineHeight: '42px',
+                }}>
+                    Demander un nouveau lien
+                </Link>
+                <BackLink to="/login" />
+            </div>
+        </main>
+    )
 
     const onSubmit = async (data: ResetForm) => {
         setIsLoading(true)
         setError(null)
-
         try {
             await api.post('/auth/reset-password/etudiant', {
                 token,
-                newPassword: data.newPassword,
+                newPassword:     data.newPassword,
                 confirmPassword: data.confirmPassword,
             })
-
             setSuccess(true)
             setTimeout(() => navigate('/login'), 3000)
-
         } catch (err: any) {
             setIsLoading(false)
-
-            if (!err?.response) {
-                setError('Impossible de contacter le serveur')
-                return
-            }
-
-            const status = err.response?.status
-            if (status === 400) {
-                setError('Lien invalide ou expiré. Demandez un nouveau lien.')
-            } else if (status >= 500) {
-                setError('Erreur serveur. Réessayez plus tard.')
-            } else {
-                setError('Une erreur inattendue est survenue.')
-            }
+            if (!err?.response)               setError('Impossible de contacter le serveur')
+            else if (err.response.status === 400) setError('Lien invalide ou expiré. Demandez un nouveau lien.')
+            else if (err.response.status >= 500)  setError('Erreur serveur. Réessayez plus tard.')
+            else                                  setError('Une erreur inattendue est survenue.')
         }
     }
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-background p-4">
-            <div className="card w-full max-w-[400px]">
+        <main style={pageStyle}>
+            <div style={cardStyle}>
 
-                {/* Header */}
-                <div className="text-center mb-6 space-y-1">
-                    <h1 className="text-xl font-bold" style={{ color: '#1a2e5a' }}>
+                <h1 style={brandStyle}>SmarTest</h1>
+                <p style={brandSubStyle}>Plateforme d'évaluation</p>
+
+                <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+                    <span style={{
+                        display: 'inline-block', fontSize: '0.65rem', fontWeight: 600,
+                        letterSpacing: '0.1em', textTransform: 'uppercase',
+                        padding: '3px 12px', borderRadius: 20,
+                        background: '#e8eef8', color: '#1a2e5a', marginBottom: '0.75rem',
+                    }}>Sécurité</span>
+                    <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0f1e3d', marginBottom: 6 }}>
                         Nouveau mot de passe
-                    </h1>
-                    <p className="text-muted" style={{ fontSize: '0.875rem' }}>
-                        Choisissez un nouveau mot de passe sécurisé
+                    </h2>
+                    <div style={{ width: 36, height: 2, background: '#1a2e5a', borderRadius: 2, margin: '0.6rem auto 0.875rem' }} />
+                    <p style={{ fontSize: '0.8rem', color: '#6b7a99', lineHeight: 1.6 }}>
+                        Choisissez un nouveau mot de passe sécurisé.
                     </p>
                 </div>
 
-                {/* Succès */}
                 {success && (
-                    <div className="mb-4 px-4 py-3 rounded-lg flex items-start gap-2 text-sm"
-                        style={{
-                            backgroundColor: '#f0fdf4',
-                            color: '#16a34a',
-                            border: '1px solid #bbf7d0',
-                        }}>
-                        <CheckCircle size={16} className="shrink-0 mt-0.5" />
-                        <div>
-                            <p style={{ fontWeight: 600 }}>Mot de passe réinitialisé !</p>
-                            <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                                Redirection vers la connexion dans 3 secondes...
-                            </p>
-                        </div>
-                    </div>
+                    <Alert type="success">
+                        <strong>Mot de passe réinitialisé !</strong><br />
+                        <span style={{ fontSize: '0.75rem' }}>Redirection vers la connexion dans 3 secondes...</span>
+                    </Alert>
                 )}
+                {error && <Alert type="error">{error}</Alert>}
 
-                {/* Erreur */}
-                {error && (
-                    <div className="mb-4 px-4 py-3 rounded-lg flex items-center gap-2 text-sm"
-                        style={{
-                            backgroundColor: '#fef2f2',
-                            color: '#dc2626',
-                            border: '1px solid #fecaca',
-                        }}>
-                        <AlertCircle size={16} className="shrink-0" />
-                        {error}
-                    </div>
-                )}
-
-                {/* Formulaire */}
                 {!success && (
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+                    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
 
-                        {/* Nouveau mot de passe */}
-                        <div>
-                            <label htmlFor="newPassword" className="label">
-                                Nouveau mot de passe
-                            </label>
-                            <div className="relative">
-                                <input
-                                    {...register('newPassword')}
-                                    id="newPassword"
-                                    type={showPassword ? 'text' : 'password'}
-                                    placeholder="* * * * * * * * *"
-                                    disabled={isLoading}
-                                    className={`input pr-10 ${errors.newPassword ? 'error' : ''}`}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(p => !p)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                                    style={{ color: 'var(--muted-foreground)', background: 'none', border: 'none', cursor: 'pointer' }}
-                                    tabIndex={-1}
-                                >
-                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
+                        <Field label="Nouveau mot de passe" error={errors.newPassword?.message}>
+                            <div style={{ position: 'relative' }}>
+                                <input {...register('newPassword')} type={showPassword ? 'text' : 'password'}
+                                    placeholder="• • • • • • • •" disabled={isLoading}
+                                    style={{ ...inputStyle(!!errors.newPassword), paddingRight: 40 }} />
+                                <EyeBtn show={showPassword} onClick={() => setShowPassword(p => !p)} />
                             </div>
-                            {errors.newPassword && (
-                                <p className="error-msg">{errors.newPassword.message}</p>
-                            )}
-                        </div>
+                        </Field>
 
-                        {/* Confirmer mot de passe */}
-                        <div>
-                            <label htmlFor="confirmPassword" className="label">
-                                Confirmer le mot de passe
-                            </label>
-                            <div className="relative">
-                                <input
-                                    {...register('confirmPassword')}
-                                    id="confirmPassword"
-                                    type={showConfirm ? 'text' : 'password'}
-                                    placeholder="* * * * * * * * *"
-                                    disabled={isLoading}
-                                    className={`input pr-10 ${errors.confirmPassword ? 'error' : ''}`}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirm(p => !p)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                                    style={{ color: 'var(--muted-foreground)', background: 'none', border: 'none', cursor: 'pointer' }}
-                                    tabIndex={-1}
-                                >
-                                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
+                        <Field label="Confirmer le mot de passe" error={errors.confirmPassword?.message}>
+                            <div style={{ position: 'relative' }}>
+                                <input {...register('confirmPassword')} type={showConfirm ? 'text' : 'password'}
+                                    placeholder="• • • • • • • •" disabled={isLoading}
+                                    style={{ ...inputStyle(!!errors.confirmPassword), paddingRight: 40 }} />
+                                <EyeBtn show={showConfirm} onClick={() => setShowConfirm(p => !p)} />
                             </div>
-                            {errors.confirmPassword && (
-                                <p className="error-msg">{errors.confirmPassword.message}</p>
-                            )}
-                        </div>
+                        </Field>
 
-                        <button type="submit" disabled={isLoading} className="btn-primary">
+                        <button type="submit" disabled={isLoading}
+                            style={{ ...submitBtnStyle, opacity: isLoading ? 0.75 : 1 }}
+                            onMouseEnter={e => { if (!isLoading) e.currentTarget.style.opacity = '0.88' }}
+                            onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+                        >
                             {isLoading
-                                ? <span className="flex items-center justify-center gap-2">
-                                    <Loader2 size={16} className="animate-spin" />
-                                    Réinitialisation...
+                                ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                    <Loader2 size={16} className="animate-spin" /> Réinitialisation...
                                   </span>
                                 : 'Réinitialiser le mot de passe'
                             }
@@ -208,21 +160,8 @@ export default function ResetPassword() {
                     </form>
                 )}
 
-                {/* Retour */}
-                <div className="mt-5 text-center">
-                    <Link to="/login"
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                            fontSize: '0.875rem', color: '#1a2e5a',
-                            fontWeight: 600, textDecoration: 'none',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                        onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
-                    >
-                        <ArrowLeft size={16} />
-                        Retour à la connexion
-                    </Link>
-                </div>
+                <BackLink to="/login" />
+                <Footer />
             </div>
         </main>
     )

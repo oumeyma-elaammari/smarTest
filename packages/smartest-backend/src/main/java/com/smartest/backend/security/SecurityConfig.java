@@ -31,7 +31,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(auth -> auth
@@ -40,19 +39,18 @@ public class SecurityConfig {
                                 "/auth/register/etudiant",
                                 "/auth/login",
                                 "/auth/verify-email",
+                                "/auth/verify-email/code",    // ✅ vérification par code (desktop)
+                                "/auth/verify-email/resend",  // ✅ renvoi du code (desktop)
                                 "/auth/forgot-password/etudiant",
                                 "/auth/forgot-password/professeur",
                                 "/auth/reset-password/etudiant",
-                                "/auth/reset-password/professeur"
+                                "/auth/reset-password/professeur",
+                                "/ws/**"
                         ).permitAll()
-
-                        // ✅ AJOUTS demandés
-                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/quiz/publies").hasRole("ETUDIANT")
                         .requestMatchers("/api/quiz/*/soumettre").hasRole("ETUDIANT")
                         .requestMatchers("/api/quiz/*/publier").hasRole("PROFESSEUR")
                         .requestMatchers("/api/examens-publies/**").authenticated()
-
                         .requestMatchers("/api/professeur/**").hasRole("PROFESSEUR")
                         .requestMatchers("/api/etudiant/**").hasRole("ETUDIANT")
                         .anyRequest().authenticated()
@@ -80,10 +78,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        // ✅ Autorise React web (localhost:5173) + app desktop WPF (sans Origin header)
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(false); // false car desktop n'envoie pas de cookies
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

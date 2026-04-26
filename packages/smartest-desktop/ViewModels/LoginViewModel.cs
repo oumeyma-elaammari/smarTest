@@ -1,10 +1,8 @@
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
-using WpfApp = System.Windows.Application;  
-using WpfWindow = System.Windows.Window;
+using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
@@ -62,11 +60,11 @@ namespace smartest_desktop.ViewModels
                 async _ => await ExecuteLogin(),
                 _ => IsNotLoading);
 
-            ForgotPasswordCommand = new RelayCommand(
-                _ => OpenForgotPassword());
+            ForgotPasswordCommand = new RelayCommand(_ =>
+                NavigationService.NavigateTo<Views.ForgotPasswordWindow, Views.LoginWindow>());
 
-            RegisterCommand = new RelayCommand(
-                _ => OpenRegister());
+            RegisterCommand = new RelayCommand(_ =>
+                NavigationService.NavigateTo<Views.RegisterWindow, Views.LoginWindow>());
         }
 
         private async Task ExecuteLogin()
@@ -92,32 +90,11 @@ namespace smartest_desktop.ViewModels
                 return;
             }
 
-            // ✅ Succès
             WpfApp.Current.Properties["Token"] = auth.Token;
             WpfApp.Current.Properties["Nom"] = auth.Nom;
             WpfApp.Current.Properties["Email"] = auth.Email;
 
-            var dashboard = new Views.DashboardWindow();
-            dashboard.Show();
-
-            foreach (WpfWindow w in WpfApp.Current.Windows)
-            {
-                if (w is Views.LoginWindow)
-                {
-                    w.Close();
-                    break;
-                }
-            }
-        }
-
-        private void OpenForgotPassword()
-        {
-            new Views.ForgotPasswordWindow().Show();
-        }
-
-        private void OpenRegister()
-        {
-            new Views.RegisterWindow().ShowDialog();
+            NavigationService.NavigateTo<Views.DashboardWindow, Views.LoginWindow>();
         }
     }
 }

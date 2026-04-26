@@ -1,135 +1,133 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { CheckCircle, XCircle, Mail } from 'lucide-react'
+import {
+    pageStyle, cardStyle, brandStyle, brandSubStyle,
+    submitBtnStyle, Footer,
+} from '../styles/AuthStyles'
 
 type Status = 'loading' | 'success' | 'error'
 
 export default function EmailVerification() {
     const [searchParams] = useSearchParams()
-    const navigate = useNavigate()
+    const navigate       = useNavigate()
     const [countdown, setCountdown] = useState(5)
 
-    // ✅ Lire directement le paramètre status envoyé par le backend
     const statusParam = searchParams.get('status')
-    const status: Status = statusParam === 'success'
-        ? 'success'
-        : statusParam === 'error'
-            ? 'error'
-            : 'loading'
+    const status: Status = statusParam === 'success' ? 'success'
+        : statusParam === 'error' ? 'error' : 'loading'
 
-    // Countdown vers login après succès
     useEffect(() => {
         if (status !== 'success') return
-        if (countdown === 0) {
-            navigate('/login')
-            return
-        }
-        const timer = setTimeout(() => setCountdown(c => c - 1), 1000)
-        return () => clearTimeout(timer)
+        if (countdown === 0) { navigate('/login'); return }
+        const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+        return () => clearTimeout(t)
     }, [status, countdown, navigate])
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-background p-4">
-            <div className="card w-full max-w-[420px] text-center">
+        <main style={pageStyle}>
+            <div style={{ ...cardStyle, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-                {/* Logo */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold tracking-widest" style={{ color: '#1a2e5a' }}>
-                        SmarTest
-                    </h1>
-                    <p className="text-muted">Plateforme d'évaluation sécurisée</p>
-                </div>
+                {status !== 'loading' && (
+                    <span style={{
+                        display: 'inline-block', fontSize: '0.65rem', fontWeight: 600,
+                        letterSpacing: '0.1em', textTransform: 'uppercase',
+                        padding: '3px 12px', borderRadius: 20, marginBottom: '1rem',
+                        ...(status === 'success'
+                            ? { background: '#eaf3de', color: '#3b6d11' }
+                            : { background: '#fcebeb', color: '#791f1f' }),
+                    }}>
+                        {status === 'success' ? 'Succès' : 'Erreur'}
+                    </span>
+                )}
+
+                <h1 style={brandStyle}>SmarTest</h1>
+                <p style={brandSubStyle}>Plateforme d'évaluation</p>
 
                 {/* ── SUCCESS ── */}
                 {status === 'success' && (
-                    <div className="space-y-4 py-6">
-                        <div className="flex justify-center">
-                            <div className="p-4 rounded-full" style={{ backgroundColor: '#f0fdf4' }}>
-                                <CheckCircle size={40} style={{ color: '#16a34a' }} />
-                            </div>
+                    <>
+                        <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#eaf3de', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                            <CheckCircle size={32} style={{ color: '#3b6d11' }} />
                         </div>
-                        <h2 className="text-lg font-semibold" style={{ color: '#16a34a' }}>
-                            Email confirmé avec succès !
+                        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0f1e3d', marginBottom: 8 }}>
+                            Email confirmé !
                         </h2>
-                        <p className="text-muted">
-                            Votre compte a été activé. Vous pouvez maintenant vous connecter.
+                        <div style={{ width: 40, height: 1, background: '#e2e8f4', margin: '0.75rem auto' }} />
+                        <p style={{ fontSize: '0.82rem', color: '#6b7a99', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                            Votre compte a été activé avec succès. Vous pouvez maintenant accéder à la plateforme.
                         </p>
-                        <div className="px-4 py-3 rounded-lg text-sm"
-                            style={{
-                                backgroundColor: '#f0fdf4',
-                                color: '#16a34a',
-                                border: '1px solid #bbf7d0',
-                            }}>
+                        <div style={{
+                            width: '100%', padding: '0.65rem 1rem', borderRadius: 8,
+                            background: '#eaf3de', border: '1px solid #c0dd97',
+                            color: '#27500a', fontSize: '0.8rem', fontWeight: 500, marginBottom: '1.25rem',
+                        }}>
                             Redirection dans <strong>{countdown}s</strong>...
                         </div>
-                        <button onClick={() => navigate('/login')} className="btn-primary">
+                        <button onClick={() => navigate('/login')} style={submitBtnStyle}
+                            onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                        >
                             Se connecter maintenant
                         </button>
-                    </div>
+                    </>
                 )}
 
                 {/* ── ERROR ── */}
                 {status === 'error' && (
-                    <div className="space-y-4 py-6">
-                        <div className="flex justify-center">
-                            <div className="p-4 rounded-full" style={{ backgroundColor: '#fef2f2' }}>
-                                <XCircle size={40} style={{ color: '#dc2626' }} />
-                            </div>
+                    <>
+                        <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#fcebeb', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                            <XCircle size={32} style={{ color: '#a32d2d' }} />
                         </div>
-                        <h2 className="text-lg font-semibold" style={{ color: '#dc2626' }}>
-                            Lien invalide ou expiré
+                        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.35rem', color: '#0f1e3d', marginBottom: 8 }}>
+                            Lien invalide
                         </h2>
-                        <p className="text-muted">
-                            Ce lien est invalide ou a expiré. Veuillez vous réinscrire.
+                        <div style={{ width: 40, height: 1, background: '#e2e8f4', margin: '0.75rem auto' }} />
+                        <p style={{ fontSize: '0.82rem', color: '#6b7a99', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                            Ce lien est invalide ou a expiré. Les liens de confirmation sont valides pendant 24h seulement.
                         </p>
-                        <div className="px-4 py-3 rounded-lg text-sm"
+                        <div style={{
+                            width: '100%', padding: '0.65rem 1rem', borderRadius: 8,
+                            background: '#fcebeb', border: '1px solid #f7c1c1',
+                            color: '#791f1f', fontSize: '0.8rem', fontWeight: 500, marginBottom: '1.25rem',
+                        }}>
+                            Lien expiré — veuillez vous réinscrire
+                        </div>
+                        <button onClick={() => navigate('/register')}
+                            style={{ ...submitBtnStyle, marginBottom: '0.5rem' }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                        >
+                            Créer un nouveau compte
+                        </button>
+                        <button onClick={() => navigate('/login')}
                             style={{
-                                backgroundColor: '#fef2f2',
-                                color: '#dc2626',
-                                border: '1px solid #fecaca',
-                            }}>
-                            Le lien est valide pendant 24h seulement.
-                        </div>
-                        <div className="space-y-2">
-                            <button onClick={() => navigate('/register')} className="btn-primary">
-                                Créer un nouveau compte
-                            </button>
-                            <button
-                                onClick={() => navigate('/login')}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.625rem 1rem',
-                                    borderRadius: '0.5rem',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    border: '1px solid #d1d5db',
-                                    backgroundColor: 'transparent',
-                                    cursor: 'pointer',
-                                    color: '#1a2e5a',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f9fafb'}
-                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                            >
-                                Retour à la connexion
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── LOADING (pas de paramètre) ── */}
-                {status === 'loading' && (
-                    <div className="space-y-4 py-6">
-                        <p className="text-muted">Paramètres manquants...</p>
-                        <button onClick={() => navigate('/login')} className="btn-primary">
+                                width: '100%', height: 42, background: 'transparent',
+                                color: '#1a2e5a', border: '1px solid #d4dce8', borderRadius: 9,
+                                fontFamily: "'DM Sans', sans-serif", fontSize: '0.875rem',
+                                fontWeight: 500, cursor: 'pointer', transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#f6f8fc'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
                             Retour à la connexion
                         </button>
-                    </div>
+                    </>
                 )}
 
-                <div className="mt-4 flex justify-center items-center gap-1">
-                    <Mail size={14} style={{ color: 'var(--muted-foreground)' }} />
-                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>SmarTest — ENSA</span>
-                </div>
+                {/* ── LOADING ── */}
+                {status === 'loading' && (
+                    <>
+                        <p style={{ fontSize: '0.85rem', color: '#6b7a99', marginBottom: '1rem' }}>
+                            Paramètres manquants...
+                        </p>
+                        <button onClick={() => navigate('/login')} style={submitBtnStyle}>
+                            Retour à la connexion
+                        </button>
+                    </>
+                )}
+
+                <Footer />
             </div>
         </main>
     )

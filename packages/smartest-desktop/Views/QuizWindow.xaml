@@ -1,0 +1,38 @@
+<Window x:Class="smartest_desktop.Views.QuizWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Génération Quiz" Height="600" Width="800">
+
+    <Grid Margin="20">
+        <StackPanel>
+
+            <TextBox Text="{Binding Cours}" Height="100" AcceptsReturn="True"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,10">
+                <TextBox Width="50" Text="{Binding NbQuestions}"/>
+				<ComboBox Width="120"
+          SelectedValue="{Binding Difficulte}"
+          SelectedValuePath="Content">
+					<ComboBoxItem Content="Facile"/>
+					<ComboBoxItem Content="Moyen"/>
+					<ComboBoxItem Content="Difficile"/>
+				</ComboBox>
+            </StackPanel>
+
+            <Button Content="Générer" Command="{Binding GenererCommand}" Height="40"/>
+
+            <ListBox ItemsSource="{Binding Questions}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="10">
+                            <TextBlock Text="{Binding Texte}" FontWeight="Bold"/>
+                            <ItemsControl ItemsSource="{Binding Choix}"/>
+                            <TextBlock Text="{Binding Reponse}" Foreground="Green"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+        </StackPanel>
+    </Grid>
+</Window>

@@ -10,10 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * API consommée uniquement par l'application Desktop (côté professeur).
- * Toutes les routes sont protégées par JWT avec rôle PROFESSEUR.
- */
+
 @RestController
 @RequestMapping("/api/professeur")
 @CrossOrigin(origins = "*")

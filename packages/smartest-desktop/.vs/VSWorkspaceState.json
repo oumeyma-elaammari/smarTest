@@ -1,11 +1,6 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\Helpers",
-    "\\Models",
-    "\\Services",
-    "\\ViewModels",
-    "\\Views"
+    ""
   ],
   "SelectedNode": "\\MainWindow.xaml.cs",
   "PreviewInSolutionExplorer": false

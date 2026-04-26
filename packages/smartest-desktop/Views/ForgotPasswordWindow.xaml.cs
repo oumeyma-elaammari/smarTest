@@ -1,4 +1,5 @@
 using System.Windows;
+using smartest_desktop.ViewModels;
 
 namespace smartest_desktop.Views
 {
@@ -7,6 +8,7 @@ namespace smartest_desktop.Views
         public ForgotPasswordWindow()
         {
             InitializeComponent();
+            DataContext = new ForgotPasswordViewModel();
         }
     }
 }
