@@ -7,7 +7,7 @@
         MinHeight="600" MinWidth="860"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F4F0"
+        Background="White"
         FontFamily="Segoe UI">
 
 	<Window.DataContext>
@@ -15,25 +15,11 @@
 	</Window.DataContext>
 
 	<Window.Resources>
-		<Style x:Key="NavItem" TargetType="Border">
-			<Setter Property="CornerRadius" Value="10"/>
-			<Setter Property="Padding" Value="14,0"/>
-			<Setter Property="Height" Value="42"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="Background" Value="Transparent"/>
-			<Style.Triggers>
-				<Trigger Property="IsMouseOver" Value="True">
-					<Setter Property="Background" Value="#EBEBEA"/>
-				</Trigger>
-			</Style.Triggers>
-		</Style>
-		<Style x:Key="Card" TargetType="Border">
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="CornerRadius" Value="14"/>
-			<Setter Property="BorderBrush" Value="#E8E7E3"/>
-			<Setter Property="BorderThickness" Value="1"/>
-		</Style>
-		<BooleanToVisibilityConverter x:Key="BoolToVis"/>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
 	</Window.Resources>
 
 	<Grid>
@@ -43,7 +29,8 @@
 		</Grid.ColumnDefinitions>
 
 		<!-- ══ SIDEBAR ══ -->
-		<Border Grid.Column="0" Background="#FAFAF9" BorderBrush="#E8E7E3" BorderThickness="0,0,1,0">
+		<Border Grid.Column="0" Background="White"
+                BorderBrush="#e2e8f4" BorderThickness="0,0,1,0">
 			<Grid>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="Auto"/>
@@ -52,247 +39,209 @@
 				</Grid.RowDefinitions>
 
 				<!-- Logo -->
-				<StackPanel Grid.Row="0" Margin="22,30,22,36">
+				<StackPanel Grid.Row="0" Margin="22,28,22,32">
 					<StackPanel Orientation="Horizontal">
-						<Border Width="8" Height="8" CornerRadius="4" Background="#1A1A1A"
-                                VerticalAlignment="Center" Margin="0,0,8,0"/>
-						<TextBlock FontSize="17" FontWeight="700" Foreground="#1A1A1A">
-							<Run Text="Smar"/>
-							<Run Text="Test" Foreground="#6B6B6B"/>
+						<Ellipse Width="8" Height="8" Fill="#4f8ef7"
+                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
+						<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold"
+						   Foreground="#0f1e3d" VerticalAlignment="Center">
+							Smar<Run Foreground="#4f8ef7">Test</Run>
 						</TextBlock>
 					</StackPanel>
-					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#ABABAB" Margin="16,5,0,0"/>
+					<TextBlock Text="Espace professeur" FontSize="11"
+                               Foreground="#8899b8" Margin="16,5,0,0"/>
 				</StackPanel>
 
 				<!-- Nav items -->
 				<StackPanel Grid.Row="1" Margin="12,0">
 
-					<!-- Tableau de bord — actif -->
-					<Border CornerRadius="10" Height="42" Padding="14,0"
-                            Background="#1A1A1A" Margin="0,1">
+					<!-- Home — actif -->
+					<Border CornerRadius="8" Height="40" Padding="14,0"
+                            Background="#0f1e3d" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="⊞" FontSize="14" Foreground="#FFFFFF" Margin="0,0,10,0"/>
-							<TextBlock Text="Tableau de bord" FontSize="13"
-                                       FontWeight="SemiBold" Foreground="#FFFFFF"/>
+							<TextBlock Text="&#xE80F;" FontSize="13" Foreground="White"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Home" FontSize="13"
+                                       FontWeight="SemiBold" Foreground="White"/>
 						</StackPanel>
 					</Border>
 
-					<!-- Mes cours -->
-					<Border Style="{StaticResource NavItem}" Margin="0,1">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenCoursCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="▤" FontSize="14" Foreground="#6B6B6B" Margin="0,0,10,0"/>
-							<TextBlock Text="Mes cours" FontSize="13" Foreground="#444444"/>
-						</StackPanel>
-					</Border>
-
-					<!-- Quiz et examens — connecté à OpenQuizCommand -->
-					<Border Style="{StaticResource NavItem}" Margin="0,1">
+					<!-- Quiz et examens -->
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
 						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenQuizCommand}"/>
 						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="✎" FontSize="14" Foreground="#6B6B6B" Margin="0,0,10,0"/>
-							<TextBlock Text="Quiz et examens" FontSize="13" Foreground="#444444"/>
+							<TextBlock Text="&#xE9D5;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Quiz et examens" FontSize="13" Foreground="#0f1e3d"/>
 						</StackPanel>
 					</Border>
 
 					<!-- Sessions actives -->
-					<Border Style="{StaticResource NavItem}" Margin="0,1">
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="◎" FontSize="14" Foreground="#6B6B6B" Margin="0,0,10,0"/>
-							<TextBlock Text="Sessions actives" FontSize="13" Foreground="#444444"/>
+							<TextBlock Text="&#xE7FC;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Sessions actives" FontSize="13" Foreground="#0f1e3d"/>
 						</StackPanel>
 					</Border>
 
 					<!-- Statistiques -->
-					<Border Style="{StaticResource NavItem}" Margin="0,1">
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="▦" FontSize="14" Foreground="#6B6B6B" Margin="0,0,10,0"/>
-							<TextBlock Text="Statistiques" FontSize="13" Foreground="#444444"/>
+							<TextBlock Text="&#xE9D2;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Statistiques" FontSize="13" Foreground="#0f1e3d"/>
 						</StackPanel>
 					</Border>
 
+
 					<!-- Paramètres -->
-					<Border Style="{StaticResource NavItem}" Margin="0,1">
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="⚙" FontSize="13" Foreground="#6B6B6B" Margin="0,0,10,0"/>
-							<TextBlock Text="Paramètres" FontSize="13" Foreground="#444444"/>
+							<TextBlock Text="&#xE713;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Paramètres" FontSize="13" Foreground="#0f1e3d"/>
 						</StackPanel>
 					</Border>
+
 				</StackPanel>
 
 				<!-- User info + Déconnexion -->
-				<StackPanel Grid.Row="2" Margin="12,0,12,24">
-					<Border Background="#F0EFE8" CornerRadius="12" Padding="14,12" Margin="0,0,0,8">
+				<StackPanel Grid.Row="2" Margin="12,0,12,18">
+					<Border Background="#f0f3f9" CornerRadius="10"
+                            BorderBrush="#e2e8f4" BorderThickness="1"
+                            Padding="8,6" Margin="0,0,0,8">
 						<StackPanel>
-							<TextBlock Text="{Binding Nom}"   FontSize="13" FontWeight="600" Foreground="#1A1A1A"/>
-							<TextBlock Text="{Binding Email}" FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"/>
+							<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+								<Ellipse Width="7" Height="7" Fill="#16a34a"
+                                         VerticalAlignment="Center" Margin="0,0,7,0"/>
+								<TextBlock Text="{Binding Nom}" FontSize="13"
+                                           FontWeight="600" Foreground="#0f1e3d"/>
+							</StackPanel>
+							<TextBlock Text="{Binding Email}" FontSize="11"
+                                       Foreground="#8899b8" Margin="14,0,0,0"/>
 						</StackPanel>
 					</Border>
-					<Border Style="{StaticResource NavItem}" Margin="0,1">
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,2">
 						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick" Command="{Binding LogoutCommand}"/>
 						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="→" FontSize="14" Foreground="#C84B4B" Margin="0,0,10,0"/>
-							<TextBlock Text="Déconnexion" FontSize="13" Foreground="#C84B4B"/>
+							<TextBlock Text="&#xF3B1;" FontSize="13" Foreground="#dc2626"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Déconnexion" FontSize="13" Foreground="#dc2626"/>
 						</StackPanel>
 					</Border>
 				</StackPanel>
+
 			</Grid>
 		</Border>
 
 		<!-- ══ MAIN CONTENT ══ -->
-		<ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-			<StackPanel Margin="40,36,40,40">
+		<Grid Grid.Column="1">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
 
-				<!-- Header -->
-				<Grid Margin="0,0,0,32">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="Auto"/>
-					</Grid.ColumnDefinitions>
-					<StackPanel>
-						<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,0,0,6">
-							<Run Text="BONJOUR,  "/>
+			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="White">
+				<StackPanel Margin="40,36,40,40">
+
+					<!-- Header -->
+					<StackPanel Margin="0,0,0,32">
+						<TextBlock FontSize="11" Foreground="#8899b8" Margin="0,0,0,6">
+							<Run Text="BONJOUR, "/>
 							<Run Text="{Binding Nom}" FontWeight="600"/>
 						</TextBlock>
-						<TextBlock Text="Tableau de bord" FontSize="26" FontWeight="700" Foreground="#1A1A1A"/>
+						<TextBlock Text="Home" FontSize="26" FontWeight="700" Foreground="#0f1e3d"/>
 					</StackPanel>
-					<Border Grid.Column="1" Background="White" CornerRadius="10" Padding="16,10"
-                            BorderBrush="#E8E7E3" BorderThickness="1"
-                            VerticalAlignment="Center" Cursor="Hand">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenCoursCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="+" FontSize="15" FontWeight="700"
-                                       Foreground="#1A1A1A" Margin="0,0,8,0"/>
-							<TextBlock Text="Importer un cours" FontSize="13"
-                                       FontWeight="500" Foreground="#1A1A1A"/>
-						</StackPanel>
-					</Border>
-				</Grid>
 
-				<!-- Stats Cards -->
-				<Grid Margin="0,0,0,28">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="14"/>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="14"/>
-						<ColumnDefinition Width="*"/>
-					</Grid.ColumnDefinitions>
-					<Border Grid.Column="0" Style="{StaticResource Card}" Padding="22,20">
-						<StackPanel>
-							<TextBlock Text="{Binding TotalCours, FallbackValue=0}"
-                                       FontSize="32" FontWeight="700" Foreground="#1A1A1A"/>
-							<TextBlock Text="Cours importés" FontSize="12"
-                                       Foreground="#ABABAB" Margin="0,4,0,0"/>
-						</StackPanel>
-					</Border>
-					<Border Grid.Column="2" Style="{StaticResource Card}" Padding="22,20">
-						<StackPanel>
-							<TextBlock Text="0" FontSize="32" FontWeight="700" Foreground="#1A1A1A"/>
-							<TextBlock Text="Examens créés" FontSize="12"
-                                       Foreground="#ABABAB" Margin="0,4,0,0"/>
-						</StackPanel>
-					</Border>
-					<Border Grid.Column="4" Style="{StaticResource Card}" Padding="22,20">
-						<StackPanel>
-							<TextBlock Text="0" FontSize="32" FontWeight="700" Foreground="#1A1A1A"/>
-							<TextBlock Text="Quiz créés" FontSize="12"
-                                       Foreground="#ABABAB" Margin="0,4,0,0"/>
-						</StackPanel>
-					</Border>
-				</Grid>
+					<!-- Stats Cards -->
+					<Grid Margin="0,0,0,36">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="16"/>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="16"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
 
-				<!-- Cours récents -->
-				<Border Style="{StaticResource Card}" Padding="28,24">
-					<StackPanel>
-						<Grid Margin="0,0,0,22">
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="Auto"/>
-							</Grid.ColumnDefinitions>
+						<Border Grid.Column="0" Style="{StaticResource DashCard}">
 							<StackPanel>
-								<TextBlock Text="Mes cours récents" FontSize="15"
-                                           FontWeight="600" Foreground="#1A1A1A"/>
-								<TextBlock FontSize="12" Foreground="#ABABAB" Margin="0,4,0,0">
-									<Run Text="{Binding TotalCours, FallbackValue=0}"/>
-									<Run Text=" cours au total"/>
-								</TextBlock>
+								<Border Width="36" Height="2" Background="#0f1e3d"
+                                        CornerRadius="2" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+								<TextBlock Text="{Binding TotalCours, FallbackValue=0}"
+                                           FontSize="32" FontWeight="700" Foreground="#0f1e3d"/>
+								<TextBlock Text="Cours importés" FontSize="13"
+                                           Foreground="#8899b8" Margin="0,4,0,0"/>
 							</StackPanel>
-							<Border Grid.Column="1" CornerRadius="8" Padding="14,7" Cursor="Hand"
-                                    BorderBrush="#E8E7E3" BorderThickness="1"
-                                    VerticalAlignment="Center">
-								<Border.Style>
-									<Style TargetType="Border">
-										<Setter Property="Background" Value="Transparent"/>
-										<Style.Triggers>
-											<Trigger Property="IsMouseOver" Value="True">
-												<Setter Property="Background" Value="#F5F4F0"/>
-											</Trigger>
-										</Style.Triggers>
-									</Style>
-								</Border.Style>
-								<Border.InputBindings>
-									<MouseBinding MouseAction="LeftClick" Command="{Binding OpenCoursCommand}"/>
-								</Border.InputBindings>
-								<TextBlock Text="Voir tous les cours →" FontSize="12"
-                                           Foreground="#444444" FontWeight="500"/>
-							</Border>
-						</Grid>
+						</Border>
 
-						<Border Height="1" Background="#F0EFE8" Margin="0,0,0,16"/>
+						<Border Grid.Column="2" Style="{StaticResource DashCard}">
+							<StackPanel>
+								<Border Width="36" Height="2" Background="#0f1e3d"
+                                        CornerRadius="2" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+								<TextBlock Text="{Binding TotalExamens, FallbackValue=0}"
+                                           FontSize="32" FontWeight="700" Foreground="#0f1e3d"/>
+								<TextBlock Text="Examens créés" FontSize="13"
+                                           Foreground="#8899b8" Margin="0,4,0,0"/>
+							</StackPanel>
+						</Border>
 
-						<ItemsControl ItemsSource="{Binding DerniersCours}">
-							<ItemsControl.ItemTemplate>
-								<DataTemplate>
-									<Border Padding="0,14" BorderBrush="#F0EFE8" BorderThickness="0,0,0,1">
-										<Grid>
-											<Grid.ColumnDefinitions>
-												<ColumnDefinition Width="Auto"/>
-												<ColumnDefinition Width="*"/>
-												<ColumnDefinition Width="Auto"/>
-											</Grid.ColumnDefinitions>
-											<Border Grid.Column="0" Width="38" Height="38"
-                                                    Background="#F5F4F0" CornerRadius="9" Margin="0,0,16,0">
-												<TextBlock Text="▤" FontSize="15"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center" Foreground="#6B6B6B"/>
-											</Border>
-											<StackPanel Grid.Column="1" VerticalAlignment="Center">
-												<TextBlock Text="{Binding Titre}" FontSize="13"
-                                                           FontWeight="500" Foreground="#1A1A1A"/>
-												<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0">
-													<Run Text="Importé le "/>
-													<Run Text="{Binding DateImport, StringFormat='{}{0:dd MMM yyyy}'}"/>
-												</TextBlock>
-											</StackPanel>
-											<Border Grid.Column="2" CornerRadius="7" Padding="10,5"
-                                                    Background="#F5F4F0" VerticalAlignment="Center">
-												<TextBlock Text="{Binding DateImport, StringFormat='{}{0:dd/MM/yy}'}"
-                                                           FontSize="11" Foreground="#6B6B6B"/>
-											</Border>
-										</Grid>
-									</Border>
-								</DataTemplate>
-							</ItemsControl.ItemTemplate>
-						</ItemsControl>
+						<Border Grid.Column="4" Style="{StaticResource DashCard}">
+							<StackPanel>
+								<Border Width="36" Height="2" Background="#0f1e3d"
+                                        CornerRadius="2" HorizontalAlignment="Left" Margin="0,0,0,14"/>
+								<TextBlock Text="0" FontSize="32" FontWeight="700" Foreground="#0f1e3d"/>
+								<TextBlock Text="Quiz créés" FontSize="13"
+                                           Foreground="#8899b8" Margin="0,4,0,0"/>
+							</StackPanel>
+						</Border>
+					</Grid>
 
-						<StackPanel Margin="0,24" HorizontalAlignment="Center"
-                                    Visibility="{Binding HasNoCours, Converter={StaticResource BoolToVis}}">
-							<TextBlock Text="Accédez rapidement à vos derniers cours"
-                                       FontSize="14" Foreground="#ABABAB" HorizontalAlignment="Center"/>
+
+					<!-- Activités récentes -->
+					<Border Style="{StaticResource DashCard}" Padding="24,20" Margin="0,20,0,0">
+						<StackPanel>
+							<TextBlock Text="Activités récentes" FontSize="15"
+                                       FontWeight="600" Foreground="#0f1e3d" Margin="0,0,0,4"/>
+							<TextBlock Text="Quiz et examens — disponible prochainement"
+                                       FontSize="12" Foreground="#8899b8" Margin="0,0,0,16"/>
+							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,20"/>
+							<StackPanel HorizontalAlignment="Center" Margin="0,12">
+								<Border Width="44" Height="44" CornerRadius="11"
+                                        Background="#eef3fd" BorderBrush="#d0ddf5"
+                                        BorderThickness="1" HorizontalAlignment="Center"
+                                        Margin="0,0,0,12">
+									<TextBlock Text="&#xE7FC;" FontSize="18" Foreground="#4f8ef7"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+								</Border>
+								<TextBlock Text="Aucune activité pour le moment"
+                                           FontSize="13" FontWeight="600"
+                                           Foreground="#0f1e3d" HorizontalAlignment="Center"
+                                           Margin="0,0,0,4"/>
+								<TextBlock Text="Vos quiz et examens apparaîtront ici une fois créés"
+                                           FontSize="12" Foreground="#8899b8"
+                                           HorizontalAlignment="Center"/>
+							</StackPanel>
 						</StackPanel>
-					</StackPanel>
-				</Border>
+					</Border>
 
-			</StackPanel>
-		</ScrollViewer>
+				</StackPanel>
+			</ScrollViewer>
+
+			<!-- Footer -->
+			<Border Grid.Row="1" Background="White"
+                    BorderBrush="#e2e8f4" BorderThickness="0,1,0,0"
+                    Padding="18,14">
+				<TextBlock Text="SmarTest — ENSA Oujda · Génie Informatique · 2025–2026"
+                           FontSize="11" Foreground="#aab4cc"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+			</Border>
+
+		</Grid>
 	</Grid>
 </Window>

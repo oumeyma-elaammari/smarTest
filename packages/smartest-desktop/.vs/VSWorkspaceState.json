@@ -2,12 +2,10 @@
   "ExpandedNodes": [
     "",
     "\\Data",
-    "\\Data\\LocalEntities",
-    "\\Models",
+    "\\Services",
     "\\ViewModels",
-    "\\Views",
-    "\\Views\\Styles"
+    "\\Views"
   ],
-  "SelectedNode": "\\Views\\Styles\\Stylesglobal.xaml",
+  "SelectedNode": "\\ViewModels\\QuizGenerationViewModel.cs",
   "PreviewInSolutionExplorer": false
 }

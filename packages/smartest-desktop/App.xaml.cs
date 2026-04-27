@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Windows;
+using smartest_desktop.Services;
 
 namespace smartest_desktop
 {
@@ -11,7 +12,6 @@ namespace smartest_desktop
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            // Gestion des exceptions globales
             AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
             {
                 var ex = (Exception)ev.ExceptionObject;
@@ -26,24 +26,39 @@ namespace smartest_desktop
 
             try
             {
-                // Initialisation de la base locale
                 LocalDb = new LocalDbContext();
                 LocalDb.Database.EnsureCreated();
 
                 ShutdownMode = ShutdownMode.OnLastWindowClose;
 
-                var welcome = new MainWindow();
-                MainWindow = welcome;
-                welcome.Show();
+                // Vérifier session existante
+                var sessionService = new SessionService(LocalDb);
+                var session = sessionService.ChargerSession();
+
+                if (session != null)
+                {
+                    // Session valide: restaurer Properties et aller au Dashboard
+                    Current.Properties["Token"] = session.TokenChiffre; 
+                    Current.Properties["Nom"] = session.Nom;
+                    Current.Properties["Email"] = session.Email;
+
+                    var dashboard = new Views.DashboardWindow();
+                    MainWindow = dashboard;
+                    dashboard.Show();
+                }
+                else
+                {
+                    // Pas de session : LoginWindow
+                    var login = new MainWindow();
+                    MainWindow = login;
+                    login.Show();
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
                     $"Erreur au démarrage :\n\n{ex.Message}\n\n{ex.InnerException?.Message}",
-                    "Erreur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
+                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
             }
 

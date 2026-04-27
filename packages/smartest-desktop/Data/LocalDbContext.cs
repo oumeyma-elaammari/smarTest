@@ -14,6 +14,8 @@ namespace smartest_desktop.Data
         public DbSet<ReponseLocale> Reponses { get; set; }
         public DbSet<QuizLocal> Quiz { get; set; }
         public DbSet<ExamenLocal> Examens { get; set; }
+        public DbSet<SessionLocale> SessionsLocales { get; set; }
+
 
         // ══════════════════════════════════════════════════════════
         //  CONFIGURATION — fichier smartest_local.db
@@ -126,6 +128,19 @@ namespace smartest_desktop.Data
                       .WithMany()
                       .UsingEntity(j => j.ToTable("examen_local_cours"));
             });
+
+
+            modelBuilder.Entity<SessionLocale>(entity =>
+            {
+                entity.ToTable("session_locale");
+                entity.HasKey(s => s.Id);
+                entity.Property(s => s.TokenChiffre).HasColumnType("TEXT");
+                entity.Property(s => s.Email).HasMaxLength(200);
+                entity.Property(s => s.Nom).HasMaxLength(200);
+                entity.Property(s => s.Role).HasMaxLength(50);
+            });
+
         }
+
     }
 }

@@ -9,47 +9,36 @@ namespace smartest_desktop.Views
         {
             InitializeComponent();
 
-            // ⚠️ IMPORTANT : s'assurer qu'on a bien le DataContext
-            if (DataContext is not QuizGenerationViewModel vm)
-            {
-                vm = new QuizGenerationViewModel();
-                DataContext = vm;
-            }
+            // DataContext instancié dans le XAML — on le récupère directement
+            var vm = (QuizGenerationViewModel)DataContext;
 
-            // ✅ ÉVÉNEMENT : quiz généré → ouvrir résultat
+            // Quiz généré → ouvrir QuizResultWindow
             vm.QuizGenereAvecSucces += (questions, titre, difficulte, nbQuestions, coursTitre) =>
             {
-                Application.Current.Dispatcher.Invoke(() =>
+                Dispatcher.Invoke(() =>
                 {
                     var resultWindow = new QuizResultWindow(
                         questions,
                         titre,
                         difficulte,
-                        coursTitre,
+                        coursTitre ?? string.Empty,
                         "Validé"
                     );
-
                     resultWindow.Show();
-
-                    // ✔️ éviter fermeture bug
-                    if (this.IsVisible)
-                        this.Close();
+                    if (IsVisible) Close();
                 });
             };
 
-            // ✅ ÉVÉNEMENT : annulation
+            // Annulation → retour au hub Quiz/Examen
             vm.NavigationAnnulee += () =>
             {
-                var hub = new QuizExamenWindow();
-                hub.Show();
-                this.Close();
+                Dispatcher.Invoke(() =>
+                {
+                    var hub = new QuizExamenWindow();
+                    hub.Show();
+                    Close();
+                });
             };
-        }
-
-        // ❗ DEBUG OPTIONNEL (PAS dans le constructeur)
-        private void DebugMessage()
-        {
-            System.Diagnostics.Debug.WriteLine("🚨 Fenêtre QuizGeneration ouverte !");
         }
     }
 }
