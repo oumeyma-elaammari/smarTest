@@ -38,13 +38,13 @@ namespace smartest_desktop.ViewModels
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // CoursViewModel  —  GenererQuizCommand SUPPRIMÉ (déplacé dans QuizExamenWindow)
+    // CoursViewModel
     // ═══════════════════════════════════════════════════════════════════════════
     public class CoursViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
 
-        // ── Prof info ──────────────────────────────────────────────────────────
+        // ── Prof info ─────────────────────────────────────────────────────────
         private string _professeurNom = string.Empty;
         public string ProfesseurNom
         {
@@ -380,7 +380,7 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        // ── Delete course ─────────────────────────────────────────────────────
+        // ── Delete ────────────────────────────────────────────────────────────
         private async Task SupprimerCours()
         {
             if (CoursSelectionne == null) return;
@@ -453,10 +453,7 @@ namespace smartest_desktop.ViewModels
                     sb.AppendLine(page.Text);
                 return sb.ToString();
             }
-            catch
-            {
-                return $"[Contenu PDF — {Path.GetFileName(chemin)}]";
-            }
+            catch { return $"[Contenu PDF — {Path.GetFileName(chemin)}]"; }
         }
 
         private string ExtraireTexteDocx(string chemin)
@@ -467,10 +464,7 @@ namespace smartest_desktop.ViewModels
                 var body = doc.MainDocumentPart?.Document?.Body;
                 return body?.InnerText ?? string.Empty;
             }
-            catch
-            {
-                return $"[Contenu DOCX — {Path.GetFileName(chemin)}]";
-            }
+            catch { return $"[Contenu DOCX — {Path.GetFileName(chemin)}]"; }
         }
     }
 }

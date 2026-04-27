@@ -94,7 +94,11 @@ namespace smartest_desktop.ViewModels
             WpfApp.Current.Properties["Nom"] = auth.Nom;
             WpfApp.Current.Properties["Email"] = auth.Email;
 
+            var sessionService = new SessionService(App.LocalDb);
+            sessionService.SauvegarderSession(auth);
+
             NavigationService.NavigateTo<Views.DashboardWindow, Views.LoginWindow>();
+            
         }
     }
 }

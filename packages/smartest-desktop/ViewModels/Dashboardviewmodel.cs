@@ -67,7 +67,6 @@ namespace smartest_desktop.ViewModels
             OpenCoursCommand = new RelayCommand(_ => ExecuteOpenCours());
 
 
-            // ✅ AJOUT ICI
             OpenQuizCommand = new RelayCommand(_ => ExecuteOpenQuiz());
 
             _ = ChargerDonnees();
@@ -138,6 +137,8 @@ namespace smartest_desktop.ViewModels
                 MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
+
+            new Services.SessionService(App.LocalDb).SupprimerSession();
 
             WpfApp.Current.Properties["Token"] = null;
             WpfApp.Current.Properties["Nom"] = null;
