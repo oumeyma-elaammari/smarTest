@@ -12,9 +12,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
+    /// <summary>Élément affiché lorsque plusieurs cours sont importés pour un examen.</summary>
+    public sealed class FichierCoursImporteItem : BaseViewModel
+    {
+        private string _titre = string.Empty;
+        public string Titre
+        {
+            get => _titre;
+            set => SetProperty(ref _titre, value);
+        }
+
+        private string _typeExtension = string.Empty;
+        public string TypeExtension
+        {
+            get => _typeExtension;
+            set => SetProperty(ref _typeExtension, value);
+        }
+    }
+
     public class ExamenGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
@@ -174,6 +193,12 @@ namespace smartest_desktop.ViewModels
         }
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+        /// <summary>Fichiers sources (plusieurs imports possibles).</summary>
+        public ObservableCollection<FichierCoursImporteItem> FichiersImportes { get; } = new();
+
+        public string Nom => WpfApp.Current.Properties["Nom"]?.ToString() ?? "Professeur";
+        public string Email => WpfApp.Current.Properties["Email"]?.ToString() ?? "";
+
         // ── Commandes ─────────────────────────────────────────────────────────
 
         public ICommand GenererCommand           { get; }
@@ -188,11 +213,15 @@ namespace smartest_desktop.ViewModels
         public ICommand DecrCheckboxCommand      { get; }
         public ICommand IncrRedactionCommand     { get; }
         public ICommand DecrRedactionCommand     { get; }
+        public ICommand RetourDashboardCommand   { get; }
+        public ICommand LogoutCommand            { get; }
 
         // ── Événements de navigation ──────────────────────────────────────────
 
         public event Action<List<QuestionExamen>, string, int, string, string>? ExamenGenereAvecSucces;
         public event Action? NavigationAnnulee;
+        public event Action? NavigateToDashboard;
+        public event Action? NavigateToLogin;
 
         // ── Constructeur ──────────────────────────────────────────────────────
 
@@ -213,10 +242,11 @@ namespace smartest_desktop.ViewModels
                 _ =>
                 {
                     var res = MessageBox.Show(
-                        "Effacer le contenu importé ?",
+                        "Effacer tous les cours importés ?",
                         "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
                     if (res != MessageBoxResult.Yes) return;
                     ContenuCours = string.Empty;
+                    FichiersImportes.Clear();
                     TitreCours   = string.Empty;
                     NomFichier   = string.Empty;
                     TypeFichier  = string.Empty;
@@ -251,6 +281,28 @@ namespace smartest_desktop.ViewModels
                 _cts?.Cancel();
                 NavigationAnnulee?.Invoke();
             });
+
+            RetourDashboardCommand = new RelayCommand(_ => NavigateToDashboard?.Invoke());
+            LogoutCommand = new RelayCommand(_ => ExecuteLogout());
+        }
+
+        private void ExecuteLogout()
+        {
+            var result = MessageBox.Show(
+                "Voulez-vous vraiment vous déconnecter ?",
+                "Déconnexion",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            new SessionService(App.LocalDb).SupprimerSession();
+
+            WpfApp.Current.Properties["Token"] = null;
+            WpfApp.Current.Properties["Nom"] = null;
+            WpfApp.Current.Properties["Email"] = null;
+
+            NavigateToLogin?.Invoke();
         }
 
         // ── Import de fichier ─────────────────────────────────────────────────
@@ -259,16 +311,16 @@ namespace smartest_desktop.ViewModels
         {
             var dlg = new OpenFileDialog
             {
-                Title  = "Importer un cours",
+                Title  = "Importer un ou plusieurs cours",
                 Filter = "Fichiers supportés (*.pdf;*.docx;*.txt)|*.pdf;*.docx;*.txt" +
                          "|PDF (*.pdf)|*.pdf|Word (*.docx)|*.docx|Texte (*.txt)|*.txt",
-                Multiselect = false
+                Multiselect = true
             };
 
             if (dlg.ShowDialog() != true) return;
 
-            string chemin    = dlg.FileName;
-            string extension = Path.GetExtension(chemin).ToLowerInvariant();
+            var chemins = dlg.FileNames;
+            if (chemins == null || chemins.Length == 0) return;
 
             IsImporting   = true;
             ErrorMessage  = string.Empty;
@@ -276,24 +328,36 @@ namespace smartest_desktop.ViewModels
 
             try
             {
-                string contenu = await Task.Run(() => ExtraireContenu(chemin, extension));
+                int ajoutes = 0;
 
-                if (string.IsNullOrWhiteSpace(contenu))
+                foreach (string chemin in chemins)
                 {
-                    ErrorMessage  = "❌ Le fichier est vide ou le contenu n'a pas pu être extrait.";
+                    string extension = Path.GetExtension(chemin).ToLowerInvariant();
+                    string contenu   = await Task.Run(() => ExtraireContenu(chemin, extension));
+
+                    if (string.IsNullOrWhiteSpace(contenu))
+                        continue;
+
+                    AjouterBlocCours(chemin, extension, contenu.Trim());
+                    ajoutes++;
+                }
+
+                if (ajoutes == 0)
+                {
+                    ErrorMessage  = "❌ Aucun contenu exploitable dans les fichiers sélectionnés.";
                     StatusMessage = string.Empty;
                     return;
                 }
 
-                NomFichier  = Path.GetFileName(chemin);
-                TypeFichier = extension.TrimStart('.').ToUpperInvariant();
-                TitreCours  = Path.GetFileNameWithoutExtension(chemin);
+                NomFichier = Path.GetFileName(chemins[^1]);
+                MettreAJourResumeFichiers();
 
-                if (string.IsNullOrWhiteSpace(TitreExamen))
-                    TitreExamen = $"Examen — {TitreCours}";
+                if (string.IsNullOrWhiteSpace(TitreExamen) && FichiersImportes.Count > 0)
+                    TitreExamen = $"Examen — {FichiersImportes[0].Titre}";
 
-                ContenuCours = contenu;
-                StatusMessage = $"✅ Cours importé ({NombreCaracteres})";
+                StatusMessage = ajoutes > 1
+                    ? $"✅ {ajoutes} cours ajoutés ({NombreCaracteres})"
+                    : $"✅ Cours importé ({NombreCaracteres})";
 
                 _ = Task.Delay(2500).ContinueWith(_ =>
                     Application.Current.Dispatcher.Invoke(() =>
@@ -309,6 +373,51 @@ namespace smartest_desktop.ViewModels
             finally
             {
                 IsImporting = false;
+            }
+        }
+
+        private void AjouterBlocCours(string chemin, string extension, string contenuTrim)
+        {
+            string nomSansExt = Path.GetFileNameWithoutExtension(chemin);
+            string label      = Path.GetFileName(chemin);
+            string ext        = extension.TrimStart('.').ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(ContenuCours))
+                ContenuCours = contenuTrim;
+            else
+            {
+                ContenuCours +=
+                    "\n\n────────────────────────────────────────\n" +
+                    $"[{label}]\n" +
+                    "────────────────────────────────────────\n\n" +
+                    contenuTrim;
+            }
+
+            FichiersImportes.Add(new FichierCoursImporteItem
+            {
+                Titre          = nomSansExt,
+                TypeExtension  = ext
+            });
+        }
+
+        private void MettreAJourResumeFichiers()
+        {
+            if (FichiersImportes.Count == 0)
+            {
+                TitreCours  = string.Empty;
+                TypeFichier = string.Empty;
+                return;
+            }
+
+            if (FichiersImportes.Count == 1)
+            {
+                TitreCours  = FichiersImportes[0].Titre;
+                TypeFichier = FichiersImportes[0].TypeExtension;
+            }
+            else
+            {
+                TitreCours  = $"{FichiersImportes.Count} cours importés";
+                TypeFichier = "Plusieurs fichiers";
             }
         }
 

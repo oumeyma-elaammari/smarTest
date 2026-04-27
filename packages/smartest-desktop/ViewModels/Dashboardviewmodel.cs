@@ -2,6 +2,7 @@ using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Helpers;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -51,6 +52,28 @@ namespace smartest_desktop.ViewModels
             get => _totalExamens;
             set => SetProperty(ref _totalExamens, value);
         }
+
+        private int _totalQuiz;
+        public int TotalQuiz
+        {
+            get => _totalQuiz;
+            set => SetProperty(ref _totalQuiz, value);
+        }
+
+        public ObservableCollection<DashboardActiviteItem> ActivitesRecentes { get; } = new();
+
+        private bool _hasRecentActivities;
+        public bool HasRecentActivities
+        {
+            get => _hasRecentActivities;
+            set
+            {
+                if (!SetProperty(ref _hasRecentActivities, value)) return;
+                OnPropertyChanged(nameof(HasNoRecentActivities));
+            }
+        }
+
+        public bool HasNoRecentActivities => !_hasRecentActivities;
 
         public ICommand LogoutCommand { get; }
         public ICommand OpenCoursCommand { get; }
@@ -118,6 +141,65 @@ namespace smartest_desktop.ViewModels
                 TotalCategories = categories.Count;
 
                 TotalExamens = await Task.Run(() => _db.Examens.Count());
+                TotalQuiz = await Task.Run(() => _db.Quiz.Count());
+
+                var culture = CultureInfo.GetCultureInfo("fr-FR");
+                var quizRows = await Task.Run(() =>
+                    _db.Quiz.Select(q => new
+                    {
+                        q.Titre,
+                        q.DateCreation,
+                        q.Statut,
+                        q.NombreQuestions,
+                        q.CoursSourceTitre
+                    }).ToList());
+
+                var examRows = await Task.Run(() =>
+                    _db.Examens.Select(e => new
+                    {
+                        e.Titre,
+                        e.DateCreation,
+                        e.Statut,
+                        e.Duree
+                    }).ToList());
+
+                var fusion = quizRows
+                    .Select(q => (
+                        Instant: q.DateCreation,
+                        Item: new DashboardActiviteItem
+                        {
+                            TypeLabel = "Quiz",
+                            Titre = string.IsNullOrWhiteSpace(q.Titre) ? "(Sans titre)" : q.Titre,
+                            SousTitre = $"{q.Statut} · {q.NombreQuestions} question(s)" +
+                                        (string.IsNullOrWhiteSpace(q.CoursSourceTitre)
+                                            ? ""
+                                            : $" · {q.CoursSourceTitre}"),
+                            DateFormatee = ""
+                        }))
+                    .Concat(examRows.Select(e => (
+                        Instant: e.DateCreation,
+                        Item: new DashboardActiviteItem
+                        {
+                            TypeLabel = "Examen",
+                            Titre = string.IsNullOrWhiteSpace(e.Titre) ? "(Sans titre)" : e.Titre,
+                            SousTitre = $"{e.Statut} · {e.Duree} min",
+                            DateFormatee = ""
+                        })))
+                    .OrderByDescending(x => x.Instant)
+                    .Take(3)
+                    .Select(x =>
+                    {
+                        x.Item.DateFormatee = $"Généré le {x.Instant.ToString("g", culture)}";
+                        return x.Item;
+                    })
+                    .ToList();
+
+                ActivitesRecentes.Clear();
+                foreach (var a in fusion)
+                    ActivitesRecentes.Add(a);
+
+                HasRecentActivities = ActivitesRecentes.Count > 0;
+                OnPropertyChanged(nameof(HasNoRecentActivities));
             }
             catch (System.Exception ex)
             {

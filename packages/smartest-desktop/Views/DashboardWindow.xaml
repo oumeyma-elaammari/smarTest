@@ -194,7 +194,8 @@
 							<StackPanel>
 								<Border Width="36" Height="2" Background="#0f1e3d"
                                         CornerRadius="2" HorizontalAlignment="Left" Margin="0,0,0,14"/>
-								<TextBlock Text="0" FontSize="32" FontWeight="700" Foreground="#0f1e3d"/>
+								<TextBlock Text="{Binding TotalQuiz, FallbackValue=0}"
+                                           FontSize="32" FontWeight="700" Foreground="#0f1e3d"/>
 								<TextBlock Text="Quiz créés" FontSize="13"
                                            Foreground="#8899b8" Margin="0,4,0,0"/>
 							</StackPanel>
@@ -207,23 +208,54 @@
 						<StackPanel>
 							<TextBlock Text="Activités récentes" FontSize="15"
                                        FontWeight="600" Foreground="#0f1e3d" Margin="0,0,0,4"/>
-							<TextBlock Text="Quiz et examens — disponible prochainement"
+							<TextBlock Text="Les 3 derniers quiz ou examens générés (plus récent en premier)"
                                        FontSize="12" Foreground="#8899b8" Margin="0,0,0,16"/>
-							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,20"/>
-							<StackPanel HorizontalAlignment="Center" Margin="0,12">
-								<Border Width="44" Height="44" CornerRadius="11"
-                                        Background="#eef3fd" BorderBrush="#d0ddf5"
-                                        BorderThickness="1" HorizontalAlignment="Center"
-                                        Margin="0,0,0,12">
-									<TextBlock Text="&#xE7FC;" FontSize="18" Foreground="#4f8ef7"
-                                               FontFamily="Segoe MDL2 Assets"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-								</Border>
+							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,12"/>
+
+							<ItemsControl ItemsSource="{Binding ActivitesRecentes}"
+                                          Visibility="{Binding HasRecentActivities, Converter={StaticResource BoolToVis}}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Padding="14,12" Margin="0,0,0,10"
+                                                Background="#f8fafc" CornerRadius="10"
+                                                BorderBrush="#e2e8f4" BorderThickness="1">
+											<Grid>
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="Auto"/>
+													<ColumnDefinition Width="*"/>
+												</Grid.ColumnDefinitions>
+												<Border Grid.Column="0" Width="40" Height="40"
+                                                        CornerRadius="10" Background="#eef3fd"
+                                                        Margin="0,0,14,0" VerticalAlignment="Top">
+													<TextBlock Text="&#xE9D5;" FontSize="16" Foreground="#4f8ef7"
+                                                               FontFamily="Segoe MDL2 Assets"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+												</Border>
+												<StackPanel Grid.Column="1">
+													<TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="#4f8ef7" Margin="0,0,0,2"/>
+													<TextBlock Text="{Binding Titre}" FontSize="14"
+                                                               FontWeight="600" Foreground="#0f1e3d"
+                                                               TextWrapping="Wrap"/>
+													<TextBlock Text="{Binding SousTitre}" FontSize="12"
+                                                               Foreground="#8899b8" Margin="0,2,0,4"
+                                                               TextWrapping="Wrap"/>
+													<TextBlock Text="{Binding DateFormatee}" FontSize="11"
+                                                               Foreground="#aab4cc"/>
+												</StackPanel>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<StackPanel HorizontalAlignment="Center" Margin="0,12"
+                                        Visibility="{Binding HasNoRecentActivities, Converter={StaticResource BoolToVis}}">
 								<TextBlock Text="Aucune activité pour le moment"
                                            FontSize="13" FontWeight="600"
                                            Foreground="#0f1e3d" HorizontalAlignment="Center"
                                            Margin="0,0,0,4"/>
-								<TextBlock Text="Vos quiz et examens apparaîtront ici une fois créés"
+								<TextBlock Text="Créez un quiz ou un examen pour le voir ici"
                                            FontSize="12" Foreground="#8899b8"
                                            HorizontalAlignment="Center"/>
 							</StackPanel>

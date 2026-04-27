@@ -3,24 +3,28 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
         Title="SmarTest — Créer un examen"
-        Height="720" Width="1100"
-        MinHeight="600" MinWidth="900"
+        Height="720" Width="1280"
+        MinHeight="600" MinWidth="960"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#F8F8F6"
+        Background="#fafbfd"
         FontFamily="Segoe UI">
 
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
         <Style x:Key="CounterBtn" TargetType="Border">
             <Setter Property="Width" Value="30"/>
             <Setter Property="Height" Value="30"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Background" Value="#F0EFE8"/>
+            <Setter Property="Background" Value="#eef3fd"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E0DED6"/>
+                    <Setter Property="Background" Value="#e0e8fc"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -30,21 +34,26 @@
             <Setter Property="Padding" Value="16,10"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Width" Value="108"/>
-            <Setter Property="Background" Value="#F5F4F0"/>
-            <Setter Property="BorderBrush" Value="#E8E7E3"/>
+            <Setter Property="Background" Value="#f8fafc"/>
+            <Setter Property="BorderBrush" Value="#e2e8f4"/>
             <Setter Property="BorderThickness" Value="1.5"/>
         </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid Background="#fafbfd">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- ═══════════════ HEADER ═══════════════ -->
-        <Border Grid.Row="0" Background="White"
-                BorderBrush="#E8E7E3" BorderThickness="0,0,0,1" Padding="28,18">
+        <!-- HEADER -->
+        <Border Grid.Row="0" Background="White" Padding="28,20,28,22">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="1" Direction="270"
+                                  Opacity="0.04" Color="#0f1e3d"/>
+            </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -52,39 +61,35 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Width="38" Height="38" CornerRadius="9"
-                        Background="#F0EFE8" Cursor="Hand" Margin="0,0,20,0">
+                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
+                        Background="#eef3fd" Cursor="Hand" Margin="0,0,18,0"
+                        BorderBrush="#d0ddf5" BorderThickness="1">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerCommand}"/>
                     </Border.InputBindings>
-                    <TextBlock Text="←" FontSize="18" FontWeight="300" Foreground="#1A1A1A"
+                    <TextBlock Text="&#xE72B;" FontSize="15" FontFamily="Segoe MDL2 Assets"
+                               Foreground="#0f1e3d"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="8" Height="8" CornerRadius="4" Background="#1A1A1A"
-                                VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock FontSize="17" FontWeight="700" Foreground="#1A1A1A">
-                            <Run Text="Smar"/><Run Text="Test" Foreground="#6B6B6B"/>
-                        </TextBlock>
-                    </StackPanel>
-                    <TextBlock Text="Création d'examen par IA locale"
-                               FontSize="11" Foreground="#ABABAB" Margin="16,2,0,0"/>
+                    <TextBlock Text="Nouvel examen" FontSize="20" FontWeight="700" Foreground="#0f1e3d"/>
+                    <TextBlock Text="IA locale (Ollama)" FontSize="12" Foreground="#8899b8" Margin="0,6,0,0"/>
                 </StackPanel>
 
-                <Border Grid.Column="2" Background="#F5F3FF" BorderBrush="#DDD6FE"
-                        BorderThickness="1" CornerRadius="8" Padding="12,8">
+                <Border Grid.Column="2" Background="#f5f8ff" BorderBrush="#dbe8fc"
+                        BorderThickness="1" CornerRadius="12" Padding="12,8">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🤖" FontSize="13" Margin="0,0,6,0"/>
-                        <TextBlock Text="Ollama" FontSize="12" FontWeight="600" Foreground="#7C3AED"/>
-                        <TextBlock Text=" · Multi-types" FontSize="11" Foreground="#A78BFA"/>
+                        <TextBlock Text="&#xE99A;" FontSize="14" FontFamily="Segoe MDL2 Assets"
+                                   Foreground="#4f8ef7" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Ollama" FontSize="12" FontWeight="SemiBold" Foreground="#0f1e3d"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- ═══════════════ CONTENU ═══════════════ -->
+        <!-- CONTENU -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="420"/>
@@ -92,25 +97,23 @@
             </Grid.ColumnDefinitions>
 
             <!-- ══ COLONNE GAUCHE — Configuration ══ -->
-            <Border Grid.Column="0" Background="#FAFAF9"
-                    BorderBrush="#E8E7E3" BorderThickness="0,0,1,0">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="28,32,28,32">
+            <Border Grid.Column="0" Background="#f5f7fa"
+                    BorderBrush="#e8ecf5" BorderThickness="0,0,1,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="24,26,24,28">
 
-                        <TextBlock Text="Configuration de l'examen"
-                                   FontSize="18" FontWeight="700" Foreground="#1A1A1A"
-                                   Margin="0,0,0,4"/>
-                        <TextBlock Text="Définissez les paramètres avant la génération"
-                                   FontSize="12" Foreground="#ABABAB" Margin="0,0,0,28"/>
+                        <TextBlock Text="Paramètres"
+                                   FontSize="18" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,24"/>
 
                         <!-- Titre -->
                         <TextBlock Text="TITRE DE L'EXAMEN" FontSize="10" FontWeight="700"
                                    Foreground="#9CA3AF" Margin="0,0,0,8"/>
-                        <Border Background="White" CornerRadius="10" BorderBrush="#E8E7E3"
+                        <Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
                                 BorderThickness="1" Padding="14,12" Margin="0,0,0,24">
                             <TextBox Text="{Binding TitreExamen, UpdateSourceTrigger=PropertyChanged}"
                                      BorderThickness="0" Background="Transparent"
-                                     FontSize="12" Foreground="#1A1A1A"
+                                     FontSize="12" Foreground="#0f1e3d"
                                      VerticalAlignment="Center" CaretBrush="#1A1A1A"/>
                         </Border>
 
@@ -119,7 +122,7 @@
                                    Foreground="#9CA3AF" Margin="0,0,0,8"/>
                         <ComboBox ItemsSource="{Binding DureesDisponibles}"
                                   SelectedItem="{Binding Duree}"
-                                  Background="White" BorderBrush="#E8E7E3" BorderThickness="1"
+                                  Background="White" BorderBrush="#e2e8f4" BorderThickness="1"
                                   Padding="12,10" FontSize="13" Height="44"
                                   Margin="0,0,0,24"/>
 
@@ -145,7 +148,7 @@
                                     </Style>
                                 </Border.Style>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="🟢" FontSize="16" HorizontalAlignment="Center"/>
+                                    <Ellipse Width="12" Height="12" Fill="#22c55e" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Facile" FontSize="11" FontWeight="600"
                                                Foreground="#16A34A" HorizontalAlignment="Center"
                                                Margin="0,4,0,0"/>
@@ -169,7 +172,7 @@
                                     </Style>
                                 </Border.Style>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="🟡" FontSize="16" HorizontalAlignment="Center"/>
+                                    <Ellipse Width="12" Height="12" Fill="#f59e0b" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Moyen" FontSize="11" FontWeight="600"
                                                Foreground="#D97706" HorizontalAlignment="Center"
                                                Margin="0,4,0,0"/>
@@ -193,7 +196,7 @@
                                     </Style>
                                 </Border.Style>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="🔴" FontSize="16" HorizontalAlignment="Center"/>
+                                    <Ellipse Width="12" Height="12" Fill="#dc2626" HorizontalAlignment="Center"/>
                                     <TextBlock Text="Difficile" FontSize="11" FontWeight="600"
                                                Foreground="#DC2626" HorizontalAlignment="Center"
                                                Margin="0,4,0,0"/>
@@ -206,19 +209,16 @@
                                    Foreground="#9CA3AF" Margin="0,0,0,12"/>
 
                         <!-- QCM -->
-                        <Border Background="White" CornerRadius="10" BorderBrush="#E8E7E3"
+                        <Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
                                 BorderThickness="1" Padding="16,12" Margin="0,0,0,8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="Choix multiple (QCM)"
-                                               FontSize="13" FontWeight="600" Foreground="#1A1A1A"/>
-                                    <TextBlock Text="Une seule bonne réponse"
-                                               FontSize="11" Foreground="#9CA3AF" Margin="0,2,0,0"/>
-                                </StackPanel>
+                                <TextBlock Text="Choix multiple (QCM)"
+                                           FontSize="13" FontWeight="600" Foreground="#0f1e3d"
+                                           VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border Style="{StaticResource CounterBtn}">
                                         <Border.InputBindings>
@@ -228,7 +228,7 @@
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBlock Text="{Binding NbQCM}" FontSize="16" FontWeight="700"
-                                               Foreground="#1A1A1A" Width="36"
+                                               Foreground="#0f1e3d" Width="36"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                TextAlignment="Center"/>
                                     <Border Style="{StaticResource CounterBtn}">
@@ -243,19 +243,16 @@
                         </Border>
 
                         <!-- CHECKBOX -->
-                        <Border Background="White" CornerRadius="10" BorderBrush="#E8E7E3"
+                        <Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
                                 BorderThickness="1" Padding="16,12" Margin="0,0,0,8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="Cases à cocher"
-                                               FontSize="13" FontWeight="600" Foreground="#1A1A1A"/>
-                                    <TextBlock Text="Plusieurs bonnes réponses possibles"
-                                               FontSize="11" Foreground="#9CA3AF" Margin="0,2,0,0"/>
-                                </StackPanel>
+                                <TextBlock Text="Cases à cocher"
+                                           FontSize="13" FontWeight="600" Foreground="#0f1e3d"
+                                           VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border Style="{StaticResource CounterBtn}">
                                         <Border.InputBindings>
@@ -265,7 +262,7 @@
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBlock Text="{Binding NbCheckbox}" FontSize="16" FontWeight="700"
-                                               Foreground="#1A1A1A" Width="36"
+                                               Foreground="#0f1e3d" Width="36"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                TextAlignment="Center"/>
                                     <Border Style="{StaticResource CounterBtn}">
@@ -280,19 +277,16 @@
                         </Border>
 
                         <!-- RÉDACTION -->
-                        <Border Background="White" CornerRadius="10" BorderBrush="#E8E7E3"
+                        <Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
                                 BorderThickness="1" Padding="16,12" Margin="0,0,0,16">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="Rédaction"
-                                               FontSize="13" FontWeight="600" Foreground="#1A1A1A"/>
-                                    <TextBlock Text="Question ouverte avec réponse modèle"
-                                               FontSize="11" Foreground="#9CA3AF" Margin="0,2,0,0"/>
-                                </StackPanel>
+                                <TextBlock Text="Rédaction"
+                                           FontSize="13" FontWeight="600" Foreground="#0f1e3d"
+                                           VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border Style="{StaticResource CounterBtn}">
                                         <Border.InputBindings>
@@ -302,7 +296,7 @@
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBlock Text="{Binding NbRedaction}" FontSize="16" FontWeight="700"
-                                               Foreground="#1A1A1A" Width="36"
+                                               Foreground="#0f1e3d" Width="36"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                TextAlignment="Center"/>
                                     <Border Style="{StaticResource CounterBtn}">
@@ -317,20 +311,20 @@
                         </Border>
 
                         <!-- Total -->
-                        <Border Background="#F5F3FF" CornerRadius="10"
-                                BorderBrush="#DDD6FE" BorderThickness="1"
-                                Padding="16,12" Margin="0,0,0,28">
+                        <Border Background="#eef3fd" CornerRadius="12"
+                                BorderBrush="#cfe0fc" BorderThickness="1"
+                                Padding="16,14" Margin="0,0,0,28">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Total de questions"
-                                           FontSize="13" FontWeight="600" Foreground="#7C3AED"
+                                           FontSize="13" FontWeight="600" Foreground="#0f1e3d"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding TotalQuestions}"
-                                           FontSize="22" FontWeight="700" Foreground="#7C3AED"/>
+                                           FontSize="24" FontWeight="700" Foreground="#4f8ef7"/>
                             </Grid>
                         </Border>
 
@@ -356,10 +350,10 @@
                                 Visibility="{Binding IsNotGenerating, Converter={StaticResource BoolToVis}}">
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="Background" Value="#1A1A1A"/>
+                                    <Setter Property="Background" Value="#0f1e3d"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#333333"/>
+                                            <Setter Property="Background" Value="#1a2e5a"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -368,7 +362,8 @@
                                 <MouseBinding MouseAction="LeftClick" Command="{Binding GenererCommand}"/>
                             </Border.InputBindings>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="🤖" FontSize="14" Margin="0,0,8,0"
+                                <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                           Foreground="White" Margin="0,0,8,0"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Text="Générer l'examen"
                                            FontSize="14" FontWeight="600" Foreground="White"
@@ -383,145 +378,245 @@
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerGenerationCommand}"/>
                             </Border.InputBindings>
-                            <TextBlock Text="⛔ Annuler la génération"
-                                       FontSize="13" FontWeight="600" Foreground="#DC2626"
-                                       HorizontalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                           Foreground="#DC2626" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Annuler la génération"
+                                           FontSize="13" FontWeight="600" Foreground="#DC2626"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Border>
 
                     </StackPanel>
                 </ScrollViewer>
             </Border>
 
-            <!-- ══ COLONNE DROITE — Import de cours ══ -->
-            <Grid Grid.Column="1" Background="#F8F8F6">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="36,32,36,32">
+            <!-- ══ COLONNE DROITE — Import + cours (aligné quiz) ══ -->
+            <Grid Grid.Column="1" Background="#fafbfd">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                        <TextBlock Text="Cours source"
-                                   FontSize="18" FontWeight="700" Foreground="#1A1A1A"
-                                   Margin="0,0,0,4"/>
-                        <TextBlock Text="Importez un fichier PDF, Word ou texte pour générer l'examen"
-                                   FontSize="12" Foreground="#ABABAB" Margin="0,0,0,24"/>
-
-                        <!-- Zone d'import (visible si pas de cours) -->
-                        <Border CornerRadius="14" BorderThickness="2" Padding="32,40"
-                                Margin="0,0,0,20"
-                                Visibility="{Binding HasNoCours, Converter={StaticResource BoolToVis}}">
+                <Border Grid.Row="0" Padding="28,22,28,18" Background="#fafbfd"
+                        BorderBrush="#e8ecf5" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Cours importés" FontSize="17" FontWeight="700" Foreground="#0f1e3d"/>
+                            <TextBlock Text="Import multiple possible · texte modifiable ci-dessous."
+                                       FontSize="12" Foreground="#8899b8" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" CornerRadius="10" Cursor="Hand" Padding="16,10" VerticalAlignment="Center">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding ImporterFichierCommand}"/>
+                            </Border.InputBindings>
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="Background" Value="White"/>
-                                    <Setter Property="BorderBrush" Value="#E8E7E3"/>
+                                    <Setter Property="Background" Value="#0f1e3d"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#FAFAF9"/>
-                                            <Setter Property="BorderBrush" Value="#7C3AED"/>
+                                            <Setter Property="Background" Value="#1a2e5a"/>
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding IsImporting}" Value="True">
+                                            <Setter Property="Background" Value="#6B7280"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="&#xE838;"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsImporting}" Value="True">
+                                                    <Setter Property="Text" Value="&#xE72C;"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock FontSize="12" FontWeight="600" Foreground="White">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Importer des cours"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsImporting}" Value="True">
+                                                    <Setter Property="Text" Value="Import en cours..."/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HasCours}" Value="True">
+                                                    <Setter Property="Text" Value="Ajouter des cours"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1">
+
+                    <!-- État vide -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,40">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasCours}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <Border Width="320" Height="220" CornerRadius="16"
+                                BorderBrush="#e2e8f4" BorderThickness="2"
+                                Background="White" Cursor="Hand">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding ImporterFichierCommand}"/>
+                            </Border.InputBindings>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="BorderBrush" Value="#4f8ef7"/>
+                                            <Setter Property="Background" Value="#f8fbff"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <Border.InputBindings>
-                                <MouseBinding MouseAction="LeftClick" Command="{Binding ImporterFichierCommand}"/>
-                            </Border.InputBindings>
-                            <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="📄" FontSize="40"
-                                           HorizontalAlignment="Center" Margin="0,0,0,16"/>
-                                <TextBlock Text="Cliquez pour importer un cours"
-                                           FontSize="14" FontWeight="600" Foreground="#1A1A1A"
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="44"
+                                           Foreground="#4f8ef7" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                                <TextBlock Text="Importer des cours"
+                                           FontSize="14" FontWeight="600" Foreground="#0f1e3d"
                                            HorizontalAlignment="Center"/>
-                                <TextBlock Text="PDF · Word (DOCX) · Texte (TXT)"
-                                           FontSize="12" Foreground="#9CA3AF"
+                                <TextBlock Text="PDF · DOCX · TXT"
+                                           FontSize="12" Foreground="#ABABAB"
                                            HorizontalAlignment="Center" Margin="0,8,0,0"/>
                             </StackPanel>
                         </Border>
+                    </StackPanel>
 
-                        <!-- Cours importé (visible si cours chargé) -->
-                        <Border Background="White" CornerRadius="12" BorderBrush="#A78BFA"
-                                BorderThickness="2" Padding="20,16" Margin="0,0,0,16"
-                                Visibility="{Binding HasCours, Converter={StaticResource BoolToVis}}">
+                    <!-- Cours importé -->
+                    <Grid>
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasCours}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Margin="20,16,20,0" CornerRadius="12"
+                                Background="#eef3fd" BorderBrush="#cfe0fc" BorderThickness="1" Padding="14,12">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Icône type -->
-                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="10"
-                                        Background="#F5F3FF" Margin="0,0,14,0">
-                                    <TextBlock Text="📄" FontSize="20"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
-
-                                <!-- Info fichier -->
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TitreCours}"
-                                               FontSize="14" FontWeight="700" Foreground="#1A1A1A"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <Border CornerRadius="4" Padding="6,2"
-                                                Background="#F5F3FF" Margin="0,0,8,0">
-                                            <TextBlock Text="{Binding TypeFichier}"
-                                                       FontSize="10" FontWeight="700"
-                                                       Foreground="#7C3AED"/>
-                                        </Border>
-                                        <TextBlock Text="{Binding NombreCaracteres}"
-                                                   FontSize="11" Foreground="#9CA3AF"
-                                                   VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <!-- Bouton supprimer -->
-                                <Border Grid.Column="2" Width="32" Height="32" CornerRadius="8"
-                                        Background="#FEF2F2" Cursor="Hand"
-                                        VerticalAlignment="Center">
-                                    <Border.InputBindings>
-                                        <MouseBinding MouseAction="LeftClick"
-                                                      Command="{Binding EffacerContenuCommand}"/>
-                                    </Border.InputBindings>
-                                    <TextBlock Text="✕" FontSize="13" FontWeight="700"
-                                               Foreground="#DC2626"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ItemsControl Grid.Column="0" ItemsSource="{Binding FichiersImportes}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,0,8,8" Padding="10,6" CornerRadius="8"
+                                                        Background="White" BorderBrush="#cfe0fc" BorderThickness="1">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Titre}" FontWeight="600" FontSize="12"
+                                                                   Foreground="#0f1e3d"/>
+                                                        <Border CornerRadius="4" Padding="4,1" Margin="8,0,0,0"
+                                                                Background="#dfe8fb" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding TypeExtension}" FontSize="10"
+                                                                       FontWeight="700" Foreground="#0f1e3d"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Border Grid.Column="1" Width="36" Height="36" CornerRadius="8"
+                                            Background="#FEE2E2" Cursor="Hand" VerticalAlignment="Top"
+                                            HorizontalAlignment="Right" Margin="4,0,0,0">
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" Command="{Binding EffacerContenuCommand}"/>
+                                        </Border.InputBindings>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#FECACA"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                   Foreground="#DC2626"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Grid.Row="1" Text="{Binding NombreCaracteres}" FontSize="11"
+                                           Foreground="#6b7a99" Margin="0,8,0,0"/>
                             </Grid>
                         </Border>
 
-                        <!-- Bouton "Changer de fichier" (quand cours déjà chargé) -->
-                        <Border CornerRadius="10" Padding="16,11" Cursor="Hand"
-                                Background="#F5F4F0" BorderBrush="#E8E7E3" BorderThickness="1"
-                                Margin="0,0,0,24"
-                                Visibility="{Binding HasCours, Converter={StaticResource BoolToVis}}">
-                            <Border.InputBindings>
-                                <MouseBinding MouseAction="LeftClick" Command="{Binding ImporterFichierCommand}"/>
-                            </Border.InputBindings>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="📂" FontSize="13" Margin="0,0,8,0"
-                                           VerticalAlignment="Center"/>
-                                <TextBlock Text="Changer de fichier"
-                                           FontSize="13" FontWeight="600" Foreground="#1A1A1A"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
+                        <Border Grid.Row="1" Margin="20,12,20,20" CornerRadius="12"
+                                Background="White" BorderBrush="#e2e8f4" BorderThickness="1.5">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Border Grid.Row="0" Padding="14,10" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1"
+                                        Background="#fafbfd">
+                                    <TextBlock Text="Texte extrait (modifiable)"
+                                               FontSize="11" FontWeight="600" Foreground="#6b7a99"/>
+                                </Border>
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              Padding="14,12" MinHeight="240">
+                                    <TextBox Text="{Binding ContenuCours, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="12" Foreground="#374151"
+                                             BorderThickness="0" Background="Transparent"
+                                             TextWrapping="Wrap" AcceptsReturn="True"
+                                             FontFamily="Consolas"
+                                             CaretBrush="#4f8ef7"/>
+                                </ScrollViewer>
+                            </Grid>
                         </Border>
+                    </Grid>
 
-                        <!-- Aperçu du contenu -->
-                        <Border Visibility="{Binding HasCours, Converter={StaticResource BoolToVis}}"
-                                Background="White" CornerRadius="12" BorderBrush="#E8E7E3"
-                                BorderThickness="1" Padding="16,14">
-                            <StackPanel>
-                                <TextBlock Text="APERÇU DU CONTENU" FontSize="10" FontWeight="700"
-                                           Foreground="#9CA3AF" Margin="0,0,0,10"/>
-                                <TextBlock Text="{Binding ContenuCours}"
-                                           FontSize="11" Foreground="#6B6B6B"
-                                           TextWrapping="Wrap" MaxHeight="200"
-                                           TextTrimming="CharacterEllipsis"/>
-                            </StackPanel>
-                        </Border>
-
-                    </StackPanel>
-                </ScrollViewer>
+                </Grid>
             </Grid>
 
         </Grid>
+
+        <Border Grid.Row="2" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0" Padding="18,14">
+            <TextBlock Text="SmarTest — ENSA Oujda · Génie Informatique · 2025–2026"
+                       FontSize="11" Foreground="#aab4cc"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+
     </Grid>
 </Window>

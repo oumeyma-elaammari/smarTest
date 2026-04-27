@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
@@ -121,16 +122,6 @@ namespace smartest_desktop.ViewModels
         public string NombreCaracteres =>
             HasCours ? $"{ContenuCours.Length:N0} caractères" : string.Empty;
 
-        // ── Mode édition contenu ──────────────────────────────────────────────
-
-        private bool _isEditingContenu;
-        public bool IsEditingContenu
-        {
-            get => _isEditingContenu;
-            set { SetProperty(ref _isEditingContenu, value); OnPropertyChanged(nameof(IsNotEditingContenu)); }
-        }
-        public bool IsNotEditingContenu => !_isEditingContenu;
-
         // ── Paramètres quiz ───────────────────────────────────────────────────
 
         private string _titreQuiz = string.Empty;
@@ -197,20 +188,26 @@ namespace smartest_desktop.ViewModels
         public bool HasStatus => !string.IsNullOrEmpty(StatusMessage);
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+        public string Nom => WpfApp.Current.Properties["Nom"]?.ToString() ?? "Professeur";
+        public string Email => WpfApp.Current.Properties["Email"]?.ToString() ?? "";
+
         // ── Commandes ─────────────────────────────────────────────────────────
 
         public ICommand ImporterFichierCommand { get; }
         public ICommand EffacerContenuCommand { get; }
-        public ICommand ToggleEditionContenuCommand { get; }
         public ICommand SetDifficulteCommand { get; }
         public ICommand GenererCommand { get; }
         public ICommand AnnulerGenerationCommand { get; }
         public ICommand AnnulerCommand { get; }
+        public ICommand RetourDashboardCommand { get; }
+        public ICommand LogoutCommand { get; }
 
         // ── Événements ────────────────────────────────────────────────────────
 
         public event Action<List<QuestionQCM>, string, string, int, string?>? QuizGenereAvecSucces;
         public event Action? NavigationAnnulee;
+        public event Action? NavigateToDashboard;
+        public event Action? NavigateToLogin;
 
         // ── Constructeur ──────────────────────────────────────────────────────
 
@@ -224,10 +221,6 @@ namespace smartest_desktop.ViewModels
 
             EffacerContenuCommand = new RelayCommand(
                 _ => EffacerContenu(),
-                _ => HasCours && !IsGenerating);
-
-            ToggleEditionContenuCommand = new RelayCommand(
-                _ => IsEditingContenu = !IsEditingContenu,
                 _ => HasCours && !IsGenerating);
 
             SetDifficulteCommand = new RelayCommand(param =>
@@ -254,6 +247,28 @@ namespace smartest_desktop.ViewModels
                 _cts?.Cancel();
                 NavigationAnnulee?.Invoke();
             });
+
+            RetourDashboardCommand = new RelayCommand(_ => NavigateToDashboard?.Invoke());
+            LogoutCommand = new RelayCommand(_ => ExecuteLogout());
+        }
+
+        private void ExecuteLogout()
+        {
+            var result = MessageBox.Show(
+                "Voulez-vous vraiment vous déconnecter ?",
+                "Déconnexion",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            new Services.SessionService(App.LocalDb).SupprimerSession();
+
+            WpfApp.Current.Properties["Token"] = null;
+            WpfApp.Current.Properties["Nom"] = null;
+            WpfApp.Current.Properties["Email"] = null;
+
+            NavigateToLogin?.Invoke();
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -298,7 +313,6 @@ namespace smartest_desktop.ViewModels
                     TitreQuiz = $"Quiz — {TitreCours}";
 
                 ContenuCours = contenu;
-                IsEditingContenu = false;
                 StatusMessage = $"✅ Cours importé ({NombreCaracteres})";
 
                 _ = Task.Delay(2500).ContinueWith(_ =>
@@ -356,7 +370,6 @@ namespace smartest_desktop.ViewModels
             NomFichier = string.Empty;
             TypeFichier = string.Empty;
             TitreQuiz = string.Empty;
-            IsEditingContenu = false;
             StatusMessage = string.Empty;
             ErrorMessage = string.Empty;
         }

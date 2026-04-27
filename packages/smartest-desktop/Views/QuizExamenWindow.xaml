@@ -7,7 +7,7 @@
         MinHeight="600" MinWidth="960"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="White"
+        Background="#fafbfd"
         FontFamily="Segoe UI">
 
 	<Window.DataContext>
@@ -87,9 +87,9 @@
 					<StackPanel Orientation="Horizontal">
 						<Ellipse Width="8" Height="8" Fill="#4f8ef7"
                                  VerticalAlignment="Center" Margin="0,0,8,0"/>
-						<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold" VerticalAlignment="Center">
-							<Run Foreground="#0f1e3d">Smar</Run>
-							<Run Foreground="#4f8ef7">Test</Run>
+						<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold"
+                                   Foreground="#0f1e3d" VerticalAlignment="Center">
+							Smar<Run Foreground="#4f8ef7">Test</Run>
 						</TextBlock>
 					</StackPanel>
 					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#8899b8" Margin="16,5,0,0"/>
@@ -130,7 +130,6 @@
 							<TextBlock Text="Statistiques" FontSize="13" Foreground="#0f1e3d"/>
 						</StackPanel>
 					</Border>
-
 
 					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -174,15 +173,12 @@
 				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
 
-			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="White">
+			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="white">
 				<StackPanel Margin="40,36,40,40">
 
 					<!-- Header -->
-					<StackPanel Margin="0,0,0,32">
-						<TextBlock FontSize="11" Foreground="#8899b8" Margin="0,0,0,6">
-							<Run Text="QUIZ ET EXAMENS"/>
-						</TextBlock>
-						<TextBlock Text="Mes évaluations" FontSize="26" FontWeight="700" Foreground="#0f1e3d"/>
+					<StackPanel Margin="0,0,0,28">
+						<TextBlock Text="Mes évaluations" FontSize="22" FontWeight="700" Foreground="#0f1e3d"/>
 					</StackPanel>
 
 					<!-- Cartes action -->
@@ -217,8 +213,8 @@
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
 								</Border>
 								<StackPanel Grid.Column="1" VerticalAlignment="Center">
-									<TextBlock Text="Générer un Quiz" FontSize="14" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,4"/>
-									<TextBlock Text="QCM et Vrai/Faux via Ollama depuis vos cours"
+									<TextBlock Text="Générer un quiz" FontSize="14" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,4"/>
+									<TextBlock Text="QCM depuis un cours importé"
                                                FontSize="12" Foreground="#8899b8" TextWrapping="Wrap"/>
 								</StackPanel>
 							</Grid>
@@ -254,8 +250,8 @@
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
 								</Border>
 								<StackPanel Grid.Column="1" VerticalAlignment="Center">
-									<TextBlock Text="Créer un Examen" FontSize="14" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,4"/>
-									<TextBlock Text="Examen formel avec CSV étudiants et supervision temps réel"
+									<TextBlock Text="Créer un examen" FontSize="14" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,4"/>
+									<TextBlock Text="Types variés depuis un cours importé"
                                                FontSize="12" Foreground="#8899b8" TextWrapping="Wrap"/>
 								</StackPanel>
 							</Grid>

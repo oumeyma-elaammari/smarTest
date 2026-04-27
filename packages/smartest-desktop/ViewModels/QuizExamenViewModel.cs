@@ -14,11 +14,9 @@ namespace smartest_desktop.ViewModels
         private readonly LocalQuizService _quizService;
         private readonly LocalExamenService _examenService;
 
-        // ── Collections ──────────────────────────────────────────
         public ObservableCollection<QuizLocal> Quiz { get; } = new();
         public ObservableCollection<ExamenLocal> Examens { get; } = new();
 
-        // ── Selected items ────────────────────────────────────────
         private QuizLocal? _selectedQuiz;
         private ExamenLocal? _selectedExamen;
 
@@ -34,7 +32,6 @@ namespace smartest_desktop.ViewModels
             set => SetProperty(ref _selectedExamen, value);
         }
 
-        // ── Stats ─────────────────────────────────────────────────
         private int _totalQuiz;
         private int _totalExamens;
 
@@ -53,26 +50,21 @@ namespace smartest_desktop.ViewModels
         public bool HasNoQuiz => Quiz.Count == 0;
         public bool HasNoExamens => Examens.Count == 0;
 
-        // ── Nom/Email sidebar ─────────────────────────────────────
         public string Nom => WpfApp.Current.Properties["Nom"]?.ToString() ?? "Professeur";
         public string Email => WpfApp.Current.Properties["Email"]?.ToString() ?? "";
 
-        // ── Events navigation ─────────────────────────────────────
         public event Action? NavigateToQuizGeneration;
         public event Action? NavigateToExamenGeneration;
         public event Action? NavigateToDashboard;
 
-        // ── Commands ──────────────────────────────────────────────
         public ICommand GenererQuizCommand { get; }
         public ICommand GenererExamenCommand { get; }
         public ICommand RetourDashboardCommand { get; }
         public ICommand LogoutCommand { get; }
 
-        // Quiz CRUD
         public ICommand SupprimerQuizCommand { get; }
         public ICommand PublierQuizCommand { get; }
 
-        // Examen CRUD
         public ICommand SupprimerExamenCommand { get; }
         public ICommand LancerExamenCommand { get; }
 
@@ -81,25 +73,37 @@ namespace smartest_desktop.ViewModels
             _quizService = new LocalQuizService(App.LocalDb);
             _examenService = new LocalExamenService(App.LocalDb);
 
-            GenererQuizCommand   = new RelayCommand(_ => NavigateToQuizGeneration?.Invoke());
+            GenererQuizCommand = new RelayCommand(_ => NavigateToQuizGeneration?.Invoke());
             GenererExamenCommand = new RelayCommand(_ => NavigateToExamenGeneration?.Invoke());
             RetourDashboardCommand = new RelayCommand(_ => NavigateToDashboard?.Invoke());
             LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
-            SupprimerQuizCommand = new RelayCommand(async _ => await SupprimerQuizAsync(),
-                                         _ => SelectedQuiz != null);
-            PublierQuizCommand = new RelayCommand(async _ => await PublierQuizAsync(),
-                                         _ => SelectedQuiz?.Statut == "Brouillon");
+            SupprimerQuizCommand = new RelayCommand(
+                async p => await SupprimerQuizAsync(p),
+                p => p is QuizLocal);
 
-            SupprimerExamenCommand = new RelayCommand(async _ => await SupprimerExamenAsync(),
-                                         _ => SelectedExamen != null);
-            LancerExamenCommand = new RelayCommand(_ => LancerExamen(),
-                                         _ => SelectedExamen?.Statut == "PUBLIE");
+            PublierQuizCommand = new RelayCommand(
+                async p => await PublierQuizAsync(p),
+                p => p is QuizLocal q && EstQuizPublisable(q));
+
+            SupprimerExamenCommand = new RelayCommand(
+                async p => await SupprimerExamenAsync(p),
+                p => p is ExamenLocal);
+
+            LancerExamenCommand = new RelayCommand(
+                p => LancerExamen(p),
+                p => p is ExamenLocal e && string.Equals(e.Statut, "PUBLIE", System.StringComparison.OrdinalIgnoreCase));
 
             _ = ChargerDonneesAsync();
         }
 
-        // ── Chargement ────────────────────────────────────────────
+        private static bool EstQuizPublisable(QuizLocal q)
+        {
+            var s = q.Statut?.Trim();
+            return string.Equals(s, "Brouillon", System.StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(s, "BROUILLON", System.StringComparison.OrdinalIgnoreCase);
+        }
+
         private async Task ChargerDonneesAsync()
         {
             try
@@ -122,61 +126,62 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        // ── CRUD Quiz ─────────────────────────────────────────────
-        private async Task SupprimerQuizAsync()
+        private async Task SupprimerQuizAsync(object? parameter)
         {
-            if (SelectedQuiz == null) return;
+            if (parameter is not QuizLocal quiz) return;
 
             var result = MessageBox.Show(
-                $"Supprimer le quiz \"{SelectedQuiz.Titre}\" ?",
+                $"Supprimer le quiz \"{quiz.Titre}\" ?",
                 "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
 
-            await _quizService.SupprimerAsync(SelectedQuiz.Id);
-            Quiz.Remove(SelectedQuiz);
+            await _quizService.SupprimerAsync(quiz.Id);
+            Quiz.Remove(quiz);
             TotalQuiz = Quiz.Count;
-            SelectedQuiz = null;
+            OnPropertyChanged(nameof(HasNoQuiz));
+            if (SelectedQuiz?.Id == quiz.Id) SelectedQuiz = null;
         }
 
-        private async Task PublierQuizAsync()
+        private async Task PublierQuizAsync(object? parameter)
         {
-            if (SelectedQuiz == null) return;
+            if (parameter is not QuizLocal quiz) return;
+            if (!EstQuizPublisable(quiz)) return;
 
-            await _quizService.ChangerStatutAsync(SelectedQuiz.Id, "Publié");
-            SelectedQuiz.Statut = "Publié";
-
-            // Forcer refresh
-            var temp = SelectedQuiz;
-            SelectedQuiz = null;
-            SelectedQuiz = temp;
+            await _quizService.ChangerStatutAsync(quiz.Id, "Publié");
+            await ChargerDonneesAsync();
+            OnPropertyChanged(nameof(HasNoQuiz));
         }
 
-        // ── CRUD Examen ───────────────────────────────────────────
-        private async Task SupprimerExamenAsync()
+        private async Task SupprimerExamenAsync(object? parameter)
         {
-            if (SelectedExamen == null) return;
+            if (parameter is not ExamenLocal examen) return;
 
             var result = MessageBox.Show(
-                $"Supprimer l'examen \"{SelectedExamen.Titre}\" ?",
+                $"Supprimer l'examen \"{examen.Titre}\" ?",
                 "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
 
-            await _examenService.SupprimerAsync(SelectedExamen.Id);
-            Examens.Remove(SelectedExamen);
+            await _examenService.SupprimerAsync(examen.Id);
+            Examens.Remove(examen);
             TotalExamens = Examens.Count;
-            SelectedExamen = null;
+            OnPropertyChanged(nameof(HasNoExamens));
+            if (SelectedExamen?.Id == examen.Id) SelectedExamen = null;
         }
 
-        private void LancerExamen()
+        private void LancerExamen(object? parameter)
         {
-            // À implémenter — navigation vers SupervisionWindow
-            MessageBox.Show("Lancement de session — Sprint 2",
-                "Bientôt disponible", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (parameter is not ExamenLocal examen) return;
+
+            MessageBox.Show(
+                $"Lancer la session pour « {examen.Titre} » (durée {examen.Duree} min).\n\n" +
+                "La supervision temps réel sera disponible dans une prochaine version.",
+                "Lancer l'examen",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
-        // ── Déconnexion ───────────────────────────────────────────
         private void ExecuteLogout()
         {
             var result = MessageBox.Show(
