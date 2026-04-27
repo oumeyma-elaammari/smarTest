@@ -4,17 +4,30 @@
 winexe
 C#
 .cs
+<<<<<<< HEAD
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\
+=======
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\
+>>>>>>> 79297ab359c318b7da5428628075037c45bcb529
 smartest_desktop
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
+<<<<<<< HEAD
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\App.xaml
 151506834132
 
 50-1370744395
 226201212002
 MainWindow.xaml;Views\CoursWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ExamenGenerationWindow.xaml;Views\ExamenResultWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\LoginWindow.xaml;Views\QuizExamenWindow.xaml;Views\QuizGenerationWindow.xaml;Views\QuizResultWindow.xaml;Views\QuizWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;Views\Styles\AuthStyles.xaml;
+=======
+C:\Users\User\smarTest\packages\smartest-desktop\App.xaml
+14-190700440
+
+48-1960157819
+226-9788411
+MainWindow.xaml;Views\CoursWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\LoginWindow.xaml;Views\QuizExamenWindow.xaml;Views\QuizGenerationWindow.xaml;Views\QuizResultWindow.xaml;Views\QuizWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;Views\Styles\AuthStyles.xaml;Views\Styles\Stylesglobal.xaml;
+>>>>>>> 79297ab359c318b7da5428628075037c45bcb529
 
 True
 

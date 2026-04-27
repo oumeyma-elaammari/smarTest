@@ -262,8 +262,46 @@
               "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
             },
             {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "QuizGenerationViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizGenerationViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\QuizGenerationViewModel.cs",
+              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizGenerationViewModel.cs",
+              "RelativeToolTip": "ViewModels\\QuizGenerationViewModel.cs",
+              "ViewState": "AgIAAN4BAAAAAAAAAAAAAAQCAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T22:54:04.803Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "LoginViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\LoginViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\LoginViewModel.cs",
+              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\LoginViewModel.cs",
+              "RelativeToolTip": "ViewModels\\LoginViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T20:28:27.646Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Coursviewmodel.cs",
+              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\Coursviewmodel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\Coursviewmodel.cs",
+              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\Coursviewmodel.cs",
+              "RelativeToolTip": "ViewModels\\Coursviewmodel.cs",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAAANUBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T23:15:51.531Z"
+            },
+            {
               "$type": "Bookmark",
-              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+              "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
             },
             {
               "$type": "Document",
@@ -273,7 +311,7 @@
               "RelativeDocumentMoniker": "Views\\QuizGenerationWindow.xaml.cs",
               "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml.cs",
               "RelativeToolTip": "Views\\QuizGenerationWindow.xaml.cs",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAswDYAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAACsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-22T22:29:26.846Z"
             },
@@ -384,7 +422,7 @@
               "RelativeToolTip": "Views\\QuizWindow.xaml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-22T07:33:38.541Z"
+              "WhenOpened": "2026-04-26T20:04:11.432Z"
             },
             {
               "$type": "Document",
@@ -396,7 +434,7 @@
               "RelativeToolTip": "Views\\QuizResultWindow.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAswC4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-22T22:31:52.403Z"
+              "WhenOpened": "2026-04-26T19:58:42.122Z"
             },
             {
               "$type": "Document",
@@ -408,7 +446,7 @@
               "RelativeToolTip": "Views\\Resetpasswordwindow.xaml.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAEcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-20T17:46:20.74Z"
+              "WhenOpened": "2026-04-26T22:38:44.877Z"
             },
             {
               "$type": "Document",
@@ -468,7 +506,7 @@
               "RelativeToolTip": "ViewModels\\QuizResultViewModel.cs",
               "ViewState": "AgIAAOUAAAAAAAAAAAAcwPwAAABjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-22T22:31:04.7Z"
+              "WhenOpened": "2026-04-26T20:16:57.338Z"
             },
             {
               "$type": "Document",
@@ -479,8 +517,44 @@
               "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\RegisterWindow.xaml",
               "RelativeToolTip": "Views\\RegisterWindow.xaml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-23T20:29:40.195Z"
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T20:17:37.555Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml.cs",
+              "RelativeDocumentMoniker": "App.xaml.cs",
+              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml.cs",
+              "RelativeToolTip": "App.xaml.cs",
+              "ViewState": "AgIAAEoAAAAAAAAAAAAAAAQAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T20:29:47.658Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "LocalDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Data\\LocalDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\LocalDbContext.cs",
+              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Data\\LocalDbContext.cs",
+              "RelativeToolTip": "Data\\LocalDbContext.cs",
+              "ViewState": "AgIAADEAAAAAAAAAAAAAAJEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T20:25:51.542Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "SessionService.cs",
+              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\SessionService.cs",
+              "RelativeDocumentMoniker": "Services\\SessionService.cs",
+              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\SessionService.cs",
+              "RelativeToolTip": "Services\\SessionService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T20:18:59.4Z"
             },
             {
               "$type": "Document",
@@ -492,7 +566,7 @@
               "RelativeToolTip": "Data\\LocalEntities\\QuestionLocal.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAswDQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-23T19:51:25.143Z"
+              "WhenOpened": "2026-04-26T17:29:54.966Z"
             },
             {
               "$type": "Document",
@@ -701,7 +775,7 @@
           ]
         },
         {
-          "DockedWidth": 200,
+          "DockedWidth": 994,
           "SelectedChildIndex": -1,
           "Children": [
             {

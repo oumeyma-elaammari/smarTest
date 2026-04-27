@@ -1,8 +1,16 @@
 ﻿
 
+<<<<<<< HEAD
 FC:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\Views\CoursWindow.xaml;;
 FC:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\Views\DashboardWindow.xaml;;
 FC:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\Views\QuizExamenWindow.xaml;;
 FC:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\Views\QuizGenerationWindow.xaml;;
 FC:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\Views\QuizResultWindow.xaml;;
+=======
+FC:\Users\User\smarTest\packages\smartest-desktop\Views\CoursWindow.xaml;;
+FC:\Users\User\smarTest\packages\smartest-desktop\Views\DashboardWindow.xaml;;
+FC:\Users\User\smarTest\packages\smartest-desktop\Views\QuizExamenWindow.xaml;;
+FC:\Users\User\smarTest\packages\smartest-desktop\Views\QuizGenerationWindow.xaml;;
+FC:\Users\User\smarTest\packages\smartest-desktop\Views\QuizResultWindow.xaml;;
+>>>>>>> 79297ab359c318b7da5428628075037c45bcb529
 

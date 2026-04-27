@@ -2,9 +2,6 @@
   "ExpandedNodes": [
     "",
     "\\Data",
-    "\\Data\\LocalEntities",
-    "\\Helpers",
-    "\\Models",
     "\\Services",
     "\\Views"
   ],

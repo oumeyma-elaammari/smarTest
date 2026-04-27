@@ -1,4 +1,4 @@
-<Window x:Class="smartest_desktop.Views.QuizExamenWindow"
+﻿<Window x:Class="smartest_desktop.Views.QuizExamenWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
@@ -7,447 +7,554 @@
         MinHeight="600" MinWidth="960"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#F8F8F6"
+        Background="White"
         FontFamily="Segoe UI">
 
-    <Window.DataContext>
-        <vm:QuizExamenViewModel />
-    </Window.DataContext>
+	<Window.DataContext>
+		<vm:QuizExamenViewModel />
+	</Window.DataContext>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
 
-        <!-- ══════════ HEADER ══════════ -->
-        <Border Grid.Row="0"
-                Background="White"
-                BorderBrush="#E8E7E3"
-                BorderThickness="0,0,0,1"
-                Padding="24,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+			<!-- Badge statut Quiz -->
+			<Style x:Key="BadgeBrouillon" TargetType="Border">
+				<Setter Property="Background" Value="#fff7ed"/>
+				<Setter Property="CornerRadius" Value="6"/>
+				<Setter Property="Padding" Value="8,3"/>
+			</Style>
+			<Style x:Key="BadgePublie" TargetType="Border">
+				<Setter Property="Background" Value="#eaf3de"/>
+				<Setter Property="CornerRadius" Value="6"/>
+				<Setter Property="Padding" Value="8,3"/>
+			</Style>
+			<Style x:Key="BadgePlanifie" TargetType="Border">
+				<Setter Property="Background" Value="#eef3fd"/>
+				<Setter Property="CornerRadius" Value="6"/>
+				<Setter Property="Padding" Value="8,3"/>
+			</Style>
 
-                <!-- Flèche retour -->
-                <Border Grid.Column="0"
-                        Width="36" Height="36"
-                        CornerRadius="8"
-                        Background="#F0EFE8"
-                        Cursor="Hand"
-                        Margin="0,0,20,0">
-                    <Border.InputBindings>
-                        <MouseBinding MouseAction="LeftClick"
-                                      Command="{Binding RetourDashboardCommand}"/>
-                    </Border.InputBindings>
-                    <TextBlock Text="←" FontSize="18" FontWeight="300"
-                               Foreground="#1A1A1A"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
-                </Border>
+			<!-- Bouton action table -->
+			<Style x:Key="ActionBtn" TargetType="Button">
+				<Setter Property="Height" Value="28"/>
+				<Setter Property="Padding" Value="10,0"/>
+				<Setter Property="FontSize" Value="11"/>
+				<Setter Property="FontWeight" Value="600"/>
+				<Setter Property="BorderThickness" Value="1"/>
+				<Setter Property="Cursor" Value="Hand"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="Button">
+							<Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="6">
+								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter Property="Opacity" Value="0.85"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
 
-                <!-- Logo + titre -->
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="8" Height="8" CornerRadius="4" Background="#1A1A1A"
-                                VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock FontSize="17" FontWeight="700" Foreground="#1A1A1A">
-                            <Run Text="Smar"/>
-                            <Run Text="Test" Foreground="#6B6B6B"/>
-                        </TextBlock>
-                    </StackPanel>
-                    <TextBlock Text="Espace professeur" FontSize="11"
-                               Foreground="#ABABAB" Margin="16,2,0,0"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+		</ResourceDictionary>
+	</Window.Resources>
 
-        <!-- ══════════ CONTENU ══════════ -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <!-- Sidebar menu gauche identique au Dashboard -->
-                <ColumnDefinition Width="220"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="230"/>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
 
-            <!-- ── SIDEBAR ── -->
-            <Border Grid.Column="0"
-                    Background="White"
-                    BorderBrush="#E8E7E3"
-                    BorderThickness="0,0,1,0">
-                <StackPanel Margin="12,20,12,20">
+		<!-- ══ SIDEBAR ══ -->
+		<Border Grid.Column="0" Background="White"
+                BorderBrush="#e2e8f4" BorderThickness="0,0,1,0">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
 
-                    <!-- Tableau de bord -->
-                    <Border CornerRadius="10" Padding="14,12" Cursor="Hand" Margin="0,0,0,4">
-                        <Border.InputBindings>
-                            <MouseBinding MouseAction="LeftClick"
-                                          Command="{Binding RetourDashboardCommand}"/>
-                        </Border.InputBindings>
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#F5F4F0"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⊞" FontSize="14" Margin="0,0,10,0"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                            <TextBlock Text="Tableau de bord" FontSize="13"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+				<StackPanel Grid.Row="0" Margin="22,28,22,32">
+					<StackPanel Orientation="Horizontal">
+						<Ellipse Width="8" Height="8" Fill="#4f8ef7"
+                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
+						<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold" VerticalAlignment="Center">
+							<Run Foreground="#0f1e3d">Smar</Run>
+							<Run Foreground="#4f8ef7">Test</Run>
+						</TextBlock>
+					</StackPanel>
+					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#8899b8" Margin="16,5,0,0"/>
+				</StackPanel>
 
-                    <!-- Mes cours -->
-                    <Border CornerRadius="10" Padding="14,12" Cursor="Hand" Margin="0,0,0,4">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#F5F4F0"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="≡" FontSize="14" Margin="0,0,10,0"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                            <TextBlock Text="Mes cours" FontSize="13"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+				<StackPanel Grid.Row="1" Margin="12,0">
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
+						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding RetourDashboardCommand}"/>
+						</Border.InputBindings>
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+							<TextBlock Text="&#xE80F;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Home" FontSize="13" Foreground="#0f1e3d"/>
+						</StackPanel>
+					</Border>
 
-                    <!-- Quiz et examens — ACTIF -->
-                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,4"
-                            Background="#1A1A1A">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="✎" FontSize="14" Margin="0,0,10,0"
-                                       Foreground="White" VerticalAlignment="Center"/>
-                            <TextBlock Text="Quiz et examens" FontSize="13"
-                                       Foreground="White" FontWeight="600"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+					<Border CornerRadius="8" Height="40" Padding="14,0" Background="#0f1e3d" Margin="0,1">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+							<TextBlock Text="&#xE9D5;" FontSize="13" Foreground="White"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Quiz et examens" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
+						</StackPanel>
+					</Border>
 
-                    <!-- Sessions actives -->
-                    <Border CornerRadius="10" Padding="14,12" Cursor="Hand" Margin="0,0,0,4">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#F5F4F0"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="○" FontSize="14" Margin="0,0,10,0"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                            <TextBlock Text="Sessions actives" FontSize="13"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+							<TextBlock Text="&#xE7FC;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Sessions actives" FontSize="13" Foreground="#0f1e3d"/>
+						</StackPanel>
+					</Border>
 
-                    <!-- Statistiques -->
-                    <Border CornerRadius="10" Padding="14,12" Cursor="Hand" Margin="0,0,0,4">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#F5F4F0"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="▦" FontSize="14" Margin="0,0,10,0"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                            <TextBlock Text="Statistiques" FontSize="13"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+							<TextBlock Text="&#xE9D2;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Statistiques" FontSize="13" Foreground="#0f1e3d"/>
+						</StackPanel>
+					</Border>
 
-                    <!-- Paramètres -->
-                    <Border CornerRadius="10" Padding="14,12" Cursor="Hand" Margin="0,0,0,4">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#F5F4F0"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⚙" FontSize="14" Margin="0,0,10,0"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                            <TextBlock Text="Paramètres" FontSize="13"
-                                       Foreground="#6B6B6B" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
 
-                </StackPanel>
-            </Border>
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+							<TextBlock Text="&#xE713;" FontSize="13" Foreground="#6b7a99"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Paramètres" FontSize="13" Foreground="#0f1e3d"/>
+						</StackPanel>
+					</Border>
+				</StackPanel>
 
-            <!-- ── CONTENU PRINCIPAL ── -->
-            <Grid Grid.Column="1" Background="#F8F8F6">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
-                            MaxWidth="820">
+				<StackPanel Grid.Row="2" Margin="12,0,12,18">
+					<Border Background="#f0f3f9" CornerRadius="10" BorderBrush="#e2e8f4"
+                            BorderThickness="1" Padding="8,6" Margin="0,0,0,8">
+						<StackPanel>
+							<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+								<Ellipse Width="7" Height="7" Fill="#16a34a"
+                                         VerticalAlignment="Center" Margin="0,0,7,0"/>
+								<TextBlock Text="{Binding Nom}" FontSize="13" FontWeight="600" Foreground="#0f1e3d"/>
+							</StackPanel>
+							<TextBlock Text="{Binding Email}" FontSize="11" Foreground="#8899b8" Margin="14,0,0,0"/>
+						</StackPanel>
+					</Border>
+					<Border Style="{StaticResource MenuPopupItem}" Margin="0,2">
+						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding LogoutCommand}"/>
+						</Border.InputBindings>
+						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+							<TextBlock Text="&#xF3B1;" FontSize="13" Foreground="#dc2626"
+                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
+							<TextBlock Text="Déconnexion" FontSize="13" Foreground="#dc2626"/>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+			</Grid>
+		</Border>
 
-                    <!-- Titre de section -->
-                    <TextBlock Text="Quiz et Examens"
-                               FontSize="28" FontWeight="700"
-                               Foreground="#1A1A1A"
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,8"/>
-                    <TextBlock Text="Choisissez le type d'évaluation que vous souhaitez créer"
-                               FontSize="14" Foreground="#ABABAB"
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,56"/>
+		<!-- ══ MAIN CONTENT ══ -->
+		<Grid Grid.Column="1">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
 
-                    <!-- Deux cartes côte à côte -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="White">
+				<StackPanel Margin="40,36,40,40">
 
-                        <!-- ══ CARTE QUIZ ══ -->
-                        <Border Width="340" Margin="0,0,24,0" Cursor="Hand"
-                                CornerRadius="20" BorderThickness="2">
-                            <Border.InputBindings>
-                                <MouseBinding MouseAction="LeftClick"
-                                              Command="{Binding GenererQuizCommand}"/>
-                            </Border.InputBindings>
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background" Value="White"/>
-                                    <Setter Property="BorderBrush" Value="#E8E7E3"/>
-                                    <Setter Property="Effect">
-                                        <Setter.Value>
-                                            <DropShadowEffect BlurRadius="16"
-                                                              Opacity="0.06"
-                                                              ShadowDepth="4"
-                                                              Direction="270"/>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="BorderBrush" Value="#1A1A1A"/>
-                                            <Setter Property="Background" Value="#FAFAF9"/>
-                                            <Setter Property="Effect">
-                                                <Setter.Value>
-                                                    <DropShadowEffect BlurRadius="28"
-                                                                      Opacity="0.12"
-                                                                      ShadowDepth="6"
-                                                                      Direction="270"/>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
+					<!-- Header -->
+					<StackPanel Margin="0,0,0,32">
+						<TextBlock FontSize="11" Foreground="#8899b8" Margin="0,0,0,6">
+							<Run Text="QUIZ ET EXAMENS"/>
+						</TextBlock>
+						<TextBlock Text="Mes évaluations" FontSize="26" FontWeight="700" Foreground="#0f1e3d"/>
+					</StackPanel>
 
-                            <Grid Margin="36,40,36,40">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+					<!-- Cartes action -->
+					<UniformGrid Columns="2" Margin="0,0,0,36">
+						<Border Margin="0,0,8,0" Cursor="Hand" CornerRadius="14"
+                                BorderThickness="1.5" Background="White">
+							<Border.InputBindings>
+								<MouseBinding MouseAction="LeftClick" Command="{Binding GenererQuizCommand}"/>
+							</Border.InputBindings>
+							<Border.Effect>
+								<DropShadowEffect BlurRadius="12" Opacity="0.05" ShadowDepth="3" Direction="270"/>
+							</Border.Effect>
+							<Border.Style>
+								<Style TargetType="Border">
+									<Setter Property="BorderBrush" Value="#e2e8f4"/>
+									<Style.Triggers>
+										<Trigger Property="IsMouseOver" Value="True">
+											<Setter Property="BorderBrush" Value="#0f1e3d"/>
+										</Trigger>
+									</Style.Triggers>
+								</Style>
+							</Border.Style>
+							<Grid Margin="22,20,22,20">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="Auto"/>
+									<ColumnDefinition Width="*"/>
+								</Grid.ColumnDefinitions>
+								<Border Width="42" Height="42" CornerRadius="10" Background="#0f1e3d"
+                                        Margin="0,0,16,0" VerticalAlignment="Center">
+									<TextBlock Text="&#xE9D5;" FontSize="18" Foreground="White"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+								</Border>
+								<StackPanel Grid.Column="1" VerticalAlignment="Center">
+									<TextBlock Text="Générer un Quiz" FontSize="14" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,4"/>
+									<TextBlock Text="QCM et Vrai/Faux via Ollama depuis vos cours"
+                                               FontSize="12" Foreground="#8899b8" TextWrapping="Wrap"/>
+								</StackPanel>
+							</Grid>
+						</Border>
 
-                                <!-- Icône -->
-                                <Border Grid.Row="0"
-                                        Width="64" Height="64"
-                                        CornerRadius="18"
-                                        Background="#1A1A1A"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,0,0,24">
-                                    <TextBlock Text="✨"
-                                               FontSize="28"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
+						<Border Margin="8,0,0,0" Cursor="Hand" CornerRadius="14"
+                                BorderThickness="1.5" Background="White">
+							<Border.InputBindings>
+								<MouseBinding MouseAction="LeftClick" Command="{Binding GenererExamenCommand}"/>
+							</Border.InputBindings>
+							<Border.Effect>
+								<DropShadowEffect BlurRadius="12" Opacity="0.05" ShadowDepth="3" Direction="270"/>
+							</Border.Effect>
+							<Border.Style>
+								<Style TargetType="Border">
+									<Setter Property="BorderBrush" Value="#e2e8f4"/>
+									<Style.Triggers>
+										<Trigger Property="IsMouseOver" Value="True">
+											<Setter Property="BorderBrush" Value="#0f1e3d"/>
+										</Trigger>
+									</Style.Triggers>
+								</Style>
+							</Border.Style>
+							<Grid Margin="22,20,22,20">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="Auto"/>
+									<ColumnDefinition Width="*"/>
+								</Grid.ColumnDefinitions>
+								<Border Width="42" Height="42" CornerRadius="10" Background="#0f1e3d"
+                                        Margin="0,0,16,0" VerticalAlignment="Center">
+									<TextBlock Text="&#xE9D2;" FontSize="18" Foreground="White"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+								</Border>
+								<StackPanel Grid.Column="1" VerticalAlignment="Center">
+									<TextBlock Text="Créer un Examen" FontSize="14" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,4"/>
+									<TextBlock Text="Examen formel avec CSV étudiants et supervision temps réel"
+                                               FontSize="12" Foreground="#8899b8" TextWrapping="Wrap"/>
+								</StackPanel>
+							</Grid>
+						</Border>
+					</UniformGrid>
 
-                                <!-- Titre -->
-                                <TextBlock Grid.Row="1"
-                                           Text="Générer un Quiz"
-                                           FontSize="20" FontWeight="700"
-                                           Foreground="#1A1A1A"
-                                           Margin="0,0,0,10"/>
+					<!-- ══ MES QUIZ ══ -->
+					<Border Style="{StaticResource DashCard}" Padding="24,20" Margin="0,0,0,20">
+						<StackPanel>
 
-                                <!-- Description -->
-                                <TextBlock Grid.Row="2"
-                                           Text="Créez un quiz QCM automatiquement à partir d'un de vos cours grâce à l'IA locale Ollama."
-                                           FontSize="13" Foreground="#6B6B6B"
-                                           TextWrapping="Wrap"
-                                           LineHeight="20"
-                                           Margin="0,0,0,28"/>
+							<!-- Titre section -->
+							<Grid Margin="0,0,0,16">
+								<StackPanel>
+									<TextBlock Text="Mes Quiz" FontSize="15" FontWeight="600" Foreground="#0f1e3d"/>
+									<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,3,0,0">
+										<Run Text="{Binding TotalQuiz}"/>
+										<Run Text="quiz enregistrés"/>
+									</TextBlock>
+								</StackPanel>
+							</Grid>
 
-                                <!-- Tags -->
-                                <StackPanel Grid.Row="3"
-                                            Orientation="Horizontal"
-                                            Margin="0,0,0,32">
-                                    <Border CornerRadius="6" Padding="8,4"
-                                            Background="#F0F9FF" Margin="0,0,6,0">
-                                        <TextBlock Text="QCM" FontSize="10" FontWeight="700"
-                                                   Foreground="#0369A1"/>
-                                    </Border>
-                                    <Border CornerRadius="6" Padding="8,4"
-                                            Background="#F0FDF4" Margin="0,0,6,0">
-                                        <TextBlock Text="IA locale" FontSize="10" FontWeight="700"
-                                                   Foreground="#16A34A"/>
-                                    </Border>
-                                    <Border CornerRadius="6" Padding="8,4"
-                                            Background="#FFF7ED">
-                                        <TextBlock Text="Ollama" FontSize="10" FontWeight="700"
-                                                   Foreground="#C2410C"/>
-                                    </Border>
-                                </StackPanel>
+							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,0"/>
 
-                                <!-- Bouton -->
-                                <Border Grid.Row="4"
-                                        CornerRadius="10"
-                                        Background="#1A1A1A"
-                                        Padding="0,14">
-                                    <StackPanel Orientation="Horizontal"
-                                                HorizontalAlignment="Center">
-                                        <TextBlock Text="Générer un Quiz"
-                                                   FontSize="13" FontWeight="600"
-                                                   Foreground="White"/>
-                                        <TextBlock Text=" →"
-                                                   FontSize="13" FontWeight="600"
-                                                   Foreground="#888888"/>
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
-                        </Border>
+							<!-- En-têtes colonnes -->
+							<Grid Margin="0,12,0,8">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="100"/>
+									<ColumnDefinition Width="90"/>
+									<ColumnDefinition Width="80"/>
+									<ColumnDefinition Width="180"/>
+								</Grid.ColumnDefinitions>
+								<TextBlock Grid.Column="0" Text="Titre" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="1" Text="Difficulté" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="2" Text="Questions" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="3" Text="Statut" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="4" Text="Actions" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+							</Grid>
 
-                        <!-- ══ CARTE EXAMEN ══ -->
-                        <Border Width="340" Cursor="Hand"
-                                CornerRadius="20" BorderThickness="2">
-                            <Border.InputBindings>
-                                <MouseBinding MouseAction="LeftClick"
-                                              Command="{Binding GenererExamenCommand}"/>
-                            </Border.InputBindings>
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background" Value="White"/>
-                                    <Setter Property="BorderBrush" Value="#E8E7E3"/>
-                                    <Setter Property="Effect">
-                                        <Setter.Value>
-                                            <DropShadowEffect BlurRadius="16"
-                                                              Opacity="0.06"
-                                                              ShadowDepth="4"
-                                                              Direction="270"/>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="BorderBrush" Value="#1A1A1A"/>
-                                            <Setter Property="Background" Value="#FAFAF9"/>
-                                            <Setter Property="Effect">
-                                                <Setter.Value>
-                                                    <DropShadowEffect BlurRadius="28"
-                                                                      Opacity="0.12"
-                                                                      ShadowDepth="6"
-                                                                      Direction="270"/>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
+							<Border Height="1" Background="#f0f3f9" Margin="0,0,0,4"/>
 
-                            <Grid Margin="36,40,36,40">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+							<!-- Liste quiz -->
+							<ItemsControl ItemsSource="{Binding Quiz}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
+											<Grid>
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="*"/>
+													<ColumnDefinition Width="100"/>
+													<ColumnDefinition Width="90"/>
+													<ColumnDefinition Width="80"/>
+													<ColumnDefinition Width="180"/>
+												</Grid.ColumnDefinitions>
 
-                                <!-- Icône -->
-                                <Border Grid.Row="0"
-                                        Width="64" Height="64"
-                                        CornerRadius="18"
-                                        Background="#1A1A1A"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,0,0,24">
-                                    <TextBlock Text="📋"
-                                               FontSize="28"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
+												<StackPanel Grid.Column="0" VerticalAlignment="Center">
+													<TextBlock Text="{Binding Titre}" FontSize="13"
+                                                               FontWeight="600" Foreground="#0f1e3d"/>
+													<TextBlock Text="{Binding CoursSourceTitre}" FontSize="11"
+                                                               Foreground="#8899b8" Margin="0,2,0,0"/>
+												</StackPanel>
 
-                                <!-- Titre -->
-                                <TextBlock Grid.Row="1"
-                                           Text="Créer un Examen"
-                                           FontSize="20" FontWeight="700"
-                                           Foreground="#1A1A1A"
-                                           Margin="0,0,0,10"/>
+												<TextBlock Grid.Column="1" Text="{Binding Difficulte}"
+                                                           FontSize="12" Foreground="#6b7a99"
+                                                           VerticalAlignment="Center"/>
 
-                                <!-- Description -->
-                                <TextBlock Grid.Row="2"
-                                           Text="Créez un examen multi-types (QCM, cases à cocher, rédaction, images) à partir de vos cours grâce à Ollama."
-                                           FontSize="13" Foreground="#6B6B6B"
-                                           TextWrapping="Wrap"
-                                           LineHeight="20"
-                                           Margin="0,0,0,28"/>
+												<TextBlock Grid.Column="2" Text="{Binding NombreQuestions}"
+                                                           FontSize="12" Foreground="#6b7a99"
+                                                           VerticalAlignment="Center"/>
 
-                                <!-- Tags -->
-                                <StackPanel Grid.Row="3"
-                                            Orientation="Horizontal"
-                                            Margin="0,0,0,32">
-                                    <Border CornerRadius="6" Padding="8,4"
-                                            Background="#F5F3FF" Margin="0,0,6,0">
-                                        <TextBlock Text="Multi-types" FontSize="10" FontWeight="700"
-                                                   Foreground="#7C3AED"/>
-                                    </Border>
-                                    <Border CornerRadius="6" Padding="8,4"
-                                            Background="#F0FDF4" Margin="0,0,6,0">
-                                        <TextBlock Text="IA locale" FontSize="10" FontWeight="700"
-                                                   Foreground="#16A34A"/>
-                                    </Border>
-                                    <Border CornerRadius="6" Padding="8,4"
-                                            Background="#FFF7ED">
-                                        <TextBlock Text="Ollama" FontSize="10" FontWeight="700"
-                                                   Foreground="#C2410C"/>
-                                    </Border>
-                                </StackPanel>
+												<!-- Badge statut -->
+												<Border Grid.Column="3" CornerRadius="6" Padding="8,3"
+                                                        VerticalAlignment="Center" HorizontalAlignment="Left">
+													<Border.Style>
+														<Style TargetType="Border">
+															<Setter Property="Background" Value="#fff7ed"/>
+															<Style.Triggers>
+																<DataTrigger Binding="{Binding Statut}" Value="Publié">
+																	<Setter Property="Background" Value="#eaf3de"/>
+																</DataTrigger>
+																<DataTrigger Binding="{Binding Statut}" Value="Validé">
+																	<Setter Property="Background" Value="#eef3fd"/>
+																</DataTrigger>
+															</Style.Triggers>
+														</Style>
+													</Border.Style>
+													<TextBlock FontSize="10" FontWeight="700">
+														<TextBlock.Style>
+															<Style TargetType="TextBlock">
+																<Setter Property="Text" Value="{Binding Statut}"/>
+																<Setter Property="Foreground" Value="#c2410c"/>
+																<Style.Triggers>
+																	<DataTrigger Binding="{Binding Statut}" Value="Publié">
+																		<Setter Property="Foreground" Value="#16a34a"/>
+																	</DataTrigger>
+																	<DataTrigger Binding="{Binding Statut}" Value="Validé">
+																		<Setter Property="Foreground" Value="#4f8ef7"/>
+																	</DataTrigger>
+																</Style.Triggers>
+															</Style>
+														</TextBlock.Style>
+													</TextBlock>
+												</Border>
 
-                                <!-- Bouton -->
-                                <Border Grid.Row="4"
-                                        CornerRadius="10"
-                                        Background="#1A1A1A"
-                                        Padding="0,14">
-                                    <StackPanel Orientation="Horizontal"
-                                                HorizontalAlignment="Center">
-                                        <TextBlock Text="Créer un Examen"
-                                                   FontSize="13" FontWeight="600"
-                                                   Foreground="White"/>
-                                        <TextBlock Text=" →"
-                                                   FontSize="13" FontWeight="600"
-                                                   Foreground="#888888"/>
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
-                        </Border>
+												<!-- Actions -->
+												<StackPanel Grid.Column="4" Orientation="Horizontal"
+                                                            VerticalAlignment="Center">
+													<Button Style="{StaticResource ActionBtn}"
+                                                            Background="#eef3fd" BorderBrush="#d0ddf5"
+                                                            Foreground="#4f8ef7" Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.PublierQuizCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+														<TextBlock Text="Publier"/>
+													</Button>
+													<Button Style="{StaticResource ActionBtn}"
+                                                            Background="#fcebeb" BorderBrush="#f7c1c1"
+                                                            Foreground="#dc2626"
+                                                            Command="{Binding DataContext.SupprimerQuizCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+														<TextBlock Text="Supprimer"/>
+													</Button>
+												</StackPanel>
 
-                    </StackPanel>
-                </StackPanel>
-            </Grid>
-        </Grid>
-    </Grid>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<!-- État vide quiz -->
+							<StackPanel HorizontalAlignment="Center" Margin="0,20"
+                                        Visibility="{Binding HasNoQuiz, Converter={StaticResource BoolToVis}}">
+								<TextBlock Text="Aucun quiz créé pour le moment"
+                                           FontSize="13" Foreground="#8899b8" HorizontalAlignment="Center"/>
+							</StackPanel>
+
+						</StackPanel>
+					</Border>
+
+					<!-- ══ MES EXAMENS ══ -->
+					<Border Style="{StaticResource DashCard}" Padding="24,20">
+						<StackPanel>
+
+							<Grid Margin="0,0,0,16">
+								<StackPanel>
+									<TextBlock Text="Mes Examens" FontSize="15" FontWeight="600" Foreground="#0f1e3d"/>
+									<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,3,0,0">
+										<Run Text="{Binding TotalExamens}"/>
+										<Run Text="examens enregistrés"/>
+									</TextBlock>
+								</StackPanel>
+							</Grid>
+
+							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,0"/>
+
+							<!-- En-têtes -->
+							<Grid Margin="0,12,0,8">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="80"/>
+									<ColumnDefinition Width="100"/>
+									<ColumnDefinition Width="90"/>
+									<ColumnDefinition Width="200"/>
+								</Grid.ColumnDefinitions>
+								<TextBlock Grid.Column="0" Text="Titre" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="1" Text="Durée" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="2" Text="Date prévue" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="3" Text="Statut" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+								<TextBlock Grid.Column="4" Text="Actions" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
+							</Grid>
+
+							<Border Height="1" Background="#f0f3f9" Margin="0,0,0,4"/>
+
+							<!-- Liste examens -->
+							<ItemsControl ItemsSource="{Binding Examens}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
+											<Grid>
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="*"/>
+													<ColumnDefinition Width="80"/>
+													<ColumnDefinition Width="100"/>
+													<ColumnDefinition Width="90"/>
+													<ColumnDefinition Width="200"/>
+												</Grid.ColumnDefinitions>
+
+												<TextBlock Grid.Column="0" Text="{Binding Titre}"
+                                                           FontSize="13" FontWeight="600"
+                                                           Foreground="#0f1e3d" VerticalAlignment="Center"/>
+
+												<TextBlock Grid.Column="1" FontSize="12"
+                                                           Foreground="#6b7a99" VerticalAlignment="Center">
+													<Run Text="{Binding Duree}"/>
+													<Run Text=" min"/>
+												</TextBlock>
+
+												<TextBlock Grid.Column="2" FontSize="12"
+                                                           Foreground="#6b7a99" VerticalAlignment="Center">
+													<TextBlock.Style>
+														<Style TargetType="TextBlock">
+															<Setter Property="Text" Value="Non définie"/>
+															<Style.Triggers>
+																<DataTrigger Binding="{Binding DatePrevue}" Value="{x:Null}">
+																	<Setter Property="Text" Value="Non définie"/>
+																</DataTrigger>
+															</Style.Triggers>
+														</Style>
+													</TextBlock.Style>
+												</TextBlock>
+
+												<!-- Badge statut -->
+												<Border Grid.Column="3" CornerRadius="6" Padding="8,3"
+                                                        VerticalAlignment="Center" HorizontalAlignment="Left">
+													<Border.Style>
+														<Style TargetType="Border">
+															<Setter Property="Background" Value="#fff7ed"/>
+															<Style.Triggers>
+																<DataTrigger Binding="{Binding Statut}" Value="PUBLIE">
+																	<Setter Property="Background" Value="#eef3fd"/>
+																</DataTrigger>
+																<DataTrigger Binding="{Binding Statut}" Value="EN_COURS">
+																	<Setter Property="Background" Value="#eaf3de"/>
+																</DataTrigger>
+																<DataTrigger Binding="{Binding Statut}" Value="TERMINE">
+																	<Setter Property="Background" Value="#f0f3f9"/>
+																</DataTrigger>
+															</Style.Triggers>
+														</Style>
+													</Border.Style>
+													<TextBlock FontSize="10" FontWeight="700">
+														<TextBlock.Style>
+															<Style TargetType="TextBlock">
+																<Setter Property="Text" Value="{Binding Statut}"/>
+																<Setter Property="Foreground" Value="#c2410c"/>
+																<Style.Triggers>
+																	<DataTrigger Binding="{Binding Statut}" Value="PUBLIE">
+																		<Setter Property="Foreground" Value="#4f8ef7"/>
+																	</DataTrigger>
+																	<DataTrigger Binding="{Binding Statut}" Value="EN_COURS">
+																		<Setter Property="Foreground" Value="#16a34a"/>
+																	</DataTrigger>
+																	<DataTrigger Binding="{Binding Statut}" Value="TERMINE">
+																		<Setter Property="Foreground" Value="#8899b8"/>
+																	</DataTrigger>
+																</Style.Triggers>
+															</Style>
+														</TextBlock.Style>
+													</TextBlock>
+												</Border>
+
+												<!-- Actions -->
+												<StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+													<Button Style="{StaticResource ActionBtn}"
+                                                            Background="#eaf3de" BorderBrush="#c0dd97"
+                                                            Foreground="#16a34a" Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.LancerExamenCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+														<TextBlock Text="Lancer"/>
+													</Button>
+													<Button Style="{StaticResource ActionBtn}"
+                                                            Background="#fcebeb" BorderBrush="#f7c1c1"
+                                                            Foreground="#dc2626"
+                                                            Command="{Binding DataContext.SupprimerExamenCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+														<TextBlock Text="Supprimer"/>
+													</Button>
+												</StackPanel>
+
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+
+							<!-- État vide examens -->
+							<StackPanel HorizontalAlignment="Center" Margin="0,20"
+                                        Visibility="{Binding HasNoExamens, Converter={StaticResource BoolToVis}}">
+								<TextBlock Text="Aucun examen créé pour le moment"
+                                           FontSize="13" Foreground="#8899b8" HorizontalAlignment="Center"/>
+							</StackPanel>
+
+						</StackPanel>
+					</Border>
+
+				</StackPanel>
+			</ScrollViewer>
+
+			<!-- Footer -->
+			<Border Grid.Row="1" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0" Padding="18,14">
+				<TextBlock Text="SmarTest — ENSA Oujda · Génie Informatique · 2025–2026"
+                           FontSize="11" Foreground="#aab4cc"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+			</Border>
+
+		</Grid>
+	</Grid>
 </Window>
-
-    

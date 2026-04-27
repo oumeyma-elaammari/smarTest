@@ -77,9 +77,8 @@
 
 				<!-- Titre -->
 				<TextBlock FontFamily="Georgia" FontSize="52" FontWeight="Bold"
-                           HorizontalAlignment="Center" Margin="0,0,0,6">
-					<Run Foreground="#0f1e3d">Smar</Run>
-					<Run Foreground="#4f8ef7">Test</Run>
+						   Foreground="#0f1e3d" HorizontalAlignment="Center">
+					Smar<Run Foreground="#4f8ef7">Test</Run>
 				</TextBlock>
 
 				<!-- Sous-titre -->

@@ -10,7 +10,11 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = smartest_desktop
+<<<<<<< HEAD
 build_property.ProjectDir = C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\
+=======
+build_property.ProjectDir = C:\Users\User\smarTest\packages\smartest-desktop\
+>>>>>>> 79297ab359c318b7da5428628075037c45bcb529
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false
