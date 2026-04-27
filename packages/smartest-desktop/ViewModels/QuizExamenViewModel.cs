@@ -3,10 +3,6 @@ using System.Windows.Input;
 
 namespace smartest_desktop.ViewModels
 {
-    /// <summary>
-    /// ViewModel de la page hub "Quiz et Examens"
-    /// Affiche deux cartes : Générer un Quiz / Générer un Examen
-    /// </summary>
     public class QuizExamenViewModel : BaseViewModel
     {
         public ICommand GenererQuizCommand { get; }
@@ -14,12 +10,13 @@ namespace smartest_desktop.ViewModels
         public ICommand RetourDashboardCommand { get; }
 
         public event Action? NavigateToQuizGeneration;
+        public event Action? NavigateToExamenGeneration;
         public event Action? NavigateToDashboard;
 
         public QuizExamenViewModel()
         {
-            GenererQuizCommand = new RelayCommand(_ => NavigateToQuizGeneration?.Invoke());
-            GenererExamenCommand = new RelayCommand(_ => { /* à implémenter plus tard */ });
+            GenererQuizCommand    = new RelayCommand(_ => NavigateToQuizGeneration?.Invoke());
+            GenererExamenCommand  = new RelayCommand(_ => NavigateToExamenGeneration?.Invoke());
             RetourDashboardCommand = new RelayCommand(_ => NavigateToDashboard?.Invoke());
         }
     }

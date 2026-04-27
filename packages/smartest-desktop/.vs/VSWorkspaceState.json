@@ -6,9 +6,8 @@
     "\\Helpers",
     "\\Models",
     "\\Services",
-    "\\ViewModels",
     "\\Views"
   ],
-  "SelectedNode": "\\Views\\DashboardWindow.xaml",
+  "SelectedNode": "\\Services\\OllamaService.cs",
   "PreviewInSolutionExplorer": false
 }

@@ -11,16 +11,20 @@ namespace smartest_desktop.Views
 
             if (DataContext is QuizExamenViewModel vm)
             {
-                // Clic sur "Générer un Quiz" → ouvrir QuizGenerationWindow
                 vm.NavigateToQuizGeneration += () =>
                 {
                     var quizGen = new QuizGenerationWindow();
                     quizGen.Show();
-
-                    this.Hide(); // ✅ au lieu de Close()
+                    this.Hide();
                 };
 
-                // Retour Dashboard
+                vm.NavigateToExamenGeneration += () =>
+                {
+                    var examenGen = new ExamenGenerationWindow();
+                    examenGen.Show();
+                    this.Close();
+                };
+
                 vm.NavigateToDashboard += () =>
                 {
                     var dashboard = new DashboardWindow();

@@ -118,8 +118,7 @@ namespace smartest_desktop.ViewModels
                     .ToList());
                 TotalCategories = categories.Count;
 
-                // Total examens (à adapter selon votre logique)
-                TotalExamens = 0;
+                TotalExamens = await Task.Run(() => _db.Examens.Count());
             }
             catch (System.Exception ex)
             {

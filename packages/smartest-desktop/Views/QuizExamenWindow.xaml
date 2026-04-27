@@ -333,21 +333,37 @@
 
                         <!-- ══ CARTE EXAMEN ══ -->
                         <Border Width="340" Cursor="Hand"
-                                CornerRadius="20" BorderThickness="2"
-                                Opacity="0.55">
-                            <!-- Désactivé visuellement — à activer plus tard -->
+                                CornerRadius="20" BorderThickness="2">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick"
+                                              Command="{Binding GenererExamenCommand}"/>
+                            </Border.InputBindings>
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background" Value="White"/>
                                     <Setter Property="BorderBrush" Value="#E8E7E3"/>
                                     <Setter Property="Effect">
                                         <Setter.Value>
-                                            <DropShadowEffect BlurRadius="12"
-                                                              Opacity="0.04"
-                                                              ShadowDepth="2"
+                                            <DropShadowEffect BlurRadius="16"
+                                                              Opacity="0.06"
+                                                              ShadowDepth="4"
                                                               Direction="270"/>
                                         </Setter.Value>
                                     </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="BorderBrush" Value="#1A1A1A"/>
+                                            <Setter Property="Background" Value="#FAFAF9"/>
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="28"
+                                                                      Opacity="0.12"
+                                                                      ShadowDepth="6"
+                                                                      Direction="270"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
                                 </Style>
                             </Border.Style>
 
@@ -364,7 +380,7 @@
                                 <Border Grid.Row="0"
                                         Width="64" Height="64"
                                         CornerRadius="18"
-                                        Background="#E8E7E3"
+                                        Background="#1A1A1A"
                                         HorizontalAlignment="Left"
                                         Margin="0,0,0,24">
                                     <TextBlock Text="📋"
@@ -373,29 +389,17 @@
                                                VerticalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Badge "Bientôt" -->
-                                <Border Grid.Row="0"
-                                        CornerRadius="6" Padding="8,4"
-                                        Background="#F3F4F6"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Top"
-                                        Margin="0,4,0,0">
-                                    <TextBlock Text="Bientôt disponible"
-                                               FontSize="10" FontWeight="600"
-                                               Foreground="#9CA3AF"/>
-                                </Border>
-
                                 <!-- Titre -->
                                 <TextBlock Grid.Row="1"
                                            Text="Créer un Examen"
                                            FontSize="20" FontWeight="700"
-                                           Foreground="#6B6B6B"
+                                           Foreground="#1A1A1A"
                                            Margin="0,0,0,10"/>
 
                                 <!-- Description -->
                                 <TextBlock Grid.Row="2"
-                                           Text="Créez un examen formel avec une durée définie, des étudiants autorisés et un contrôle en temps réel."
-                                           FontSize="13" Foreground="#9CA3AF"
+                                           Text="Créez un examen multi-types (QCM, cases à cocher, rédaction, images) à partir de vos cours grâce à Ollama."
+                                           FontSize="13" Foreground="#6B6B6B"
                                            TextWrapping="Wrap"
                                            LineHeight="20"
                                            Margin="0,0,0,28"/>
@@ -405,31 +409,36 @@
                                             Orientation="Horizontal"
                                             Margin="0,0,0,32">
                                     <Border CornerRadius="6" Padding="8,4"
-                                            Background="#F5F4F0" Margin="0,0,6,0">
-                                        <TextBlock Text="Formel" FontSize="10" FontWeight="700"
-                                                   Foreground="#9CA3AF"/>
+                                            Background="#F5F3FF" Margin="0,0,6,0">
+                                        <TextBlock Text="Multi-types" FontSize="10" FontWeight="700"
+                                                   Foreground="#7C3AED"/>
                                     </Border>
                                     <Border CornerRadius="6" Padding="8,4"
-                                            Background="#F5F4F0" Margin="0,0,6,0">
-                                        <TextBlock Text="Durée limitée" FontSize="10" FontWeight="700"
-                                                   Foreground="#9CA3AF"/>
+                                            Background="#F0FDF4" Margin="0,0,6,0">
+                                        <TextBlock Text="IA locale" FontSize="10" FontWeight="700"
+                                                   Foreground="#16A34A"/>
                                     </Border>
                                     <Border CornerRadius="6" Padding="8,4"
-                                            Background="#F5F4F0">
-                                        <TextBlock Text="Temps réel" FontSize="10" FontWeight="700"
-                                                   Foreground="#9CA3AF"/>
+                                            Background="#FFF7ED">
+                                        <TextBlock Text="Ollama" FontSize="10" FontWeight="700"
+                                                   Foreground="#C2410C"/>
                                     </Border>
                                 </StackPanel>
 
-                                <!-- Bouton désactivé -->
+                                <!-- Bouton -->
                                 <Border Grid.Row="4"
                                         CornerRadius="10"
-                                        Background="#E8E7E3"
+                                        Background="#1A1A1A"
                                         Padding="0,14">
-                                    <TextBlock Text="Prochainement"
-                                               FontSize="13" FontWeight="600"
-                                               Foreground="#9CA3AF"
-                                               HorizontalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center">
+                                        <TextBlock Text="Créer un Examen"
+                                                   FontSize="13" FontWeight="600"
+                                                   Foreground="White"/>
+                                        <TextBlock Text=" →"
+                                                   FontSize="13" FontWeight="600"
+                                                   Foreground="#888888"/>
+                                    </StackPanel>
                                 </Border>
                             </Grid>
                         </Border>
