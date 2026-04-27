@@ -13,7 +13,9 @@ namespace smartest_desktop.Data.LocalEntities
 		[Key]
 		public int Id { get; set; }
 
-		public int QuizLocalId { get; set; }
+		public int? QuizLocalId { get; set; }
+
+		public int? ExamenLocalId { get; set; }
 
 		public int Numero { get; set; }
 
@@ -36,9 +38,15 @@ namespace smartest_desktop.Data.LocalEntities
 
 
 		public int? CoursId { get; set; }
-		public string Type { get; set; } = string.Empty;
+
+		/// <summary>QCM | CHECKBOX | REDACTION | IMAGE</summary>
+		public string Type { get; set; } = "QCM";
 		public string Difficulte { get; set; } = "Moyen";
 		public string ReponseModele { get; set; } = string.Empty;
+
+		/// <summary>Réponses correctes pour CHECKBOX — JSON ex: ["A","C"]</summary>
+		public string ReponsesCorrectesJson { get; set; } = string.Empty;
+
 		public string ImageBase64 { get; set; } = string.Empty;
 		public string ImageType { get; set; } = string.Empty;
 		public string ImageNom { get; set; } = string.Empty;
@@ -46,6 +54,9 @@ namespace smartest_desktop.Data.LocalEntities
 		// Navigation properties
 		[ForeignKey(nameof(QuizLocalId))]
 		public QuizLocal? Quiz { get; set; }
+
+		[ForeignKey(nameof(ExamenLocalId))]
+		public ExamenLocal? Examen { get; set; }
 
 		public CoursLocal? Cours { get; set; }
 	}

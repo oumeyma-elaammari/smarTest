@@ -1,94 +1,166 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\",
+  "WorkspaceRootPath": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:smartest-desktop.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\LoginViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\LoginViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizGenerationViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\QuizGenerationViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\OllamaService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\OllamaService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\OllamaService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizGenerationWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ollama_debug.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ollama_debug.txt||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizGenerationWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\LocalCoursService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\LocalCoursService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\Coursviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\Coursviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\Navigationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\Navigationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\Localquizservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\Localquizservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizExamenWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\Dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\Dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\DashboardWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizExamenViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizGenerationViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\QuizGenerationViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizGenerationWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizGenerationWindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizExamenWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Helpers\\EqualityConverter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Helpers\\EqualityConverter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizExamenViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\QuizExamenViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\Localexamenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\Localexamenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizExamenWindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\App.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:App.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Data\\LocalDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizResultWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizResultWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\Resetpasswordwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\Resetpasswordwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\QuizLocal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\LocalEntities\\QuizLocal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\LocalDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\SessionService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\SessionService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\CoursLocal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\LocalEntities\\CoursLocal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\SessionLocale.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\LocalEntities\\SessionLocale.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\ReponseLocale.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\LocalEntities\\ReponseLocale.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\CryptoService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\CryptoService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizResultViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\QuizResultViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\RegisterWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\RegisterWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\QuestionLocal.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\LocalEntities\\QuestionLocal.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\QuizViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\ExamenLocal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Data\\LocalEntities\\ExamenLocal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\ForgotPasswordWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\ForgotPasswordWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\BaseViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\BaseViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\Courswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\Courswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\CoursWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\CoursWindow.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Coursviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\Coursviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\DashboardWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:App.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\Dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\Styles\\Stylesglobal.xaml||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\Styles\\Stylesglobal.xaml||{8B382828-6202-11D1-8870-0000F87579D2}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Helpers\\RelayCommand.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Helpers\\RelayCommand.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizResultWindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizResultWindow.xaml||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\QuizWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\LoginViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\LoginViewModel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\RegisterWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Views\\RegisterWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:ViewModels\\Mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\App.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:App.xaml||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\AuthService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Services\\AuthService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -98,8 +170,61 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 3,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "DashboardWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\DashboardWindow.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml",
+              "RelativeToolTip": "Views\\DashboardWindow.xaml",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-22T07:04:18.244Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ollama_debug.txt",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ollama_debug.txt",
+              "RelativeDocumentMoniker": "ollama_debug.txt",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ollama_debug.txt",
+              "RelativeToolTip": "ollama_debug.txt",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-04-26T12:10:03.367Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LocalCoursService.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\LocalCoursService.cs",
+              "RelativeDocumentMoniker": "Services\\LocalCoursService.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\LocalCoursService.cs",
+              "RelativeToolTip": "Services\\LocalCoursService.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T12:09:49.397Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "OllamaService.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\OllamaService.cs",
+              "RelativeDocumentMoniker": "Services\\OllamaService.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\OllamaService.cs",
+              "RelativeToolTip": "Services\\OllamaService.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-26T12:09:33.992Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
@@ -107,6 +232,22 @@
             {
               "$type": "Bookmark",
               "Name": "ST:1:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{c6f34f0d-7ae5-4f3a-be61-fe0c21ae9eb8}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
             },
             {
               "$type": "Bookmark",
@@ -118,37 +259,7 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "smartest-desktop.csproj",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
-              "RelativeDocumentMoniker": "smartest-desktop.csproj",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
-              "RelativeToolTip": "smartest-desktop.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-04-27T11:59:01.096Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "OllamaService.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\OllamaService.cs",
-              "RelativeDocumentMoniker": "Services\\OllamaService.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\OllamaService.cs",
-              "RelativeToolTip": "Services\\OllamaService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAMMAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-27T11:45:06.001Z",
-              "EditorCaption": ""
+              "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
             },
             {
               "$type": "Document",
@@ -194,120 +305,217 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "QuizGenerationWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml.cs",
               "RelativeDocumentMoniker": "Views\\QuizGenerationWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml.cs",
               "RelativeToolTip": "Views\\QuizGenerationWindow.xaml.cs",
               "ViewState": "AgIAAAUAAAAAAAAAAAAAACsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-26T23:01:19.347Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "QuizGenerationWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml",
-              "RelativeDocumentMoniker": "Views\\QuizGenerationWindow.xaml",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml",
-              "RelativeToolTip": "Views\\QuizGenerationWindow.xaml",
-              "ViewState": "AgIAAEQCAAAAAAAAAAAQwF4CAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-26T22:54:31.872Z"
+              "WhenOpened": "2026-04-22T22:29:26.846Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 7,
-              "Title": "Localquizservice.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\Localquizservice.cs",
-              "RelativeDocumentMoniker": "Services\\Localquizservice.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\Localquizservice.cs",
-              "RelativeToolTip": "Services\\Localquizservice.cs",
-              "ViewState": "AgIAABYAAAAAAAAAAAAIwC0AAAAJAAAAAAAAAA==",
+              "Title": "QuizGenerationWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\QuizGenerationWindow.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizGenerationWindow.xaml",
+              "RelativeToolTip": "Views\\QuizGenerationWindow.xaml",
+              "ViewState": "AgIAALwBAAAAAAAAAAAswOoBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-22T22:29:10.616Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Navigationservice.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\Navigationservice.cs",
+              "RelativeDocumentMoniker": "Services\\Navigationservice.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\Navigationservice.cs",
+              "RelativeToolTip": "Services\\Navigationservice.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADMAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-26T22:37:45.258Z"
+              "WhenOpened": "2026-04-18T20:36:49.984Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "QuizGenerationViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizGenerationViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\QuizGenerationViewModel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizGenerationViewModel.cs",
+              "RelativeToolTip": "ViewModels\\QuizGenerationViewModel.cs",
+              "ViewState": "AgIAAGMCAAAAAAAAAAAswGUCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T22:28:53.118Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 8,
+              "Title": "QuizExamenWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\QuizExamenWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml.cs",
+              "RelativeToolTip": "Views\\QuizExamenWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T22:28:34.543Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "EqualityConverter.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Helpers\\EqualityConverter.cs",
+              "RelativeDocumentMoniker": "Helpers\\EqualityConverter.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Helpers\\EqualityConverter.cs",
+              "RelativeToolTip": "Helpers\\EqualityConverter.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T23:13:26.573Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "QuizExamenViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizExamenViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\QuizExamenViewModel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizExamenViewModel.cs",
+              "RelativeToolTip": "ViewModels\\QuizExamenViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T22:27:36.018Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\App.xaml.cs",
+              "RelativeDocumentMoniker": "App.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\App.xaml.cs",
+              "RelativeToolTip": "App.xaml.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAswDsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T22:49:18.795Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "QuizExamenWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml",
               "RelativeDocumentMoniker": "Views\\QuizExamenWindow.xaml",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizExamenWindow.xaml",
               "RelativeToolTip": "Views\\QuizExamenWindow.xaml",
-              "ViewState": "AgIAAE0AAAAAAAAAAAAQwIwAAAAOAAAAAAAAAA==",
+              "ViewState": "AgIAAI0BAAAAAAAAAAAswKoBAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-22T22:27:58.74Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "QuizWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\QuizWindow.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizWindow.xaml",
+              "RelativeToolTip": "Views\\QuizWindow.xaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
               "WhenOpened": "2026-04-26T20:04:11.432Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "DashboardWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml",
-              "RelativeDocumentMoniker": "Views\\DashboardWindow.xaml",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml",
-              "RelativeToolTip": "Views\\DashboardWindow.xaml",
-              "ViewState": "AgIAALwAAAAAAAAAAAAQwMoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-26T17:29:29.39Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "Dashboardviewmodel.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\Dashboardviewmodel.cs",
-              "RelativeDocumentMoniker": "ViewModels\\Dashboardviewmodel.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\Dashboardviewmodel.cs",
-              "RelativeToolTip": "ViewModels\\Dashboardviewmodel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAwAAAAAAAAAA==",
+              "DocumentIndex": 14,
+              "Title": "QuizResultWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizResultWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\QuizResultWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizResultWindow.xaml.cs",
+              "RelativeToolTip": "Views\\QuizResultWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAswC4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-26T19:58:42.122Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "QuizExamenViewModel.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizExamenViewModel.cs",
-              "RelativeDocumentMoniker": "ViewModels\\QuizExamenViewModel.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizExamenViewModel.cs",
-              "RelativeToolTip": "ViewModels\\QuizExamenViewModel.cs",
-              "ViewState": "AgIAAJwAAAAAAAAAAAAAAMIAAAABAAAAAAAAAA==",
+              "DocumentIndex": 15,
+              "Title": "Resetpasswordwindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\Resetpasswordwindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\Resetpasswordwindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\Resetpasswordwindow.xaml.cs",
+              "RelativeToolTip": "Views\\Resetpasswordwindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-26T22:38:44.877Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "Localexamenservice.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\Localexamenservice.cs",
-              "RelativeDocumentMoniker": "Services\\Localexamenservice.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\Localexamenservice.cs",
-              "RelativeToolTip": "Services\\Localexamenservice.cs",
-              "ViewState": "AgIAABoAAAAAAAAAAADwv0AAAAABAAAAAAAAAA==",
+              "DocumentIndex": 16,
+              "Title": "QuizLocal.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\QuizLocal.cs",
+              "RelativeDocumentMoniker": "Data\\LocalEntities\\QuizLocal.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\QuizLocal.cs",
+              "RelativeToolTip": "Data\\LocalEntities\\QuizLocal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACYAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-26T22:38:09.943Z"
+              "WhenOpened": "2026-04-23T19:35:46.681Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "SessionLocale.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\SessionLocale.cs",
-              "RelativeDocumentMoniker": "Data\\LocalEntities\\SessionLocale.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\SessionLocale.cs",
-              "RelativeToolTip": "Data\\LocalEntities\\SessionLocale.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 17,
+              "Title": "LocalDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\LocalDbContext.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalDbContext.cs",
+              "RelativeToolTip": "Data\\LocalDbContext.cs",
+              "ViewState": "AgIAAFAAAAAAAAAAAAAswH4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T19:39:25.416Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "CoursLocal.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\CoursLocal.cs",
+              "RelativeDocumentMoniker": "Data\\LocalEntities\\CoursLocal.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\CoursLocal.cs",
+              "RelativeToolTip": "Data\\LocalEntities\\CoursLocal.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAAAC8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T19:39:10.354Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "ReponseLocale.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\ReponseLocale.cs",
+              "RelativeDocumentMoniker": "Data\\LocalEntities\\ReponseLocale.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\ReponseLocale.cs",
+              "RelativeToolTip": "Data\\LocalEntities\\ReponseLocale.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T19:39:22.954Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "QuizResultViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizResultViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\QuizResultViewModel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizResultViewModel.cs",
+              "RelativeToolTip": "ViewModels\\QuizResultViewModel.cs",
+              "ViewState": "AgIAAOUAAAAAAAAAAAAcwPwAAABjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-26T20:16:57.338Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "CryptoService.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\CryptoService.cs",
-              "RelativeDocumentMoniker": "Services\\CryptoService.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Services\\CryptoService.cs",
-              "RelativeToolTip": "Services\\CryptoService.cs",
+              "DocumentIndex": 21,
+              "Title": "RegisterWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\RegisterWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\RegisterWindow.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\RegisterWindow.xaml",
+              "RelativeToolTip": "Views\\RegisterWindow.xaml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-26T20:17:37.555Z"
@@ -350,63 +558,219 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "DashboardWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml.cs",
-              "RelativeDocumentMoniker": "Views\\DashboardWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml.cs",
-              "RelativeToolTip": "Views\\DashboardWindow.xaml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "DocumentIndex": 22,
+              "Title": "QuestionLocal.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\QuestionLocal.cs",
+              "RelativeDocumentMoniker": "Data\\LocalEntities\\QuestionLocal.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\QuestionLocal.cs",
+              "RelativeToolTip": "Data\\LocalEntities\\QuestionLocal.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAswDQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-26T17:29:54.966Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 23,
+              "Title": "QuizViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\QuizViewModel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\QuizViewModel.cs",
+              "RelativeToolTip": "ViewModels\\QuizViewModel.cs",
+              "ViewState": "AgIAACkAAAAAAAAAAAAAACcAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T09:53:12.583Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "ExamenLocal.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\ExamenLocal.cs",
+              "RelativeDocumentMoniker": "Data\\LocalEntities\\ExamenLocal.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Data\\LocalEntities\\ExamenLocal.cs",
+              "RelativeToolTip": "Data\\LocalEntities\\ExamenLocal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T19:42:55.543Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "BaseViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\BaseViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\BaseViewModel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\BaseViewModel.cs",
+              "RelativeToolTip": "ViewModels\\BaseViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T19:37:42.223Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "RelayCommand.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Helpers\\RelayCommand.cs",
+              "RelativeDocumentMoniker": "Helpers\\RelayCommand.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Helpers\\RelayCommand.cs",
+              "RelativeToolTip": "Helpers\\RelayCommand.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAwwB4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-23T07:22:03.326Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "QuizResultWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizResultWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\QuizResultWindow.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizResultWindow.xaml",
+              "RelativeToolTip": "Views\\QuizResultWindow.xaml",
+              "ViewState": "AgIAAHYCAAAAAAAAAAAQwIcCAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-22T22:31:34.953Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "LoginViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\LoginViewModel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\LoginViewModel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\LoginViewModel.cs",
+              "RelativeToolTip": "ViewModels\\LoginViewModel.cs",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAAAFwAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T11:08:52.624Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "Courswindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\Courswindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\Courswindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\Courswindow.xaml.cs",
+              "RelativeToolTip": "Views\\Courswindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T07:18:50.64Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "QuizWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\QuizWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\QuizWindow.xaml.cs",
+              "RelativeToolTip": "Views\\QuizWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T07:36:36.921Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "CoursWindow.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\CoursWindow.xaml",
+              "RelativeDocumentMoniker": "Views\\CoursWindow.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\CoursWindow.xaml",
+              "RelativeToolTip": "Views\\CoursWindow.xaml",
+              "ViewState": "AgIAAK0BAAAAAAAAAAAUwNMBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-22T10:19:54.111Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "Coursviewmodel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Coursviewmodel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\Coursviewmodel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Coursviewmodel.cs",
+              "RelativeToolTip": "ViewModels\\Coursviewmodel.cs",
+              "ViewState": "AgIAALYBAAAAAAAAAAAwwNsBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T10:21:55.259Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "DashboardWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\DashboardWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\DashboardWindow.xaml.cs",
+              "RelativeToolTip": "Views\\DashboardWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T18:42:59.882Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "Dashboardviewmodel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Dashboardviewmodel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\Dashboardviewmodel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Dashboardviewmodel.cs",
+              "RelativeToolTip": "ViewModels\\Dashboardviewmodel.cs",
+              "ViewState": "AgIAAJAAAAAAAAAAAAAAALQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-21T23:16:09.582Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "Mainviewmodel.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Mainviewmodel.cs",
+              "RelativeDocumentMoniker": "ViewModels\\Mainviewmodel.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\ViewModels\\Mainviewmodel.cs",
+              "RelativeToolTip": "ViewModels\\Mainviewmodel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAYwBQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-20T20:54:02.436Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
               "Title": "App.xaml",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\App.xaml",
               "RelativeDocumentMoniker": "App.xaml",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\App.xaml",
               "RelativeToolTip": "App.xaml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-26T16:21:16.814Z"
+              "WhenOpened": "2026-04-20T20:29:10.503Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "Stylesglobal.xaml",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\Styles\\Stylesglobal.xaml",
-              "RelativeDocumentMoniker": "Views\\Styles\\Stylesglobal.xaml",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\Views\\Styles\\Stylesglobal.xaml",
-              "RelativeToolTip": "Views\\Styles\\Stylesglobal.xaml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAuAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-26T16:53:58.697Z"
+              "DocumentIndex": 25,
+              "Title": "ForgotPasswordWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\ForgotPasswordWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\ForgotPasswordWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\ForgotPasswordWindow.xaml.cs",
+              "RelativeToolTip": "Views\\ForgotPasswordWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T10:09:49.5Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
-              "Title": "App.xaml",
-              "DocumentMoniker": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml",
-              "RelativeDocumentMoniker": "App.xaml",
-              "ToolTip": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\App.xaml",
-              "RelativeToolTip": "App.xaml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-04-26T16:21:13.095Z"
+              "DocumentIndex": 36,
+              "Title": "RegisterWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\RegisterWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Views\\RegisterWindow.xaml.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Views\\RegisterWindow.xaml.cs",
+              "RelativeToolTip": "Views\\RegisterWindow.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-20T20:58:05.84Z"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:4:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:3:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "AuthService.cs",
+              "DocumentMoniker": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\AuthService.cs",
+              "RelativeDocumentMoniker": "Services\\AuthService.cs",
+              "ToolTip": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\Services\\AuthService.cs",
+              "RelativeToolTip": "Services\\AuthService.cs",
+              "ViewState": "AgIAAN4AAAAAAAAAAAAowN8AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T10:50:14.83Z"
             }
           ]
         },

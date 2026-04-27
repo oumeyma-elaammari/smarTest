@@ -3,9 +3,8 @@
     "",
     "\\Data",
     "\\Services",
-    "\\ViewModels",
     "\\Views"
   ],
-  "SelectedNode": "\\ViewModels\\QuizGenerationViewModel.cs",
+  "SelectedNode": "\\Services\\OllamaService.cs",
   "PreviewInSolutionExplorer": false
 }

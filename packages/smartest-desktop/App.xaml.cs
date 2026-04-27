@@ -1,4 +1,4 @@
-﻿using smartest_desktop.Data;
+using smartest_desktop.Data;
 using System;
 using System.IO;
 using System.Windows;
@@ -26,8 +26,7 @@ namespace smartest_desktop
 
             try
             {
-                LocalDb = new LocalDbContext();
-                LocalDb.Database.EnsureCreated();
+                LocalDb = InitialiserBase();
 
                 ShutdownMode = ShutdownMode.OnLastWindowClose;
 
@@ -63,6 +62,37 @@ namespace smartest_desktop
             }
 
             base.OnStartup(e);
+        }
+
+        /// <summary>
+        /// Initialise la base SQLite. Si le schéma est incompatible avec le modèle actuel
+        /// (par exemple après une migration de colonnes), la base est supprimée et recréée.
+        /// </summary>
+        private static LocalDbContext InitialiserBase()
+        {
+            const string dbPath = "smartest_local.db";
+
+            var ctx = new LocalDbContext();
+            try
+            {
+                ctx.Database.EnsureCreated();
+
+                // Vérification rapide : on lit une ligne de chaque table critique
+                _ = ctx.Examens.Count();
+                _ = ctx.Questions.Count();
+            }
+            catch
+            {
+                // Schéma obsolète — on recrée la base
+                ctx.Dispose();
+                if (File.Exists(dbPath))
+                    File.Delete(dbPath);
+
+                ctx = new LocalDbContext();
+                ctx.Database.EnsureCreated();
+            }
+
+            return ctx;
         }
 
         protected override void OnExit(ExitEventArgs e)

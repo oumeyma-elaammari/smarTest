@@ -59,7 +59,7 @@ namespace smartest_desktop.ViewModels
 
         // ── Events navigation ─────────────────────────────────────
         public event Action? NavigateToQuizGeneration;
-        public event Action? NavigateToExamenCreation;
+        public event Action? NavigateToExamenGeneration;
         public event Action? NavigateToDashboard;
 
         // ── Commands ──────────────────────────────────────────────
@@ -81,8 +81,8 @@ namespace smartest_desktop.ViewModels
             _quizService = new LocalQuizService(App.LocalDb);
             _examenService = new LocalExamenService(App.LocalDb);
 
-            GenererQuizCommand = new RelayCommand(_ => NavigateToQuizGeneration?.Invoke());
-            GenererExamenCommand = new RelayCommand(_ => NavigateToExamenCreation?.Invoke());
+            GenererQuizCommand   = new RelayCommand(_ => NavigateToQuizGeneration?.Invoke());
+            GenererExamenCommand = new RelayCommand(_ => NavigateToExamenGeneration?.Invoke());
             RetourDashboardCommand = new RelayCommand(_ => NavigateToDashboard?.Invoke());
             LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 

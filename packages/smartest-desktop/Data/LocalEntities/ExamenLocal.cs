@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -36,10 +36,10 @@ namespace smartest_desktop.Data.LocalEntities
         public long? BackendId { get; set; }
 
         // ── Relation Many-to-Many avec CoursLocal ────────────────
-        // Un examen peut couvrir PLUSIEURS cours
-        // EF Core crée automatiquement la table :
-        //   examen_local_cours (ExamenLocalId, CoursLocalId)
         public List<CoursLocal> Cours { get; set; } = new();
+
+        // ── Relation One-to-Many avec QuestionLocale ─────────────
+        public List<QuestionLocale> Questions { get; set; } = new();
 
         public override string ToString() => Titre;
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using smartest_desktop.Data.LocalEntities;
 
 namespace smartest_desktop.Data
@@ -58,22 +58,33 @@ namespace smartest_desktop.Data
                 entity.Property(q => q.Difficulte).HasMaxLength(20);
                 entity.Property(q => q.Explication).HasColumnType("TEXT");
 
-                // Réponse modèle — locale uniquement
                 entity.Property(q => q.ReponseModele).HasColumnType("TEXT");
+                entity.Property(q => q.ReponsesCorrectesJson).HasColumnType("TEXT");
 
-                // ── Image Base64 ──────────────────────────────────
-                // Stockée directement dans SQLite
-                // TEXT car Base64 peut être très long
                 entity.Property(q => q.ImageBase64).HasColumnType("TEXT");
                 entity.Property(q => q.ImageType).HasMaxLength(50);
                 entity.Property(q => q.ImageNom).HasMaxLength(255);
 
-                // Relation : Question → Cours (Many-to-One)
+                // Relation : Question → Cours (Many-to-One, optional)
                 entity.HasOne(q => q.Cours)
                       .WithMany(c => c.Questions)
                       .HasForeignKey(q => q.CoursId)
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                // Relation : Question → QuizLocal (Many-to-One, optional)
+                entity.HasOne(q => q.Quiz)
+                      .WithMany(q => q.Questions)
+                      .HasForeignKey(q => q.QuizLocalId)
+                      .IsRequired(false)
                       .OnDelete(DeleteBehavior.Cascade);
-                // ↑ Supprimer cours → supprime ses questions
+
+                // Relation : Question → ExamenLocal (Many-to-One, optional)
+                entity.HasOne(q => q.Examen)
+                      .WithMany(e => e.Questions)
+                      .HasForeignKey(q => q.ExamenLocalId)
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // ── ReponseLocale ─────────────────────────────────────
