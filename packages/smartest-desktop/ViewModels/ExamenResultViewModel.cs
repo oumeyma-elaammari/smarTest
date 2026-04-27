@@ -28,10 +28,7 @@ namespace smartest_desktop.ViewModels
         public int    Duree     { get; }
         public string Difficulte { get; }
 
-        public List<CoursItem> CoursSource { get; }
-
-        public string CoursSourceLabel =>
-            string.Join(", ", CoursSource.Select(c => c.Titre));
+        public string CoursSourceLabel { get; }
 
         // ── Liste de questions ────────────────────────────────────────────────
 
@@ -89,7 +86,7 @@ namespace smartest_desktop.ViewModels
 
         // ── Événements ────────────────────────────────────────────────────────
 
-        public event Action<List<QuestionExamen>, string, int, string, List<CoursItem>>? ExamenValide;
+        public event Action<List<QuestionExamen>, string, int, string, string>? ExamenValide;
         public event Action? NavigationRegenerarRequested;
         public event Action? NavigationRetourRequested;
 
@@ -100,15 +97,15 @@ namespace smartest_desktop.ViewModels
             string titre,
             int    duree,
             string difficulte,
-            List<CoursItem> cours)
+            string coursTitre)
         {
             _db      = App.LocalDb;
             _service = new ExamenLocalService(_db);
 
-            TitreExamen = titre;
-            Duree       = duree;
-            Difficulte  = difficulte;
-            CoursSource = cours;
+            TitreExamen    = titre;
+            Duree          = duree;
+            Difficulte     = difficulte;
+            CoursSourceLabel = coursTitre;
 
             int n = 1;
             foreach (var q in questions)
@@ -276,10 +273,10 @@ namespace smartest_desktop.ViewModels
                     DateCreation = DateTime.Now
                 };
 
-                await _service.SauvegarderAsync(examen, Questions.ToList(), CoursSource);
+                await _service.SauvegarderAsync(examen, Questions.ToList(), CoursSourceLabel);
 
                 ExamenValide?.Invoke(
-                    Questions.ToList(), TitreExamen, Duree, Difficulte, CoursSource);
+                    Questions.ToList(), TitreExamen, Duree, Difficulte, CoursSourceLabel);
             }
             catch (Exception ex)
             {

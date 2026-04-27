@@ -213,9 +213,7 @@
                                                         <Setter Property="Background" Value="#F5F4F0"/>
                                                         <Setter Property="BorderBrush" Value="#C8C7C3"/>
                                                     </Trigger>
-                                                    <DataTrigger Binding="{Binding DataContext.QuestionSelectionnee,
-                                                                           RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                                 Value="{Binding}">
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                                         <Setter Property="Background" Value="#EFF6FF"/>
                                                         <Setter Property="BorderBrush" Value="#3B82F6"/>
                                                     </DataTrigger>

@@ -58,15 +58,5 @@
     "C:\\Users\\asus\\.nuget\\packages\\system.text.json\\8.0.0\\system.text.json.8.0.0.nupkg.sha512",
     "C:\\Users\\asus\\.nuget\\packages\\system.threading.channels\\6.0.0\\system.threading.channels.6.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "message": "Problem reading the cache file C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\obj\\project.nuget.cache : '<' is an invalid start of a property name. Expected a '\"'. Path: $ | LineNumber: 2 | BytePositionInLine: 0.",
-      "projectPath": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\asus\\Desktop\\S4\\PFA\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
-      "targetGraphs": []
-    }
-  ]
+  "logs": []
 }

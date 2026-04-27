@@ -392,99 +392,134 @@
                 </ScrollViewer>
             </Border>
 
-            <!-- ══ COLONNE DROITE — Sélection des cours ══ -->
+            <!-- ══ COLONNE DROITE — Import de cours ══ -->
             <Grid Grid.Column="1" Background="#F8F8F6">
-                <StackPanel Margin="36,32,36,32">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="36,32,36,32">
 
-                    <TextBlock Text="Sélectionner les cours sources"
-                               FontSize="18" FontWeight="700" Foreground="#1A1A1A"
-                               Margin="0,0,0,4"/>
-                    <TextBlock Text="Cliquez sur un cours pour le sélectionner / désélectionner"
-                               FontSize="12" Foreground="#ABABAB" Margin="0,0,0,24"/>
+                        <TextBlock Text="Cours source"
+                                   FontSize="18" FontWeight="700" Foreground="#1A1A1A"
+                                   Margin="0,0,0,4"/>
+                        <TextBlock Text="Importez un fichier PDF, Word ou texte pour générer l'examen"
+                                   FontSize="12" Foreground="#ABABAB" Margin="0,0,0,24"/>
 
-                    <!-- Indicateur sélection -->
-                    <Border Background="#F0F9FF" CornerRadius="8" Padding="14,10"
-                            Margin="0,0,0,20"
-                            Visibility="{Binding HasCoursSelectionne, Converter={StaticResource BoolToVis}}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="✅ " FontSize="13"/>
-                            <TextBlock FontSize="12" Foreground="#0369A1">
-                                <Run Text="{Binding CoursSelectionnes.Count, Mode=OneWay}"/>
-                                <Run Text=" cours sélectionné(s)"/>
-                            </TextBlock>
-                        </StackPanel>
-                    </Border>
+                        <!-- Zone d'import (visible si pas de cours) -->
+                        <Border CornerRadius="14" BorderThickness="2" Padding="32,40"
+                                Margin="0,0,0,20"
+                                Visibility="{Binding HasNoCours, Converter={StaticResource BoolToVis}}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="White"/>
+                                    <Setter Property="BorderBrush" Value="#E8E7E3"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#FAFAF9"/>
+                                            <Setter Property="BorderBrush" Value="#7C3AED"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding ImporterFichierCommand}"/>
+                            </Border.InputBindings>
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="📄" FontSize="40"
+                                           HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                                <TextBlock Text="Cliquez pour importer un cours"
+                                           FontSize="14" FontWeight="600" Foreground="#1A1A1A"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="PDF · Word (DOCX) · Texte (TXT)"
+                                           FontSize="12" Foreground="#9CA3AF"
+                                           HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
 
-                    <!-- Liste des cours -->
-                    <ItemsControl ItemsSource="{Binding CoursDisponibles}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="0,0,0,10" CornerRadius="12"
-                                        Padding="18,16" Cursor="Hand"
-                                        BorderThickness="2">
+                        <!-- Cours importé (visible si cours chargé) -->
+                        <Border Background="White" CornerRadius="12" BorderBrush="#A78BFA"
+                                BorderThickness="2" Padding="20,16" Margin="0,0,0,16"
+                                Visibility="{Binding HasCours, Converter={StaticResource BoolToVis}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Icône type -->
+                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="10"
+                                        Background="#F5F3FF" Margin="0,0,14,0">
+                                    <TextBlock Text="📄" FontSize="20"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Info fichier -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TitreCours}"
+                                               FontSize="14" FontWeight="700" Foreground="#1A1A1A"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <Border CornerRadius="4" Padding="6,2"
+                                                Background="#F5F3FF" Margin="0,0,8,0">
+                                            <TextBlock Text="{Binding TypeFichier}"
+                                                       FontSize="10" FontWeight="700"
+                                                       Foreground="#7C3AED"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding NombreCaracteres}"
+                                                   FontSize="11" Foreground="#9CA3AF"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Bouton supprimer -->
+                                <Border Grid.Column="2" Width="32" Height="32" CornerRadius="8"
+                                        Background="#FEF2F2" Cursor="Hand"
+                                        VerticalAlignment="Center">
                                     <Border.InputBindings>
                                         <MouseBinding MouseAction="LeftClick"
-                                                      Command="{Binding DataContext.ToggleCoursCommand,
-                                                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                      CommandParameter="{Binding}"/>
+                                                      Command="{Binding EffacerContenuCommand}"/>
                                     </Border.InputBindings>
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="White"/>
-                                            <Setter Property="BorderBrush" Value="#E8E7E3"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding EstSelectionne}" Value="True">
-                                                    <Setter Property="Background" Value="#F5F3FF"/>
-                                                    <Setter Property="BorderBrush" Value="#A78BFA"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Titre}"
-                                                       FontSize="13" FontWeight="600"
-                                                       Foreground="#1A1A1A"/>
-                                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                                <Border CornerRadius="4" Padding="6,2"
-                                                        Background="#F5F4F0" Margin="0,0,6,0">
-                                                    <TextBlock Text="{Binding TypeFichier}"
-                                                               FontSize="10" FontWeight="600"
-                                                               Foreground="#6B6B6B"/>
-                                                </Border>
-                                                <TextBlock Text="{Binding DateImport, StringFormat='dd/MM/yyyy'}"
-                                                           FontSize="11" Foreground="#9CA3AF"
-                                                           VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="✓"
-                                                   FontSize="20" FontWeight="700"
-                                                   Foreground="#7C3AED"
-                                                   VerticalAlignment="Center"
-                                                   Visibility="{Binding EstSelectionne,
-                                                                Converter={StaticResource BoolToVis}}"/>
-                                    </Grid>
+                                    <TextBlock Text="✕" FontSize="13" FontWeight="700"
+                                               Foreground="#DC2626"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
                                 </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                            </Grid>
+                        </Border>
 
-                    <!-- Vide -->
-                    <StackPanel HorizontalAlignment="Center" Margin="0,40,0,0">
-                        <TextBlock Text="Aucun cours importé"
-                                   FontSize="14" Foreground="#ABABAB"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="Importez des cours depuis la section Mes cours"
-                                   FontSize="12" Foreground="#CACACA"
-                                   HorizontalAlignment="Center" Margin="0,6,0,0"/>
+                        <!-- Bouton "Changer de fichier" (quand cours déjà chargé) -->
+                        <Border CornerRadius="10" Padding="16,11" Cursor="Hand"
+                                Background="#F5F4F0" BorderBrush="#E8E7E3" BorderThickness="1"
+                                Margin="0,0,0,24"
+                                Visibility="{Binding HasCours, Converter={StaticResource BoolToVis}}">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding ImporterFichierCommand}"/>
+                            </Border.InputBindings>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="📂" FontSize="13" Margin="0,0,8,0"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="Changer de fichier"
+                                           FontSize="13" FontWeight="600" Foreground="#1A1A1A"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Aperçu du contenu -->
+                        <Border Visibility="{Binding HasCours, Converter={StaticResource BoolToVis}}"
+                                Background="White" CornerRadius="12" BorderBrush="#E8E7E3"
+                                BorderThickness="1" Padding="16,14">
+                            <StackPanel>
+                                <TextBlock Text="APERÇU DU CONTENU" FontSize="10" FontWeight="700"
+                                           Foreground="#9CA3AF" Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding ContenuCours}"
+                                           FontSize="11" Foreground="#6B6B6B"
+                                           TextWrapping="Wrap" MaxHeight="200"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
-
-                </StackPanel>
+                </ScrollViewer>
             </Grid>
 
         </Grid>

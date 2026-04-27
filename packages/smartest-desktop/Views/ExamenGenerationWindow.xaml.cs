@@ -12,12 +12,12 @@ namespace smartest_desktop.Views
             var vm = new ExamenGenerationViewModel();
             DataContext = vm;
 
-            vm.ExamenGenereAvecSucces += (questions, titre, duree, difficulte, cours) =>
+            vm.ExamenGenereAvecSucces += (questions, titre, duree, difficulte, coursTitre) =>
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     var resultWindow = new ExamenResultWindow(
-                        questions, titre, duree, difficulte, cours);
+                        questions, titre, duree, difficulte, coursTitre);
                     resultWindow.Show();
 
                     if (this.IsVisible)

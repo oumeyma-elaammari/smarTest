@@ -11,11 +11,11 @@ namespace smartest_desktop.Views
             string titre,
             int duree,
             string difficulte,
-            List<CoursItem> cours)
+            string coursTitre)
         {
             InitializeComponent();
 
-            var vm = new ExamenResultViewModel(questions, titre, duree, difficulte, cours);
+            var vm = new ExamenResultViewModel(questions, titre, duree, difficulte, coursTitre);
             DataContext = vm;
 
             vm.NavigationRetourRequested += () =>
@@ -32,7 +32,7 @@ namespace smartest_desktop.Views
                 this.Close();
             };
 
-            vm.ExamenValide += (_, titreExamen, _, _, _) =>
+            vm.ExamenValide += (_, titreExamen, _, _, coursTitre) =>
             {
                 MessageBox.Show(
                     $"✅ L'examen \"{titreExamen}\" a été sauvegardé avec succès !",

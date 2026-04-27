@@ -46,8 +46,15 @@ namespace smartest_desktop.ViewModels
             get => _isEditing;
             set { SetProperty(ref _isEditing, value); OnPropertyChanged(nameof(IsNotEditing)); }
         }
-
         public bool IsNotEditing => !_isEditing;
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
         public int Numero { get; set; }
     }
 
@@ -379,8 +386,9 @@ namespace smartest_desktop.ViewModels
                 await Task.Delay(300, token);
 
                 string contenu = ContenuCours;
-                int limite = NombreQuestions <= 3 ? 1500 :
-                             NombreQuestions <= 5 ? 2500 : 4000;
+                int limite = NombreQuestions <= 3  ? 1500 :
+                             NombreQuestions <= 5  ? 2500 :
+                             NombreQuestions <= 10 ? 4000 : 6000;
                 if (contenu.Length > limite) contenu = contenu[..limite];
 
                 StatusMessage = $"🧠 Génération ({NombreQuestions} questions, niveau {Difficulte})...";
@@ -397,9 +405,15 @@ namespace smartest_desktop.ViewModels
                 var questions = ParseQCM(reponse);
 
                 if (questions.Count == 0)
+                {
+                    string apercu = reponse.Length > 250
+                        ? reponse[..250].Replace("\n", " ") + "…"
+                        : reponse.Replace("\n", " ");
                     throw new Exception(
                         "Le modèle n'a pas produit de JSON valide.\n\n" +
-                        "Conseil : réduisez le nombre de questions ou raccourcissez le texte.");
+                        $"Réponse reçue :\n{apercu}\n\n" +
+                        "Conseil : réduisez le nombre de questions ou essayez un autre modèle (ex : mistral).");
+                }
 
                 string titre = string.IsNullOrWhiteSpace(TitreQuiz)
                     ? $"Quiz — {TitreCours}"
@@ -441,7 +455,7 @@ namespace smartest_desktop.ViewModels
                 model = modele,
                 prompt,
                 stream = true,
-                options = new { temperature = 0.1, num_predict = 2048, num_ctx = 4096, top_k = 5, top_p = 0.3 }
+                options = new { temperature = 0.2, num_predict = 8192, num_ctx = 8192, top_k = 40, top_p = 0.9 }
             };
 
             var req = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate")
@@ -551,24 +565,23 @@ namespace smartest_desktop.ViewModels
         // ── Prompt ────────────────────────────────────────────────────────────
 
         private string BuildPrompt(string contenu) =>
-$@"Tu es un générateur de QCM. Réponds UNIQUEMENT avec un tableau JSON, sans aucun texte avant ou après.
+$@"You are a JSON quiz generator. Respond with ONLY a valid JSON array. No explanations. No markdown. No extra text.
 
-Génère exactement {NombreQuestions} questions QCM en français. Niveau de difficulté : {Difficulte}.
+Generate exactly {NombreQuestions} multiple-choice quiz questions in FRENCH. Difficulty: {Difficulte}.
 
-Texte source :
+Source text:
 {contenu}
 
-FORMAT JSON OBLIGATOIRE — commence par [ et termine par ] :
+REQUIRED OUTPUT FORMAT (respond with ONLY this, starting with [ ):
 [
-  {{""enonce"":""Question ?"",""optionA"":""Réponse A"",""optionB"":""Réponse B"",""optionC"":""Réponse C"",""optionD"":""Réponse D"",""reponseCorrecte"":""A"",""explication"":""Explication courte""}}
+{{""enonce"":""Question en français ?"",""optionA"":""Réponse A"",""optionB"":""Réponse B"",""optionC"":""Réponse C"",""optionD"":""Réponse D"",""reponseCorrecte"":""A"",""explication"":""Courte explication""}}
 ]
 
-RÈGLES ABSOLUES :
-- Commence DIRECTEMENT par le caractère [
-- Termine DIRECTEMENT par le caractère ]
-- Pas de ```json, pas d'introduction, pas de conclusion
-- reponseCorrecte doit être exactement A, B, C ou D
-- Génère exactement {NombreQuestions} objets dans le tableau";
+MANDATORY RULES:
+- Your entire response must start with [ and end with ]
+- Do NOT write anything before [ or after ]
+- reponseCorrecte MUST be exactly one of: A, B, C or D
+- Generate EXACTLY {NombreQuestions} question objects in the array";
 
         // ── Parser JSON robuste ───────────────────────────────────────────────
 
@@ -577,24 +590,24 @@ RÈGLES ABSOLUES :
             var questions = new List<QuestionQCM>();
             try
             {
-                // Supprimer les balises ```json``` que certains modèles ajoutent
+                // 1. Supprimer les balises markdown
                 texte = Regex.Replace(texte, @"```json|```", "", RegexOptions.IgnoreCase).Trim();
 
-                int debut = texte.IndexOf('[');
-                int fin = texte.LastIndexOf(']');
-
-                if (debut == -1 || fin == -1 || fin <= debut)
+                // 2. Extraire le tableau JSON (gérer {"questions":[...]} wrapper)
+                string jsonPart = ExtraireTableau(texte);
+                if (string.IsNullOrEmpty(jsonPart))
                 {
                     System.Diagnostics.Debug.WriteLine("[ParseQCM] Aucun tableau JSON trouvé.");
                     return questions;
                 }
 
-                string jsonPart = texte[debut..(fin + 1)].Replace("\r", "").Replace("\t", " ");
+                // 3. Nettoyer les virgules finales
+                jsonPart = Regex.Replace(jsonPart, @",\s*([}\]])", "$1");
 
-                // Tentative 1 : parse direct
+                // 4. Tentative parse direct
                 var items = TryDeserialize(jsonPart);
 
-                // Tentative 2 : réparer JSON tronqué
+                // 5. Tentative parse sur JSON tronqué
                 if (items == null)
                 {
                     int dernierObjet = jsonPart.LastIndexOf('}');
@@ -613,16 +626,54 @@ RÈGLES ABSOLUES :
                 {
                     try
                     {
+                        string enonce = StrAlt(item,
+                            "enonce", "question", "text", "texte", "questionText", "enoncé");
+
+                        string optA = StrAlt(item, "optionA", "option_a", "a", "choiceA");
+                        string optB = StrAlt(item, "optionB", "option_b", "b", "choiceB");
+                        string optC = StrAlt(item, "optionC", "option_c", "c", "choiceC");
+                        string optD = StrAlt(item, "optionD", "option_d", "d", "choiceD");
+
+                        // Certains modèles donnent "options": ["...", "...", "...", "..."]
+                        if (string.IsNullOrWhiteSpace(optA))
+                        {
+                            var opts = ExtraireOptions(item);
+                            if (opts.Count >= 2) { optA = opts[0]; optB = opts[1]; }
+                            if (opts.Count >= 3) optC = opts[2];
+                            if (opts.Count >= 4) optD = opts[3];
+                        }
+
+                        string rep = StrAlt(item,
+                            "reponseCorrecte", "reponse_correcte", "answer", "correct_answer",
+                            "correctAnswer", "correct", "bonne_reponse", "bonneReponse",
+                            "reponse", "response");
+                        rep = rep.ToUpper().Trim();
+
+                        // Certains modèles retournent la lettre seule "a" ou "1"
+                        if (rep == "1") rep = "A";
+                        else if (rep == "2") rep = "B";
+                        else if (rep == "3") rep = "C";
+                        else if (rep == "4") rep = "D";
+                        else if (rep.Length > 1 && !string.IsNullOrWhiteSpace(rep))
+                        {
+                            // ex: "A)" ou "A." ou "Option A"
+                            rep = rep[0].ToString();
+                        }
+
+                        string explication = StrAlt(item,
+                            "explication", "explanation", "justification",
+                            "rationale", "reason", "expl");
+
                         var q = new QuestionQCM
                         {
-                            Numero = n++,
-                            Enonce = Str(item, "enonce"),
-                            OptionA = Str(item, "optionA"),
-                            OptionB = Str(item, "optionB"),
-                            OptionC = Str(item, "optionC"),
-                            OptionD = Str(item, "optionD"),
-                            ReponseCorrecte = Str(item, "reponseCorrecte").ToUpper().Trim(),
-                            Explication = Str(item, "explication")
+                            Numero          = n++,
+                            Enonce          = enonce,
+                            OptionA         = optA,
+                            OptionB         = optB,
+                            OptionC         = optC,
+                            OptionD         = optD,
+                            ReponseCorrecte = rep,
+                            Explication     = explication
                         };
 
                         if (!string.IsNullOrWhiteSpace(q.Enonce) &&
@@ -644,6 +695,98 @@ RÈGLES ABSOLUES :
             return questions;
         }
 
+        /// <summary>
+        /// Extrait le tableau JSON depuis la réponse brute d'Ollama.
+        /// Gère : tableau direct [...], objet wrapper {"questions":[...]},
+        /// objet seul {...} (enveloppé automatiquement), et JSON tronqué.
+        /// </summary>
+        private static string ExtraireTableau(string texte)
+        {
+            int objDebut = texte.IndexOf('{');
+            int arrDebut = texte.IndexOf('[');
+
+            // Cas 1 : La réponse commence par un objet JSON (avant tout tableau)
+            if (objDebut != -1 && (arrDebut == -1 || objDebut < arrDebut))
+            {
+                int objFin = texte.LastIndexOf('}');
+                if (objFin > objDebut)
+                {
+                    try
+                    {
+                        string objText = texte[objDebut..(objFin + 1)];
+                        using var doc = JsonDocument.Parse(objText);
+
+                        // Chercher une propriété tableau à l'intérieur (ex. {"questions":[...]})
+                        foreach (var prop in doc.RootElement.EnumerateObject())
+                        {
+                            if (prop.Value.ValueKind == JsonValueKind.Array)
+                                return prop.Value.GetRawText();
+                        }
+
+                        // Aucune propriété tableau trouvée → l'objet EST une question → l'emballer
+                        return "[" + objText + "]";
+                    }
+                    catch { }
+
+                    // JSON invalide mais on a des accolades : tenter de récupérer tous les objets
+                    var objets = ExtraireObjetsJSON(texte, objDebut);
+                    if (objets.Count > 0)
+                        return "[" + string.Join(",", objets) + "]";
+                }
+            }
+
+            // Cas 2 : La réponse contient un tableau [...] (format attendu)
+            if (arrDebut == -1) return string.Empty;
+            int arrFin = texte.LastIndexOf(']');
+
+            if (arrFin > arrDebut)
+                return texte[arrDebut..(arrFin + 1)].Replace("\r", "").Replace("\t", " ");
+
+            // Cas 3 : Tableau tronqué (pas de ']' final) → récupérer les objets complets
+            var objetsArr = ExtraireObjetsJSON(texte, arrDebut);
+            if (objetsArr.Count > 0)
+                return "[" + string.Join(",", objetsArr) + "]";
+
+            return string.Empty;
+        }
+
+        /// <summary>Extrait tous les objets JSON complets {...} depuis une position de départ.</summary>
+        private static List<string> ExtraireObjetsJSON(string texte, int debut)
+        {
+            var objets = new List<string>();
+            int i = debut;
+            while (i < texte.Length)
+            {
+                int start = texte.IndexOf('{', i);
+                if (start == -1) break;
+
+                int depth = 0;
+                int end = -1;
+                bool inString = false;
+                for (int j = start; j < texte.Length; j++)
+                {
+                    char c = texte[j];
+                    if (c == '"' && (j == 0 || texte[j - 1] != '\\')) inString = !inString;
+                    if (inString) continue;
+                    if (c == '{') depth++;
+                    else if (c == '}') { depth--; if (depth == 0) { end = j; break; } }
+                }
+
+                if (end == -1) break;
+
+                string candidat = texte[start..(end + 1)];
+                try
+                {
+                    JsonDocument.Parse(candidat);
+                    objets.Add(candidat);
+                }
+                catch { }
+
+                i = end + 1;
+            }
+            return objets;
+        }
+
         private static List<JsonElement>? TryDeserialize(string json)
         {
             try
@@ -654,13 +797,45 @@ RÈGLES ABSOLUES :
             catch { return null; }
         }
 
-        private static string Str(JsonElement el, string key)
+        /// <summary>Tente plusieurs noms de champs alternatifs.</summary>
+        private static string StrAlt(JsonElement el, params string[] keys)
         {
-            if (el.TryGetProperty(key, out var p)) return p.GetString() ?? string.Empty;
-            foreach (var prop in el.EnumerateObject())
-                if (string.Equals(prop.Name, key, StringComparison.OrdinalIgnoreCase))
-                    return prop.Value.GetString() ?? string.Empty;
+            foreach (var key in keys)
+            {
+                if (el.TryGetProperty(key, out var p) && p.ValueKind == JsonValueKind.String)
+                    return p.GetString() ?? string.Empty;
+                foreach (var prop in el.EnumerateObject())
+                    if (string.Equals(prop.Name, key, StringComparison.OrdinalIgnoreCase) &&
+                        prop.Value.ValueKind == JsonValueKind.String)
+                        return prop.Value.GetString() ?? string.Empty;
+            }
             return string.Empty;
+        }
+
+        /// <summary>Extrait un tableau "options"/"choices"/"answers" si présent.</summary>
+        private static List<string> ExtraireOptions(JsonElement el)
+        {
+            string[] arrKeys = { "options", "choices", "answers", "propositions" };
+            foreach (var key in arrKeys)
+            {
+                JsonElement arr = default;
+                bool found = false;
+                if (el.TryGetProperty(key, out arr)) found = true;
+                if (!found)
+                    foreach (var prop in el.EnumerateObject())
+                        if (string.Equals(prop.Name, key, StringComparison.OrdinalIgnoreCase) &&
+                            prop.Value.ValueKind == JsonValueKind.Array)
+                        { arr = prop.Value; found = true; break; }
+
+                if (found && arr.ValueKind == JsonValueKind.Array)
+                {
+                    var list = new List<string>();
+                    foreach (var item in arr.EnumerateArray())
+                        list.Add(item.GetString() ?? item.GetRawText());
+                    if (list.Count > 0) return list;
+                }
+            }
+            return new List<string>();
         }
     }
 }
