@@ -1,4 +1,4 @@
-﻿C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\smartest-desktop.exe
+C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\smartest-desktop.exe
 C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\smartest-desktop.dll
 C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\Microsoft.Data.Sqlite.dll
 C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\Microsoft.EntityFrameworkCore.dll
@@ -147,7 +147,6 @@ C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\QuizGenerationWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\QuizResultWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.g.resources
-C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\styles\AuthStyles.baml
 C:\Users\pc\Desktop\pfaa\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.csproj.AssemblyReference.cache
 C:\Users\pc\Desktop\pfaa\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\MainWindow.baml
 C:\Users\pc\Desktop\pfaa\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\EmailVerificationWindow.baml
@@ -473,3 +472,7 @@ C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ExamenResultWindow.g.cs
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ExamenGenerationWindow.g.cs
 C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ExamenGenerationWindow.baml
+C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\Styles\Stylesglobal.baml
+C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.dll
+C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\refint\smartest-desktop.dll
+C:\Users\asus\Desktop\S4\PFA\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\smartest-desktop.pdb
