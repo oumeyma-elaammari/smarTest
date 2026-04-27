@@ -42,7 +42,16 @@ namespace smartest_desktop.ViewModels
                 if (_questionSelectionnee?.IsEditing == true)
                     AnnulerEditionInterne();
 
+                // Désélectionner l'ancienne
+                if (_questionSelectionnee != null)
+                    _questionSelectionnee.IsSelected = false;
+
                 SetProperty(ref _questionSelectionnee, value);
+
+                // Sélectionner la nouvelle
+                if (_questionSelectionnee != null)
+                    _questionSelectionnee.IsSelected = true;
+
                 OnPropertyChanged(nameof(HasQuestionSelectionnee));
                 OnPropertyChanged(nameof(HasNoQuestionSelectionnee));
                 RefreshEditionCommands();

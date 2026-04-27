@@ -1,4 +1,8 @@
+using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.ViewModels;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 
 namespace smartest_desktop.Views
@@ -14,34 +18,84 @@ namespace smartest_desktop.Views
 
             vm.NavigationRetourRequested += () =>
             {
-                var hub = new QuizExamenWindow();
-                hub.Show();
-                this.Close();
+                Dispatcher.Invoke(() =>
+                {
+                    var hub = new QuizExamenWindow();
+                    hub.Show();
+                    Close();
+                });
             };
 
             vm.NavigationRegenerarRequested += () =>
             {
-                var quizGen = new QuizGenerationWindow();
-                quizGen.Show();
-                this.Close();
+                Dispatcher.Invoke(() =>
+                {
+                    var quizGen = new QuizGenerationWindow();
+                    quizGen.Show();
+                    Close();
+                });
             };
 
-            vm.QuizValide += (questionsValidees, titreQuiz, difficulteQuiz, coursTitreQuiz, statutQuiz) =>
+            vm.QuizValide += async (questionsValidees, titreQuiz, difficulteQuiz, coursTitreQuiz, statutQuiz) =>
             {
-                MessageBox.Show(
-                    $"✅ Le quiz \"{titreQuiz}\" a été validé avec succès !\n\n" +
-                    $"{questionsValidees.Count} questions sauvegardées.\n" +
-                    $"• Difficulté : {difficulteQuiz}\n" +
-                    $"• Cours : {coursTitreQuiz}\n" +
-                    $"• Statut : {statutQuiz}\n\n" +
-                    $"Vous pouvez maintenant le publier pour vos étudiants.",
-                    "Quiz validé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                try
+                {
+                    var db = App.LocalDb;
 
-                var dashboard = new DashboardWindow();
-                dashboard.Show();
-                this.Close();
+                    var questionsDb = questionsValidees.Select((q, idx) => new QuestionLocale
+                    {
+                        Numero          = idx + 1,
+                        Type            = "QCM",
+                        Enonce          = q.Enonce,
+                        OptionA         = q.OptionA,
+                        OptionB         = q.OptionB,
+                        OptionC         = q.OptionC,
+                        OptionD         = q.OptionD,
+                        ReponseCorrecte = q.ReponseCorrecte,
+                        Explication     = q.Explication,
+                        Difficulte      = difficulteQuiz
+                    }).ToList();
+
+                    var quiz = new QuizLocal
+                    {
+                        Titre             = titreQuiz,
+                        Difficulte        = difficulteQuiz,
+                        CoursSourceTitre  = coursTitreQuiz ?? string.Empty,
+                        Statut            = statutQuiz,
+                        NombreQuestions   = questionsValidees.Count,
+                        DateCreation      = DateTime.Now,
+                        Questions         = questionsDb
+                    };
+
+                    db.Quiz.Add(quiz);
+                    await db.SaveChangesAsync();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show(
+                            $"✅ Le quiz \"{titreQuiz}\" a été sauvegardé !\n\n" +
+                            $"• {questionsValidees.Count} questions\n" +
+                            $"• Difficulté : {difficulteQuiz}\n" +
+                            $"• Cours : {coursTitreQuiz}\n" +
+                            $"• Statut : {statutQuiz}",
+                            "Quiz sauvegardé",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+
+                        var dashboard = new DashboardWindow();
+                        dashboard.Show();
+                        Close();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Dispatcher.Invoke(() =>
+                        MessageBox.Show(
+                            $"Erreur lors de la sauvegarde :\n{ex.Message}",
+                            "Erreur",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error));
+                }
             };
         }
     }

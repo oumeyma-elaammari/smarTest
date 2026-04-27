@@ -1,12 +1,16 @@
+using DocumentFormat.OpenXml.Packaging;
+using Microsoft.Win32;
 using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace smartest_desktop.ViewModels
@@ -17,13 +21,60 @@ namespace smartest_desktop.ViewModels
         private readonly OllamaService  _ollama = new();
         private CancellationTokenSource? _cts;
 
-        // ── Cours ─────────────────────────────────────────────────────────────
+        // ── Fichier importé ───────────────────────────────────────────────────
 
-        public ObservableCollection<CoursItem> CoursDisponibles { get; } = new();
+        private string _titreCours = string.Empty;
+        public string TitreCours
+        {
+            get => _titreCours;
+            set
+            {
+                SetProperty(ref _titreCours, value);
+                OnPropertyChanged(nameof(HasCours));
+                ((RelayCommand)GenererCommand).RaiseCanExecuteChanged();
+            }
+        }
 
-        public ObservableCollection<CoursItem> CoursSelectionnes { get; } = new();
+        private string _contenuCours = string.Empty;
+        public string ContenuCours
+        {
+            get => _contenuCours;
+            set
+            {
+                SetProperty(ref _contenuCours, value);
+                OnPropertyChanged(nameof(HasCours));
+                OnPropertyChanged(nameof(HasNoCours));
+                OnPropertyChanged(nameof(NombreCaracteres));
+                ((RelayCommand)GenererCommand).RaiseCanExecuteChanged();
+            }
+        }
 
-        public bool HasCoursSelectionne => CoursSelectionnes.Count > 0;
+        private string _nomFichier = string.Empty;
+        public string NomFichier
+        {
+            get => _nomFichier;
+            set => SetProperty(ref _nomFichier, value);
+        }
+
+        private string _typeFichier = string.Empty;
+        public string TypeFichier
+        {
+            get => _typeFichier;
+            set => SetProperty(ref _typeFichier, value);
+        }
+
+        private bool _isImporting;
+        public bool IsImporting
+        {
+            get => _isImporting;
+            set { SetProperty(ref _isImporting, value); OnPropertyChanged(nameof(IsNotImporting)); }
+        }
+        public bool IsNotImporting => !_isImporting;
+
+        public bool HasCours    => !string.IsNullOrWhiteSpace(ContenuCours);
+        public bool HasNoCours  => !HasCours;
+        public string NombreCaracteres =>
+            HasCours ? $"{ContenuCours.Length:N0} caractères" : string.Empty;
 
         // ── Paramètres de l'examen ────────────────────────────────────────────
 
@@ -129,7 +180,8 @@ namespace smartest_desktop.ViewModels
         public ICommand AnnulerGenerationCommand { get; }
         public ICommand AnnulerCommand           { get; }
         public ICommand SetDifficulteCommand     { get; }
-        public ICommand ToggleCoursCommand       { get; }
+        public ICommand ImporterFichierCommand   { get; }
+        public ICommand EffacerContenuCommand    { get; }
         public ICommand IncrQCMCommand           { get; }
         public ICommand DecrQCMCommand           { get; }
         public ICommand IncrCheckboxCommand      { get; }
@@ -139,7 +191,7 @@ namespace smartest_desktop.ViewModels
 
         // ── Événements de navigation ──────────────────────────────────────────
 
-        public event Action<List<QuestionExamen>, string, int, string, List<CoursItem>>? ExamenGenereAvecSucces;
+        public event Action<List<QuestionExamen>, string, int, string, string>? ExamenGenereAvecSucces;
         public event Action? NavigationAnnulee;
 
         // ── Constructeur ──────────────────────────────────────────────────────
@@ -153,24 +205,25 @@ namespace smartest_desktop.ViewModels
                 if (p is string d) Difficulte = d;
             });
 
-            ToggleCoursCommand = new RelayCommand(p =>
-            {
-                if (p is not CoursItem item) return;
+            ImporterFichierCommand = new RelayCommand(
+                async _ => await ImporterFichierAsync(),
+                _ => !IsImporting && !IsGenerating);
 
-                if (CoursSelectionnes.Contains(item))
+            EffacerContenuCommand = new RelayCommand(
+                _ =>
                 {
-                    CoursSelectionnes.Remove(item);
-                    item.EstSelectionne = false;
-                }
-                else
-                {
-                    CoursSelectionnes.Add(item);
-                    item.EstSelectionne = true;
-                }
-
-                OnPropertyChanged(nameof(HasCoursSelectionne));
-                ((RelayCommand)GenererCommand).RaiseCanExecuteChanged();
-            });
+                    var res = MessageBox.Show(
+                        "Effacer le contenu importé ?",
+                        "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (res != MessageBoxResult.Yes) return;
+                    ContenuCours = string.Empty;
+                    TitreCours   = string.Empty;
+                    NomFichier   = string.Empty;
+                    TypeFichier  = string.Empty;
+                    if (string.IsNullOrWhiteSpace(TitreExamen))
+                        TitreExamen = string.Empty;
+                },
+                _ => HasCours && !IsGenerating);
 
             IncrQCMCommand       = new RelayCommand(_ => NbQCM++);
             DecrQCMCommand       = new RelayCommand(_ => NbQCM--);
@@ -181,7 +234,7 @@ namespace smartest_desktop.ViewModels
 
             GenererCommand = new RelayCommand(
                 async _ => await GenererExamen(),
-                _ => HasCoursSelectionne && TotalQuestions > 0 && IsNotGenerating);
+                _ => HasCours && TotalQuestions > 0 && IsNotGenerating);
 
             AnnulerGenerationCommand = new RelayCommand(
                 _ =>
@@ -198,25 +251,88 @@ namespace smartest_desktop.ViewModels
                 _cts?.Cancel();
                 NavigationAnnulee?.Invoke();
             });
-
-            _ = ChargerCours();
         }
 
-        // ── Chargement des cours ──────────────────────────────────────────────
+        // ── Import de fichier ─────────────────────────────────────────────────
 
-        private async Task ChargerCours()
+        private async Task ImporterFichierAsync()
         {
+            var dlg = new OpenFileDialog
+            {
+                Title  = "Importer un cours",
+                Filter = "Fichiers supportés (*.pdf;*.docx;*.txt)|*.pdf;*.docx;*.txt" +
+                         "|PDF (*.pdf)|*.pdf|Word (*.docx)|*.docx|Texte (*.txt)|*.txt",
+                Multiselect = false
+            };
+
+            if (dlg.ShowDialog() != true) return;
+
+            string chemin    = dlg.FileName;
+            string extension = Path.GetExtension(chemin).ToLowerInvariant();
+
+            IsImporting   = true;
+            ErrorMessage  = string.Empty;
+            StatusMessage = "📂 Extraction du contenu en cours...";
+
             try
             {
-                var liste = await Task.Run(() => _db.Cours.ToList());
-                CoursDisponibles.Clear();
-                foreach (var c in liste)
-                    CoursDisponibles.Add(new CoursItem(c));
+                string contenu = await Task.Run(() => ExtraireContenu(chemin, extension));
+
+                if (string.IsNullOrWhiteSpace(contenu))
+                {
+                    ErrorMessage  = "❌ Le fichier est vide ou le contenu n'a pas pu être extrait.";
+                    StatusMessage = string.Empty;
+                    return;
+                }
+
+                NomFichier  = Path.GetFileName(chemin);
+                TypeFichier = extension.TrimStart('.').ToUpperInvariant();
+                TitreCours  = Path.GetFileNameWithoutExtension(chemin);
+
+                if (string.IsNullOrWhiteSpace(TitreExamen))
+                    TitreExamen = $"Examen — {TitreCours}";
+
+                ContenuCours = contenu;
+                StatusMessage = $"✅ Cours importé ({NombreCaracteres})";
+
+                _ = Task.Delay(2500).ContinueWith(_ =>
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        if (!IsGenerating) StatusMessage = string.Empty;
+                    }));
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Erreur chargement cours : {ex.Message}";
+                ErrorMessage  = $"❌ Erreur lors de l'import : {ex.Message}";
+                StatusMessage = string.Empty;
             }
+            finally
+            {
+                IsImporting = false;
+            }
+        }
+
+        private static string ExtraireContenu(string chemin, string extension) => extension switch
+        {
+            ".txt"  => File.ReadAllText(chemin, Encoding.UTF8),
+            ".pdf"  => ExtrairePdf(chemin),
+            ".docx" => ExtraireDocx(chemin),
+            _       => throw new NotSupportedException($"Format non supporté : {extension}")
+        };
+
+        private static string ExtrairePdf(string chemin)
+        {
+            using var doc = UglyToad.PdfPig.PdfDocument.Open(chemin);
+            var sb = new StringBuilder();
+            foreach (var page in doc.GetPages())
+                sb.AppendLine(page.Text);
+            return sb.ToString().Trim();
+        }
+
+        private static string ExtraireDocx(string chemin)
+        {
+            using var wordDoc = WordprocessingDocument.Open(chemin, isEditable: false);
+            return wordDoc.MainDocumentPart?.Document.Body?.InnerText ?? string.Empty;
         }
 
         // ── Génération ────────────────────────────────────────────────────────
@@ -239,18 +355,8 @@ namespace smartest_desktop.ViewModels
                 StatusMessage = $"✅ Modèle : {modele}";
                 await Task.Delay(300, ct);
 
-                // Construire le contenu combiné de tous les cours sélectionnés
-                var contenuBuilder = new StringBuilder();
-                foreach (var ci in CoursSelectionnes)
-                {
-                    contenuBuilder.AppendLine($"=== {ci.Titre} ===");
-                    contenuBuilder.AppendLine(ci.Contenu);
-                    contenuBuilder.AppendLine();
-                }
-
-                string contenu = contenuBuilder.ToString();
-                int limiteContenu = Math.Min(contenu.Length,
-                    TotalQuestions <= 5 ? 3000 : TotalQuestions <= 10 ? 5000 : 7000);
+                string contenu = ContenuCours;
+                int limiteContenu = TotalQuestions <= 5 ? 3000 : TotalQuestions <= 10 ? 5000 : 7000;
                 if (contenu.Length > limiteContenu)
                     contenu = contenu[..limiteContenu];
 
@@ -276,15 +382,14 @@ namespace smartest_desktop.ViewModels
                         "Essayez avec moins de questions ou changez de cours.");
 
                 string titre = string.IsNullOrWhiteSpace(TitreExamen)
-                    ? $"Examen — {string.Join(", ", CoursSelectionnes.Select(c => c.Titre))}"
+                    ? $"Examen — {TitreCours}"
                     : TitreExamen.Trim();
 
                 StatusMessage = $"✅ {questions.Count} questions générées !";
                 await Task.Delay(400, ct);
 
                 ExamenGenereAvecSucces?.Invoke(
-                    questions, titre, Duree, Difficulte,
-                    CoursSelectionnes.ToList());
+                    questions, titre, Duree, Difficulte, TitreCours);
             }
             catch (OperationCanceledException)
             {

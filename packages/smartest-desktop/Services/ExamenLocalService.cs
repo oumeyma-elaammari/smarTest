@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace smartest_desktop.Services
 {
@@ -19,23 +18,15 @@ namespace smartest_desktop.Services
         }
 
         /// <summary>
-        /// Persiste l'examen, ses cours sources et ses questions en base locale.
+        /// Persiste l'examen et ses questions en base locale.
         /// Retourne l'Id de l'examen créé.
         /// </summary>
         public async Task<int> SauvegarderAsync(
             ExamenLocal examen,
             List<QuestionExamen> questions,
-            List<CoursItem> cours)
+            string coursTitre = "")
         {
-            // Attacher les cours sources (Many-to-Many)
             examen.Cours.Clear();
-            foreach (var ci in cours)
-            {
-                var tracked = await _db.Cours.FindAsync(ci.Id);
-                if (tracked != null)
-                    examen.Cours.Add(tracked);
-            }
-
             _db.Examens.Add(examen);
             await _db.SaveChangesAsync();
 

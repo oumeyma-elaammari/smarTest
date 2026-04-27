@@ -33,9 +33,18 @@ namespace smartest_desktop.Services
             var session = _db.SessionsLocales.FirstOrDefault();
             if (session == null) return null;
 
-            // Déchiffrer le token pour utilisation
-            session.TokenChiffre = CryptoService.Dechiffrer(session.TokenChiffre);
-            return session;
+            try
+            {
+                // Déchiffrer le token pour utilisation.
+                session.TokenChiffre = CryptoService.Dechiffrer(session.TokenChiffre);
+                return session;
+            }
+            catch
+            {
+                // Session locale corrompue ou créée avec une ancienne clé : on force une reconnexion.
+                SupprimerSession();
+                return null;
+            }
         }
 
         public void SupprimerSession()
