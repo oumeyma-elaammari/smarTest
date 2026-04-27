@@ -78,15 +78,33 @@ namespace smartest_desktop
                 ctx.Database.EnsureCreated();
 
                 // Vérification rapide : on lit une ligne de chaque table critique
+                _ = ctx.SessionsLocales.Count();
+                _ = ctx.Cours.Count();
+                _ = ctx.Quiz.Count();
                 _ = ctx.Examens.Count();
                 _ = ctx.Questions.Count();
             }
             catch
             {
-                // Schéma obsolète — on recrée la base
-                ctx.Dispose();
-                if (File.Exists(dbPath))
-                    File.Delete(dbPath);
+                // Schéma obsolète — supprimer via EF Core (ferme proprement les connexions SQLite)
+                try
+                {
+                    ctx.Database.EnsureDeleted();
+                }
+                catch
+                {
+                    // Si EF Core ne peut pas supprimer (fichier verrouillé), on force
+                    ctx.Dispose();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+
+                    foreach (var f in new[] { dbPath, dbPath + "-shm", dbPath + "-wal" })
+                        if (File.Exists(f)) File.Delete(f);
+                }
+                finally
+                {
+                    ctx.Dispose();
+                }
 
                 ctx = new LocalDbContext();
                 ctx.Database.EnsureCreated();
