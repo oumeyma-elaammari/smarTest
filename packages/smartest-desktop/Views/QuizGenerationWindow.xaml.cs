@@ -39,6 +39,26 @@ namespace smartest_desktop.Views
                     Close();
                 });
             };
+
+            vm.NavigateToDashboard += () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var dashboard = new DashboardWindow();
+                    dashboard.Show();
+                    Close();
+                });
+            };
+
+            vm.NavigateToLogin += () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var login = new LoginWindow();
+                    login.Show();
+                    Close();
+                });
+            };
         }
     }
 }
