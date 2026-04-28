@@ -57,6 +57,8 @@ namespace smartest_desktop.Services
                 using var doc = JsonDocument.Parse(json);
 
                 string[] preference = {
+                    "qwen3:1.7b", "qwen3",
+                    "gemma2:2b", "gemma2",
                     "phi3:mini", "phi3", "phi",
                     "llama3.2:1b", "llama3.2:3b", "llama3.2",
                     "mistral", "llama3", "llama2",
