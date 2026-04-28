@@ -137,14 +137,6 @@ namespace smartest_desktop.ViewModels
 
         // ── État UI ──────────────────────────────────────────────────────────
 
-        private bool _isEditing;
-        public bool IsEditing
-        {
-            get => _isEditing;
-            set { SetProperty(ref _isEditing, value); OnPropertyChanged(nameof(IsNotEditing)); }
-        }
-        public bool IsNotEditing => !_isEditing;
-
         private bool _isSelected;
         public bool IsSelected
         {

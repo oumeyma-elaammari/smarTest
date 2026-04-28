@@ -41,14 +41,6 @@ namespace smartest_desktop.ViewModels
         private string _explication = string.Empty;
         public string Explication { get => _explication; set => SetProperty(ref _explication, value); }
 
-        private bool _isEditing;
-        public bool IsEditing
-        {
-            get => _isEditing;
-            set { SetProperty(ref _isEditing, value); OnPropertyChanged(nameof(IsNotEditing)); }
-        }
-        public bool IsNotEditing => !_isEditing;
-
         private bool _isSelected;
         public bool IsSelected
         {
