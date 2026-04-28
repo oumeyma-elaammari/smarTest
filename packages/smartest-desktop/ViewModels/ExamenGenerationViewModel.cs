@@ -32,6 +32,13 @@ namespace smartest_desktop.ViewModels
             get => _typeExtension;
             set => SetProperty(ref _typeExtension, value);
         }
+
+        private string _blocContenu = string.Empty;
+        public string BlocContenu
+        {
+            get => _blocContenu;
+            set => SetProperty(ref _blocContenu, value);
+        }
     }
 
     public class ExamenGenerationViewModel : BaseViewModel
@@ -173,6 +180,7 @@ namespace smartest_desktop.ViewModels
                 OnPropertyChanged(nameof(IsNotGenerating));
                 ((RelayCommand)GenererCommand).RaiseCanExecuteChanged();
                 ((RelayCommand)AnnulerGenerationCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)SupprimerFichierImporteCommand).RaiseCanExecuteChanged();
             }
         }
         public bool IsNotGenerating => !_isGenerating;
@@ -215,6 +223,7 @@ namespace smartest_desktop.ViewModels
         public ICommand DecrRedactionCommand     { get; }
         public ICommand RetourDashboardCommand   { get; }
         public ICommand LogoutCommand            { get; }
+        public ICommand SupprimerFichierImporteCommand { get; }
 
         // ── Événements de navigation ──────────────────────────────────────────
 
@@ -254,6 +263,32 @@ namespace smartest_desktop.ViewModels
                         TitreExamen = string.Empty;
                 },
                 _ => HasCours && !IsGenerating);
+
+            SupprimerFichierImporteCommand = new RelayCommand(
+                p =>
+                {
+                    if (p is not FichierCoursImporteItem fichier) return;
+                    if (!FichiersImportes.Contains(fichier)) return;
+
+                    FichiersImportes.Remove(fichier);
+                    RebuildContenuDepuisFichiers();
+                    MettreAJourResumeFichiers();
+
+                    if (FichiersImportes.Count == 0)
+                    {
+                        TitreCours = string.Empty;
+                        NomFichier = string.Empty;
+                        TypeFichier = string.Empty;
+                    }
+
+                    StatusMessage = "🗑 Cours supprimé.";
+                    _ = Task.Delay(1800).ContinueWith(_ =>
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            if (!IsGenerating) StatusMessage = string.Empty;
+                        }));
+                },
+                _ => !IsGenerating && FichiersImportes.Count > 0);
 
             IncrQCMCommand       = new RelayCommand(_ => NbQCM++);
             DecrQCMCommand       = new RelayCommand(_ => NbQCM--);
@@ -396,8 +431,34 @@ namespace smartest_desktop.ViewModels
             FichiersImportes.Add(new FichierCoursImporteItem
             {
                 Titre          = nomSansExt,
-                TypeExtension  = ext
+                TypeExtension  = ext,
+                BlocContenu    = contenuTrim
             });
+        }
+
+        private void RebuildContenuDepuisFichiers()
+        {
+            if (FichiersImportes.Count == 0)
+            {
+                ContenuCours = string.Empty;
+                return;
+            }
+
+            var sb = new StringBuilder();
+            for (int i = 0; i < FichiersImportes.Count; i++)
+            {
+                var item = FichiersImportes[i];
+                if (i > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("────────────────────────────────────────");
+                    sb.AppendLine($"[{item.Titre}.{item.TypeExtension.ToLowerInvariant()}]");
+                    sb.AppendLine("────────────────────────────────────────");
+                    sb.AppendLine();
+                }
+                sb.Append(item.BlocContenu);
+            }
+            ContenuCours = sb.ToString();
         }
 
         private void MettreAJourResumeFichiers()

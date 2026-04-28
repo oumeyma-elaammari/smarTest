@@ -26,6 +26,7 @@ namespace smartest_desktop.Services
         {
             return await _db.Examens
                 .Include(e => e.Cours)
+                .Include(e => e.Questions)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 

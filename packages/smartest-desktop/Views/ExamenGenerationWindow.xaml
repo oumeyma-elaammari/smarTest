@@ -529,11 +529,7 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid Grid.Row="0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ItemsControl Grid.Column="0" ItemsSource="{Binding FichiersImportes}">
+                                    <ItemsControl ItemsSource="{Binding FichiersImportes}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel Orientation="Horizontal"/>
@@ -551,30 +547,23 @@
                                                             <TextBlock Text="{Binding TypeExtension}" FontSize="10"
                                                                        FontWeight="700" Foreground="#0f1e3d"/>
                                                         </Border>
+                                                        <Border Width="20" Height="20" CornerRadius="6"
+                                                                Background="#FEE2E2" Cursor="Hand"
+                                                                Margin="8,0,0,0" VerticalAlignment="Center">
+                                                            <Border.InputBindings>
+                                                                <MouseBinding MouseAction="LeftClick"
+                                                                              Command="{Binding DataContext.SupprimerFichierImporteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                              CommandParameter="{Binding}"/>
+                                                            </Border.InputBindings>
+                                                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                                                       FontSize="9" Foreground="#DC2626"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
                                                     </StackPanel>
                                                 </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                    <Border Grid.Column="1" Width="36" Height="36" CornerRadius="8"
-                                            Background="#FEE2E2" Cursor="Hand" VerticalAlignment="Top"
-                                            HorizontalAlignment="Right" Margin="4,0,0,0">
-                                        <Border.InputBindings>
-                                            <MouseBinding MouseAction="LeftClick" Command="{Binding EffacerContenuCommand}"/>
-                                        </Border.InputBindings>
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#FECACA"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="#DC2626"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
                                 </Grid>
                                 <TextBlock Grid.Row="1" Text="{Binding NombreCaracteres}" FontSize="11"
                                            Foreground="#6b7a99" Margin="0,8,0,0"/>

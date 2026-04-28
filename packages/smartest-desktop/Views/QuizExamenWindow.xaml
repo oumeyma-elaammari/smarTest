@@ -297,7 +297,12 @@
 							<ItemsControl ItemsSource="{Binding Quiz}">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
-										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
+										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1" Cursor="Hand">
+											<Border.InputBindings>
+												<MouseBinding MouseAction="LeftClick"
+															  Command="{Binding DataContext.OuvrirQuizCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+															  CommandParameter="{Binding}"/>
+											</Border.InputBindings>
 											<Grid>
 												<Grid.ColumnDefinitions>
 													<ColumnDefinition Width="*"/>
@@ -431,7 +436,12 @@
 							<ItemsControl ItemsSource="{Binding Examens}">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
-										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
+										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1" Cursor="Hand">
+											<Border.InputBindings>
+												<MouseBinding MouseAction="LeftClick"
+															  Command="{Binding DataContext.OuvrirExamenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+															  CommandParameter="{Binding}"/>
+											</Border.InputBindings>
 											<Grid>
 												<Grid.ColumnDefinitions>
 													<ColumnDefinition Width="*"/>

@@ -44,13 +44,9 @@ namespace smartest_desktop.ViewModels
             get => _questionSelectionnee;
             set
             {
-                if (_questionSelectionnee?.IsEditing == true)
-                    AnnulerEditionInterne();
-
                 SetProperty(ref _questionSelectionnee, value);
                 OnPropertyChanged(nameof(HasQuestion));
                 OnPropertyChanged(nameof(NoQuestion));
-                RefreshEditionCommands();
             }
         }
 
@@ -67,16 +63,9 @@ namespace smartest_desktop.ViewModels
         }
         public bool HasSuccess => !string.IsNullOrEmpty(SuccessMessage);
 
-        // ── Sauvegarde pour annulation d'édition ──────────────────────────────
-
-        private QuestionExamen? _backup;
-
         // ── Commandes ─────────────────────────────────────────────────────────
 
         public ICommand SelectionnerCommand      { get; }
-        public ICommand EditerCommand            { get; }
-        public ICommand SauvegarderEditionCommand { get; }
-        public ICommand AnnulerEditionCommand    { get; }
         public ICommand SupprimerCommand         { get; }
         public ICommand AttacherImageCommand     { get; }
         public ICommand SupprimerImageCommand    { get; }
@@ -114,6 +103,12 @@ namespace smartest_desktop.ViewModels
                 Questions.Add(q);
             }
 
+            if (Questions.Count > 0)
+            {
+                Questions[0].IsSelected = true;
+                QuestionSelectionnee = Questions[0];
+            }
+
             // ── Commandes ────────────────────────────────────────────────────
 
             SelectionnerCommand = new RelayCommand(p =>
@@ -126,31 +121,6 @@ namespace smartest_desktop.ViewModels
                 q.IsSelected = true;
                 QuestionSelectionnee = q;
             });
-
-            EditerCommand = new RelayCommand(
-                _ =>
-                {
-                    if (QuestionSelectionnee == null) return;
-                    _backup = Clone(QuestionSelectionnee);
-                    QuestionSelectionnee.IsEditing = true;
-                    RefreshEditionCommands();
-                },
-                _ => QuestionSelectionnee != null && QuestionSelectionnee.IsNotEditing);
-
-            SauvegarderEditionCommand = new RelayCommand(
-                _ =>
-                {
-                    if (QuestionSelectionnee == null) return;
-                    QuestionSelectionnee.IsEditing = false;
-                    _backup = null;
-                    RefreshEditionCommands();
-                    ShowSuccess("✅ Question modifiée avec succès");
-                },
-                _ => QuestionSelectionnee?.IsEditing == true);
-
-            AnnulerEditionCommand = new RelayCommand(
-                _ => AnnulerEditionInterne(),
-                _ => QuestionSelectionnee?.IsEditing == true);
 
             SupprimerCommand = new RelayCommand(p =>
             {
@@ -248,9 +218,6 @@ namespace smartest_desktop.ViewModels
         {
             if (Questions.Count == 0) return;
 
-            if (QuestionSelectionnee?.IsEditing == true)
-                AnnulerEditionInterne();
-
             var res = MessageBox.Show(
                 $"Valider l'examen \"{TitreExamen}\" ?\n\n" +
                 $"• {Questions.Count} questions\n" +
@@ -287,22 +254,6 @@ namespace smartest_desktop.ViewModels
 
         // ── Helpers ───────────────────────────────────────────────────────────
 
-        private void AnnulerEditionInterne()
-        {
-            if (QuestionSelectionnee == null || _backup == null) return;
-            RestoreFrom(_backup, QuestionSelectionnee);
-            QuestionSelectionnee.IsEditing = false;
-            _backup = null;
-            RefreshEditionCommands();
-        }
-
-        private void RefreshEditionCommands()
-        {
-            ((RelayCommand)EditerCommand).RaiseCanExecuteChanged();
-            ((RelayCommand)SauvegarderEditionCommand).RaiseCanExecuteChanged();
-            ((RelayCommand)AnnulerEditionCommand).RaiseCanExecuteChanged();
-        }
-
         private void Renuméroter()
         {
             int n = 1;
@@ -319,42 +270,5 @@ namespace smartest_desktop.ViewModels
         private static string Tronquer(string t, int max) =>
             t.Length <= max ? t : t[..max] + "…";
 
-        private static QuestionExamen Clone(QuestionExamen src) => new()
-        {
-            Numero            = src.Numero,
-            Type              = src.Type,
-            Enonce            = src.Enonce,
-            Difficulte        = src.Difficulte,
-            Explication       = src.Explication,
-            OptionA           = src.OptionA,
-            OptionB           = src.OptionB,
-            OptionC           = src.OptionC,
-            OptionD           = src.OptionD,
-            ReponseCorrecte   = src.ReponseCorrecte,
-            OptionACorrecte   = src.OptionACorrecte,
-            OptionBCorrecte   = src.OptionBCorrecte,
-            OptionCCorrecte   = src.OptionCCorrecte,
-            OptionDCorrecte   = src.OptionDCorrecte,
-            ReponseModele     = src.ReponseModele,
-            ImageBase64       = src.ImageBase64,
-            ImageType         = src.ImageType,
-            ImageNom          = src.ImageNom,
-        };
-
-        private static void RestoreFrom(QuestionExamen src, QuestionExamen dst)
-        {
-            dst.Enonce          = src.Enonce;
-            dst.Explication     = src.Explication;
-            dst.OptionA         = src.OptionA;
-            dst.OptionB         = src.OptionB;
-            dst.OptionC         = src.OptionC;
-            dst.OptionD         = src.OptionD;
-            dst.ReponseCorrecte = src.ReponseCorrecte;
-            dst.OptionACorrecte = src.OptionACorrecte;
-            dst.OptionBCorrecte = src.OptionBCorrecte;
-            dst.OptionCCorrecte = src.OptionCCorrecte;
-            dst.OptionDCorrecte = src.OptionDCorrecte;
-            dst.ReponseModele   = src.ReponseModele;
-        }
     }
 }

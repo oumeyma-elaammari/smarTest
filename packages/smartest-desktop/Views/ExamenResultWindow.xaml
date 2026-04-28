@@ -221,7 +221,7 @@
                         <TextBlock Text="Sélectionnez une question"
                                    FontSize="16" Foreground="#ABABAB"
                                    HorizontalAlignment="Center" Margin="0,12,0,0"/>
-                        <TextBlock Text="pour afficher et modifier son contenu"
+                        <TextBlock Text="pour afficher et ajuster son contenu"
                                    FontSize="13" Foreground="#CACACA"
                                    HorizontalAlignment="Center" Margin="0,6,0,0"/>
                     </StackPanel>
@@ -251,46 +251,15 @@
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <!-- Bouton Éditer -->
-                                <Border CornerRadius="8" Padding="14,8" Cursor="Hand"
-                                        Background="#F0EFE8" Margin="0,0,8,0"
-                                        Visibility="{Binding QuestionSelectionnee.IsNotEditing, Converter={StaticResource BoolToVis}}">
-                                    <Border.InputBindings>
-                                        <MouseBinding MouseAction="LeftClick" Command="{Binding EditerCommand}"/>
-                                    </Border.InputBindings>
-                                    <TextBlock Text="✏ Modifier" FontSize="12"
-                                               FontWeight="600" Foreground="#0f1e3d"/>
-                                </Border>
                                 <!-- Bouton Supprimer -->
                                 <Border CornerRadius="8" Padding="14,8" Cursor="Hand"
-                                        Background="#FEF2F2"
-                                        Visibility="{Binding QuestionSelectionnee.IsNotEditing, Converter={StaticResource BoolToVis}}">
+                                        Background="#FEF2F2">
                                     <Border.InputBindings>
                                         <MouseBinding MouseAction="LeftClick" Command="{Binding SupprimerCommand}"
                                                       CommandParameter="{Binding QuestionSelectionnee}"/>
                                     </Border.InputBindings>
                                     <TextBlock Text="🗑 Supprimer" FontSize="12"
                                                FontWeight="600" Foreground="#DC2626"/>
-                                </Border>
-                                <!-- Bouton Sauvegarder édition -->
-                                <Border CornerRadius="8" Padding="14,8" Cursor="Hand"
-                                        Background="#0f1e3d" Margin="0,0,8,0"
-                                        Visibility="{Binding QuestionSelectionnee.IsEditing, Converter={StaticResource BoolToVis}}">
-                                    <Border.InputBindings>
-                                        <MouseBinding MouseAction="LeftClick" Command="{Binding SauvegarderEditionCommand}"/>
-                                    </Border.InputBindings>
-                                    <TextBlock Text="💾 Sauvegarder" FontSize="12"
-                                               FontWeight="600" Foreground="White"/>
-                                </Border>
-                                <!-- Bouton Annuler édition -->
-                                <Border CornerRadius="8" Padding="14,8" Cursor="Hand"
-                                        Background="#F0EFE8"
-                                        Visibility="{Binding QuestionSelectionnee.IsEditing, Converter={StaticResource BoolToVis}}">
-                                    <Border.InputBindings>
-                                        <MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerEditionCommand}"/>
-                                    </Border.InputBindings>
-                                    <TextBlock Text="✕ Annuler" FontSize="12"
-                                               FontWeight="600" Foreground="#6B6B6B"/>
                                 </Border>
                             </StackPanel>
                         </Grid>
@@ -303,7 +272,6 @@
                                 Padding="16,14" Margin="0,0,0,24">
                             <TextBox Text="{Binding QuestionSelectionnee.Enonce,
                                                     UpdateSourceTrigger=PropertyChanged}"
-                                     IsReadOnly="{Binding QuestionSelectionnee.IsNotEditing}"
                                      BorderThickness="0" Background="Transparent"
                                      FontSize="14" Foreground="#0f1e3d" TextWrapping="Wrap"
                                      AcceptsReturn="True" MinHeight="60"/>
@@ -335,7 +303,6 @@
                                     <TextBox Grid.Column="1"
                                              Text="{Binding QuestionSelectionnee.OptionA,
                                                             UpdateSourceTrigger=PropertyChanged}"
-                                             IsReadOnly="{Binding QuestionSelectionnee.IsNotEditing}"
                                              BorderThickness="0" Background="Transparent"
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
@@ -360,7 +327,6 @@
                                     <!-- CHECKBOX : checkbox -->
                                     <CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionACorrecte}"
-                                              IsEnabled="{Binding QuestionSelectionnee.IsEditing}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
                                                            Converter={StaticResource BoolToVis}}"/>
                                 </Grid>
@@ -384,7 +350,6 @@
                                     <TextBox Grid.Column="1"
                                              Text="{Binding QuestionSelectionnee.OptionB,
                                                             UpdateSourceTrigger=PropertyChanged}"
-                                             IsReadOnly="{Binding QuestionSelectionnee.IsNotEditing}"
                                              BorderThickness="0" Background="Transparent"
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
@@ -407,7 +372,6 @@
                                     </Border>
                                     <CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionBCorrecte}"
-                                              IsEnabled="{Binding QuestionSelectionnee.IsEditing}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
                                                            Converter={StaticResource BoolToVis}}"/>
                                 </Grid>
@@ -431,7 +395,6 @@
                                     <TextBox Grid.Column="1"
                                              Text="{Binding QuestionSelectionnee.OptionC,
                                                             UpdateSourceTrigger=PropertyChanged}"
-                                             IsReadOnly="{Binding QuestionSelectionnee.IsNotEditing}"
                                              BorderThickness="0" Background="Transparent"
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
@@ -454,7 +417,6 @@
                                     </Border>
                                     <CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionCCorrecte}"
-                                              IsEnabled="{Binding QuestionSelectionnee.IsEditing}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
                                                            Converter={StaticResource BoolToVis}}"/>
                                 </Grid>
@@ -478,7 +440,6 @@
                                     <TextBox Grid.Column="1"
                                              Text="{Binding QuestionSelectionnee.OptionD,
                                                             UpdateSourceTrigger=PropertyChanged}"
-                                             IsReadOnly="{Binding QuestionSelectionnee.IsNotEditing}"
                                              BorderThickness="0" Background="Transparent"
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
@@ -501,7 +462,6 @@
                                     </Border>
                                     <CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionDCorrecte}"
-                                              IsEnabled="{Binding QuestionSelectionnee.IsEditing}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
                                                            Converter={StaticResource BoolToVis}}"/>
                                 </Grid>
@@ -565,7 +525,6 @@
                                     Padding="16,14" Margin="0,0,0,24">
                                 <TextBox Text="{Binding QuestionSelectionnee.ReponseModele,
                                                         UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="{Binding QuestionSelectionnee.IsNotEditing}"
                                          BorderThickness="0" Background="Transparent"
                                          FontSize="13" Foreground="#0f1e3d" TextWrapping="Wrap"
                                          AcceptsReturn="True" MinHeight="80"/>
@@ -581,7 +540,6 @@
                                 Padding="16,14">
                             <TextBox Text="{Binding QuestionSelectionnee.Explication,
                                                     UpdateSourceTrigger=PropertyChanged}"
-                                     IsReadOnly="{Binding QuestionSelectionnee.IsNotEditing}"
                                      BorderThickness="0" Background="Transparent"
                                      FontSize="13" Foreground="#92400E" TextWrapping="Wrap"
                                      AcceptsReturn="True" MinHeight="60"/>

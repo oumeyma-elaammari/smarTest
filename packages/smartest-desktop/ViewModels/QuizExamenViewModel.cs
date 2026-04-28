@@ -56,6 +56,8 @@ namespace smartest_desktop.ViewModels
         public event Action? NavigateToQuizGeneration;
         public event Action? NavigateToExamenGeneration;
         public event Action? NavigateToDashboard;
+        public event Action<QuizLocal>? NavigateToQuizDetails;
+        public event Action<ExamenLocal>? NavigateToExamenDetails;
 
         public ICommand GenererQuizCommand { get; }
         public ICommand GenererExamenCommand { get; }
@@ -67,6 +69,8 @@ namespace smartest_desktop.ViewModels
 
         public ICommand SupprimerExamenCommand { get; }
         public ICommand LancerExamenCommand { get; }
+        public ICommand OuvrirQuizCommand { get; }
+        public ICommand OuvrirExamenCommand { get; }
 
         public QuizExamenViewModel()
         {
@@ -93,6 +97,22 @@ namespace smartest_desktop.ViewModels
             LancerExamenCommand = new RelayCommand(
                 p => LancerExamen(p),
                 p => p is ExamenLocal e && string.Equals(e.Statut, "PUBLIE", System.StringComparison.OrdinalIgnoreCase));
+
+            OuvrirQuizCommand = new RelayCommand(
+                p =>
+                {
+                    if (p is not QuizLocal quiz) return;
+                    NavigateToQuizDetails?.Invoke(quiz);
+                },
+                p => p is QuizLocal);
+
+            OuvrirExamenCommand = new RelayCommand(
+                p =>
+                {
+                    if (p is not ExamenLocal examen) return;
+                    NavigateToExamenDetails?.Invoke(examen);
+                },
+                p => p is ExamenLocal);
 
             _ = ChargerDonneesAsync();
         }
