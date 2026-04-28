@@ -334,19 +334,52 @@ namespace smartest_desktop.ViewModels
             _ => throw new NotSupportedException($"Format non supporté : {extension}")
         };
 
-        private static string ExtrairePdf(string chemin)
-        {
-            using var doc = UglyToad.PdfPig.PdfDocument.Open(chemin);
-            var sb = new StringBuilder();
-            foreach (var page in doc.GetPages())
-                sb.AppendLine(page.Text);
-            return sb.ToString().Trim();
-        }
+        private static string ExtrairePdf(string chemin) =>
+            NettoyerTexteSlides(PdfTextImport.ExtraireTexteBrut(chemin)).Trim();
 
         private static string ExtraireDocx(string chemin)
         {
             using var wordDoc = WordprocessingDocument.Open(chemin, isEditable: false);
             return wordDoc.MainDocumentPart?.Document.Body?.InnerText ?? string.Empty;
+        }
+
+        private static string NettoyerTexteSlides(string texte)
+        {
+            if (string.IsNullOrWhiteSpace(texte)) return string.Empty;
+            var original = texte;
+
+            var lignes = texte.Replace("\r\n", "\n").Split('\n');
+            var sorties = new List<string>(lignes.Length);
+            string previous = string.Empty;
+
+            foreach (var brute in lignes)
+            {
+                var ligne = brute.Trim();
+                if (ligne.Length == 0)
+                {
+                    if (sorties.Count > 0 && sorties[^1].Length > 0)
+                        sorties.Add(string.Empty);
+                    continue;
+                }
+
+                if (EstBruitDeSlide(ligne)) continue;
+                if (string.Equals(previous, ligne, StringComparison.Ordinal)) continue;
+
+                sorties.Add(ligne);
+                previous = ligne;
+            }
+
+            var nettoye = string.Join("\n", sorties).Trim();
+            return string.IsNullOrWhiteSpace(nettoye) ? original.Trim() : nettoye;
+        }
+
+        private static bool EstBruitDeSlide(string ligne)
+        {
+            if (ligne.StartsWith("©", StringComparison.Ordinal)) return true;
+            if (ligne.Contains("Chapitre", StringComparison.OrdinalIgnoreCase)
+                && ligne.Contains("AU:", StringComparison.OrdinalIgnoreCase)
+                && ligne.Any(char.IsDigit)) return true;
+            return false;
         }
 
         private void EffacerContenu()
