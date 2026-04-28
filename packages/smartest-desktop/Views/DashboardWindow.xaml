@@ -151,7 +151,7 @@
 
 					<!-- Header -->
 					<StackPanel Margin="0,0,0,32">
-						<TextBlock FontSize="11" Foreground="#8899b8" Margin="0,0,0,6">
+						<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,0,0,6">
 							<Run Text="BONJOUR, "/>
 							<Run Text="{Binding Nom}" FontWeight="600"/>
 						</TextBlock>
@@ -204,12 +204,11 @@
 
 
 					<!-- Activités récentes -->
-					<Border Style="{StaticResource DashCard}" Padding="24,20" Margin="0,20,0,0">
+					<Border Style="{StaticResource DashCard}" Padding="24,20" Margin="0,10,0,0">
 						<StackPanel>
 							<TextBlock Text="Activités récentes" FontSize="15"
-                                       FontWeight="600" Foreground="#0f1e3d" Margin="0,0,0,4"/>
-							<TextBlock Text="Les 3 derniers quiz ou examens générés (plus récent en premier)"
-                                       FontSize="12" Foreground="#8899b8" Margin="0,0,0,16"/>
+                                       FontWeight="600" Foreground="#0f1e3d" Margin="0,0,6,4"/>
+					
 							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,12"/>
 
 							<ItemsControl ItemsSource="{Binding ActivitesRecentes}"
