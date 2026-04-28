@@ -24,26 +24,27 @@
 			<Style x:Key="BadgeBrouillon" TargetType="Border">
 				<Setter Property="Background" Value="#fff7ed"/>
 				<Setter Property="CornerRadius" Value="6"/>
-				<Setter Property="Padding" Value="8,3"/>
+				<Setter Property="Padding" Value="6,5"/>
 			</Style>
 			<Style x:Key="BadgePublie" TargetType="Border">
 				<Setter Property="Background" Value="#eaf3de"/>
 				<Setter Property="CornerRadius" Value="6"/>
-				<Setter Property="Padding" Value="8,3"/>
+				<Setter Property="Padding" Value="6,5"/>
 			</Style>
 			<Style x:Key="BadgePlanifie" TargetType="Border">
 				<Setter Property="Background" Value="#eef3fd"/>
 				<Setter Property="CornerRadius" Value="6"/>
-				<Setter Property="Padding" Value="8,3"/>
+				<Setter Property="Padding" Value="6,5"/>
 			</Style>
 
 			<!-- Bouton action table -->
 			<Style x:Key="ActionBtn" TargetType="Button">
-				<Setter Property="Height" Value="28"/>
-				<Setter Property="Padding" Value="10,0"/>
+				<Setter Property="Height" Value="30"/>
+				<Setter Property="MinWidth" Value="58"/>
+				<Setter Property="Padding" Value="10,5"/>
 				<Setter Property="FontSize" Value="11"/>
 				<Setter Property="FontWeight" Value="600"/>
-				<Setter Property="BorderThickness" Value="1"/>
+				<Setter Property="BorderThickness" Value="0"/>
 				<Setter Property="Cursor" Value="Hand"/>
 				<Setter Property="Template">
 					<Setter.Value>
@@ -51,6 +52,7 @@
 							<Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
+									Padding="{TemplateBinding Padding}"
                                     CornerRadius="6">
 								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
 							</Border>
@@ -297,12 +299,7 @@
 							<ItemsControl ItemsSource="{Binding Quiz}">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
-										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1" Cursor="Hand">
-											<Border.InputBindings>
-												<MouseBinding MouseAction="LeftClick"
-															  Command="{Binding DataContext.OuvrirQuizCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-															  CommandParameter="{Binding}"/>
-											</Border.InputBindings>
+										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
 											<Grid>
 												<Grid.ColumnDefinitions>
 													<ColumnDefinition Width="*"/>
@@ -314,7 +311,14 @@
 
 												<StackPanel Grid.Column="0" VerticalAlignment="Center">
 													<TextBlock Text="{Binding Titre}" FontSize="13"
-                                                               FontWeight="600" Foreground="#0f1e3d"/>
+                                                               FontWeight="600" Foreground="#0f1e3d"
+                                                               Cursor="Hand" >
+														<TextBlock.InputBindings>
+															<MouseBinding MouseAction="LeftClick"
+																		  Command="{Binding DataContext.OuvrirQuizCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+																		  CommandParameter="{Binding}"/>
+														</TextBlock.InputBindings>
+													</TextBlock>
 													<TextBlock Text="{Binding CoursSourceTitre}" FontSize="11"
                                                                Foreground="#8899b8" Margin="0,2,0,0"/>
 												</StackPanel>
@@ -365,7 +369,7 @@
 												<StackPanel Grid.Column="4" Orientation="Horizontal"
                                                             VerticalAlignment="Center">
 													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#eef3fd" BorderBrush="#d0ddf5"
+                                                            Background="#eef3fd" BorderBrush="#eef3fd"
                                                             Foreground="#4f8ef7" Margin="0,0,6,0"
                                                             Command="{Binding DataContext.PublierQuizCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
@@ -373,7 +377,7 @@
 														<TextBlock Text="Publier"/>
 													</Button>
 													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#fcebeb" BorderBrush="#f7c1c1"
+                                                            Background="#fcebeb" BorderBrush="#fcebeb"
                                                             Foreground="#dc2626"
                                                             Command="{Binding DataContext.SupprimerQuizCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
@@ -436,12 +440,7 @@
 							<ItemsControl ItemsSource="{Binding Examens}">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
-										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1" Cursor="Hand">
-											<Border.InputBindings>
-												<MouseBinding MouseAction="LeftClick"
-															  Command="{Binding DataContext.OuvrirExamenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-															  CommandParameter="{Binding}"/>
-											</Border.InputBindings>
+										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
 											<Grid>
 												<Grid.ColumnDefinitions>
 													<ColumnDefinition Width="*"/>
@@ -453,7 +452,14 @@
 
 												<TextBlock Grid.Column="0" Text="{Binding Titre}"
                                                            FontSize="13" FontWeight="600"
-                                                           Foreground="#0f1e3d" VerticalAlignment="Center"/>
+                                                           Foreground="#0f1e3d" VerticalAlignment="Center"
+                                                           Cursor="Hand" >
+													<TextBlock.InputBindings>
+														<MouseBinding MouseAction="LeftClick"
+																	  Command="{Binding DataContext.OuvrirExamenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+																	  CommandParameter="{Binding}"/>
+													</TextBlock.InputBindings>
+												</TextBlock>
 
 												<TextBlock Grid.Column="1" FontSize="12"
                                                            Foreground="#6b7a99" VerticalAlignment="Center">
@@ -518,7 +524,7 @@
 												<!-- Actions -->
 												<StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
 													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#eaf3de" BorderBrush="#c0dd97"
+                                                            Background="#eaf3de" BorderBrush="#eaf3de"
                                                             Foreground="#16a34a" Margin="0,0,6,0"
                                                             Command="{Binding DataContext.LancerExamenCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
@@ -526,7 +532,7 @@
 														<TextBlock Text="Lancer"/>
 													</Button>
 													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#fcebeb" BorderBrush="#f7c1c1"
+                                                            Background="#fcebeb" BorderBrush="#fcebeb"
                                                             Foreground="#dc2626"
                                                             Command="{Binding DataContext.SupprimerExamenCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
