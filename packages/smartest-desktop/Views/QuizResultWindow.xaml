@@ -10,535 +10,463 @@
         Background="{DynamicResource BgBrush}"
         FontFamily="Segoe UI">
 
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
+	<Window.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
 
-        <Style x:Key="QRCard" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="BorderBrush" Value="#e2e8f4"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
+			<Style x:Key="QRCard" TargetType="Border">
+				<Setter Property="Background" Value="White"/>
+				<Setter Property="CornerRadius" Value="12"/>
+				<Setter Property="BorderBrush" Value="#e2e8f4"/>
+				<Setter Property="BorderThickness" Value="1"/>
+			</Style>
 
-        <Style x:Key="QRPrimaryBorder" TargetType="Border">
-            <Setter Property="CornerRadius" Value="9"/>
-            <Setter Property="Padding" Value="18,11"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#0f1e3d"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1a2e5a"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+			<Style x:Key="QRSuccessBorder" TargetType="Border">
+				<Setter Property="CornerRadius" Value="9"/>
+				<Setter Property="Padding" Value="18,11"/>
+				<Setter Property="Cursor" Value="Hand"/>
+				<Setter Property="Background" Value="#16A34A"/>
+				<Style.Triggers>
+					<Trigger Property="IsMouseOver" Value="True">
+						<Setter Property="Background" Value="#15803D"/>
+					</Trigger>
+				</Style.Triggers>
+			</Style>
 
-        <Style x:Key="QRSuccessBorder" TargetType="Border">
-            <Setter Property="CornerRadius" Value="9"/>
-            <Setter Property="Padding" Value="18,11"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#16A34A"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#15803D"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+			<Style x:Key="QRSecondaryBorder" TargetType="Border">
+				<Setter Property="CornerRadius" Value="9"/>
+				<Setter Property="Padding" Value="14,9"/>
+				<Setter Property="Cursor" Value="Hand"/>
+				<Setter Property="Background" Value="#f0f3f9"/>
+				<Setter Property="BorderBrush" Value="#e2e8f4"/>
+				<Setter Property="BorderThickness" Value="1"/>
+				<Style.Triggers>
+					<Trigger Property="IsMouseOver" Value="True">
+						<Setter Property="Background" Value="#e8eef8"/>
+					</Trigger>
+				</Style.Triggers>
+			</Style>
 
-        <Style x:Key="QRDangerBorder" TargetType="Border">
-            <Setter Property="CornerRadius" Value="9"/>
-            <Setter Property="Padding" Value="14,9"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#FDF0F0"/>
-            <Setter Property="BorderBrush" Value="#F5C6C6"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FDE8E8"/>
-                    <Setter Property="BorderBrush" Value="#C84B4B"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+			<!-- TextBox SANS bordure : intérieur des options A/B/C/D et champs arrondis -->
+			<Style x:Key="QREditField" TargetType="TextBox">
+				<Setter Property="Background" Value="Transparent"/>
+				<Setter Property="BorderThickness" Value="0"/>
+				<Setter Property="Padding" Value="0"/>
+				<Setter Property="FontSize" Value="12"/>
+				<Setter Property="Foreground" Value="#0f1e3d"/>
+				<Setter Property="TextWrapping" Value="Wrap"/>
+				<Setter Property="AcceptsReturn" Value="True"/>
+				<Setter Property="CaretBrush" Value="#0f1e3d"/>
+			</Style>
 
-        <Style x:Key="QRSecondaryBorder" TargetType="Border">
-            <Setter Property="CornerRadius" Value="9"/>
-            <Setter Property="Padding" Value="14,9"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#f0f3f9"/>
-            <Setter Property="BorderBrush" Value="#e2e8f4"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#e8eef8"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+		</ResourceDictionary>
+	</Window.Resources>
 
-        <Style x:Key="QREditField" TargetType="TextBox">
-            <Setter Property="Background" Value="#FBFBFB"/>
-            <Setter Property="BorderBrush" Value="#e2e8f4"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#0f1e3d"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="AcceptsReturn" Value="True"/>
-        </Style>
-        </ResourceDictionary>
-    </Window.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+		<!-- ══ HEADER ══ -->
+		<Border Grid.Row="0" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1" Padding="28,16">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
 
-        <!-- ══ HEADER ══ -->
-        <Border Grid.Row="0" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1" Padding="28,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Retour -->
-                <Border Grid.Column="0" Width="38" Height="38" CornerRadius="9"
+				<!-- Retour -->
+				<Border Grid.Column="0" Width="38" Height="38" CornerRadius="9"
                         Background="#eef3fd" Cursor="Hand" Margin="0,0,20,0">
-                    <Border.InputBindings>
-                        <MouseBinding MouseAction="LeftClick" Command="{Binding RetourCommand}"/>
-                    </Border.InputBindings>
-                    <TextBlock Text="&#xE72B;" FontSize="14" FontFamily="Segoe MDL2 Assets"
+					<Border.InputBindings>
+						<MouseBinding MouseAction="LeftClick" Command="{Binding RetourCommand}"/>
+					</Border.InputBindings>
+					<TextBlock Text="&#xE72B;" FontSize="14" FontFamily="Segoe MDL2 Assets"
                                Foreground="#0f1e3d"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
+				</Border>
 
-                <!-- Info quiz -->
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-                        <Border Width="8" Height="8" CornerRadius="4" Background="#16A34A"
+				<!-- Info quiz -->
+				<StackPanel Grid.Column="1" VerticalAlignment="Center">
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+						<Border Width="8" Height="8" CornerRadius="4" Background="#16A34A"
                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding TitreQuiz}" FontSize="16" FontWeight="700"
+						<TextBlock Text="{Binding TitreQuiz}" FontSize="16" FontWeight="700"
                                    Foreground="#0f1e3d"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock FontSize="11" Foreground="#8899b8"
+					</StackPanel>
+					<StackPanel Orientation="Horizontal">
+						<TextBlock FontSize="11" Foreground="#8899b8"
                                    Text="{Binding NombreQuestions, StringFormat='{}{0} questions générées'}"/>
-                        <TextBlock Text=" · " FontSize="11" Foreground="#ABABAB"/>
-                        <TextBlock Text="Vérifiez et ajustez avant validation"
+						<TextBlock Text=" · " FontSize="11" Foreground="#ABABAB"/>
+						<TextBlock Text="Vérifiez et ajustez avant validation"
                                    FontSize="11" Foreground="#ABABAB"/>
-                    </StackPanel>
-                </StackPanel>
+					</StackPanel>
+				</StackPanel>
 
-                <!-- Actions header -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <!-- Message succès -->
-                    <Border CornerRadius="8" Padding="12,8" Margin="0,0,12,0"
+				<!-- Actions header -->
+				<StackPanel Grid.Column="2" Orientation="Horizontal">
+					<Border CornerRadius="8" Padding="12,8" Margin="0,0,12,0"
                             Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1"
                             Visibility="{Binding HasSuccess, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="{Binding SuccessMessage}" FontSize="11"
+						<TextBlock Text="{Binding SuccessMessage}" FontSize="11"
                                    Foreground="#16A34A" FontWeight="500"/>
-                    </Border>
+					</Border>
 
-                    <!-- Regénérer -->
-                    <Border Style="{StaticResource QRSecondaryBorder}" Margin="0,0,10,0">
-                        <Border.InputBindings>
-                            <MouseBinding MouseAction="LeftClick" Command="{Binding RegenerarQuizCommand}"/>
-                        </Border.InputBindings>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+					<!-- Regénérer -->
+					<Border Style="{StaticResource QRSecondaryBorder}" Margin="0,0,10,0">
+						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding RegenerarCommand}"/>
+						</Border.InputBindings>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                        Foreground="#444444" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Regénérer" FontSize="12" FontWeight="500" Foreground="#444444"
+							<TextBlock Text="Regénérer" FontSize="12" FontWeight="500" Foreground="#444444"
                                        VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+						</StackPanel>
+					</Border>
 
-                    <!-- Valider -->
-                    <Border Style="{StaticResource QRSuccessBorder}">
-                        <Border.InputBindings>
-                            <MouseBinding MouseAction="LeftClick" Command="{Binding ValiderQuizCommand}"/>
-                        </Border.InputBindings>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                       FontWeight="Normal" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Valider le quiz" FontSize="12" FontWeight="600" Foreground="White"
+					<!-- Valider -->
+					<Border Style="{StaticResource QRSuccessBorder}">
+						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding ValiderQuizCommand}"/>
+						</Border.InputBindings>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                       Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
+							<TextBlock Text="Valider le quiz" FontSize="12" FontWeight="600" Foreground="White"
                                        VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </Grid>
-        </Border>
+						</StackPanel>
+					</Border>
+				</StackPanel>
+			</Grid>
+		</Border>
 
-        <!-- ══ CONTENU ══ -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="380"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+		<!-- ══ CONTENU ══ -->
+		<Grid Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="380"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
 
-            <!-- ══ LISTE DES QUESTIONS ══ -->
-            <Border Grid.Column="0" Background="#FAFAF9" BorderBrush="#e2e8f4" BorderThickness="0,0,1,0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+			<!-- ══ LISTE DES QUESTIONS ══ -->
+			<Border Grid.Column="0" Background="#FAFAF9" BorderBrush="#e2e8f4" BorderThickness="0,0,1,0">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Padding="20,18,20,14" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1">
-                        <StackPanel>
-                            <TextBlock Text="Questions du quiz" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
-                        <TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
-                                       Text="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
-                        </StackPanel>
-                    </Border>
+					<Border Grid.Row="0" Padding="20,18,20,14" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1">
+						<StackPanel>
+							<TextBlock Text="Questions du quiz" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
+							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
+									   Text="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
+						</StackPanel>
+					</Border>
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0">
-                        <ItemsControl ItemsSource="{Binding Questions}" Margin="12,12,12,12">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Margin="0,0,0,8" Cursor="Hand" CornerRadius="10"
+					<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0">
+						<ItemsControl ItemsSource="{Binding Questions}" Margin="12,12,12,12">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Margin="0,0,0,8" Cursor="Hand" CornerRadius="10"
                                             BorderThickness="1.5" Padding="14,12">
-                                        <Border.InputBindings>
-                                            <MouseBinding MouseAction="LeftClick"
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick"
                                                           Command="{Binding DataContext.SelectionnerQuestionCommand,
                                                                     RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                           CommandParameter="{Binding}"/>
-                                        </Border.InputBindings>
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="White"/>
-                                                <Setter Property="BorderBrush" Value="#e2e8f4"/>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#F5F4F0"/>
-                                                        <Setter Property="BorderBrush" Value="#C8C7C3"/>
-                                                    </Trigger>
-                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                        <Setter Property="Background" Value="#EFF6FF"/>
-                                                        <Setter Property="BorderBrush" Value="#3B82F6"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
+										</Border.InputBindings>
+										<Border.Style>
+											<Style TargetType="Border">
+												<Setter Property="Background" Value="White"/>
+												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Style.Triggers>
+													<Trigger Property="IsMouseOver" Value="True">
+														<Setter Property="Background" Value="#F5F4F0"/>
+														<Setter Property="BorderBrush" Value="#C8C7C3"/>
+													</Trigger>
+													<DataTrigger Binding="{Binding IsSelected}" Value="True">
+														<Setter Property="Background" Value="#EFF6FF"/>
+														<Setter Property="BorderBrush" Value="#3B82F6"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="Auto"/>
+												<ColumnDefinition Width="*"/>
+												<ColumnDefinition Width="Auto"/>
+											</Grid.ColumnDefinitions>
 
-                                            <!-- Numéro -->
-                                            <Border Grid.Column="0" Width="30" Height="30"
+											<!-- Numéro -->
+											<Border Grid.Column="0" Width="30" Height="30"
                                                     CornerRadius="8" Background="#0f1e3d"
                                                     Margin="0,0,10,0" VerticalAlignment="Top">
-                                                <TextBlock Text="{Binding Numero}" FontSize="11"
+												<TextBlock Text="{Binding Numero}" FontSize="11"
                                                            FontWeight="700" Foreground="White"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
-                                            </Border>
+											</Border>
 
-                                            <!-- Énoncé -->
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Top">
-                                                <TextBlock Text="{Binding Enonce}" FontSize="11"
+											<!-- Énoncé + badge réponse SANS icône -->
+											<StackPanel Grid.Column="1" VerticalAlignment="Top">
+												<TextBlock Text="{Binding Enonce}" FontSize="11"
                                                            Foreground="#0f1e3d" TextWrapping="Wrap"
                                                            FontWeight="500" MaxHeight="48"
                                                            TextTrimming="CharacterEllipsis"/>
-                                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                                    <Border CornerRadius="5" Padding="6,2"
-                                                            Background="#DCFCE7" Margin="0,0,4,0">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets"
-                                                                       FontSize="9" Foreground="#16A34A"
-                                                                       Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                                            <TextBlock FontSize="9" FontWeight="700"
-                                                                       Foreground="#16A34A" VerticalAlignment="Center"
-                                                                       Text="{Binding ReponseCorrecte}"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </StackPanel>
-                                            </StackPanel>
+												<StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+													<Border CornerRadius="5" Padding="6,2" Background="#DCFCE7">
+														<TextBlock FontSize="9" FontWeight="700"
+                                                                   Foreground="#16A34A"
+                                                                   VerticalAlignment="Center"
+                                                                   Text="{Binding ReponseCorrecte}"/>
+													</Border>
+												</StackPanel>
+											</StackPanel>
 
-                                            <!-- Supprimer -->
-                                            <Border Grid.Column="2" Width="26" Height="26"
+											<!-- Supprimer -->
+											<Border Grid.Column="2" Width="26" Height="26"
                                                     CornerRadius="7" Cursor="Hand"
                                                     VerticalAlignment="Top" Margin="6,0,0,0"
                                                     ToolTip="Supprimer cette question">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick"
+												<Border.InputBindings>
+													<MouseBinding MouseAction="LeftClick"
                                                                   Command="{Binding DataContext.SupprimerQuestionCommand,
                                                                             RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                   CommandParameter="{Binding}"/>
-                                                </Border.InputBindings>
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="Transparent"/>
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="#FDE8E8"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+												</Border.InputBindings>
+												<Border.Style>
+													<Style TargetType="Border">
+														<Setter Property="Background" Value="Transparent"/>
+														<Style.Triggers>
+															<Trigger Property="IsMouseOver" Value="True">
+																<Setter Property="Background" Value="#FDE8E8"/>
+															</Trigger>
+														</Style.Triggers>
+													</Style>
+												</Border.Style>
+												<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
                                                            Foreground="#DC2626"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
-                                            </Border>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
+											</Border>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</Grid>
+			</Border>
 
-            <!-- ══ DÉTAIL / ÉDITION DE LA QUESTION ══ -->
-            <Grid Grid.Column="1" Background="#FBFBFB">
+			<!-- ══ DÉTAIL / ÉDITION ══ -->
+			<Grid Grid.Column="1" Background="#FBFBFB">
 
-                <!-- Pas de question sélectionnée -->
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
-                            Visibility="{Binding HasQuestionSelectionnee, Converter={StaticResource BoolToVis}}">
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasQuestionSelectionnee}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-                    <TextBlock Text="📋" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
-                    <TextBlock Text="Sélectionnez une question"
-                               FontSize="15" FontWeight="600"
+				<!-- Aucune question sélectionnée -->
+				<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+					<StackPanel.Style>
+						<Style TargetType="StackPanel">
+							<Setter Property="Visibility" Value="Visible"/>
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding HasQuestionSelectionnee}" Value="True">
+									<Setter Property="Visibility" Value="Collapsed"/>
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</StackPanel.Style>
+					<TextBlock Text="📋" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+					<TextBlock Text="Sélectionnez une question" FontSize="15" FontWeight="600"
                                Foreground="#0f1e3d" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Cliquez sur une question dans la liste pour la voir et l'ajuster"
+					<TextBlock Text="Cliquez sur une question dans la liste pour la voir et l'ajuster"
                                FontSize="12" Foreground="#ABABAB" HorizontalAlignment="Center"
-                               TextWrapping="Wrap" MaxWidth="280" TextAlignment="Center"
-                               Margin="0,8,0,0"/>
-                </StackPanel>
+                               TextWrapping="Wrap" MaxWidth="280" TextAlignment="Center" Margin="0,8,0,0"/>
+				</StackPanel>
 
-                <!-- Question sélectionnée -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
+				<!-- Question sélectionnée -->
+				<ScrollViewer VerticalScrollBarVisibility="Auto"
                               Visibility="{Binding HasQuestionSelectionnee, Converter={StaticResource BoolToVis}}">
-                    <Grid Margin="32,28,32,28" DataContext="{Binding QuestionSelectionnee}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+					<Grid Margin="32,28,32,28" DataContext="{Binding QuestionSelectionnee}">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+						</Grid.RowDefinitions>
 
-                        <!-- Header question -->
-                        <Grid Grid.Row="0" Margin="0,0,0,20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+						<!-- Header -->
+						<StackPanel Grid.Row="0" Margin="0,0,0,20">
+							<TextBlock FontSize="11" Foreground="#ABABAB" FontWeight="600"
+                                       Text="{Binding Numero, StringFormat='QUESTION {0}'}"/>
+							<TextBlock Text="Détail de la question "
+                                       FontSize="15" FontWeight="700" Foreground="#0f1e3d" Margin="0,4,0,0"/>
+						</StackPanel>
 
-                            <StackPanel>
-                                <TextBlock FontSize="11" Foreground="#ABABAB" FontWeight="600"
-                                           Text="{Binding Numero, StringFormat='QUESTION {0}'}"/>
-                                <TextBlock Text="Détail de la question (édition directe)"
-                                           FontSize="15" FontWeight="700" Foreground="#0f1e3d"
-                                           Margin="0,4,0,0"/>
-                            </StackPanel>
-
-                        </Grid>
-
-                        <!-- Énoncé -->
-                        <Border Grid.Row="1" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="ÉNONCÉ" FontSize="10" FontWeight="700"
+						<!-- Énoncé -->
+						<Border Grid.Row="1" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
+							<StackPanel>
+								<TextBlock Text="ÉNONCÉ" FontSize="10" FontWeight="700"
                                            Foreground="#9CA3AF" Margin="0,0,0,8"/>
-                                <TextBox Style="{StaticResource QREditField}"
-                                         Text="{Binding Enonce, UpdateSourceTrigger=PropertyChanged}"
-                                         MinHeight="60"/>
-                            </StackPanel>
-                        </Border>
+								<!-- Border arrondi qui entoure le TextBox -->
+								<Border CornerRadius="8" BorderBrush="#e2e8f4" BorderThickness="1"
+                                        Background="#FBFBFB">
+									<TextBox Style="{StaticResource QREditField}"
+                                             Padding="10,8"
+                                             Text="{Binding Enonce, UpdateSourceTrigger=PropertyChanged}"
+                                             MinHeight="60"/>
+								</Border>
+							</StackPanel>
+						</Border>
 
-                        <!-- Options A, B, C, D -->
-                        <Border Grid.Row="2" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="OPTIONS" FontSize="10" FontWeight="700"
+						<!-- Options A B C D -->
+						<Border Grid.Row="2" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
+							<StackPanel>
+								<TextBlock Text="OPTIONS" FontSize="10" FontWeight="700"
                                            Foreground="#9CA3AF" Margin="0,0,0,12"/>
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="12"/>
+										<ColumnDefinition Width="*"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition Height="Auto"/>
+										<RowDefinition Height="10"/>
+										<RowDefinition Height="Auto"/>
+									</Grid.RowDefinitions>
 
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="12"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="10"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <!-- Option A -->
-                                    <Border Grid.Row="0" Grid.Column="0" CornerRadius="8" Padding="12,10">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#FBFBFB"/>
-                                                <Setter Property="BorderBrush" Value="#e2e8f4"/>
-                                                <Setter Property="BorderThickness" Value="1.5"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding ReponseCorrecte}" Value="A">
-                                                        <Setter Property="Background" Value="#F0FDF4"/>
-                                                        <Setter Property="BorderBrush" Value="#86EFAC"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <StackPanel>
-                                            <TextBlock Text="A" FontSize="10" FontWeight="700"
+									<!-- Option A -->
+									<Border Grid.Row="0" Grid.Column="0" CornerRadius="8" Padding="12,10">
+										<Border.Style>
+											<Style TargetType="Border">
+												<Setter Property="Background" Value="#FBFBFB"/>
+												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="BorderThickness" Value="1.5"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="A">
+														<Setter Property="Background" Value="#F0FDF4"/>
+														<Setter Property="BorderBrush" Value="#86EFAC"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<StackPanel>
+											<TextBlock Text="A" FontSize="10" FontWeight="700"
                                                        Foreground="#6B6B6B" Margin="0,0,0,4"/>
-                                            <TextBox Style="{StaticResource QREditField}"
+											<TextBox Style="{StaticResource QREditField}"
                                                      Text="{Binding OptionA, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </StackPanel>
-                                    </Border>
+										</StackPanel>
+									</Border>
 
-                                    <!-- Option B -->
-                                    <Border Grid.Row="0" Grid.Column="2" CornerRadius="8" Padding="12,10">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#FBFBFB"/>
-                                                <Setter Property="BorderBrush" Value="#e2e8f4"/>
-                                                <Setter Property="BorderThickness" Value="1.5"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding ReponseCorrecte}" Value="B">
-                                                        <Setter Property="Background" Value="#F0FDF4"/>
-                                                        <Setter Property="BorderBrush" Value="#86EFAC"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <StackPanel>
-                                            <TextBlock Text="B" FontSize="10" FontWeight="700"
+									<!-- Option B -->
+									<Border Grid.Row="0" Grid.Column="2" CornerRadius="8" Padding="12,10">
+										<Border.Style>
+											<Style TargetType="Border">
+												<Setter Property="Background" Value="#FBFBFB"/>
+												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="BorderThickness" Value="1.5"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="B">
+														<Setter Property="Background" Value="#F0FDF4"/>
+														<Setter Property="BorderBrush" Value="#86EFAC"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<StackPanel>
+											<TextBlock Text="B" FontSize="10" FontWeight="700"
                                                        Foreground="#6B6B6B" Margin="0,0,0,4"/>
-                                            <TextBox Style="{StaticResource QREditField}"
+											<TextBox Style="{StaticResource QREditField}"
                                                      Text="{Binding OptionB, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </StackPanel>
-                                    </Border>
+										</StackPanel>
+									</Border>
 
-                                    <!-- Option C -->
-                                    <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" Padding="12,10">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#FBFBFB"/>
-                                                <Setter Property="BorderBrush" Value="#e2e8f4"/>
-                                                <Setter Property="BorderThickness" Value="1.5"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding ReponseCorrecte}" Value="C">
-                                                        <Setter Property="Background" Value="#F0FDF4"/>
-                                                        <Setter Property="BorderBrush" Value="#86EFAC"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <StackPanel>
-                                            <TextBlock Text="C" FontSize="10" FontWeight="700"
+									<!-- Option C -->
+									<Border Grid.Row="2" Grid.Column="0" CornerRadius="8" Padding="12,10">
+										<Border.Style>
+											<Style TargetType="Border">
+												<Setter Property="Background" Value="#FBFBFB"/>
+												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="BorderThickness" Value="1.5"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="C">
+														<Setter Property="Background" Value="#F0FDF4"/>
+														<Setter Property="BorderBrush" Value="#86EFAC"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<StackPanel>
+											<TextBlock Text="C" FontSize="10" FontWeight="700"
                                                        Foreground="#6B6B6B" Margin="0,0,0,4"/>
-                                            <TextBox Style="{StaticResource QREditField}"
+											<TextBox Style="{StaticResource QREditField}"
                                                      Text="{Binding OptionC, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </StackPanel>
-                                    </Border>
+										</StackPanel>
+									</Border>
 
-                                    <!-- Option D -->
-                                    <Border Grid.Row="2" Grid.Column="2" CornerRadius="8" Padding="12,10">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#FBFBFB"/>
-                                                <Setter Property="BorderBrush" Value="#e2e8f4"/>
-                                                <Setter Property="BorderThickness" Value="1.5"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding ReponseCorrecte}" Value="D">
-                                                        <Setter Property="Background" Value="#F0FDF4"/>
-                                                        <Setter Property="BorderBrush" Value="#86EFAC"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <StackPanel>
-                                            <TextBlock Text="D" FontSize="10" FontWeight="700"
+									<!-- Option D -->
+									<Border Grid.Row="2" Grid.Column="2" CornerRadius="8" Padding="12,10">
+										<Border.Style>
+											<Style TargetType="Border">
+												<Setter Property="Background" Value="#FBFBFB"/>
+												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="BorderThickness" Value="1.5"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="D">
+														<Setter Property="Background" Value="#F0FDF4"/>
+														<Setter Property="BorderBrush" Value="#86EFAC"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<StackPanel>
+											<TextBlock Text="D" FontSize="10" FontWeight="700"
                                                        Foreground="#6B6B6B" Margin="0,0,0,4"/>
-                                            <TextBox Style="{StaticResource QREditField}"
+											<TextBox Style="{StaticResource QREditField}"
                                                      Text="{Binding OptionD, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+										</StackPanel>
+									</Border>
+								</Grid>
+							</StackPanel>
+						</Border>
 
-                        <!-- Réponse correcte + Explication -->
-                        <Border Grid.Row="3" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="20"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Réponse correcte -->
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="RÉPONSE CORRECTE" FontSize="10" FontWeight="700"
-                                                   Foreground="#9CA3AF" Margin="0,0,0,8"/>
-                                        <ComboBox SelectedValue="{Binding ReponseCorrecte, UpdateSourceTrigger=PropertyChanged}"
-                                                  SelectedValuePath="Content"
-                                                  Height="40" FontSize="14" FontWeight="700">
-                                            <ComboBoxItem Content="A"/>
-                                            <ComboBoxItem Content="B"/>
-                                            <ComboBoxItem Content="C"/>
-                                            <ComboBoxItem Content="D"/>
-                                        </ComboBox>
-                                    </StackPanel>
-
-                                    <!-- Numéro question -->
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
-                                        <TextBlock Text="NUMÉRO" FontSize="10" FontWeight="700"
-                                                   Foreground="#9CA3AF" Margin="0,0,0,8"/>
-                                        <Border CornerRadius="8" Padding="14,10" Background="#F5F4F0"
-                                                BorderBrush="#e2e8f4" BorderThickness="1">
-                                            <TextBlock FontSize="16" FontWeight="800" Foreground="#6B6B6B"
-                                                       Text="{Binding Numero, StringFormat='Q{0}'}"/>
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-
-                                <!-- Explication -->
-                                <TextBlock Text="EXPLICATION" FontSize="10" FontWeight="700"
+						<!-- Explication -->
+						<Border Grid.Row="3" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
+							<StackPanel>
+								<TextBlock Text="EXPLICATION" FontSize="10" FontWeight="700"
                                            Foreground="#9CA3AF" Margin="0,0,0,8"/>
-                                <TextBox Style="{StaticResource QREditField}"
-                                         Text="{Binding Explication, UpdateSourceTrigger=PropertyChanged}"
-                                         MinHeight="60"/>
-                            </StackPanel>
-                        </Border>
+								<!-- Border arrondi qui entoure le TextBox -->
+								<Border CornerRadius="8" BorderBrush="#e2e8f4" BorderThickness="1"
+                                        Background="#FBFBFB">
+									<TextBox Style="{StaticResource QREditField}"
+                                             Padding="10,8"
+                                             Text="{Binding Explication, UpdateSourceTrigger=PropertyChanged}"
+                                             MinHeight="60"/>
+								</Border>
+							</StackPanel>
+						</Border>
 
-                    </Grid>
-                </ScrollViewer>
-            </Grid>
-        </Grid>
+					</Grid>
+				</ScrollViewer>
+			</Grid>
+		</Grid>
 
-        <!-- ══ FOOTER ══ -->
-        <Border Grid.Row="2" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0"
-                Padding="28,12">
-            <Grid>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE9F3;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                               Foreground="#6B6B6B" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <TextBlock FontSize="12" Foreground="#6B6B6B" VerticalAlignment="Center"
-                               Text="{Binding NombreQuestions, StringFormat='{}{0} questions dans ce quiz'}"/>
-                    <TextBlock Text=" · " FontSize="12" Foreground="#CACACA"/>
-                    <TextBlock Text="Cliquez sur une question pour l'éditer directement ou la supprimer"
-                               FontSize="12" Foreground="#ABABAB"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-    </Grid>
+		<!-- ══ FOOTER ══ -->
+		<Border Grid.Row="2" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0" Padding="28,12">
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+				<TextBlock Text="&#xE9F3;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                           Foreground="#6B6B6B" Margin="0,0,6,0" VerticalAlignment="Center"/>
+				<TextBlock FontSize="12" Foreground="#6B6B6B" VerticalAlignment="Center"
+                           Text="{Binding NombreQuestions, StringFormat='{}{0} questions dans ce quiz'}"/>
+				<TextBlock Text=" · " FontSize="12" Foreground="#CACACA"/>
+				<TextBlock Text="Cliquez sur une question pour l'éditer directement ou la supprimer"
+                           FontSize="12" Foreground="#ABABAB"/>
+			</StackPanel>
+		</Border>
+	</Grid>
 </Window>

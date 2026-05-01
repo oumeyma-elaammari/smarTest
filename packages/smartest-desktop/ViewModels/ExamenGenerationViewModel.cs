@@ -44,7 +44,7 @@ namespace smartest_desktop.ViewModels
     public class ExamenGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
-        private readonly OllamaService  _ollama = new();
+        private readonly GroqService _groq = new();
         private CancellationTokenSource? _cts;
 
         // ── Fichier importé ───────────────────────────────────────────────────
@@ -97,8 +97,8 @@ namespace smartest_desktop.ViewModels
         }
         public bool IsNotImporting => !_isImporting;
 
-        public bool HasCours    => !string.IsNullOrWhiteSpace(ContenuCours);
-        public bool HasNoCours  => !HasCours;
+        public bool HasCours => !string.IsNullOrWhiteSpace(ContenuCours);
+        public bool HasNoCours => !HasCours;
         public string NombreCaracteres =>
             HasCours ? $"{ContenuCours.Length:N0} caractères" : string.Empty;
 
@@ -209,20 +209,20 @@ namespace smartest_desktop.ViewModels
 
         // ── Commandes ─────────────────────────────────────────────────────────
 
-        public ICommand GenererCommand           { get; }
+        public ICommand GenererCommand { get; }
         public ICommand AnnulerGenerationCommand { get; }
-        public ICommand AnnulerCommand           { get; }
-        public ICommand SetDifficulteCommand     { get; }
-        public ICommand ImporterFichierCommand   { get; }
-        public ICommand EffacerContenuCommand    { get; }
-        public ICommand IncrQCMCommand           { get; }
-        public ICommand DecrQCMCommand           { get; }
-        public ICommand IncrCheckboxCommand      { get; }
-        public ICommand DecrCheckboxCommand      { get; }
-        public ICommand IncrRedactionCommand     { get; }
-        public ICommand DecrRedactionCommand     { get; }
-        public ICommand RetourDashboardCommand   { get; }
-        public ICommand LogoutCommand            { get; }
+        public ICommand AnnulerCommand { get; }
+        public ICommand SetDifficulteCommand { get; }
+        public ICommand ImporterFichierCommand { get; }
+        public ICommand EffacerContenuCommand { get; }
+        public ICommand IncrQCMCommand { get; }
+        public ICommand DecrQCMCommand { get; }
+        public ICommand IncrCheckboxCommand { get; }
+        public ICommand DecrCheckboxCommand { get; }
+        public ICommand IncrRedactionCommand { get; }
+        public ICommand DecrRedactionCommand { get; }
+        public ICommand RetourDashboardCommand { get; }
+        public ICommand LogoutCommand { get; }
         public ICommand SupprimerFichierImporteCommand { get; }
 
         // ── Événements de navigation ──────────────────────────────────────────
@@ -256,9 +256,9 @@ namespace smartest_desktop.ViewModels
                     if (res != MessageBoxResult.Yes) return;
                     ContenuCours = string.Empty;
                     FichiersImportes.Clear();
-                    TitreCours   = string.Empty;
-                    NomFichier   = string.Empty;
-                    TypeFichier  = string.Empty;
+                    TitreCours = string.Empty;
+                    NomFichier = string.Empty;
+                    TypeFichier = string.Empty;
                     if (string.IsNullOrWhiteSpace(TitreExamen))
                         TitreExamen = string.Empty;
                 },
@@ -290,10 +290,10 @@ namespace smartest_desktop.ViewModels
                 },
                 _ => !IsGenerating && FichiersImportes.Count > 0);
 
-            IncrQCMCommand       = new RelayCommand(_ => NbQCM++);
-            DecrQCMCommand       = new RelayCommand(_ => NbQCM--);
-            IncrCheckboxCommand  = new RelayCommand(_ => NbCheckbox++);
-            DecrCheckboxCommand  = new RelayCommand(_ => NbCheckbox--);
+            IncrQCMCommand = new RelayCommand(_ => NbQCM++);
+            DecrQCMCommand = new RelayCommand(_ => NbQCM--);
+            IncrCheckboxCommand = new RelayCommand(_ => NbCheckbox++);
+            DecrCheckboxCommand = new RelayCommand(_ => NbCheckbox--);
             IncrRedactionCommand = new RelayCommand(_ => NbRedaction++);
             DecrRedactionCommand = new RelayCommand(_ => NbRedaction--);
 
@@ -306,8 +306,8 @@ namespace smartest_desktop.ViewModels
                 {
                     _cts?.Cancel();
                     StatusMessage = "⛔ Génération annulée.";
-                    ErrorMessage  = string.Empty;
-                    IsGenerating  = false;
+                    ErrorMessage = string.Empty;
+                    IsGenerating = false;
                 },
                 _ => IsGenerating);
 
@@ -346,7 +346,7 @@ namespace smartest_desktop.ViewModels
         {
             var dlg = new OpenFileDialog
             {
-                Title  = "Importer un ou plusieurs cours",
+                Title = "Importer un ou plusieurs cours",
                 Filter = "Fichiers supportés (*.pdf;*.docx;*.txt)|*.pdf;*.docx;*.txt" +
                          "|PDF (*.pdf)|*.pdf|Word (*.docx)|*.docx|Texte (*.txt)|*.txt",
                 Multiselect = true
@@ -357,8 +357,8 @@ namespace smartest_desktop.ViewModels
             var chemins = dlg.FileNames;
             if (chemins == null || chemins.Length == 0) return;
 
-            IsImporting   = true;
-            ErrorMessage  = string.Empty;
+            IsImporting = true;
+            ErrorMessage = string.Empty;
             StatusMessage = "📂 Extraction du contenu en cours...";
 
             try
@@ -368,7 +368,7 @@ namespace smartest_desktop.ViewModels
                 foreach (string chemin in chemins)
                 {
                     string extension = Path.GetExtension(chemin).ToLowerInvariant();
-                    string contenu   = await Task.Run(() => ExtraireContenu(chemin, extension));
+                    string contenu = await Task.Run(() => ExtraireContenu(chemin, extension));
 
                     if (string.IsNullOrWhiteSpace(contenu))
                         continue;
@@ -379,7 +379,7 @@ namespace smartest_desktop.ViewModels
 
                 if (ajoutes == 0)
                 {
-                    ErrorMessage  = "❌ Aucun contenu exploitable dans les fichiers sélectionnés.";
+                    ErrorMessage = "❌ Aucun contenu exploitable dans les fichiers sélectionnés.";
                     StatusMessage = string.Empty;
                     return;
                 }
@@ -402,7 +402,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage  = $"❌ Erreur lors de l'import : {ex.Message}";
+                ErrorMessage = $"❌ Erreur lors de l'import : {ex.Message}";
                 StatusMessage = string.Empty;
             }
             finally
@@ -414,8 +414,8 @@ namespace smartest_desktop.ViewModels
         private void AjouterBlocCours(string chemin, string extension, string contenuTrim)
         {
             string nomSansExt = Path.GetFileNameWithoutExtension(chemin);
-            string label      = Path.GetFileName(chemin);
-            string ext        = extension.TrimStart('.').ToUpperInvariant();
+            string label = Path.GetFileName(chemin);
+            string ext = extension.TrimStart('.').ToUpperInvariant();
 
             if (string.IsNullOrWhiteSpace(ContenuCours))
                 ContenuCours = contenuTrim;
@@ -430,9 +430,9 @@ namespace smartest_desktop.ViewModels
 
             FichiersImportes.Add(new FichierCoursImporteItem
             {
-                Titre          = nomSansExt,
-                TypeExtension  = ext,
-                BlocContenu    = contenuTrim
+                Titre = nomSansExt,
+                TypeExtension = ext,
+                BlocContenu = contenuTrim
             });
         }
 
@@ -465,29 +465,29 @@ namespace smartest_desktop.ViewModels
         {
             if (FichiersImportes.Count == 0)
             {
-                TitreCours  = string.Empty;
+                TitreCours = string.Empty;
                 TypeFichier = string.Empty;
                 return;
             }
 
             if (FichiersImportes.Count == 1)
             {
-                TitreCours  = FichiersImportes[0].Titre;
+                TitreCours = FichiersImportes[0].Titre;
                 TypeFichier = FichiersImportes[0].TypeExtension;
             }
             else
             {
-                TitreCours  = $"{FichiersImportes.Count} cours importés";
+                TitreCours = $"{FichiersImportes.Count} cours importés";
                 TypeFichier = "Plusieurs fichiers";
             }
         }
 
         private static string ExtraireContenu(string chemin, string extension) => extension switch
         {
-            ".txt"  => File.ReadAllText(chemin, Encoding.UTF8),
-            ".pdf"  => ExtrairePdf(chemin),
+            ".txt" => File.ReadAllText(chemin, Encoding.UTF8),
+            ".pdf" => ExtrairePdf(chemin),
             ".docx" => ExtraireDocx(chemin),
-            _       => throw new NotSupportedException($"Format non supporté : {extension}")
+            _ => throw new NotSupportedException($"Format non supporté : {extension}")
         };
 
         private static string ExtrairePdf(string chemin)
@@ -505,7 +505,7 @@ namespace smartest_desktop.ViewModels
             return wordDoc.MainDocumentPart?.Document.Body?.InnerText ?? string.Empty;
         }
 
-        // ── Génération ────────────────────────────────────────────────────────
+        // ── Génération via Groq (avec génération par lots) ────────────────────
 
         private async Task GenererExamen()
         {
@@ -513,67 +513,177 @@ namespace smartest_desktop.ViewModels
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
 
-            IsGenerating  = true;
-            ErrorMessage  = string.Empty;
-            StatusMessage = "🤖 Connexion à Ollama...";
+            IsGenerating = true;
+            ErrorMessage = string.Empty;
+            StatusMessage = "🤖 Connexion à Groq...";
 
             try
             {
-                await _ollama.VerifierAsync(ct);
-
-                string modele = await _ollama.DetecterModeleAsync(ct);
-                StatusMessage = $"✅ Modèle : {modele}";
+                // Vérification clé API
+                GroqService.VerifierConfiguration();
+                StatusMessage = $"✅ Modèle : {GroqService.NomModele}";
                 await Task.Delay(300, ct);
 
-                string contenu = ContenuCours;
-                int limiteContenu = TotalQuestions <= 5 ? 3000 : TotalQuestions <= 10 ? 5000 : 7000;
-                if (contenu.Length > limiteContenu)
-                    contenu = contenu[..limiteContenu];
+                // ── Préparation du contenu du cours ──────────────────────────────────
+                //
+                // STRATÉGIE BATCHING :
+                //   Au lieu d'envoyer tout le cours en une seule requête (→ rate limit),
+                //   on génère les questions par petits lots de 4.
+                //   Chaque lot reçoit un EXTRAIT du cours (~2000 chars) pour rester
+                //   dans la limite de tokens par minute de Groq.
+                //
+                //   Pour varier les questions entre lots, on fait tourner une "fenêtre"
+                //   dans le contenu du cours (lot 1 → début, lot 2 → milieu, lot 3 → fin, etc.)
 
-                string prompt = _ollama.BuildPromptExamen(
-                    contenu, NbQCM, NbCheckbox, NbRedaction, Difficulte);
+                string contenuComplet = ContenuCours;
 
-                StatusMessage = $"🧠 Génération de {TotalQuestions} questions ({Difficulte})...";
+                // Limite raisonnable pour éviter les cours de 100 pages
+                // (inutile d'envoyer 50 000 chars pour générer 20 questions)
+                const int LIMITE_CONTENU_TOTAL = 20_000;
+                if (contenuComplet.Length > LIMITE_CONTENU_TOTAL)
+                    contenuComplet = contenuComplet[..LIMITE_CONTENU_TOTAL];
 
-                string texte = await _ollama.GenererStreamingAsync(
-                    modele, prompt,
-                    onProgress: _ => { },
-                    ct: ct);
+                int tailleContexte = GroqService.TailleContexteParLot;
+                int totalQuestions = TotalQuestions;
 
-                if (string.IsNullOrWhiteSpace(texte))
-                    throw new Exception("Ollama n'a retourné aucun texte.");
+                // ── Décision : batching ou requête unique ? ───────────────────────────
+                //
+                // Si ≤ 4 questions ET cours court → requête unique (plus rapide)
+                // Sinon → batching automatique
+                bool useBatching = totalQuestions > 4 || contenuComplet.Length > tailleContexte;
 
-                StatusMessage = "📝 Extraction des questions...";
-                var questions = ParseQuestions(texte);
+                if (!useBatching)
+                {
+                    // ── CAS SIMPLE : une seule requête (≤ 4 questions, cours court) ──
+                    string contenu = contenuComplet.Length > tailleContexte
+                        ? contenuComplet[..tailleContexte]
+                        : contenuComplet;
 
-                if (questions.Count == 0)
-                    throw new Exception(
-                        "Le modèle n'a pas produit de JSON valide.\n\n" +
-                        "Essayez avec moins de questions ou changez de cours.");
+                    string prompt = GroqService.BuildPromptExamen(
+                        contenu, NbQCM, NbCheckbox, NbRedaction, Difficulte);
 
-                string titre = string.IsNullOrWhiteSpace(TitreExamen)
-                    ? $"Examen — {TitreCours}"
-                    : TitreExamen.Trim();
+                    StatusMessage = $"🧠 Génération de {totalQuestions} questions ({Difficulte})...";
 
-                StatusMessage = $"✅ {questions.Count} questions générées !";
-                await Task.Delay(400, ct);
+                    var (texte, duree) = await _groq.GenererAsync(prompt, ct);
 
-                ExamenGenereAvecSucces?.Invoke(
-                    questions, titre, Duree, Difficulte, TitreCours);
+                    if (string.IsNullOrWhiteSpace(texte))
+                        throw new Exception("Groq n'a retourné aucun texte.");
+
+                    StatusMessage = "📝 Extraction des questions...";
+                    var questions = ParseQuestions(texte);
+                    questions = AjusterTypesQuestions(questions, NbQCM, NbCheckbox, NbRedaction);
+
+                    if (questions.Count == 0)
+                        throw new Exception(
+                            "Le modèle n'a pas produit de JSON valide.\n\n" +
+                            "Essayez avec moins de questions ou changez de cours.");
+
+                    string titreQ = string.IsNullOrWhiteSpace(TitreExamen)
+                        ? $"Examen — {TitreCours}"
+                        : TitreExamen.Trim();
+
+                    StatusMessage = $"✅ {questions.Count} questions générées en {duree.TotalSeconds:F1} s !";
+                    await Task.Delay(400, ct);
+
+                    ExamenGenereAvecSucces?.Invoke(questions, titreQ, Duree, Difficulte, TitreCours);
+                }
+                else
+                {
+                    // ── CAS BATCHING : plusieurs lots de questions ────────────────────
+                    //
+                    // On répartit les types de questions proportionnellement sur les lots.
+                    // Exemple : 6 QCM + 4 CHECKBOX + 2 REDACTION = 12 questions
+                    //   Lot 1 : 2 QCM + 1 CHECKBOX + 1 REDACTION = 4 questions
+                    //   Lot 2 : 2 QCM + 2 CHECKBOX + 0 REDACTION = 4 questions
+                    //   Lot 3 : 2 QCM + 1 CHECKBOX + 1 REDACTION = 4 questions
+
+                    int nbLots = (int)Math.Ceiling((double)totalQuestions / 4.0);
+
+                    // Distribuer les types sur les lots
+                    var lotsQCM = DistribuerSurLots(NbQCM, nbLots);
+                    var lotsCheckbox = DistribuerSurLots(NbCheckbox, nbLots);
+                    var lotsRedaction = DistribuerSurLots(NbRedaction, nbLots);
+
+                    StatusMessage = $"🧠 Génération par lots : {totalQuestions} questions en {nbLots} lots...";
+
+                    var toutesQuestions = new List<QuestionExamen>();
+                    int questionDepart = 1;
+                    var swTotal = System.Diagnostics.Stopwatch.StartNew();
+
+                    // Fonction qui construit le prompt pour un lot donné
+                    // Elle fait "tourner" la fenêtre de contexte dans le cours
+                    string BuildPromptPourLot(int nbQInLot, int numeroPremiereLigne)
+                    {
+                        // Indice du lot courant (0-based)
+                        int idxLot = (numeroPremiereLigne - 1) / 4;
+
+                        // Faire tourner la fenêtre de contexte pour varier les questions
+                        int debut = (idxLot * tailleContexte / 2) % Math.Max(1, contenuComplet.Length - tailleContexte);
+                        string extrait = contenuComplet.Length <= tailleContexte
+                            ? contenuComplet
+                            : contenuComplet[debut..Math.Min(debut + tailleContexte, contenuComplet.Length)];
+
+                        // Calculer la répartition pour CE lot spécifique
+                        int idxLotSafe = Math.Min(idxLot, nbLots - 1);
+                        int qcmLot = idxLotSafe < lotsQCM.Length ? lotsQCM[idxLotSafe] : 0;
+                        int cbkLot = idxLotSafe < lotsCheckbox.Length ? lotsCheckbox[idxLotSafe] : 0;
+                        int redLot = idxLotSafe < lotsRedaction.Length ? lotsRedaction[idxLotSafe] : 0;
+
+                        return GroqService.BuildPromptExamenLot(
+                            extrait, qcmLot, cbkLot, redLot, Difficulte, numeroPremiereLigne);
+                    }
+
+                    // Appel batching avec callback de progression
+                    var (jsonFusionne, dureeTotal) = await _groq.GenererParLotsAsync(
+                        buildPromptPourLot: (nbQInLot, numDepart) => BuildPromptPourLot(nbQInLot, numDepart),
+                        totalQuestions: totalQuestions,
+                        onProgres: (lotActuel, nbTotalLots) =>
+                        {
+                            // Mise à jour UI depuis le thread de travail → Dispatcher requis
+                            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                StatusMessage = $"🧠 Lot {lotActuel}/{nbTotalLots} généré...";
+                            });
+                        },
+                        ct: ct);
+
+                    StatusMessage = "📝 Extraction et fusion des questions...";
+
+                    var questions = ParseQuestions(jsonFusionne);
+                    questions = AjusterTypesQuestions(questions, NbQCM, NbCheckbox, NbRedaction);
+
+                    if (questions.Count == 0)
+                        throw new Exception(
+                            "Aucune question n'a pu être extraite des lots générés.\n\n" +
+                            "Essayez avec moins de questions ou un cours plus structuré.");
+
+                    string titre = string.IsNullOrWhiteSpace(TitreExamen)
+                        ? $"Examen — {TitreCours}"
+                        : TitreExamen.Trim();
+
+                    string avertissement = questions.Count < totalQuestions
+                        ? $"\n⚠️ {questions.Count}/{totalQuestions} obtenues (certains lots incomplets)"
+                        : string.Empty;
+
+                    StatusMessage = $"✅ {questions.Count} questions en {dureeTotal.TotalSeconds:F1} s !{avertissement}";
+                    await Task.Delay(400, ct);
+
+                    ExamenGenereAvecSucces?.Invoke(questions, titre, Duree, Difficulte, TitreCours);
+                }
             }
             catch (OperationCanceledException)
             {
                 StatusMessage = "⛔ Génération annulée.";
-                ErrorMessage  = string.Empty;
+                ErrorMessage = string.Empty;
             }
             catch (System.Net.Http.HttpRequestException ex)
             {
-                ErrorMessage  = $"❌ Ollama inaccessible.\n\nLancez : ollama serve\n\nDétail : {ex.Message}";
+                ErrorMessage = $"❌ Groq inaccessible.\n\nVérifiez votre connexion internet.\n\nDétail : {ex.Message}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)
             {
-                ErrorMessage  = $"❌ {ex.Message}";
+                ErrorMessage = $"❌ {ex.Message}";
                 StatusMessage = string.Empty;
             }
             finally
@@ -582,21 +692,211 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        // ── Parser JSON ───────────────────────────────────────────────────────
+        // ── Utilitaire : distribuer N éléments sur K lots ─────────────────────────────
 
         /// <summary>
-        /// Nettoie la réponse brute d'Ollama avant de parser :
-        /// supprime les blocs markdown, les virgules finales, les caractères parasites.
+        /// Distribue N questions aussi uniformément que possible sur K lots.
+        ///
+        /// Exemple : 7 questions sur 3 lots → [3, 2, 2]
+        ///           5 questions sur 4 lots → [2, 1, 1, 1]
+        ///           0 questions sur 3 lots → [0, 0, 0]
         /// </summary>
+        private static int[] DistribuerSurLots(int total, int nbLots)
+        {
+            if (nbLots <= 0) return Array.Empty<int>();
+            if (total <= 0) return new int[nbLots]; // tous à zéro
+
+            var lots = new int[nbLots];
+            int base_ = total / nbLots;
+            int reste = total % nbLots;
+
+            for (int i = 0; i < nbLots; i++)
+                lots[i] = base_ + (i < reste ? 1 : 0);
+
+            return lots;
+        }
+
+
+        /// <summary>
+        /// Découpe (nbQCM, nbCheckbox, nbRedaction) en lots de taille ≤ maxParLot.
+        /// Chaque lot respecte les proportions autant que possible.
+        /// </summary>
+        private static List<(int QCM, int Checkbox, int Redaction)> DecoupeEnLots(
+            int nbQCM, int nbCheckbox, int nbRedaction, int maxParLot)
+        {
+            int total = nbQCM + nbCheckbox + nbRedaction;
+
+            // Cas simple : tout tient dans un seul lot
+            if (total <= maxParLot)
+                return new List<(int QCM, int Checkbox, int Redaction)> { (nbQCM, nbCheckbox, nbRedaction) };
+
+            // Calculer le nombre de lots nécessaires
+            int nbLots = (int)Math.Ceiling((double)total / maxParLot);
+            var lots = new List<(int QCM, int Checkbox, int Redaction)>();
+
+            int restQCM = nbQCM;
+            int restCheckbox = nbCheckbox;
+            int restRedaction = nbRedaction;
+
+            for (int i = 0; i < nbLots; i++)
+            {
+                int restTotal = restQCM + restCheckbox + restRedaction;
+                int lotsRestants = nbLots - i;
+
+                // Taille de ce lot (répartition équitable)
+                int tailleLot = (int)Math.Ceiling((double)restTotal / lotsRestants);
+                tailleLot = Math.Min(tailleLot, maxParLot);
+
+                // Distribuer proportionnellement dans ce lot
+                int lotQCM = Math.Min(restQCM,
+                    (int)Math.Round((double)nbQCM / (nbQCM + nbCheckbox + nbRedaction) * tailleLot));
+                int lotCheckbox = Math.Min(restCheckbox,
+                    (int)Math.Round((double)nbCheckbox / (nbQCM + nbCheckbox + nbRedaction) * tailleLot));
+                int lotRedaction = Math.Min(restRedaction, tailleLot - lotQCM - lotCheckbox);
+
+                // Ajuster pour ne pas dépasser maxParLot
+                int lotTotal = lotQCM + lotCheckbox + lotRedaction;
+                if (lotTotal > maxParLot)
+                {
+                    // Réduire proportionnellement
+                    lotQCM = (int)Math.Floor((double)lotQCM * maxParLot / lotTotal);
+                    lotCheckbox = (int)Math.Floor((double)lotCheckbox * maxParLot / lotTotal);
+                    lotRedaction = maxParLot - lotQCM - lotCheckbox;
+                }
+
+                // S'assurer qu'on génère au moins 1 question par lot
+                if (lotQCM + lotCheckbox + lotRedaction == 0)
+                {
+                    if (restQCM > 0) lotQCM = 1;
+                    else if (restCheckbox > 0) lotCheckbox = 1;
+                    else if (restRedaction > 0) lotRedaction = 1;
+                }
+
+                lots.Add((lotQCM, lotCheckbox, lotRedaction));
+
+                restQCM -= lotQCM;
+                restCheckbox -= lotCheckbox;
+                restRedaction -= lotRedaction;
+
+                if (restQCM + restCheckbox + restRedaction == 0) break;
+            }
+
+            // Si des questions restent (à cause des arrondis), les ajouter au dernier lot
+            if (restQCM + restCheckbox + restRedaction > 0 && lots.Count > 0)
+            {
+                var last = lots[^1];
+                lots[^1] = (last.QCM + restQCM, last.Checkbox + restCheckbox, last.Redaction + restRedaction);
+            }
+
+            // Supprimer les lots vides
+            lots.RemoveAll(l => l.QCM + l.Checkbox + l.Redaction == 0);
+
+            return lots;
+        }
+
+        /// <summary>
+        /// Découpe le contenu du cours en N segments de taille ≤ LIMITE_CONTENU_CHARS.
+        /// Chaque lot reçoit un segment différent pour couvrir l'ensemble du document.
+        /// Si le cours est court, tous les segments sont identiques (le cours entier tronqué).
+        /// </summary>
+        private static List<string> DecoupeContenuEnSegments(string contenu, int nbSegments)
+        {
+            int limite = GroqService.LIMITE_CONTENU_CHARS;
+            var segments = new List<string>();
+
+            if (contenu.Length <= limite || nbSegments <= 1)
+            {
+                // Cours court : même segment pour tout le monde
+                string seg = contenu.Length > limite ? contenu[..limite] : contenu;
+                for (int i = 0; i < nbSegments; i++) segments.Add(seg);
+                return segments;
+            }
+
+            // Cours long : découper en tranches qui se chevauchent légèrement
+            // pour ne pas couper au milieu d'une phrase importante
+            int tailleTranche = Math.Max(limite, contenu.Length / nbSegments);
+
+            for (int i = 0; i < nbSegments; i++)
+            {
+                int debut = i * tailleTranche;
+                if (debut >= contenu.Length)
+                {
+                    // Plus de contenu : répéter le dernier segment
+                    segments.Add(segments[^1]);
+                    continue;
+                }
+
+                int fin = Math.Min(debut + limite, contenu.Length);
+
+                // Essayer de couper sur un espace pour ne pas tronquer un mot
+                if (fin < contenu.Length)
+                {
+                    int espaceProche = contenu.LastIndexOf(' ', fin, Math.Min(100, fin - debut));
+                    if (espaceProche > debut) fin = espaceProche;
+                }
+
+                segments.Add(contenu[debut..fin].Trim());
+            }
+
+            return segments;
+        }
+
+        /// <summary>
+        /// Si Groq n'a pas produit exactement le bon nombre de questions par type,
+        /// on coupe les excès et on ré-étiquette les manquants pour respecter les compteurs.
+        /// </summary>
+        private static List<QuestionExamen> AjusterTypesQuestions(
+            List<QuestionExamen> src, int wantQCM, int wantCheckbox, int wantRedaction)
+        {
+            var qcms = src.Where(q => q.Type == "QCM").Take(wantQCM).ToList();
+            var checks = src.Where(q => q.Type == "CHECKBOX").Take(wantCheckbox).ToList();
+            var reds = src.Where(q => q.Type == "REDACTION").Take(wantRedaction).ToList();
+
+            var restants = src.Where(q => q.Type == "QCM" && !qcms.Contains(q)).ToList();
+
+            while (checks.Count < wantCheckbox && restants.Count > 0)
+            {
+                var q = restants[0]; restants.RemoveAt(0);
+                q.Type = "CHECKBOX";
+                checks.Add(q);
+            }
+
+            while (reds.Count < wantRedaction && restants.Count > 0)
+            {
+                var q = restants[0]; restants.RemoveAt(0);
+                q.Type = "REDACTION";
+                q.ReponseModele = q.Explication;
+                reds.Add(q);
+            }
+
+            while (qcms.Count < wantQCM && restants.Count > 0)
+            {
+                qcms.Add(restants[0]);
+                restants.RemoveAt(0);
+            }
+
+            var result = qcms.Concat(checks).Concat(reds).ToList();
+            int n = 1;
+            foreach (var q in result) q.Numero = n++;
+            return result;
+        }
+
+        // ── Parser JSON ───────────────────────────────────────────────────────
+
         private static string NettoyerJSON(string texte)
         {
-            // Supprimer les blocs ```json ... ``` ou ``` ... ```
+            // Supprimer les blocs markdown
             texte = System.Text.RegularExpressions.Regex.Replace(
                 texte, @"```[a-z]*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            texte = texte.Replace("```", "");
 
-            // Supprimer les virgules finales avant ] ou }
+            // Supprimer les virgules traînantes avant } ou ]
             texte = System.Text.RegularExpressions.Regex.Replace(
                 texte, @",\s*([}\]])", "$1");
+
+            // Supprimer les caractères de contrôle invisibles sauf \n \r \t
+            texte = System.Text.RegularExpressions.Regex.Replace(
+                texte, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", "");
 
             return texte.Trim();
         }
@@ -608,22 +908,37 @@ namespace smartest_desktop.ViewModels
             {
                 texte = NettoyerJSON(texte);
 
-                System.Diagnostics.Debug.WriteLine("=== OLLAMA EXAMEN RESPONSE ===");
+                System.Diagnostics.Debug.WriteLine("=== GROQ EXAMEN RESPONSE ===");
                 System.Diagnostics.Debug.WriteLine(texte[..Math.Min(800, texte.Length)]);
 
-                // ── Extraire le tableau JSON ──────────────────────────────────────
-                // Cas 1 : réponse directement un tableau [...]
-                // Cas 2 : objet { "questions": [...] } ou { "exam": [...] }
                 string jsonPart = ExtraireTableau(texte);
+
+                // ✅ Si le tableau est vide ou incomplet, tenter de le réparer
+                if (string.IsNullOrEmpty(jsonPart))
+                {
+                    System.Diagnostics.Debug.WriteLine("[ParseQuestions] Tableau non trouvé, tentative de réparation...");
+                    jsonPart = TenterReparerJSON(texte);
+                }
+
                 if (string.IsNullOrEmpty(jsonPart)) return result;
 
-                // Deuxième passe de nettoyage sur le segment extrait
+                // Supprimer virgules traînantes (seconde passe après extraction)
                 jsonPart = System.Text.RegularExpressions.Regex.Replace(
                     jsonPart, @",\s*([}\]])", "$1");
 
-                var items = JsonSerializer.Deserialize<List<JsonElement>>(
-                    jsonPart,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                List<JsonElement>? items = null;
+                try
+                {
+                    items = JsonSerializer.Deserialize<List<JsonElement>>(
+                        jsonPart,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+                catch (JsonException)
+                {
+                    // ✅ Dernière tentative : extraire les objets JSON individuels
+                    System.Diagnostics.Debug.WriteLine("[ParseQuestions] Échec désérialisation, extraction individuelle...");
+                    items = ExtraireObjetsJSON(jsonPart);
+                }
 
                 if (items == null) return result;
 
@@ -632,8 +947,6 @@ namespace smartest_desktop.ViewModels
                 {
                     try
                     {
-                        // Type : accepte "QCM", "CHECKBOX", "REDACTION", "IMAGE"
-                        // ou des variantes qu'Ollama peut produire
                         string type = StrAlt(item,
                             "type", "questionType", "question_type", "kind")
                             .ToUpperInvariant()
@@ -641,13 +954,12 @@ namespace smartest_desktop.ViewModels
 
                         if (string.IsNullOrEmpty(type)) type = "QCM";
                         if (type.Contains("CHECK")) type = "CHECKBOX";
-                        else if (type.Contains("REDAG") || type.Contains("OPEN") || type.Contains("LIBRE")) type = "REDACTION";
+                        else if (type.Contains("REDAC") || type.Contains("OPEN") || type.Contains("LIBRE")) type = "REDACTION";
                         else if (type.Contains("IMAGE") || type.Contains("IMG")) type = "IMAGE";
                         else if (!type.StartsWith("QCM") && !type.StartsWith("CHECKBOX")
                                  && !type.StartsWith("REDACTION") && !type.StartsWith("IMAGE"))
-                            type = "QCM"; // fallback
+                            type = "QCM";
 
-                        // Énoncé : plusieurs noms possibles
                         string enonce = StrAlt(item,
                             "enonce", "enoncé", "question", "texte", "text",
                             "questionText", "question_text", "libelle", "intitule");
@@ -656,28 +968,29 @@ namespace smartest_desktop.ViewModels
 
                         var q = new QuestionExamen
                         {
-                            Numero      = n++,
-                            Type        = type,
-                            Enonce      = enonce,
+                            Numero = n++,
+                            Type = type,
+                            Enonce = enonce,
                             Explication = StrAlt(item, "explication", "explanation",
                                                  "justification", "correction"),
-                            Difficulte  = "Moyen",
+                            Difficulte = "Moyen",
                         };
 
                         if (type is "QCM" or "IMAGE")
                         {
-                            // Options : soit optionA/B/C/D, soit tableau choix/options/choices
                             (q.OptionA, q.OptionB, q.OptionC, q.OptionD) = ExtraireOptions(item);
                             q.ReponseCorrecte = StrAlt(item,
                                 "reponseCorrecte", "reponse_correcte", "reponse",
                                 "correctAnswer", "correct", "answer", "bonne_reponse")
                                 .ToUpper().Trim();
 
-                            // Si la réponse est 1/2/3/4, convertir en A/B/C/D
                             q.ReponseCorrecte = q.ReponseCorrecte switch
                             {
-                                "1" => "A", "2" => "B", "3" => "C", "4" => "D",
-                                _   => q.ReponseCorrecte
+                                "1" => "A",
+                                "2" => "B",
+                                "3" => "C",
+                                "4" => "D",
+                                _ => q.ReponseCorrecte
                             };
                         }
                         else if (type == "CHECKBOX")
@@ -704,38 +1017,159 @@ namespace smartest_desktop.ViewModels
             return result;
         }
 
-        // ── Helpers parseur ──────────────────────────────────────────────────────
+        // ── Helpers parseur ───────────────────────────────────────────────────
 
-        /// <summary>Extrait le premier tableau JSON valide du texte brut.</summary>
         private static string ExtraireTableau(string texte)
         {
-            // Chercher le premier '[' et son ']' correspondant (balancé)
             int start = texte.IndexOf('[');
             if (start == -1)
             {
-                // Peut-être un objet { "questions": [...] } sans tableau direct
                 int ob = texte.IndexOf('{');
                 if (ob == -1) return string.Empty;
-                // Chercher un tableau à l'intérieur
                 int inner = texte.IndexOf('[', ob);
                 if (inner == -1) return string.Empty;
                 start = inner;
             }
 
-            // Trouver le crochet fermant équilibré
             int depth = 0;
             for (int i = start; i < texte.Length; i++)
             {
                 if (texte[i] == '[') depth++;
                 else if (texte[i] == ']') { depth--; if (depth == 0) return texte[start..(i + 1)]; }
             }
+
+            // ✅ Si le tableau n'est pas fermé (JSON tronqué), essayer de récupérer ce qu'on a
+            if (depth > 0 && start >= 0)
+            {
+                System.Diagnostics.Debug.WriteLine("[ExtraireTableau] JSON tronqué, tentative récupération partielle.");
+                return ExtraireTableauPartiel(texte, start);
+            }
+
             return string.Empty;
         }
 
         /// <summary>
-        /// Extrait les 4 options depuis optionA/B/C/D OU depuis un tableau
-        /// (choix, options, choices, answers, propositions).
+        /// Tente de récupérer le maximum d'objets JSON complets d'un tableau tronqué.
         /// </summary>
+        private static string ExtraireTableauPartiel(string texte, int start)
+        {
+            // Trouver tous les objets JSON complets (profondeur objet = 0 après chaque })
+            var objets = new List<string>();
+            int i = start + 1; // sauter le [
+            int depth = 0;
+            int objStart = -1;
+
+            while (i < texte.Length)
+            {
+                char c = texte[i];
+
+                if (c == '{')
+                {
+                    if (depth == 0) objStart = i;
+                    depth++;
+                }
+                else if (c == '}')
+                {
+                    depth--;
+                    if (depth == 0 && objStart >= 0)
+                    {
+                        objets.Add(texte[objStart..(i + 1)]);
+                        objStart = -1;
+                    }
+                }
+                i++;
+            }
+
+            if (objets.Count == 0) return string.Empty;
+
+            return "[" + string.Join(",", objets) + "]";
+        }
+
+        /// <summary>
+        /// Tente de réparer un JSON invalide en cherchant des objets individuels.
+        /// </summary>
+        private static string TenterReparerJSON(string texte)
+        {
+            // Chercher tous les objets JSON { ... } au premier niveau
+            var objets = new List<string>();
+            int i = 0;
+            int depth = 0;
+            int objStart = -1;
+
+            while (i < texte.Length)
+            {
+                char c = texte[i];
+                if (c == '{')
+                {
+                    if (depth == 0) objStart = i;
+                    depth++;
+                }
+                else if (c == '}')
+                {
+                    depth--;
+                    if (depth == 0 && objStart >= 0)
+                    {
+                        string obj = texte[objStart..(i + 1)];
+                        // Vérifier que c'est un objet JSON valide
+                        try
+                        {
+                            JsonDocument.Parse(obj);
+                            objets.Add(obj);
+                        }
+                        catch { }
+                        objStart = -1;
+                    }
+                }
+                i++;
+            }
+
+            if (objets.Count == 0) return string.Empty;
+            return "[" + string.Join(",", objets) + "]";
+        }
+
+        /// <summary>
+        /// Extrait les objets JSON individuels depuis un tableau JSON partiellement invalide.
+        /// </summary>
+        private static List<JsonElement> ExtraireObjetsJSON(string jsonArray)
+        {
+            var result = new List<JsonElement>();
+            int i = 0;
+            int depth = 0;
+            int start = -1;
+
+            // Passer le premier '['
+            while (i < jsonArray.Length && jsonArray[i] != '[') i++;
+            i++;
+
+            while (i < jsonArray.Length)
+            {
+                char c = jsonArray[i];
+                if (c == '{')
+                {
+                    if (depth == 0) start = i;
+                    depth++;
+                }
+                else if (c == '}')
+                {
+                    depth--;
+                    if (depth == 0 && start >= 0)
+                    {
+                        string obj = jsonArray[start..(i + 1)];
+                        try
+                        {
+                            using var doc = JsonDocument.Parse(obj);
+                            result.Add(doc.RootElement.Clone());
+                        }
+                        catch { }
+                        start = -1;
+                    }
+                }
+                i++;
+            }
+
+            return result;
+        }
+
         private static (string A, string B, string C, string D) ExtraireOptions(JsonElement el)
         {
             string a = StrAlt(el, "optionA", "option_a", "choixA", "a");
@@ -743,7 +1177,6 @@ namespace smartest_desktop.ViewModels
             string c = StrAlt(el, "optionC", "option_c", "choixC", "c");
             string d = StrAlt(el, "optionD", "option_d", "choixD", "d");
 
-            // Si pas trouvé en individuel, chercher un tableau
             if (string.IsNullOrEmpty(a))
             {
                 foreach (var key in new[] { "choix", "options", "choices", "answers",
@@ -772,10 +1205,8 @@ namespace smartest_desktop.ViewModels
             return (a, b, c, d);
         }
 
-        /// <summary>Extrait les cases cochées correctes pour une question CHECKBOX.</summary>
         private static void ExtraireReponsesCheckbox(JsonElement el, QuestionExamen q)
         {
-            // Chercher reponsesCorrectes ou variantes
             foreach (var key in new[] { "reponsesCorrectes", "reponses_correctes",
                                          "correctAnswers", "correct_answers",
                                          "bonnesReponses", "bonnes_reponses" })
@@ -801,7 +1232,6 @@ namespace smartest_desktop.ViewModels
                 }
             }
 
-            // Fallback : champs booléens individuels
             q.OptionACorrecte = StrAlt(el, "correcteA", "correctA", "aCorrect")
                                     .Equals("true", StringComparison.OrdinalIgnoreCase);
             q.OptionBCorrecte = StrAlt(el, "correcteB", "correctB", "bCorrect")
@@ -812,7 +1242,6 @@ namespace smartest_desktop.ViewModels
                                     .Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
-        /// <summary>Lit une propriété en testant plusieurs noms alternatifs.</summary>
         private static string StrAlt(JsonElement el, params string[] keys)
         {
             foreach (var key in keys)

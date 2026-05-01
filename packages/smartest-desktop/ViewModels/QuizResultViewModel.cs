@@ -80,7 +80,7 @@ namespace smartest_desktop.ViewModels
         public event Action? NavigationRetourRequested;
 
         // ── Constructeur ──────────────────────────────────────────────────────
-      
+
 
         // ── Helpers privés ────────────────────────────────────────────────────
         private void RenuméroterQuestions()

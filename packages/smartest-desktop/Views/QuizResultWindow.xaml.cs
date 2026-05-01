@@ -44,27 +44,27 @@ namespace smartest_desktop.Views
 
                     var questionsDb = questionsValidees.Select((q, idx) => new QuestionLocale
                     {
-                        Numero          = idx + 1,
-                        Type            = "QCM",
-                        Enonce          = q.Enonce,
-                        OptionA         = q.OptionA,
-                        OptionB         = q.OptionB,
-                        OptionC         = q.OptionC,
-                        OptionD         = q.OptionD,
+                        Numero = idx + 1,
+                        Type = "QCM",
+                        Enonce = q.Enonce,
+                        OptionA = q.OptionA,
+                        OptionB = q.OptionB,
+                        OptionC = q.OptionC,
+                        OptionD = q.OptionD,
                         ReponseCorrecte = q.ReponseCorrecte,
-                        Explication     = q.Explication,
-                        Difficulte      = difficulteQuiz
+                        Explication = q.Explication,
+                        Difficulte = difficulteQuiz
                     }).ToList();
 
                     var quiz = new QuizLocal
                     {
-                        Titre             = titreQuiz,
-                        Difficulte        = difficulteQuiz,
-                        CoursSourceTitre  = coursTitreQuiz ?? string.Empty,
-                        Statut            = statutQuiz,
-                        NombreQuestions   = questionsValidees.Count,
-                        DateCreation      = DateTime.Now,
-                        Questions         = questionsDb
+                        Titre = titreQuiz,
+                        Difficulte = difficulteQuiz,
+                        CoursSourceTitre = coursTitreQuiz ?? string.Empty,
+                        Statut = statutQuiz,
+                        NombreQuestions = questionsValidees.Count,
+                        DateCreation = DateTime.Now,
+                        Questions = questionsDb
                     };
 
                     db.Quiz.Add(quiz);
