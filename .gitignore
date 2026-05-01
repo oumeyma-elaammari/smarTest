@@ -1,0 +1,36 @@
+# Dépendances et sorties front
+node_modules/
+dist/
+build/
+
+# Secrets et logs
+.env
+*.log
+
+# Système
+.DS_Store
+
+# IDE
+.vs/
+**/.vs/
+.idea/
+**/.idea/
+packages/smartest-backend/.idea/
+
+# Build .NET (tout le dépôt)
+bin/
+obj/
+
+# Binaires souvent générés localement
+*.exe
+*.dll
+
+# SQLite — rester local uniquement
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Base locale app desktop
+**/smartest_local.db
