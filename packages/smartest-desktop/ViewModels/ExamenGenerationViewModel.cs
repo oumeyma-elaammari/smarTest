@@ -490,14 +490,8 @@ namespace smartest_desktop.ViewModels
             _ => throw new NotSupportedException($"Format non supporté : {extension}")
         };
 
-        private static string ExtrairePdf(string chemin)
-        {
-            using var doc = UglyToad.PdfPig.PdfDocument.Open(chemin);
-            var sb = new StringBuilder();
-            foreach (var page in doc.GetPages())
-                sb.AppendLine(page.Text);
-            return sb.ToString().Trim();
-        }
+        private static string ExtrairePdf(string chemin) =>
+            NettoyerTexteSlides(PdfTextImport.ExtraireTexteBrut(chemin)).Trim();
 
         private static string ExtraireDocx(string chemin)
         {

@@ -66,7 +66,7 @@
 			</Grid.RowDefinitions>
 
 		<!-- ══ HEADER ══ -->
-		<Border Grid.Row="0" Background="White" Padding="28,20,28,22" Margin="0,0,0,0">
+		<Border Grid.Row="0" Background="White" Padding="14,10" Margin="0,0,0,0">
 			<Border.Effect>
 				<DropShadowEffect BlurRadius="24" ShadowDepth="1" Direction="270"
 								  Opacity="0.04" Color="#0f1e3d"/>
@@ -78,8 +78,8 @@
 					<ColumnDefinition Width="Auto"/>
 				</Grid.ColumnDefinitions>
 
-				<Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
-                        Background="#eef3fd" Cursor="Hand" Margin="0,0,18,0"
+				<Border Grid.Column="0" Width="28" Height="28" CornerRadius="7"
+                        Background="#eef3fd" Cursor="Hand" Margin="0,0,8,0"
 						BorderBrush="#d0ddf5" BorderThickness="1">
 					<Border.InputBindings>
 						<MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerCommand}"/>
@@ -91,18 +91,8 @@
 
 				<StackPanel Grid.Column="1" VerticalAlignment="Center">
 					<TextBlock Text="Nouveau quiz" FontSize="20" FontWeight="700" Foreground="#0f1e3d"/>
-					<TextBlock Text="IA locale (Ollama)" FontSize="12" Foreground="#8899b8" Margin="0,6,0,0"/>
 				</StackPanel>
 
-				<Border Grid.Column="2" Background="#f5f8ff" BorderBrush="#dbe8fc"
-                        BorderThickness="1" CornerRadius="12" Padding="12,8">
-					<StackPanel Orientation="Horizontal">
-						<TextBlock Text="&#xE99A;" FontSize="14" FontFamily="Segoe MDL2 Assets"
-								   Foreground="#4f8ef7" Margin="0,0,8,0" VerticalAlignment="Center"/>
-						<TextBlock Text="Ollama" FontSize="12" FontWeight="SemiBold" Foreground="#0f1e3d"
-								   VerticalAlignment="Center"/>
-					</StackPanel>
-				</Border>
 			</Grid>
 		</Border>
 
@@ -240,87 +230,53 @@
 						</Border>
 
 						<!-- Bouton Générer -->
-						<Border Margin="0,8,0,0">
-							<Border.InputBindings>
-								<MouseBinding MouseAction="LeftClick" Command="{Binding GenererCommand}"/>
-							</Border.InputBindings>
-							<Border.Style>
-								<Style TargetType="Border" BasedOn="{StaticResource GenPrimaryBorder}">
-									<Style.Triggers>
-										<DataTrigger Binding="{Binding IsGenerating}" Value="True">
-											<Setter Property="Background" Value="#6B7280"/>
-											<Setter Property="Cursor" Value="Wait"/>
-										</DataTrigger>
-										<DataTrigger Binding="{Binding HasCours}" Value="False">
-											<Setter Property="Background" Value="#D1D5DB"/>
-											<Setter Property="Cursor" Value="Arrow"/>
-										</DataTrigger>
-									</Style.Triggers>
-								</Style>
-							</Border.Style>
-							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-								<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center">
-									<TextBlock.Style>
-										<Style TargetType="TextBlock">
-											<Setter Property="Text" Value="&#xE946;"/>
-											<Setter Property="Foreground" Value="White"/>
-											<Style.Triggers>
-												<DataTrigger Binding="{Binding IsGenerating}" Value="True">
-													<Setter Property="Text" Value="&#xE72C;"/>
-												</DataTrigger>
-											</Style.Triggers>
-										</Style>
-									</TextBlock.Style>
-								</TextBlock>
-								<TextBlock FontSize="13" FontWeight="600" Foreground="White">
-									<TextBlock.Style>
-										<Style TargetType="TextBlock">
-											<Setter Property="Text" Value="Générer le quiz"/>
-											<Style.Triggers>
-												<DataTrigger Binding="{Binding IsGenerating}" Value="True">
-													<Setter Property="Text" Value="Génération en cours..."/>
-												</DataTrigger>
-												<DataTrigger Binding="{Binding HasCours}" Value="False">
-													<Setter Property="Text" Value="Importez un cours d'abord"/>
-												</DataTrigger>
-											</Style.Triggers>
-										</Style>
-									</TextBlock.Style>
-								</TextBlock>
-							</StackPanel>
-						</Border>
+						<Border CornerRadius="12" Padding="0,16" Cursor="Hand"
+                                Visibility="{Binding IsNotGenerating, Converter={StaticResource BoolToVis}}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#0f1e3d"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#1a2e5a"/>
+                                        </Trigger>
+                                        <DataTrigger Binding="{Binding HasCours}" Value="False">
+                                            <Setter Property="Background" Value="#B2C2DB"/>
+                                            <Setter Property="Cursor" Value="Arrow"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding GenererCommand}"/>
+                            </Border.InputBindings>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                           Foreground="White" Margin="0,0,5,0"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="Générer le quiz"
+                                           FontSize="14" FontWeight="600" Foreground="White"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
 
 						<!-- Annuler génération -->
-						<Border Margin="0,10,0,0" Padding="0,10"
+						<Border CornerRadius="12" Padding="0,16" Cursor="Hand"
+                                Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1"
                                 Visibility="{Binding IsGenerating, Converter={StaticResource BoolToVis}}">
-							<Border.InputBindings>
-								<MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerGenerationCommand}"/>
-							</Border.InputBindings>
-							<Border.Style>
-								<Style TargetType="Border" BasedOn="{StaticResource GenSecondaryBorder}"/>
-							</Border.Style>
-							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-								<TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-										   Foreground="#DC2626" Margin="0,0,8,0" VerticalAlignment="Center"/>
-								<TextBlock Text="Annuler la génération" FontSize="12"
-										   FontWeight="600" Foreground="#DC2626" VerticalAlignment="Center"/>
-							</StackPanel>
-						</Border>
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerGenerationCommand}"/>
+                            </Border.InputBindings>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                           Foreground="#DC2626" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Annuler la génération"
+                                           FontSize="13" FontWeight="600" Foreground="#DC2626"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
 
-						<!-- Info Ollama -->
-						<Border CornerRadius="8" Padding="12,10" Margin="0,16,0,0"
-                                Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
-							<StackPanel Orientation="Horizontal">
-								<TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-										   Foreground="#4f8ef7" Margin="0,0,8,0" VerticalAlignment="Center"/>
-								<TextBlock FontSize="11" Foreground="#64748B" VerticalAlignment="Center" TextWrapping="Wrap">
-									<Run FontWeight="600" Text="Ollama doit tourner"/><Run Text=" · "/>
-									<Run Text="ollama serve"/><Run Text=" · "/>
-									<Run Text="PDF, DOCX, TXT"/>
-								</TextBlock>
-							</StackPanel>
-						</Border>
-
+				
 					</StackPanel>
 				</ScrollViewer>
 			</Border>
@@ -365,19 +321,7 @@
 								</Style>
 							</Border.Style>
 							<StackPanel Orientation="Horizontal">
-								<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0"
-										   VerticalAlignment="Center">
-									<TextBlock.Style>
-										<Style TargetType="TextBlock">
-											<Setter Property="Text" Value="&#xE838;"/>
-											<Style.Triggers>
-												<DataTrigger Binding="{Binding IsImporting}" Value="True">
-													<Setter Property="Text" Value="&#xE72C;"/>
-												</DataTrigger>
-											</Style.Triggers>
-										</Style>
-									</TextBlock.Style>
-								</TextBlock>
+						
 								<TextBlock FontSize="12" FontWeight="600" Foreground="White">
 									<TextBlock.Style>
 										<Style TargetType="TextBlock">
