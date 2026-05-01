@@ -17,8 +17,9 @@
             </ResourceDictionary.MergedDictionaries>
 
         <Style x:Key="CounterBtn" TargetType="Border">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
+            <Setter Property="Width" Value="25"/>
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Background" Value="#eef3fd"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -49,7 +50,7 @@
             </Grid.RowDefinitions>
 
         <!-- HEADER -->
-        <Border Grid.Row="0" Background="White" Padding="28,20,28,22">
+        <Border Grid.Row="0" Background="White" Padding="14,10" Margin="0,0,0,0">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="24" ShadowDepth="1" Direction="270"
                                   Opacity="0.04" Color="#0f1e3d"/>
@@ -61,8 +62,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
-                        Background="#eef3fd" Cursor="Hand" Margin="0,0,18,0"
+                <Border Grid.Column="0" Width="28" Height="28" CornerRadius="7"
+                        Background="#eef3fd" Cursor="Hand" Margin="0,0,8,0"
                         BorderBrush="#d0ddf5" BorderThickness="1">
                     <Border.InputBindings>
                         <MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerCommand}"/>
@@ -74,18 +75,7 @@
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="Nouvel examen" FontSize="20" FontWeight="700" Foreground="#0f1e3d"/>
-                    <TextBlock Text="IA locale (Ollama)" FontSize="12" Foreground="#8899b8" Margin="0,6,0,0"/>
                 </StackPanel>
-
-                <Border Grid.Column="2" Background="#f5f8ff" BorderBrush="#dbe8fc"
-                        BorderThickness="1" CornerRadius="12" Padding="12,8">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE99A;" FontSize="14" FontFamily="Segoe MDL2 Assets"
-                                   Foreground="#4f8ef7" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Ollama" FontSize="12" FontWeight="SemiBold" Foreground="#0f1e3d"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
             </Grid>
         </Border>
 
@@ -313,7 +303,7 @@
                         <!-- Total -->
                         <Border Background="#eef3fd" CornerRadius="12"
                                 BorderBrush="#cfe0fc" BorderThickness="1"
-                                Padding="16,14" Margin="0,0,0,28">
+                                Padding="12,15" Margin="0,0,0,28">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -324,7 +314,7 @@
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding TotalQuestions}"
-                                           FontSize="24" FontWeight="700" Foreground="#4f8ef7"/>
+                                           FontSize="17" FontWeight="700" Foreground="#4f8ef7"/>
                             </Grid>
                         </Border>
 
@@ -351,10 +341,15 @@
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background" Value="#0f1e3d"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter Property="Background" Value="#1a2e5a"/>
                                         </Trigger>
+                                        <DataTrigger Binding="{Binding HasCours}" Value="False">
+                                            <Setter Property="Background" Value="#B2C2DB"/>
+                                            <Setter Property="Cursor" Value="Arrow"/>
+                                        </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
@@ -363,7 +358,7 @@
                             </Border.InputBindings>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                           Foreground="White" Margin="0,0,8,0"
+                                           Foreground="White" Margin="0,0,5,0"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Text="Générer l'examen"
                                            FontSize="14" FontWeight="600" Foreground="White"
@@ -428,19 +423,6 @@
                                 </Style>
                             </Border.Style>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="&#xE838;"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsImporting}" Value="True">
-                                                    <Setter Property="Text" Value="&#xE72C;"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
                                 <TextBlock FontSize="12" FontWeight="600" Foreground="White">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
