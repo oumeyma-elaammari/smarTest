@@ -2,9 +2,9 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:smartest_desktop="clr-namespace:smartest_desktop.Helpers"
-        Title="SmarTest — Révision de l'examen"
-        Height="720" Width="1200"
-        MinHeight="600" MinWidth="1000"
+        Title="{Binding TitreFenetre}"
+        Height="780" Width="1280"
+        MinHeight="650" MinWidth="1000"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BgBrush}"
@@ -20,6 +20,50 @@
 			<BooleanToVisibilityConverter x:Key="BoolToVis"/>
 			<!-- Inverse: True → Collapsed, False → Visible -->
 			<smartest_desktop:InverseBooleanToVisibilityConverter x:Key="BoolToVisInverse"/>
+
+			<Style x:Key="QRCard" TargetType="Border">
+				<Setter Property="Background" Value="White"/>
+				<Setter Property="CornerRadius" Value="12"/>
+				<Setter Property="BorderBrush" Value="#e2e8f4"/>
+				<Setter Property="BorderThickness" Value="1"/>
+			</Style>
+
+			<Style x:Key="QRValidateBorder" TargetType="Border">
+				<Setter Property="CornerRadius" Value="9"/>
+				<Setter Property="Padding" Value="18,11"/>
+				<Setter Property="Cursor" Value="Hand"/>
+				<Setter Property="Background" Value="#0f1e3d"/>
+				<Style.Triggers>
+					<Trigger Property="IsMouseOver" Value="True">
+						<Setter Property="Background" Value="#1a2e5a"/>
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+
+			<Style x:Key="QRSecondaryBorder" TargetType="Border">
+				<Setter Property="CornerRadius" Value="9"/>
+				<Setter Property="Padding" Value="14,9"/>
+				<Setter Property="Cursor" Value="Hand"/>
+				<Setter Property="Background" Value="#f0f3f9"/>
+				<Setter Property="BorderBrush" Value="#e2e8f4"/>
+				<Setter Property="BorderThickness" Value="1"/>
+				<Style.Triggers>
+					<Trigger Property="IsMouseOver" Value="True">
+						<Setter Property="Background" Value="#e8eef8"/>
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+
+			<Style x:Key="QREditField" TargetType="TextBox">
+				<Setter Property="Background" Value="Transparent"/>
+				<Setter Property="BorderThickness" Value="0"/>
+				<Setter Property="Padding" Value="0"/>
+				<Setter Property="FontSize" Value="12"/>
+				<Setter Property="Foreground" Value="#0f1e3d"/>
+				<Setter Property="TextWrapping" Value="Wrap"/>
+				<Setter Property="AcceptsReturn" Value="True"/>
+				<Setter Property="CaretBrush" Value="#0f1e3d"/>
+			</Style>
 
 			<Style x:Key="OptionRow" TargetType="Border">
 				<Setter Property="CornerRadius" Value="8"/>
@@ -42,11 +86,11 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<!-- ═══════════════ HEADER ═══════════════ -->
-		<Border Grid.Row="0" Background="White"
-                BorderBrush="#e2e8f4" BorderThickness="0,0,0,1" Padding="24,14">
+		<!-- ══ HEADER ══ -->
+		<Border Grid.Row="0" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1" Padding="28,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"/>
@@ -54,8 +98,8 @@
 					<ColumnDefinition Width="Auto"/>
 				</Grid.ColumnDefinitions>
 
-				<Border Grid.Column="0" Width="36" Height="36" CornerRadius="8"
-                        Background="#eef3fd" Cursor="Hand" Margin="0,0,16,0">
+				<Border Grid.Column="0" Width="38" Height="38" CornerRadius="9"
+                        Background="#eef3fd" Cursor="Hand" Margin="0,0,20,0">
 					<Border.InputBindings>
 						<MouseBinding MouseAction="LeftClick" Command="{Binding RetourCommand}"/>
 					</Border.InputBindings>
@@ -65,73 +109,62 @@
 				</Border>
 
 				<StackPanel Grid.Column="1" VerticalAlignment="Center">
-					<TextBlock Text="{Binding TitreExamen}"
-                               FontSize="16" FontWeight="700" Foreground="#0f1e3d"/>
-					<StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-						<TextBlock FontSize="11" Foreground="#8899b8">
-							<Run Text="{Binding NombreQuestions, Mode=OneWay}"/>
-							<Run Text=" questions"/>
-						</TextBlock>
-						<TextBlock Text=" · " FontSize="11" Foreground="#8899b8"/>
-						<TextBlock Text="{Binding Difficulte}" FontSize="11" Foreground="#8899b8"/>
-						<TextBlock Text=" · " FontSize="11" Foreground="#8899b8"/>
-						<TextBlock FontSize="11" Foreground="#8899b8">
-							<Run Text="{Binding Duree, Mode=OneWay}"/>
-							<Run Text=" min"/>
-						</TextBlock>
-						<TextBlock Text=" · " FontSize="11" Foreground="#8899b8"/>
-						<TextBlock Text="{Binding CoursSourceLabel}"
-                                   FontSize="11" Foreground="#8899b8"/>
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+						<Border Width="8" Height="8" CornerRadius="4" Background="#16A34A"
+                                VerticalAlignment="Center" Margin="0,0,8,0"/>
+						<TextBlock Text="{Binding TitreExamen}" FontSize="16" FontWeight="700"
+                                   Foreground="#0f1e3d"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal">
+						<TextBlock FontSize="11" Foreground="#8899b8"
+                                   Text="{Binding SousTitreCompteur}"/>
+						<TextBlock Text=" · " FontSize="11" Foreground="#ABABAB"/>
+						<TextBlock Text="{Binding SousTitreEtape}"
+                                   FontSize="11" Foreground="#ABABAB"/>
 					</StackPanel>
 				</StackPanel>
 
 				<StackPanel Grid.Column="2" Orientation="Horizontal">
-					<Border CornerRadius="8" Padding="14,10" Cursor="Hand"
-                            Margin="0,0,10,0" Background="#f0f3f9" BorderBrush="#e2e8f4" BorderThickness="1">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding RegenerarCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="&#xE72C;" FontSize="12" FontFamily="Segoe MDL2 Assets"
-                                       Foreground="#0f1e3d" Margin="0,0,6,0" VerticalAlignment="Center"/>
-							<TextBlock Text="Regénérer" FontSize="12"
-                                       FontWeight="600" Foreground="#0f1e3d" VerticalAlignment="Center"/>
-						</StackPanel>
-					</Border>
-					<Border CornerRadius="8" Padding="14,10" Cursor="Hand">
+					<Border Margin="0,0,10,0">
 						<Border.Style>
-							<Style TargetType="Border">
-								<Setter Property="Background" Value="#0f1e3d"/>
+							<Style TargetType="Border" BasedOn="{StaticResource QRSecondaryBorder}">
 								<Style.Triggers>
-									<Trigger Property="IsMouseOver" Value="True">
-										<Setter Property="Background" Value="#1a2e5a"/>
-									</Trigger>
+									<DataTrigger Binding="{Binding IsEditionExistant}" Value="True">
+										<Setter Property="Visibility" Value="Collapsed"/>
+									</DataTrigger>
 								</Style.Triggers>
 							</Style>
 						</Border.Style>
 						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding RegenerarCommand}"/>
+						</Border.InputBindings>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                       Foreground="#444444" Margin="0,0,6,0" VerticalAlignment="Center"/>
+							<TextBlock Text="Regénérer" FontSize="12" FontWeight="500" Foreground="#444444"
+                                       VerticalAlignment="Center"/>
+						</StackPanel>
+					</Border>
+
+					<Border Style="{StaticResource QRValidateBorder}">
+						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick" Command="{Binding ValiderExamenCommand}"/>
 						</Border.InputBindings>
-						<TextBlock Text="Valider et sauvegarder"
-                                   FontSize="12" FontWeight="600" Foreground="White"/>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                       Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
+							<TextBlock Text="{Binding LibelleBoutonValider}" FontSize="12" FontWeight="600" Foreground="White"
+                                       VerticalAlignment="Center"/>
+						</StackPanel>
 					</Border>
 				</StackPanel>
 			</Grid>
 		</Border>
 
-		<!-- Message succès -->
-		<Border Grid.Row="0" VerticalAlignment="Bottom"
-                Background="#DCFCE7" Padding="20,10"
-                Visibility="{Binding HasSuccess, Converter={StaticResource BoolToVis}}">
-			<TextBlock Text="{Binding SuccessMessage}"
-                       FontSize="13" FontWeight="600" Foreground="#166534"
-                       HorizontalAlignment="Center"/>
-		</Border>
-
-		<!-- ═══════════════ CONTENU ═══════════════ -->
+		<!-- ══ CONTENU ══ -->
 		<Grid Grid.Row="1">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="320"/>
+				<ColumnDefinition Width="380"/>
 				<ColumnDefinition Width="*"/>
 			</Grid.ColumnDefinitions>
 
@@ -144,9 +177,12 @@
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
 
-					<Border Grid.Row="0" Padding="20,16" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1">
-						<TextBlock Text="Questions générées"
-                                   FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
+					<Border Grid.Row="0" Padding="20,18,20,14" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1">
+						<StackPanel>
+							<TextBlock Text="Questions de l'examen" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
+							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
+									   Text="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
+						</StackPanel>
 					</Border>
 
 					<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -207,43 +243,30 @@
 													</Border>
 												</StackPanel>
 
-												<!-- Icône image -->
+												<!-- Corbeille (comme liste quiz) -->
 												<Border Grid.Column="1"
-                                                        Width="26" Height="26" CornerRadius="6"
-                                                        Cursor="Hand" ToolTip="Attacher / voir image"
+                                                        Width="26" Height="26" CornerRadius="7"
+                                                        Cursor="Hand" ToolTip="Supprimer cette question"
                                                         VerticalAlignment="Center">
 													<Border.InputBindings>
 														<MouseBinding MouseAction="LeftClick"
-                                                                      Command="{Binding DataContext.AttacherImageCommand,
-                                                                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+                                                                      Command="{Binding DataContext.SupprimerCommand,
+                                                                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                      CommandParameter="{Binding}"/>
 													</Border.InputBindings>
 													<Border.Style>
 														<Style TargetType="Border">
-															<Setter Property="Background" Value="#F3F4F6"/>
+															<Setter Property="Background" Value="Transparent"/>
 															<Style.Triggers>
-																<DataTrigger Binding="{Binding HasImage}" Value="True">
-																	<Setter Property="Background" Value="#D1FAE5"/>
-																</DataTrigger>
 																<Trigger Property="IsMouseOver" Value="True">
-																	<Setter Property="Background" Value="#DBEAFE"/>
+																	<Setter Property="Background" Value="#FDE8E8"/>
 																</Trigger>
 															</Style.Triggers>
 														</Style>
 													</Border.Style>
-													<TextBlock FontSize="13"
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center">
-														<TextBlock.Style>
-															<Style TargetType="TextBlock">
-																<Setter Property="Text" Value="📎"/>
-																<Style.Triggers>
-																	<DataTrigger Binding="{Binding HasImage}" Value="True">
-																		<Setter Property="Text" Value="🖼"/>
-																	</DataTrigger>
-																</Style.Triggers>
-															</Style>
-														</TextBlock.Style>
-													</TextBlock>
+													<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                                               Foreground="#DC2626"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
 												</Border>
 											</Grid>
 
@@ -281,7 +304,7 @@
 					<!-- Placeholder si aucune question sélectionnée -->
 					<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                                 Visibility="{Binding NoQuestion, Converter={StaticResource BoolToVis}}">
-						<TextBlock Text="←" FontSize="40" Foreground="#e2e8f4"
+						<TextBlock Text="&#xE762;" FontFamily="Segoe MDL2 Assets" FontSize="44" Foreground="#e2e8f4"
                                    HorizontalAlignment="Center"/>
 						<TextBlock Text="Sélectionnez une question"
                                    FontSize="16" Foreground="#ABABAB"
@@ -294,39 +317,13 @@
 					<!-- Contenu si question sélectionnée -->
 					<StackPanel Visibility="{Binding HasQuestion, Converter={StaticResource BoolToVis}}">
 
-						<!-- En-tête de question -->
-						<Grid Margin="0,0,0,24">
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="Auto"/>
-							</Grid.ColumnDefinitions>
-							<StackPanel>
-								<StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-									<TextBlock FontSize="12" Foreground="#9CA3AF">
-										<Run Text="Question"/>
-										<Run Text="{Binding QuestionSelectionnee.Numero, Mode=OneWay}"/>
-									</TextBlock>
-									<Border CornerRadius="5" Padding="8,3"
-                                            Margin="10,0,0,0"
-                                            Background="{Binding QuestionSelectionnee.TypeBackground}">
-										<TextBlock Text="{Binding QuestionSelectionnee.TypeLabel}"
-                                                   FontSize="10" FontWeight="700"
-                                                   Foreground="{Binding QuestionSelectionnee.TypeColor}"/>
-									</Border>
-								</StackPanel>
-							</StackPanel>
-							<StackPanel Grid.Column="1" Orientation="Horizontal">
-								<Border CornerRadius="8" Padding="14,8" Cursor="Hand"
-                                        Background="#FEF2F2">
-									<Border.InputBindings>
-										<MouseBinding MouseAction="LeftClick" Command="{Binding SupprimerCommand}"
-                                                      CommandParameter="{Binding QuestionSelectionnee}"/>
-									</Border.InputBindings>
-									<TextBlock Text="🗑 Supprimer" FontSize="12"
-                                               FontWeight="600" Foreground="#DC2626"/>
-								</Border>
-							</StackPanel>
-						</Grid>
+						<!-- En-tête : QUESTION n · Détails -->
+						<StackPanel Margin="0,0,0,24">
+							<TextBlock FontSize="11" Foreground="#ABABAB" FontWeight="600"
+                                       Text="{Binding QuestionSelectionnee.Numero, StringFormat='QUESTION {0}'}"/>
+							<TextBlock Text="Détails de la question"
+                                       FontSize="15" FontWeight="700" Foreground="#0f1e3d" Margin="0,4,0,0"/>
+						</StackPanel>
 
 						<!-- Énoncé -->
 						<TextBlock Text="ÉNONCÉ" FontSize="10" FontWeight="700"
@@ -341,6 +338,80 @@
                                      AcceptsReturn="True" MinHeight="60"/>
 						</Border>
 
+						<!-- Import d’image sous l’énoncé (toutes les questions, optionnel) -->
+						<StackPanel Margin="0,0,0,16">
+							<TextBlock Text="IMAGE ASSOCIÉE" FontSize="10" FontWeight="700"
+                                       Foreground="#9CA3AF" Margin="0,0,0,10"/>
+
+							<StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+								<Border CornerRadius="8" Padding="14,10" Cursor="Hand"
+                                        Background="#f0f3f9" BorderBrush="#e2e8f4"
+                                        BorderThickness="1" Margin="0,0,8,0">
+									<Border.InputBindings>
+										<MouseBinding MouseAction="LeftClick" Command="{Binding AttacherImageCommand}"/>
+									</Border.InputBindings>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="&#xE16C;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="#0f1e3d" Margin="0,0,8,0" VerticalAlignment="Center"/>
+										<TextBlock FontSize="12" FontWeight="600" Foreground="#0f1e3d" VerticalAlignment="Center">
+											<TextBlock.Style>
+												<Style TargetType="TextBlock">
+													<Setter Property="Text" Value="Attacher une image"/>
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding QuestionSelectionnee.HasImage}" Value="True">
+															<Setter Property="Text" Value="Changer l'image"/>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</TextBlock.Style>
+										</TextBlock>
+									</StackPanel>
+								</Border>
+								<Border CornerRadius="8" Padding="14,10" Cursor="Hand"
+                                        Background="#FEF2F2" BorderBrush="#FCA5A5"
+                                        BorderThickness="1"
+                                        Visibility="{Binding QuestionSelectionnee.HasImage,
+                                                     Converter={StaticResource BoolToVis}}">
+									<Border.InputBindings>
+										<MouseBinding MouseAction="LeftClick" Command="{Binding SupprimerImageCommand}"/>
+									</Border.InputBindings>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="#DC2626" Margin="0,0,6,0" VerticalAlignment="Center"/>
+										<TextBlock Text="Supprimer l'image"
+                                                   FontSize="12" FontWeight="600" Foreground="#DC2626" VerticalAlignment="Center"/>
+									</StackPanel>
+								</Border>
+							</StackPanel>
+
+							<Border CornerRadius="10" Background="White"
+                                    BorderBrush="#e2e8f4" BorderThickness="1"
+                                    Padding="12" MaxHeight="220"
+                                    Visibility="{Binding QuestionSelectionnee.HasImage,
+                                                 Converter={StaticResource BoolToVis}}">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="28"
+                                               Foreground="#0f1e3d" VerticalAlignment="Center" Margin="0,0,12,0"/>
+									<StackPanel VerticalAlignment="Center">
+										<TextBlock Text="{Binding QuestionSelectionnee.ImageNom}"
+                                                   FontSize="13" FontWeight="600" Foreground="#0f1e3d"/>
+										<TextBlock Text="Image stockée et sera sauvegardée avec l'examen"
+                                                   FontSize="11" Foreground="#9CA3AF" Margin="0,4,0,0"/>
+									</StackPanel>
+								</StackPanel>
+							</Border>
+
+							<Border CornerRadius="10" Background="#FAFAFA"
+                                    BorderBrush="#e2e8f4" BorderThickness="1"
+                                    Padding="16,12"
+                                    Visibility="{Binding QuestionSelectionnee.HasImage,
+                                                 Converter={StaticResource BoolToVisInverse}}">
+								<TextBlock Text="Aucune image — cliquez sur « Attacher une image » pour en ajouter une"
+                                           FontSize="12" Foreground="#CACACA" FontStyle="Italic"
+                                           TextWrapping="Wrap"/>
+							</Border>
+						</StackPanel>
+
 						<!-- Options QCM / CHECKBOX -->
 						<StackPanel Visibility="{Binding QuestionSelectionnee.HasOptions,
                                                   Converter={StaticResource BoolToVis}}">
@@ -348,7 +419,28 @@
 
 
 							<!-- Option A -->
-							<Border Style="{StaticResource OptionRow}">
+							<Border Margin="0,0,0,8" CornerRadius="8" Padding="12,10">
+								<Border.Style>
+									<Style TargetType="Border">
+										<Setter Property="Background" Value="#FBFBFB"/>
+										<Setter Property="BorderBrush" Value="#e2e8f4"/>
+										<Setter Property="BorderThickness" Value="1.5"/>
+										<Style.Triggers>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsQCM}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="A"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
+											<DataTrigger Binding="{Binding QuestionSelectionnee.OptionACorrecte}" Value="True">
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</Border.Style>
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="Auto"/>
@@ -370,8 +462,9 @@
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
 
-									<!-- QCM radio A -->
-									<Border Grid.Column="2"
+									<!-- QCM : icône MDL2 (style quiz — ligne verte + coche) -->
+									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
+                                            Cursor="Hand"
                                             Visibility="{Binding QuestionSelectionnee.IsQCM,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
@@ -380,30 +473,23 @@
                                                                     RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
                                                           CommandParameter="A"/>
 										</Border.InputBindings>
-										<Border.Style>
-											<Style TargetType="Border">
-												<Setter Property="Width" Value="20"/>
-												<Setter Property="Height" Value="20"/>
-												<Setter Property="CornerRadius" Value="10"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
-												<Setter Property="BorderThickness" Value="2"/>
-												<Setter Property="Background" Value="White"/>
-												<Setter Property="Cursor" Value="Hand"/>
-												<Setter Property="Margin" Value="12,0,0,0"/>
-												<Setter Property="VerticalAlignment" Value="Center"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding DataContext.QuestionSelectionnee.ReponseCorrecte,
-                                                                 RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
-                                                                 Value="A">
-														<Setter Property="Background" Value="#0f1e3d"/>
-														<Setter Property="BorderBrush" Value="#0f1e3d"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Border.Style>
+										<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+											<TextBlock.Style>
+												<Style TargetType="TextBlock">
+													<Setter Property="Text" Value="&#xE719;"/>
+													<Setter Property="Foreground" Value="#CBD5E1"/>
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="A">
+															<Setter Property="Text" Value="&#xE73E;"/>
+															<Setter Property="Foreground" Value="#16A34A"/>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</TextBlock.Style>
+										</TextBlock>
 									</Border>
 
-									<!-- CHECKBOX A -->
 									<CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionACorrecte}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
@@ -412,7 +498,28 @@
 							</Border>
 
 							<!-- Option B -->
-							<Border Style="{StaticResource OptionRow}">
+							<Border Margin="0,0,0,8" CornerRadius="8" Padding="12,10">
+								<Border.Style>
+									<Style TargetType="Border">
+										<Setter Property="Background" Value="#FBFBFB"/>
+										<Setter Property="BorderBrush" Value="#e2e8f4"/>
+										<Setter Property="BorderThickness" Value="1.5"/>
+										<Style.Triggers>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsQCM}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="B"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
+											<DataTrigger Binding="{Binding QuestionSelectionnee.OptionBCorrecte}" Value="True">
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</Border.Style>
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="Auto"/>
@@ -433,8 +540,8 @@
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
 
-									<!-- QCM radio B -->
-									<Border Grid.Column="2"
+									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
+                                            Cursor="Hand"
                                             Visibility="{Binding QuestionSelectionnee.IsQCM,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
@@ -443,30 +550,23 @@
                                                                     RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
                                                           CommandParameter="B"/>
 										</Border.InputBindings>
-										<Border.Style>
-											<Style TargetType="Border">
-												<Setter Property="Width" Value="20"/>
-												<Setter Property="Height" Value="20"/>
-												<Setter Property="CornerRadius" Value="10"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
-												<Setter Property="BorderThickness" Value="2"/>
-												<Setter Property="Background" Value="White"/>
-												<Setter Property="Cursor" Value="Hand"/>
-												<Setter Property="Margin" Value="12,0,0,0"/>
-												<Setter Property="VerticalAlignment" Value="Center"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding DataContext.QuestionSelectionnee.ReponseCorrecte,
-                                                                 RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
-                                                                 Value="B">
-														<Setter Property="Background" Value="#0f1e3d"/>
-														<Setter Property="BorderBrush" Value="#0f1e3d"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Border.Style>
+										<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+											<TextBlock.Style>
+												<Style TargetType="TextBlock">
+													<Setter Property="Text" Value="&#xE719;"/>
+													<Setter Property="Foreground" Value="#CBD5E1"/>
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="B">
+															<Setter Property="Text" Value="&#xE73E;"/>
+															<Setter Property="Foreground" Value="#16A34A"/>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</TextBlock.Style>
+										</TextBlock>
 									</Border>
 
-									<!-- CHECKBOX B -->
 									<CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionBCorrecte}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
@@ -475,7 +575,28 @@
 							</Border>
 
 							<!-- Option C -->
-							<Border Style="{StaticResource OptionRow}">
+							<Border Margin="0,0,0,8" CornerRadius="8" Padding="12,10">
+								<Border.Style>
+									<Style TargetType="Border">
+										<Setter Property="Background" Value="#FBFBFB"/>
+										<Setter Property="BorderBrush" Value="#e2e8f4"/>
+										<Setter Property="BorderThickness" Value="1.5"/>
+										<Style.Triggers>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsQCM}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="C"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
+											<DataTrigger Binding="{Binding QuestionSelectionnee.OptionCCorrecte}" Value="True">
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</Border.Style>
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="Auto"/>
@@ -496,8 +617,8 @@
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
 
-									<!-- QCM radio C -->
-									<Border Grid.Column="2"
+									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
+                                            Cursor="Hand"
                                             Visibility="{Binding QuestionSelectionnee.IsQCM,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
@@ -506,30 +627,23 @@
                                                                     RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
                                                           CommandParameter="C"/>
 										</Border.InputBindings>
-										<Border.Style>
-											<Style TargetType="Border">
-												<Setter Property="Width" Value="20"/>
-												<Setter Property="Height" Value="20"/>
-												<Setter Property="CornerRadius" Value="10"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
-												<Setter Property="BorderThickness" Value="2"/>
-												<Setter Property="Background" Value="White"/>
-												<Setter Property="Cursor" Value="Hand"/>
-												<Setter Property="Margin" Value="12,0,0,0"/>
-												<Setter Property="VerticalAlignment" Value="Center"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding DataContext.QuestionSelectionnee.ReponseCorrecte,
-                                                                 RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
-                                                                 Value="C">
-														<Setter Property="Background" Value="#0f1e3d"/>
-														<Setter Property="BorderBrush" Value="#0f1e3d"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Border.Style>
+										<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+											<TextBlock.Style>
+												<Style TargetType="TextBlock">
+													<Setter Property="Text" Value="&#xE719;"/>
+													<Setter Property="Foreground" Value="#CBD5E1"/>
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="C">
+															<Setter Property="Text" Value="&#xE73E;"/>
+															<Setter Property="Foreground" Value="#16A34A"/>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</TextBlock.Style>
+										</TextBlock>
 									</Border>
 
-									<!-- CHECKBOX C -->
 									<CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionCCorrecte}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
@@ -538,7 +652,28 @@
 							</Border>
 
 							<!-- Option D -->
-							<Border Style="{StaticResource OptionRow}" Margin="0,0,0,24">
+							<Border Margin="0,0,0,24" CornerRadius="8" Padding="12,10">
+								<Border.Style>
+									<Style TargetType="Border">
+										<Setter Property="Background" Value="#FBFBFB"/>
+										<Setter Property="BorderBrush" Value="#e2e8f4"/>
+										<Setter Property="BorderThickness" Value="1.5"/>
+										<Style.Triggers>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsQCM}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="D"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
+											<DataTrigger Binding="{Binding QuestionSelectionnee.OptionDCorrecte}" Value="True">
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</Border.Style>
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="Auto"/>
@@ -559,8 +694,8 @@
                                              FontSize="13" Foreground="#0f1e3d"
                                              VerticalAlignment="Center"/>
 
-									<!-- QCM radio D -->
-									<Border Grid.Column="2"
+									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
+                                            Cursor="Hand"
                                             Visibility="{Binding QuestionSelectionnee.IsQCM,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
@@ -569,102 +704,28 @@
                                                                     RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
                                                           CommandParameter="D"/>
 										</Border.InputBindings>
-										<Border.Style>
-											<Style TargetType="Border">
-												<Setter Property="Width" Value="20"/>
-												<Setter Property="Height" Value="20"/>
-												<Setter Property="CornerRadius" Value="10"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
-												<Setter Property="BorderThickness" Value="2"/>
-												<Setter Property="Background" Value="White"/>
-												<Setter Property="Cursor" Value="Hand"/>
-												<Setter Property="Margin" Value="12,0,0,0"/>
-												<Setter Property="VerticalAlignment" Value="Center"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding DataContext.QuestionSelectionnee.ReponseCorrecte,
-                                                                 RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
-                                                                 Value="D">
-														<Setter Property="Background" Value="#0f1e3d"/>
-														<Setter Property="BorderBrush" Value="#0f1e3d"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Border.Style>
+										<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+											<TextBlock.Style>
+												<Style TargetType="TextBlock">
+													<Setter Property="Text" Value="&#xE719;"/>
+													<Setter Property="Foreground" Value="#CBD5E1"/>
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="D">
+															<Setter Property="Text" Value="&#xE73E;"/>
+															<Setter Property="Foreground" Value="#16A34A"/>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</TextBlock.Style>
+										</TextBlock>
 									</Border>
 
-									<!-- CHECKBOX D -->
 									<CheckBox Grid.Column="2" Margin="12,0,0,0"
                                               IsChecked="{Binding QuestionSelectionnee.OptionDCorrecte}"
                                               Visibility="{Binding QuestionSelectionnee.IsCheckbox,
                                                            Converter={StaticResource BoolToVis}}"/>
 								</Grid>
-							</Border>
-						</StackPanel>
-
-						<!-- Section IMAGE (panneau de droite) -->
-						<StackPanel Margin="0,0,0,24">
-							<TextBlock Text="IMAGE ASSOCIÉE" FontSize="10" FontWeight="700"
-                                       Foreground="#9CA3AF" Margin="0,0,0,10"/>
-
-							<StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-								<Border CornerRadius="8" Padding="14,10" Cursor="Hand"
-                                        Background="#F0FDFA" BorderBrush="#99F6E4"
-                                        BorderThickness="1" Margin="0,0,8,0">
-									<Border.InputBindings>
-										<MouseBinding MouseAction="LeftClick" Command="{Binding AttacherImageCommand}"/>
-									</Border.InputBindings>
-									<TextBlock FontSize="12" FontWeight="600" Foreground="#0F766E">
-										<TextBlock.Style>
-											<Style TargetType="TextBlock">
-												<Setter Property="Text" Value="📎 Attacher une image"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding QuestionSelectionnee.HasImage}" Value="True">
-														<Setter Property="Text" Value="📎 Changer l'image"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</TextBlock.Style>
-									</TextBlock>
-								</Border>
-								<Border CornerRadius="8" Padding="14,10" Cursor="Hand"
-                                        Background="#FEF2F2" BorderBrush="#FCA5A5"
-                                        BorderThickness="1"
-                                        Visibility="{Binding QuestionSelectionnee.HasImage,
-                                                     Converter={StaticResource BoolToVis}}">
-									<Border.InputBindings>
-										<MouseBinding MouseAction="LeftClick" Command="{Binding SupprimerImageCommand}"/>
-									</Border.InputBindings>
-									<TextBlock Text="🗑 Supprimer l'image"
-                                               FontSize="12" FontWeight="600" Foreground="#DC2626"/>
-								</Border>
-							</StackPanel>
-
-							<!-- Aperçu image -->
-							<Border CornerRadius="10" Background="White"
-                                    BorderBrush="#e2e8f4" BorderThickness="1"
-                                    Padding="12" MaxHeight="220"
-                                    Visibility="{Binding QuestionSelectionnee.HasImage,
-                                                 Converter={StaticResource BoolToVis}}">
-								<StackPanel Orientation="Horizontal">
-									<TextBlock Text="🖼" FontSize="28" VerticalAlignment="Center" Margin="0,0,12,0"/>
-									<StackPanel VerticalAlignment="Center">
-										<TextBlock Text="{Binding QuestionSelectionnee.ImageNom}"
-                                                   FontSize="13" FontWeight="600" Foreground="#0F766E"/>
-										<TextBlock Text="Image stockée et sera sauvegardée avec l'examen"
-                                                   FontSize="11" Foreground="#9CA3AF" Margin="0,4,0,0"/>
-									</StackPanel>
-								</StackPanel>
-							</Border>
-
-							<!-- Placeholder si pas d'image -->
-							<Border CornerRadius="10" Background="#FAFAFA"
-                                    BorderBrush="#e2e8f4" BorderThickness="1"
-                                    Padding="16,12"
-                                    Visibility="{Binding QuestionSelectionnee.HasImage,
-                                                 Converter={StaticResource BoolToVisInverse}}">
-								<TextBlock Text="Aucune image — cliquez sur « Attacher une image » pour en ajouter une"
-                                           FontSize="12" Foreground="#CACACA" FontStyle="Italic"
-                                           TextWrapping="Wrap"/>
 							</Border>
 						</StackPanel>
 
@@ -688,13 +749,13 @@
 						<TextBlock Text="EXPLICATION / CORRECTION"
                                    FontSize="10" FontWeight="700"
                                    Foreground="#9CA3AF" Margin="0,0,0,8"/>
-						<Border Background="#FFFBEB" CornerRadius="10"
-                                BorderBrush="#FDE68A" BorderThickness="1"
+						<Border Background="White" CornerRadius="10"
+                                BorderBrush="#e2e8f4" BorderThickness="1"
                                 Padding="16,14">
 							<TextBox Text="{Binding QuestionSelectionnee.Explication,
                                                     UpdateSourceTrigger=PropertyChanged}"
                                      BorderThickness="0" Background="Transparent"
-                                     FontSize="13" Foreground="#92400E" TextWrapping="Wrap"
+                                     FontSize="13" Foreground="#0f1e3d" TextWrapping="Wrap"
                                      AcceptsReturn="True" MinHeight="60"/>
 						</Border>
 
@@ -703,5 +764,18 @@
 			</ScrollViewer>
 
 		</Grid>
+
+		<!-- ══ FOOTER ══ -->
+		<Border Grid.Row="2" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0" Padding="28,12">
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+				<TextBlock Text="&#xE9F3;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                           Foreground="#6B6B6B" Margin="0,0,6,0" VerticalAlignment="Center"/>
+				<TextBlock FontSize="12" Foreground="#6B6B6B" VerticalAlignment="Center"
+                           Text="{Binding NombreQuestions, StringFormat='{}{0} questions dans cet examen'}"/>
+				<TextBlock Text=" · " FontSize="12" Foreground="#CACACA"/>
+				<TextBlock Text="Cliquez sur une question pour l'éditer directement ou la supprimer"
+                           FontSize="12" Foreground="#ABABAB"/>
+			</StackPanel>
+		</Border>
 	</Grid>
 </Window>

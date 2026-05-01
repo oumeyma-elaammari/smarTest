@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using smartest_desktop.Data;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
+using smartest_desktop.Views;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -53,7 +54,7 @@ namespace smartest_desktop.ViewModels
     public class QuizGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
-        private readonly GroqService _groq = new();
+        private GroqService? _groq;
         private CancellationTokenSource? _cts;
 
         // ── Cours importé ─────────────────────────────────────────────────────
@@ -301,7 +302,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"❌ Erreur lors de l'import : {ex.Message}";
+                ErrorMessage = "❌ Impossible d'importer le fichier. Vérifiez qu'il n'est pas ouvert dans un autre programme.";
                 StatusMessage = string.Empty;
             }
             finally
@@ -391,17 +392,26 @@ namespace smartest_desktop.ViewModels
         {
             if (!HasCours) return;
 
+            // Vérifier / demander la clé API avant de démarrer
+            string? apiKey = GroqKeyService.LireCle(App.LocalDb);
+            if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+            {
+                var dialog = new GroqKeySetupWindow();
+                if (dialog.ShowDialog() != true) return;
+                apiKey = GroqKeyService.LireCle(App.LocalDb);
+                if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+            }
+
             _cts?.Cancel();
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
 
             IsGenerating = true;
             ErrorMessage = string.Empty;
+            _groq = new GroqService(apiKey!);
 
             try
             {
-                GroqService.VerifierConfiguration();
-
                 StatusMessage = $"🚀 Connexion à Groq ({GroqService.NomModele})...";
                 await Task.Delay(100, token);
 
@@ -427,9 +437,9 @@ namespace smartest_desktop.ViewModels
                         ? $"🧠 Lot {lotIdx + 1}/{nbLots} — génération de {nbCeLot} questions ({Difficulte})..."
                         : $"🧠 Génération de {NombreQuestions} questions ({Difficulte})...";
 
-                    // Délai anti-rate-limit entre lots
+                    // Délai anti-rate-limit entre lots (même réglage que GroqService.GenererParLotsAsync)
                     if (lotIdx > 0)
-                        await Task.Delay(3000, token);
+                        await Task.Delay(GroqService.DelaiEntreLotsMs, token);
 
                     // Tentatives par lot (max 2)
                     int tentativesMax = 2;
@@ -447,7 +457,10 @@ namespace smartest_desktop.ViewModels
                             ? BuildPrompt(contenuLot, nbCeLot, Difficulte)
                             : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte);
 
-                        var (reponse, duree) = await _groq.GenererAsync(prompt, token);
+                        var sw = System.Diagnostics.Stopwatch.StartNew();
+                        var reponse = await _groq.GenererAvecRetryAsync(prompt, token);
+                        sw.Stop();
+                        var duree = sw.Elapsed;
                         dureeTotale += duree;
 
                         var nouvelles = ParseQCM(reponse);
@@ -515,19 +528,27 @@ namespace smartest_desktop.ViewModels
                 StatusMessage = "⛔ Génération annulée.";
                 ErrorMessage = string.Empty;
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                ErrorMessage = $"⚙️ Configuration requise.\n\n{ex.Message}";
+                ErrorMessage = "⚙️ Clé API non configurée. Cliquez sur Générer pour en saisir une.";
                 StatusMessage = string.Empty;
             }
-            catch (TimeoutException ex)
+            catch (TimeoutException)
             {
-                ErrorMessage = $"⏱️ Timeout.\n\n{ex.Message}";
+                ErrorMessage = "⏱️ La génération prend trop de temps. Vérifiez votre connexion internet et réessayez.";
                 StatusMessage = string.Empty;
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("401") || ex.Message.Contains("invalide"))
+            {
+                GroqKeyService.SupprimerCle(App.LocalDb);
+                ErrorMessage = string.Empty;
+                StatusMessage = string.Empty;
+                var dialog = new GroqKeySetupWindow("Votre clé a été révoquée ou supprimée sur console.groq.com.");
+                dialog.ShowDialog();
             }
             catch (HttpRequestException ex)
             {
-                ErrorMessage = $"❌ Erreur réseau.\n\n{ex.Message}";
+                ErrorMessage = $"❌ {ex.Message}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)

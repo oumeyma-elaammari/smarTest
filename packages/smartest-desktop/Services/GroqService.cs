@@ -1,9 +1,11 @@
 #nullable enable
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,16 +14,21 @@ namespace smartest_desktop.Services
    
     public class GroqService
     {
-        oujours par "gsk_"
-        private const string GROQ_API_KEY = "diro key dyalkoum";
+        private readonly string _apiKey;
 
-        private const string MODELE = "llama-3.1-8b-instant";
+        public GroqService(string apiKey)
+        {
+            _apiKey = apiKey;
+        }
+
+        private const string MODELE = "meta-llama/llama-4-scout-17b-16e-instruct";
 
         private const int QUESTIONS_PAR_LOT = 4;
 
-        private const int DELAI_ENTRE_LOTS_MS = 1500;
+        /// <summary>Espace les lots pour rester sous le TPM (tokens/minute) Groq gratuit.</summary>
+        private const int DELAI_ENTRE_LOTS_MS = 3_000;
 
-        private const int TAILLE_CONTEXTE_PAR_LOT = 2000;
+        private const int TAILLE_CONTEXTE_PAR_LOT = 1500;
 
         // ══════════════════════════════════════════════════════════════════════
 
@@ -34,18 +41,16 @@ namespace smartest_desktop.Services
 
         // ── Vérification de la clé API ────────────────────────────────────────
 
-        public static void VerifierConfiguration()
+        public void VerifierConfiguration()
         {
-            if (string.IsNullOrWhiteSpace(GROQ_API_KEY) ||
-                GROQ_API_KEY.Length < 20 ||
-                !GROQ_API_KEY.StartsWith("gsk_"))
+            if (string.IsNullOrWhiteSpace(_apiKey) ||
+                _apiKey.Length < 20 ||
+                !_apiKey.StartsWith("gsk_"))
             {
                 throw new InvalidOperationException(
                     "Clé API Groq non configurée.\n\n" +
-                    "1. Allez sur console.groq.com\n" +
-                    "2. Créez un compte gratuit\n" +
-                    "3. Cliquez 'API Keys' → 'Create API Key'\n" +
-                    "4. Collez la clé dans GroqService.cs (ligne GROQ_API_KEY)");
+                    "Allez dans Paramètres → Clé API Groq\n" +
+                    "et collez votre clé depuis console.groq.com");
             }
         }
 
@@ -77,7 +82,7 @@ namespace smartest_desktop.Services
                     }
                 },
                 temperature = 0.1,
-                max_tokens = 1500,
+                max_tokens = 700,
                 stream = false
             };
 
@@ -163,13 +168,12 @@ namespace smartest_desktop.Services
         // ── Retry automatique sur rate limit ──────────────────────────────────
 
         /// <summary>
-        /// Envoie un prompt avec retry automatique en cas d'erreur 429 (rate limit).
-        /// Attend 15 secondes avant de réessayer (jusqu'à 3 tentatives).
+        /// Envoie un prompt avec retry en cas d'erreur 429 (TPM). Utilise le délai indiqué par Groq
+        /// (« try again in Xs ») ou un backoff progressif.
         /// </summary>
-        private async Task<string> GenererAvecRetryAsync(string prompt, CancellationToken ct)
+        public async Task<string> GenererAvecRetryAsync(string prompt, CancellationToken ct)
         {
-            const int MAX_TENTATIVES = 3;
-            const int ATTENTE_RETRY_MS = 15_000; // 15 s = la fenêtre rate-limit se renouvelle
+            const int MAX_TENTATIVES = 6;
 
             for (int tentative = 1; tentative <= MAX_TENTATIVES; tentative++)
             {
@@ -178,16 +182,47 @@ namespace smartest_desktop.Services
                     var (texte, _) = await GenererAsync(prompt, ct);
                     return texte;
                 }
-                catch (HttpRequestException ex) when (ex.Message.Contains("429") && tentative < MAX_TENTATIVES)
+                catch (HttpRequestException ex) when (MessageIndiqueQuotaGroq(ex.Message))
                 {
-                    Debug.WriteLine($"[GroqService] Rate limit (429) — attente {ATTENTE_RETRY_MS / 1000}s avant tentative {tentative + 1}/{MAX_TENTATIVES}");
-                    await Task.Delay(ATTENTE_RETRY_MS, ct);
+                    if (tentative >= MAX_TENTATIVES)
+                        throw;
+
+                    int delayMs = CalculerDelaiRetryMsApres429(ex.Message, tentative);
+                    Debug.WriteLine(
+                        $"[GroqService] 429 TPM — attente {delayMs} ms avant tentative {tentative + 1}/{MAX_TENTATIVES}");
+                    await Task.Delay(delayMs, ct);
                 }
             }
 
-            // Dernière tentative sans catch
-            var (resultat, _) = await GenererAsync(prompt, ct);
-            return resultat;
+            throw new HttpRequestException("La génération a échoué. Le quota de requêtes est temporairement atteint — réessayez dans quelques minutes.");
+        }
+
+        private static bool MessageIndiqueQuotaGroq(string message) =>
+            message.Contains("429", StringComparison.Ordinal)
+            || message.Contains("Rate limit", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("Quota Groq", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Délai conseillé par l’API (« try again in 2.64s ») + marge, sinon backoff.</summary>
+        private static int CalculerDelaiRetryMsApres429(string message, int tentative)
+        {
+            if (!string.IsNullOrEmpty(message))
+            {
+                var m = Regex.Match(message, @"try\s+again\s+in\s+([0-9.]+)\s*s", RegexOptions.IgnoreCase);
+                if (m.Success
+                    && double.TryParse(
+                        m.Groups[1].Value,
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out var secondes))
+                {
+                    int ms = (int)Math.Ceiling(secondes * 1000) + 800;
+                    return Math.Clamp(ms, 3000, 90_000);
+                }
+            }
+
+            int[] backoff = { 8000, 14_000, 22_000, 35_000, 50_000, 65_000 };
+            int idx = Math.Clamp(tentative - 1, 0, backoff.Length - 1);
+            return backoff[idx];
         }
 
         // ── Appel HTTP bas niveau ─────────────────────────────────────────────
@@ -201,7 +236,7 @@ namespace smartest_desktop.Services
             {
                 Content = content
             };
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", GROQ_API_KEY);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
             HttpResponseMessage response;
             try
@@ -217,7 +252,7 @@ namespace smartest_desktop.Services
             catch (HttpRequestException ex)
             {
                 throw new HttpRequestException(
-                    $"Impossible de contacter Groq.\nVérifiez votre connexion internet.\n\nDétail : {ex.Message}");
+                    "Impossible de contacter le service de génération.\nVérifiez votre connexion internet.");
             }
 
             var responseJson = await response.Content.ReadAsStringAsync(ct);
@@ -299,15 +334,9 @@ namespace smartest_desktop.Services
 
                     return statusCode switch
                     {
-                        401 => $"Clé API Groq invalide.\n\n" +
-                               $"Vérifiez la clé dans GroqService.cs\n" +
-                               $"Elle doit commencer par 'gsk_'\n\n" +
-                               $"Détail : {detail}",
+                        401 => "Clé API invalide ou révoquée.\n\nRendez-vous dans Paramètres pour configurer une nouvelle clé.",
 
-                        429 => $"429 — Quota Groq dépassé temporairement.\n\n" +
-                               $"Le batching va réessayer automatiquement.\n" +
-                               $"Si l'erreur persiste, augmentez DELAI_ENTRE_LOTS_MS dans GroqService.cs\n\n" +
-                               $"Détail : {detail}",
+                        429 => "Quota temporairement dépassé.\nLa génération réessaie automatiquement — cela peut prendre quelques secondes.",
 
                         503 => $"Serveurs Groq temporairement indisponibles.\n" +
                                $"Réessayez dans quelques secondes.",
@@ -324,6 +353,9 @@ namespace smartest_desktop.Services
         // ── Utilitaires ───────────────────────────────────────────────────────
 
         public static string NomModele => MODELE;
+
+        /// <summary>Délai entre deux lots API — à garder aligné avec la logique anti-429 (quiz / examen).</summary>
+        public static int DelaiEntreLotsMs => DELAI_ENTRE_LOTS_MS;
 
         
         public static int TailleContexteParLot => TAILLE_CONTEXTE_PAR_LOT;

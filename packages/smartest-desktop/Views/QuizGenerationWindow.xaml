@@ -18,43 +18,8 @@
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+				<ResourceDictionary Source="/Views/Styles/GenerationSharedStyles.xaml"/>
 			</ResourceDictionary.MergedDictionaries>
-
-		<Style x:Key="GenPrimaryBorder" TargetType="Border">
-			<Setter Property="CornerRadius" Value="10"/>
-			<Setter Property="Padding" Value="20,12"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="Background" Value="#0f1e3d"/>
-			<Style.Triggers>
-				<Trigger Property="IsMouseOver" Value="True">
-					<Setter Property="Background" Value="#1a2e5a"/>
-				</Trigger>
-			</Style.Triggers>
-		</Style>
-
-		<Style x:Key="GenSecondaryBorder" TargetType="Border">
-			<Setter Property="CornerRadius" Value="9"/>
-			<Setter Property="Padding" Value="16,10"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="Background" Value="#f0f3f9"/>
-			<Setter Property="BorderBrush" Value="#e2e8f4"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Style.Triggers>
-				<Trigger Property="IsMouseOver" Value="True">
-					<Setter Property="Background" Value="#e8eef8"/>
-				</Trigger>
-			</Style.Triggers>
-		</Style>
-
-		<Style x:Key="StyledCombo" TargetType="ComboBox">
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="BorderBrush" Value="#e2e8f4"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="Padding" Value="12,10"/>
-			<Setter Property="FontSize" Value="13"/>
-			<Setter Property="Foreground" Value="#0f1e3d"/>
-			<Setter Property="Height" Value="44"/>
-		</Style>
 		</ResourceDictionary>
 	</Window.Resources>
 

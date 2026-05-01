@@ -264,21 +264,39 @@
 					<Border Style="{StaticResource DashCard}" Padding="24,20" Margin="0,0,0,20">
 						<StackPanel>
 
-							<!-- Titre section -->
+							<!-- Titre + recherche -->
 							<Grid Margin="0,0,0,16">
-								<StackPanel>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="280"/>
+								</Grid.ColumnDefinitions>
+								<StackPanel Grid.Column="0">
 									<TextBlock Text="Mes Quiz" FontSize="15" FontWeight="600" Foreground="#0f1e3d"/>
-									<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,3,0,0">
-										<Run Text="{Binding TotalQuiz}"/>
-										<Run Text="quiz enregistrés"/>
+									<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,3,0,0" TextWrapping="Wrap">
+										<Run Text="{Binding TotalQuiz, Mode=OneWay}"/>
+										<Run Text=" quiz enregistrés"/>
 									</TextBlock>
+								</StackPanel>
+								<StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="12,0,0,0">
+									<TextBlock Text="Rechercher" FontSize="11" FontWeight="600" Foreground="#8899b8" Margin="0,0,0,4"/>
+									<TextBox Text="{Binding FiltreQuiz, UpdateSourceTrigger=PropertyChanged}"
+                                         Padding="6,5" FontSize="11"
+                                         BorderBrush="#e2e8f4" BorderThickness="1"
+                                         Background="White" VerticalContentAlignment="Center">
+										<TextBox.Resources>
+											<Style TargetType="Border">
+												<Setter Property="CornerRadius" Value="8"/>
+											</Style>
+										</TextBox.Resources>
+									</TextBox>
 								</StackPanel>
 							</Grid>
 
 							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,0"/>
 
-							<!-- En-têtes colonnes -->
-							<Grid Margin="0,12,0,8">
+							<!-- En-têtes colonnes (masqués si liste vide) -->
+							<Grid Margin="0,12,0,8"
+                                  Visibility="{Binding AfficherListeQuiz, Converter={StaticResource BoolToVis}}">
 								<Grid.ColumnDefinitions>
 									<ColumnDefinition Width="*"/>
 									<ColumnDefinition Width="100"/>
@@ -292,11 +310,12 @@
 								<TextBlock Grid.Column="3" Text="Statut" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
 								<TextBlock Grid.Column="4" Text="Actions" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
 							</Grid>
+							<Border Height="1" Background="#f0f3f9" Margin="0,0,0,4"
+                                    Visibility="{Binding AfficherListeQuiz, Converter={StaticResource BoolToVis}}"/>
 
-							<Border Height="1" Background="#f0f3f9" Margin="0,0,0,4"/>
-
-							<!-- Liste quiz -->
-							<ItemsControl ItemsSource="{Binding Quiz}">
+							<!-- Liste quiz (page courante) -->
+							<ItemsControl ItemsSource="{Binding QuizPage}"
+                                          Visibility="{Binding AfficherListeQuiz, Converter={StaticResource BoolToVis}}">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
 										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
@@ -310,7 +329,7 @@
 												</Grid.ColumnDefinitions>
 
 												<StackPanel Grid.Column="0" VerticalAlignment="Center">
-													<TextBlock Text="{Binding Titre}" FontSize="13"
+													<TextBlock Text="{Binding TitreAffiche}" FontSize="13"
                                                                FontWeight="600" Foreground="#0f1e3d"
                                                                Cursor="Hand" >
 														<TextBlock.InputBindings>
@@ -319,15 +338,15 @@
 																		  CommandParameter="{Binding}"/>
 														</TextBlock.InputBindings>
 													</TextBlock>
-													<TextBlock Text="{Binding CoursSourceTitre}" FontSize="11"
+													<TextBlock Text="{Binding Quiz.CoursSourceTitre}" FontSize="11"
                                                                Foreground="#8899b8" Margin="0,2,0,0"/>
 												</StackPanel>
 
-												<TextBlock Grid.Column="1" Text="{Binding Difficulte}"
+												<TextBlock Grid.Column="1" Text="{Binding Quiz.Difficulte}"
                                                            FontSize="12" Foreground="#6b7a99"
                                                            VerticalAlignment="Center"/>
 
-												<TextBlock Grid.Column="2" Text="{Binding NombreQuestions}"
+												<TextBlock Grid.Column="2" Text="{Binding Quiz.NombreQuestions}"
                                                            FontSize="12" Foreground="#6b7a99"
                                                            VerticalAlignment="Center"/>
 
@@ -338,10 +357,10 @@
 														<Style TargetType="Border">
 															<Setter Property="Background" Value="#fff7ed"/>
 															<Style.Triggers>
-																<DataTrigger Binding="{Binding Statut}" Value="Publié">
+																<DataTrigger Binding="{Binding Quiz.Statut}" Value="Publié">
 																	<Setter Property="Background" Value="#eaf3de"/>
 																</DataTrigger>
-																<DataTrigger Binding="{Binding Statut}" Value="Validé">
+																<DataTrigger Binding="{Binding Quiz.Statut}" Value="Validé">
 																	<Setter Property="Background" Value="#eef3fd"/>
 																</DataTrigger>
 															</Style.Triggers>
@@ -350,15 +369,15 @@
 													<TextBlock FontSize="10" FontWeight="700">
 														<TextBlock.Style>
 															<Style TargetType="TextBlock">
-																<Setter Property="Text" Value="{Binding Statut}"/>
+																<Setter Property="Text" Value="{Binding Quiz.Statut}"/>
 																<Setter Property="Foreground" Value="#c2410c"/>
 																<Style.Triggers>
-																	<DataTrigger Binding="{Binding Statut}" Value="Publié">
-																		<Setter Property="Foreground" Value="#16a34a"/>
-																	</DataTrigger>
-																	<DataTrigger Binding="{Binding Statut}" Value="Validé">
-																		<Setter Property="Foreground" Value="#4f8ef7"/>
-																	</DataTrigger>
+																<DataTrigger Binding="{Binding Quiz.Statut}" Value="Publié">
+																	<Setter Property="Foreground" Value="#16a34a"/>
+																</DataTrigger>
+																<DataTrigger Binding="{Binding Quiz.Statut}" Value="Validé">
+																	<Setter Property="Foreground" Value="#4f8ef7"/>
+																</DataTrigger>
 																</Style.Triggers>
 															</Style>
 														</TextBlock.Style>
@@ -392,10 +411,32 @@
 								</ItemsControl.ItemTemplate>
 							</ItemsControl>
 
+							<!-- Pagination quiz -->
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0"
+                                        Visibility="{Binding AfficherListeQuiz, Converter={StaticResource BoolToVis}}">
+								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
+                                        Margin="0,0,8,0" MinWidth="25" Padding="3,2"
+                                        Command="{Binding QuizPagePrecedenteCommand}">
+									<TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+								</Button>
+								<TextBlock Text="{Binding LibellePaginationQuiz}" VerticalAlignment="Center"
+                                           FontSize="12" FontWeight="600" Foreground="#6b7a99" Margin="8,0"/>
+								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
+                                        Margin="8,0,0,0" MinWidth="25" Padding="3,2"
+                                        Command="{Binding QuizPageSuivanteCommand}">
+									<TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+								</Button>
+							</StackPanel>
+
 							<!-- État vide quiz -->
 							<StackPanel HorizontalAlignment="Center" Margin="0,20"
                                         Visibility="{Binding HasNoQuiz, Converter={StaticResource BoolToVis}}">
 								<TextBlock Text="Aucun quiz créé pour le moment"
+                                           FontSize="13" Foreground="#8899b8" HorizontalAlignment="Center"/>
+							</StackPanel>
+							<StackPanel HorizontalAlignment="Center" Margin="0,20"
+                                        Visibility="{Binding HasNoQuizRecherche, Converter={StaticResource BoolToVis}}">
+								<TextBlock Text="Aucun quiz ne correspond à la recherche"
                                            FontSize="13" Foreground="#8899b8" HorizontalAlignment="Center"/>
 							</StackPanel>
 
@@ -407,19 +448,37 @@
 						<StackPanel>
 
 							<Grid Margin="0,0,0,16">
-								<StackPanel>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="280"/>
+								</Grid.ColumnDefinitions>
+								<StackPanel Grid.Column="0">
 									<TextBlock Text="Mes Examens" FontSize="15" FontWeight="600" Foreground="#0f1e3d"/>
-									<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,3,0,0">
-										<Run Text="{Binding TotalExamens}"/>
+									<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,3,0,0" TextWrapping="Wrap">
+										<Run Text="{Binding TotalExamens, Mode=OneWay}"/>
 										<Run Text="examens enregistrés"/>
 									</TextBlock>
+								</StackPanel>
+								<StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="12,0,0,0">
+									<TextBlock Text="Rechercher" FontSize="11" FontWeight="600" Foreground="#8899b8" Margin="0,0,0,4"/>
+									<TextBox Text="{Binding FiltreExamen, UpdateSourceTrigger=PropertyChanged}"
+                                         Padding="6,5" FontSize="11"
+                                         BorderBrush="#e2e8f4" BorderThickness="1"
+                                         Background="White" VerticalContentAlignment="Center">
+										<TextBox.Resources>
+											<Style TargetType="Border">
+												<Setter Property="CornerRadius" Value="8"/>
+											</Style>
+										</TextBox.Resources>
+									</TextBox>
 								</StackPanel>
 							</Grid>
 
 							<Border Height="1" Background="#e2e8f4" Margin="0,0,0,0"/>
 
 							<!-- En-têtes -->
-							<Grid Margin="0,12,0,8">
+							<Grid Margin="0,12,0,8"
+                                  Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}">
 								<Grid.ColumnDefinitions>
 									<ColumnDefinition Width="*"/>
 									<ColumnDefinition Width="80"/>
@@ -434,10 +493,12 @@
 								<TextBlock Grid.Column="4" Text="Actions" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
 							</Grid>
 
-							<Border Height="1" Background="#f0f3f9" Margin="0,0,0,4"/>
+							<Border Height="1" Background="#f0f3f9" Margin="0,0,0,4"
+                                    Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}"/>
 
-							<!-- Liste examens -->
-							<ItemsControl ItemsSource="{Binding Examens}">
+							<!-- Liste examens (page courante) -->
+							<ItemsControl ItemsSource="{Binding ExamensPage}"
+                                          Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
 										<Border Padding="0,10" BorderBrush="#f0f3f9" BorderThickness="0,0,0,1">
@@ -450,7 +511,7 @@
 													<ColumnDefinition Width="200"/>
 												</Grid.ColumnDefinitions>
 
-												<TextBlock Grid.Column="0" Text="{Binding Titre}"
+												<TextBlock Grid.Column="0" Text="{Binding TitreAffiche}"
                                                            FontSize="13" FontWeight="600"
                                                            Foreground="#0f1e3d" VerticalAlignment="Center"
                                                            Cursor="Hand" >
@@ -463,7 +524,7 @@
 
 												<TextBlock Grid.Column="1" FontSize="12"
                                                            Foreground="#6b7a99" VerticalAlignment="Center">
-													<Run Text="{Binding Duree}"/>
+													<Run Text="{Binding Examen.Duree}"/>
 													<Run Text=" min"/>
 												</TextBlock>
 
@@ -473,7 +534,7 @@
 														<Style TargetType="TextBlock">
 															<Setter Property="Text" Value="Non définie"/>
 															<Style.Triggers>
-																<DataTrigger Binding="{Binding DatePrevue}" Value="{x:Null}">
+																<DataTrigger Binding="{Binding Examen.DatePrevue}" Value="{x:Null}">
 																	<Setter Property="Text" Value="Non définie"/>
 																</DataTrigger>
 															</Style.Triggers>
@@ -488,13 +549,13 @@
 														<Style TargetType="Border">
 															<Setter Property="Background" Value="#fff7ed"/>
 															<Style.Triggers>
-																<DataTrigger Binding="{Binding Statut}" Value="PUBLIE">
+																<DataTrigger Binding="{Binding Examen.Statut}" Value="PUBLIE">
 																	<Setter Property="Background" Value="#eef3fd"/>
 																</DataTrigger>
-																<DataTrigger Binding="{Binding Statut}" Value="EN_COURS">
+																<DataTrigger Binding="{Binding Examen.Statut}" Value="EN_COURS">
 																	<Setter Property="Background" Value="#eaf3de"/>
 																</DataTrigger>
-																<DataTrigger Binding="{Binding Statut}" Value="TERMINE">
+																<DataTrigger Binding="{Binding Examen.Statut}" Value="TERMINE">
 																	<Setter Property="Background" Value="#f0f3f9"/>
 																</DataTrigger>
 															</Style.Triggers>
@@ -503,16 +564,16 @@
 													<TextBlock FontSize="10" FontWeight="700">
 														<TextBlock.Style>
 															<Style TargetType="TextBlock">
-																<Setter Property="Text" Value="{Binding Statut}"/>
+																<Setter Property="Text" Value="{Binding Examen.Statut}"/>
 																<Setter Property="Foreground" Value="#c2410c"/>
 																<Style.Triggers>
-																	<DataTrigger Binding="{Binding Statut}" Value="PUBLIE">
+																	<DataTrigger Binding="{Binding Examen.Statut}" Value="PUBLIE">
 																		<Setter Property="Foreground" Value="#4f8ef7"/>
 																	</DataTrigger>
-																	<DataTrigger Binding="{Binding Statut}" Value="EN_COURS">
+																	<DataTrigger Binding="{Binding Examen.Statut}" Value="EN_COURS">
 																		<Setter Property="Foreground" Value="#16a34a"/>
 																	</DataTrigger>
-																	<DataTrigger Binding="{Binding Statut}" Value="TERMINE">
+																	<DataTrigger Binding="{Binding Examen.Statut}" Value="TERMINE">
 																		<Setter Property="Foreground" Value="#8899b8"/>
 																	</DataTrigger>
 																</Style.Triggers>
@@ -547,10 +608,32 @@
 								</ItemsControl.ItemTemplate>
 							</ItemsControl>
 
+							<!-- Pagination examens -->
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0"
+                                        Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}">
+								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
+                                        Margin="0,0,8,0" MinWidth="25" Padding="3,2"
+                                        Command="{Binding ExamenPagePrecedenteCommand}">
+									<TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+								</Button>
+								<TextBlock Text="{Binding LibellePaginationExamen}" VerticalAlignment="Center"
+                                           FontSize="12" FontWeight="600" Foreground="#6b7a99" Margin="8,0"/>
+								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
+                                        Margin="8,0,0,0" MinWidth="25" Padding="3,2"
+                                        Command="{Binding ExamenPageSuivanteCommand}">
+									<TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+								</Button>
+							</StackPanel>
+
 							<!-- État vide examens -->
 							<StackPanel HorizontalAlignment="Center" Margin="0,20"
                                         Visibility="{Binding HasNoExamens, Converter={StaticResource BoolToVis}}">
 								<TextBlock Text="Aucun examen créé pour le moment"
+                                           FontSize="13" Foreground="#8899b8" HorizontalAlignment="Center"/>
+							</StackPanel>
+							<StackPanel HorizontalAlignment="Center" Margin="0,20"
+                                        Visibility="{Binding HasNoExamensRecherche, Converter={StaticResource BoolToVis}}">
+								<TextBlock Text="Aucun examen ne correspond à la recherche"
                                            FontSize="13" Foreground="#8899b8" HorizontalAlignment="Center"/>
 							</StackPanel>
 

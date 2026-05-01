@@ -73,7 +73,8 @@ namespace smartest_desktop.Views
                         quizComplet.Titre,
                         quizComplet.Difficulte,
                         quizComplet.CoursSourceTitre,
-                        quizComplet.Statut);
+                        quizComplet.Statut,
+                        quizComplet.Id);
 
                     resultWindow.Show();
                     this.Close();
@@ -101,12 +102,18 @@ namespace smartest_desktop.Views
                     }
 
                     string coursTitre = examenComplet.Cours.FirstOrDefault()?.Titre ?? "Cours local";
+                    string difficulte = examenComplet.Questions
+                        .OrderBy(q => q.Numero)
+                        .Select(q => q.Difficulte)
+                        .FirstOrDefault(d => !string.IsNullOrWhiteSpace(d)) ?? "Moyen";
+
                     var resultWindow = new ExamenResultWindow(
                         questions,
                         examenComplet.Titre,
                         examenComplet.Duree,
-                        "Moyen",
-                        coursTitre);
+                        difficulte,
+                        coursTitre,
+                        examenComplet.Id);
 
                     resultWindow.Show();
                     this.Close();

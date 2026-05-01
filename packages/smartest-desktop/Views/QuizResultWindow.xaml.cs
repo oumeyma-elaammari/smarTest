@@ -1,19 +1,31 @@
 using smartest_desktop.Data.LocalEntities;
+using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace smartest_desktop.Views
 {
     public partial class QuizResultWindow : Window
     {
-        public QuizResultWindow(List<QuestionQCM> questions, string titre, string difficulte, string coursTitre, string statut)
+        public QuizResultWindow(List<QuestionQCM> questions, string titre, string difficulte, string coursTitre, string statut, int? quizIdExistant = null)
         {
             InitializeComponent();
 
-            var vm = new QuizResultViewModel(questions, titre, difficulte, coursTitre, statut);
+            Func<Task>? supprimerPersistant = null;
+            if (quizIdExistant is int idQuiz)
+            {
+                supprimerPersistant = async () =>
+                {
+                    var svc = new LocalQuizService(App.LocalDb);
+                    await svc.SupprimerAsync(idQuiz);
+                };
+            }
+
+            var vm = new QuizResultViewModel(questions, titre, difficulte, coursTitre, statut, quizIdExistant, supprimerPersistant);
             DataContext = vm;
 
             vm.NavigationRetourRequested += () =>
@@ -40,8 +52,6 @@ namespace smartest_desktop.Views
             {
                 try
                 {
-                    var db = App.LocalDb;
-
                     var questionsDb = questionsValidees.Select((q, idx) => new QuestionLocale
                     {
                         Numero = idx + 1,
@@ -56,36 +66,69 @@ namespace smartest_desktop.Views
                         Difficulte = difficulteQuiz
                     }).ToList();
 
-                    var quiz = new QuizLocal
+                    var svc = new LocalQuizService(App.LocalDb);
+
+                    if (quizIdExistant is int idExistant)
                     {
-                        Titre = titreQuiz,
-                        Difficulte = difficulteQuiz,
-                        CoursSourceTitre = coursTitreQuiz ?? string.Empty,
-                        Statut = statutQuiz,
-                        NombreQuestions = questionsValidees.Count,
-                        DateCreation = DateTime.Now,
-                        Questions = questionsDb
-                    };
+                        await svc.MettreAJourContenuAsync(
+                            idExistant,
+                            titreQuiz,
+                            difficulteQuiz,
+                            coursTitreQuiz ?? string.Empty,
+                            statutQuiz,
+                            questionsDb);
 
-                    db.Quiz.Add(quiz);
-                    await db.SaveChangesAsync();
+                        Dispatcher.Invoke(() =>
+                        {
+                            MessageBox.Show(
+                                $"Les modifications du quiz « {titreQuiz} » ont été enregistrées.\n\n" +
+                                $"• {questionsValidees.Count} questions\n" +
+                                $"• Difficulté : {difficulteQuiz}\n" +
+                                $"• Cours : {coursTitreQuiz}\n" +
+                                $"• Statut : {statutQuiz}",
+                                "Modifications enregistrées",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
 
-                    Dispatcher.Invoke(() =>
+                            var hub = new QuizExamenWindow();
+                            hub.Show();
+                            Close();
+                        });
+                    }
+                    else
                     {
-                        MessageBox.Show(
-                            $"✅ Le quiz \"{titreQuiz}\" a été sauvegardé !\n\n" +
-                            $"• {questionsValidees.Count} questions\n" +
-                            $"• Difficulté : {difficulteQuiz}\n" +
-                            $"• Cours : {coursTitreQuiz}\n" +
-                            $"• Statut : {statutQuiz}",
-                            "Quiz sauvegardé",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
+                        var db = App.LocalDb;
+                        var quiz = new QuizLocal
+                        {
+                            Titre = titreQuiz,
+                            Difficulte = difficulteQuiz,
+                            CoursSourceTitre = coursTitreQuiz ?? string.Empty,
+                            Statut = statutQuiz,
+                            NombreQuestions = questionsValidees.Count,
+                            DateCreation = DateTime.Now,
+                            Questions = questionsDb
+                        };
 
-                        var dashboard = new DashboardWindow();
-                        dashboard.Show();
-                        Close();
-                    });
+                        db.Quiz.Add(quiz);
+                        await db.SaveChangesAsync();
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            MessageBox.Show(
+                                $"Le quiz « {titreQuiz} » a été validé et sauvegardé.\n\n" +
+                                $"• {questionsValidees.Count} questions\n" +
+                                $"• Difficulté : {difficulteQuiz}\n" +
+                                $"• Cours : {coursTitreQuiz}\n" +
+                                $"• Statut : {statutQuiz}",
+                                "Quiz enregistré",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+
+                            var dashboard = new DashboardWindow();
+                            dashboard.Show();
+                            Close();
+                        });
+                    }
                 }
                 catch (Exception ex)
                 {
