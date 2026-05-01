@@ -33,12 +33,12 @@ namespace smartest_desktop.Services
             catch (OperationCanceledException)
             {
                 throw new HttpRequestException(
-                    "Ollama ne répond pas en 5 secondes.\nLancez : ollama serve");
+                    "Le service IA ne répond pas en 5 secondes.");
             }
             catch (HttpRequestException)
             {
                 throw new HttpRequestException(
-                    "Ollama n'est pas démarré sur le port 11434.\nLancez : ollama serve");
+                    "Le service IA est indisponible.");
             }
         }
 
@@ -57,8 +57,6 @@ namespace smartest_desktop.Services
                 using var doc = JsonDocument.Parse(json);
 
                 string[] preference = {
-                    "qwen3:1.7b", "qwen3",
-                    "gemma2:2b", "gemma2",
                     "phi3:mini", "phi3", "phi",
                     "llama3.2:1b", "llama3.2:3b", "llama3.2",
                     "mistral", "llama3", "llama2",

@@ -548,7 +548,7 @@ namespace smartest_desktop.ViewModels
 
             IsGenerating  = true;
             ErrorMessage  = string.Empty;
-            StatusMessage = "🤖 Connexion à Ollama...";
+            StatusMessage = "🤖 Connexion au service IA...";
 
             try
             {
@@ -574,7 +574,7 @@ namespace smartest_desktop.ViewModels
                     ct: ct);
 
                 if (string.IsNullOrWhiteSpace(texte))
-                    throw new Exception("Ollama n'a retourné aucun texte.");
+                    throw new Exception("Aucune reponse n'a ete retournee.");
 
                 StatusMessage = "📝 Extraction des questions...";
                 var questions = ParseQuestions(texte);
@@ -601,7 +601,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Net.Http.HttpRequestException ex)
             {
-                ErrorMessage  = $"❌ Ollama inaccessible.\n\nLancez : ollama serve\n\nDétail : {ex.Message}";
+                ErrorMessage  = $"❌ Service IA inaccessible.\n\nDetail : {ex.Message}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)

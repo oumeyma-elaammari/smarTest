@@ -413,7 +413,7 @@ namespace smartest_desktop.ViewModels
 
             IsGenerating = true;
             ErrorMessage = string.Empty;
-            StatusMessage = "🤖 Connexion à Ollama...";
+            StatusMessage = "🤖 Connexion au service IA...";
 
             try
             {
@@ -434,7 +434,7 @@ namespace smartest_desktop.ViewModels
                 string reponse = await AppelOllamaStreamingAsync(modele, BuildPrompt(contenu), token);
 
                 if (string.IsNullOrWhiteSpace(reponse))
-                    throw new Exception("Ollama n'a retourné aucun texte.");
+                    throw new Exception("Aucune reponse n'a ete retournee.");
 
                 System.Diagnostics.Debug.WriteLine("=== OLLAMA RAW ===");
                 System.Diagnostics.Debug.WriteLine(reponse[..Math.Min(500, reponse.Length)]);
@@ -469,7 +469,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (HttpRequestException ex)
             {
-                ErrorMessage = $"❌ Ollama inaccessible.\n\nLancez : ollama serve\n\nDétail : {ex.Message}";
+                ErrorMessage = $"❌ Service IA inaccessible.\n\nDetail : {ex.Message}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)
@@ -592,11 +592,11 @@ namespace smartest_desktop.ViewModels
             }
             catch (OperationCanceledException)
             {
-                throw new HttpRequestException("Ollama ne répond pas.\nLancez : ollama serve");
+                throw new HttpRequestException("Le service IA local ne repond pas.");
             }
             catch (HttpRequestException)
             {
-                throw new HttpRequestException("Ollama n'est pas démarré sur le port 11434.\nLancez : ollama serve");
+                throw new HttpRequestException("Le service IA local est indisponible.");
             }
         }
 
