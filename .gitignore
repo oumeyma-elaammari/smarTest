@@ -1,6 +1,4 @@
-﻿.vs/
-bin/
-obj/# Dépendances et sorties front
+# Dépendances et sorties front
 node_modules/
 dist/
 build/
@@ -34,4 +32,3 @@ obj/
 
 # Base locale app desktop (y compris variantes WAL/SHM si même préfixe)
 **/smartest_local.db*
-.vs/
