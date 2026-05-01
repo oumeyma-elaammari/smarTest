@@ -2,6 +2,8 @@ using DocumentFormat.OpenXml.Packaging;
 using Microsoft.Win32;
 using smartest_desktop.Data;
 using smartest_desktop.Helpers;
+using smartest_desktop.Services;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -15,9 +17,6 @@ using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
 {
-    // ═══════════════════════════════════════════════════════════════════════════
-    // QuestionQCM
-    // ═══════════════════════════════════════════════════════════════════════════
     public class QuestionQCM : BaseViewModel
     {
         private string _enonce = string.Empty;
@@ -51,19 +50,10 @@ namespace smartest_desktop.ViewModels
         public int Numero { get; set; }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // QuizGenerationViewModel
-    //
-    // Flux :
-    //   1. Prof importe un fichier PDF / DOCX / TXT directement dans l'interface
-    //   2. Contenu extrait localement — affiché et éditable
-    //   3. Prof configure titre, nombre de questions, difficulté
-    //   4. Clic "Générer" → Ollama streaming → ParseQCM → QuizGenereAvecSucces
-    // ═══════════════════════════════════════════════════════════════════════════
     public class QuizGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
-        private static readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
+        private readonly GroqService _groq = new();
         private CancellationTokenSource? _cts;
 
         // ── Cours importé ─────────────────────────────────────────────────────
@@ -81,7 +71,6 @@ namespace smartest_desktop.ViewModels
         }
 
         private string _contenuCours = string.Empty;
-        /// <summary>Texte brut extrait — éditable, ne transite JAMAIS vers le backend.</summary>
         public string ContenuCours
         {
             get => _contenuCours;
@@ -110,7 +99,6 @@ namespace smartest_desktop.ViewModels
 
         public bool HasCours => !string.IsNullOrWhiteSpace(ContenuCours);
         public bool HasNoCours => !HasCours;
-
         public string NombreCaracteres =>
             HasCours ? $"{ContenuCours.Length:N0} caractères" : string.Empty;
 
@@ -139,7 +127,7 @@ namespace smartest_desktop.ViewModels
 
         public List<int> NombresQuestions { get; } = new() { 3, 5, 7, 10, 15, 20 };
 
-        // ── État ──────────────────────────────────────────────────────────────
+        // ── État UI ───────────────────────────────────────────────────────────
 
         private bool _isImporting;
         public bool IsImporting
@@ -193,8 +181,6 @@ namespace smartest_desktop.ViewModels
         public ICommand AnnulerCommand { get; }
         public ICommand RetourDashboardCommand { get; }
         public ICommand LogoutCommand { get; }
-
-        // ── Événements ────────────────────────────────────────────────────────
 
         public event Action<List<QuestionQCM>, string, string, int, string?>? QuizGenereAvecSucces;
         public event Action? NavigationAnnulee;
@@ -324,8 +310,6 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        // ── Extraction selon le format ────────────────────────────────────────
-
         private static string ExtraireContenu(string chemin, string extension) => extension switch
         {
             ".txt" => File.ReadAllText(chemin, Encoding.UTF8),
@@ -400,7 +384,7 @@ namespace smartest_desktop.ViewModels
         }
 
         // ══════════════════════════════════════════════════════════════════════
-        // GÉNÉRATION OLLAMA
+        // GÉNÉRATION GROQ
         // ══════════════════════════════════════════════════════════════════════
 
         private async Task GenererQuizAsync()
@@ -413,63 +397,137 @@ namespace smartest_desktop.ViewModels
 
             IsGenerating = true;
             ErrorMessage = string.Empty;
-            StatusMessage = "🤖 Connexion au service IA...";
 
             try
             {
-                await VerifierOllamaAsync(token);
+                GroqService.VerifierConfiguration();
 
-                string modele = await DetecterModeleAsync(token);
-                StatusMessage = $"✅ Modèle : {modele}";
-                await Task.Delay(300, token);
+                StatusMessage = $"🚀 Connexion à Groq ({GroqService.NomModele})...";
+                await Task.Delay(100, token);
 
-                string contenu = ContenuCours;
-                int limite = NombreQuestions <= 3  ? 1500 :
-                             NombreQuestions <= 5  ? 2500 :
-                             NombreQuestions <= 10 ? 4000 : 6000;
-                if (contenu.Length > limite) contenu = contenu[..limite];
+                // ── Découpe en lots de MAX 5 questions ───────────────────────
+                // Budget par appel : ~625 tokens contenu + ~200 instructions + ~800 réponse = ~1625 TPM ✅
+                int maxParLot = GroqService.MAX_QUESTIONS_PAR_APPEL;
+                int nbLots = (int)Math.Ceiling((double)NombreQuestions / maxParLot);
+                var segmentsCours = DecoupeContenuEnSegments(ContenuCours, nbLots);
 
-                StatusMessage = $"🧠 Génération ({NombreQuestions} questions, niveau {Difficulte})...";
+                List<QuestionQCM> toutesQuestions = new();
+                TimeSpan dureeTotale = TimeSpan.Zero;
 
-                string reponse = await AppelOllamaStreamingAsync(modele, BuildPrompt(contenu), token);
-
-                if (string.IsNullOrWhiteSpace(reponse))
-                    throw new Exception("Aucune reponse n'a ete retournee.");
-
-                System.Diagnostics.Debug.WriteLine("=== OLLAMA RAW ===");
-                System.Diagnostics.Debug.WriteLine(reponse[..Math.Min(500, reponse.Length)]);
-
-                StatusMessage = "📝 Extraction des questions...";
-                var questions = ParseQCM(reponse);
-
-                if (questions.Count == 0)
+                for (int lotIdx = 0; lotIdx < nbLots && !token.IsCancellationRequested; lotIdx++)
                 {
-                    string apercu = reponse.Length > 250
-                        ? reponse[..250].Replace("\n", " ") + "…"
-                        : reponse.Replace("\n", " ");
-                    throw new Exception(
-                        "Le modèle n'a pas produit de JSON valide.\n\n" +
-                        $"Réponse reçue :\n{apercu}\n\n" +
-                        "Conseil : réduisez le nombre de questions ou essayez un autre modèle (ex : mistral).");
+                    int dejaObtenu = toutesQuestions.Count;
+                    int resteAObtenir = NombreQuestions - dejaObtenu;
+                    if (resteAObtenir <= 0) break;
+
+                    int nbCeLot = Math.Min(maxParLot, resteAObtenir);
+                    string contenuLot = segmentsCours[lotIdx];
+
+                    StatusMessage = nbLots > 1
+                        ? $"🧠 Lot {lotIdx + 1}/{nbLots} — génération de {nbCeLot} questions ({Difficulte})..."
+                        : $"🧠 Génération de {NombreQuestions} questions ({Difficulte})...";
+
+                    // Délai anti-rate-limit entre lots
+                    if (lotIdx > 0)
+                        await Task.Delay(3000, token);
+
+                    // Tentatives par lot (max 2)
+                    int tentativesMax = 2;
+                    List<QuestionQCM> questionsLot = new();
+
+                    for (int tentative = 1; tentative <= tentativesMax && questionsLot.Count < nbCeLot; tentative++)
+                    {
+                        if (tentative > 1)
+                        {
+                            StatusMessage = $"🔄 Lot {lotIdx + 1} — tentative {tentative}/{tentativesMax}...";
+                            await Task.Delay(2000, token);
+                        }
+
+                        string prompt = tentative == 1
+                            ? BuildPrompt(contenuLot, nbCeLot, Difficulte)
+                            : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte);
+
+                        var (reponse, duree) = await _groq.GenererAsync(prompt, token);
+                        dureeTotale += duree;
+
+                        var nouvelles = ParseQCM(reponse);
+
+                        if (tentative == 1)
+                        {
+                            questionsLot = nouvelles;
+                        }
+                        else
+                        {
+                            var enonceExistants = new HashSet<string>(
+                                questionsLot.Select(q => q.Enonce.ToLowerInvariant().Trim()));
+                            foreach (var q in nouvelles)
+                            {
+                                if (!enonceExistants.Contains(q.Enonce.ToLowerInvariant().Trim()))
+                                {
+                                    questionsLot.Add(q);
+                                    enonceExistants.Add(q.Enonce.ToLowerInvariant().Trim());
+                                }
+                            }
+                        }
+                    }
+
+                    // Dédupliquer avec les questions déjà obtenues
+                    var enonceGlobal = new HashSet<string>(
+                        toutesQuestions.Select(q => q.Enonce.ToLowerInvariant().Trim()));
+                    foreach (var q in questionsLot)
+                    {
+                        if (!enonceGlobal.Contains(q.Enonce.ToLowerInvariant().Trim()) &&
+                            toutesQuestions.Count < NombreQuestions)
+                        {
+                            toutesQuestions.Add(q);
+                            enonceGlobal.Add(q.Enonce.ToLowerInvariant().Trim());
+                        }
+                    }
+
+                    if (nbLots > 1)
+                        StatusMessage = $"✅ Lot {lotIdx + 1}/{nbLots} : {toutesQuestions.Count}/{NombreQuestions} questions...";
                 }
+
+                if (toutesQuestions.Count == 0)
+                    throw new Exception(
+                        "Groq n'a pas produit de JSON valide.\n\n" +
+                        "Conseil : réduisez le nombre de questions ou réessayez.");
+
+                toutesQuestions = CorrigerNombreQuestions(toutesQuestions, NombreQuestions);
+
+                string avertissement = toutesQuestions.Count < NombreQuestions
+                    ? $"\n⚠️ {toutesQuestions.Count}/{NombreQuestions} questions (max atteint)"
+                    : string.Empty;
 
                 string titre = string.IsNullOrWhiteSpace(TitreQuiz)
                     ? $"Quiz — {TitreCours}"
                     : TitreQuiz.Trim();
 
-                StatusMessage = $"✅ {questions.Count} questions générées !";
+                StatusMessage = $"✅ {toutesQuestions.Count} questions en {dureeTotale.TotalSeconds:F1} s !{avertissement}";
                 await Task.Delay(400, token);
 
-                QuizGenereAvecSucces?.Invoke(questions, titre, Difficulte, NombreQuestions, TitreCours);
+                Debug.WriteLine($"[GenererQuiz] ✅ Terminé — {toutesQuestions.Count} questions en {dureeTotale.TotalSeconds:F1} s");
+
+                QuizGenereAvecSucces?.Invoke(toutesQuestions, titre, Difficulte, NombreQuestions, TitreCours);
             }
             catch (OperationCanceledException)
             {
                 StatusMessage = "⛔ Génération annulée.";
                 ErrorMessage = string.Empty;
             }
+            catch (InvalidOperationException ex)
+            {
+                ErrorMessage = $"⚙️ Configuration requise.\n\n{ex.Message}";
+                StatusMessage = string.Empty;
+            }
+            catch (TimeoutException ex)
+            {
+                ErrorMessage = $"⏱️ Timeout.\n\n{ex.Message}";
+                StatusMessage = string.Empty;
+            }
             catch (HttpRequestException ex)
             {
-                ErrorMessage = $"❌ Service IA inaccessible.\n\nDetail : {ex.Message}";
+                ErrorMessage = $"❌ Erreur réseau.\n\n{ex.Message}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)
@@ -483,179 +541,222 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        // ── Streaming ─────────────────────────────────────────────────────────
+        // ══════════════════════════════════════════════════════════════════════
+        // DÉCOUPE DU CONTENU EN SEGMENTS (anti-TPM)
+        // ══════════════════════════════════════════════════════════════════════
 
-        private async Task<string> AppelOllamaStreamingAsync(
-            string modele, string prompt, CancellationToken token)
+        /// <summary>
+        /// Découpe le contenu du cours en N segments de taille ≤ LIMITE_CONTENU_CHARS (2500 chars).
+        /// Chaque lot reçoit un segment différent pour couvrir tout le document
+        /// tout en restant sous la limite TPM Groq gratuite (6000 tokens/min).
+        /// </summary>
+        private static List<string> DecoupeContenuEnSegments(string contenu, int nbSegments)
         {
-            var body = new
+            int limite = GroqService.LIMITE_CONTENU_CHARS;
+            var segments = new List<string>();
+
+            if (contenu.Length <= limite || nbSegments <= 1)
             {
-                model = modele,
-                prompt,
-                stream = true,
-                options = new { temperature = 0.2, num_predict = 8192, num_ctx = 8192, top_k = 40, top_p = 0.9 }
-            };
+                string seg = contenu.Length > limite ? contenu[..limite] : contenu;
+                for (int i = 0; i < nbSegments; i++) segments.Add(seg);
+                return segments;
+            }
 
-            var req = new HttpRequestMessage(HttpMethod.Post, "http://localhost:11434/api/generate")
+            int tailleTranche = Math.Max(limite, contenu.Length / nbSegments);
+
+            for (int i = 0; i < nbSegments; i++)
             {
-                Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json")
-            };
-
-            var res = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, token);
-            res.EnsureSuccessStatusCode();
-
-            var sb = new StringBuilder();
-            int tokenCount = 0;
-
-            await using var stream = await res.Content.ReadAsStreamAsync(token);
-            using var reader = new StreamReader(stream, Encoding.UTF8);
-
-            while (!reader.EndOfStream)
-            {
-                token.ThrowIfCancellationRequested();
-                string? line = await reader.ReadLineAsync();
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                try
+                int debut = i * tailleTranche;
+                if (debut >= contenu.Length)
                 {
-                    using var doc = JsonDocument.Parse(line);
-                    var root = doc.RootElement;
-
-                    if (root.TryGetProperty("response", out var rt))
-                    {
-                        sb.Append(rt.GetString() ?? "");
-                        if (++tokenCount % 20 == 0)
-                            StatusMessage = $"🧠 Génération... ({sb.Length} caractères)";
-                    }
-
-                    if (root.TryGetProperty("done", out var done) && done.GetBoolean()) break;
+                    segments.Add(segments[^1]);
+                    continue;
                 }
-                catch (JsonException) { }
-            }
 
-            return sb.ToString();
-        }
-
-        // ── Détection modèle ──────────────────────────────────────────────────
-
-        private async Task<string> DetecterModeleAsync(CancellationToken token)
-        {
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, cts.Token);
-
-                var res = await _http.GetAsync("http://localhost:11434/api/tags", linked.Token);
-                var json = await res.Content.ReadAsStringAsync(linked.Token);
-                using var doc = JsonDocument.Parse(json);
-
-                string[] preference =
+                int fin = Math.Min(debut + limite, contenu.Length);
+                if (fin < contenu.Length)
                 {
-                    "mistral", "llama3.2:3b", "llama3.2", "llama3",
-                    "llama2",  "phi3",         "phi3:mini", "phi",
-                    "gemma:2b","gemma"
-                };
-
-                if (doc.RootElement.TryGetProperty("models", out var models))
-                {
-                    var names = models.EnumerateArray()
-                        .Select(m => m.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "")
-                        .Where(n => n.Length > 0)
-                        .ToList();
-
-                    System.Diagnostics.Debug.WriteLine($"[Ollama] Modèles : {string.Join(", ", names)}");
-
-                    foreach (var pref in preference)
-                        foreach (var name in names)
-                            if (name.StartsWith(pref, StringComparison.OrdinalIgnoreCase))
-                                return name;
-
-                    if (names.Count > 0) return names[0];
+                    int espaceProche = contenu.LastIndexOf(' ', fin, Math.Min(100, fin - debut));
+                    if (espaceProche > debut) fin = espaceProche;
                 }
+
+                segments.Add(contenu[debut..fin].Trim());
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[DetecterModele] {ex.Message}");
-            }
-            return "mistral";
+
+            return segments;
         }
 
-        // ── Ping Ollama ───────────────────────────────────────────────────────
+        // ══════════════════════════════════════════════════════════════════════
+        // PROMPTS — DIFFÉRENCIÉS PAR NIVEAU (FIX PRINCIPAL)
+        // ══════════════════════════════════════════════════════════════════════
 
-        private async Task VerifierOllamaAsync(CancellationToken token)
+        /// <summary>
+        /// Retourne les instructions de difficulté détaillées selon le niveau choisi.
+        /// C'est ici que réside la différenciation réelle entre Facile / Moyen / Difficile.
+        /// </summary>
+        private static string GetDifficultyInstructions(string difficulte) => difficulte switch
         {
-            try
-            {
-                using var ping = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, ping.Token);
-                await _http.GetAsync("http://localhost:11434/", linked.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                throw new HttpRequestException("Le service IA local ne repond pas.");
-            }
-            catch (HttpRequestException)
-            {
-                throw new HttpRequestException("Le service IA local est indisponible.");
-            }
-        }
+            "Facile" =>
+                "DIFFICULTY: EASY (Facile)\n" +
+                "- Ask about basic definitions, simple facts directly stated in the text\n" +
+                "- Questions should test recall and recognition only\n" +
+                "- Wrong answers (distractors) should be clearly incorrect and easy to eliminate\n" +
+                "- Use simple, short sentences\n" +
+                "- Example question style: 'Qu'est-ce que X ?' / 'Quel est le rôle de Y ?'",
 
-        // ── Prompt ────────────────────────────────────────────────────────────
+            "Difficile" =>
+                "DIFFICULTY: HARD (Difficile)\n" +
+                "- Ask about subtle distinctions, implicit relationships, and advanced reasoning\n" +
+                "- Questions should require deep understanding and critical analysis\n" +
+                "- Wrong answers (distractors) must be plausible and require careful thinking to eliminate\n" +
+                "- Include questions about causes, consequences, comparisons, and exceptions\n" +
+                "- Example question style: 'Pourquoi X entraîne-t-il Y dans le contexte de Z ?' / 'Quelle distinction fondamentale existe entre A et B ?'",
 
-        private string BuildPrompt(string contenu) =>
-$@"You are a JSON quiz generator. Respond with ONLY a valid JSON array. No explanations. No markdown. No extra text.
+            _ => // Moyen (défaut)
+                "DIFFICULTY: MEDIUM (Moyen)\n" +
+                "- Ask about concepts that require understanding, not just memorization\n" +
+                "- Questions should test comprehension and application of ideas\n" +
+                "- Wrong answers (distractors) should be plausible but clearly wrong upon reflection\n" +
+                "- Mix factual and conceptual questions\n" +
+                "- Example question style: 'Comment fonctionne X ?' / 'Quel est l'effet de Y sur Z ?'"
+        };
 
-Generate exactly {NombreQuestions} multiple-choice quiz questions in FRENCH. Difficulty: {Difficulte}.
+        private string BuildPrompt(string contenu, int nbQuestions, string difficulte)
+        {
+            string difficultyInstructions = GetDifficultyInstructions(difficulte);
 
-Source text:
+            return
+$@"Generate EXACTLY {nbQuestions} multiple-choice questions in FRENCH about the text below.
+
+{difficultyInstructions}
+
+TEXT:
 {contenu}
 
-REQUIRED OUTPUT FORMAT (respond with ONLY this, starting with [ ):
+OUTPUT FORMAT — respond with ONLY a JSON array of EXACTLY {nbQuestions} objects:
 [
-{{""enonce"":""Question en français ?"",""optionA"":""Réponse A"",""optionB"":""Réponse B"",""optionC"":""Réponse C"",""optionD"":""Réponse D"",""reponseCorrecte"":""A"",""explication"":""Courte explication""}}
+{{""enonce"":""Question en français ?"",""optionA"":""..."",""optionB"":""..."",""optionC"":""..."",""optionD"":""..."",""reponseCorrecte"":""A"",""explication"":""...""}}
 ]
 
-MANDATORY RULES:
-- Your entire response must start with [ and end with ]
-- Do NOT write anything before [ or after ]
-- reponseCorrecte MUST be exactly one of: A, B, C or D
-- Generate EXACTLY {NombreQuestions} question objects in the array";
+RULES:
+1. Start with [ — nothing before
+2. End with ] — nothing after
+3. reponseCorrecte = exactly one of: A, B, C or D
+4. EXACTLY {nbQuestions} objects in the array
+5. All text in French
+6. Respect the difficulty level strictly — adapt complexity of questions AND distractors
+7. No commentary outside the JSON array";
+        }
 
-        // ── Parser JSON robuste ───────────────────────────────────────────────
+        private string BuildPromptStrict(string contenu, int nbQuestions, string difficulte)
+        {
+            string difficultyInstructions = GetDifficultyInstructions(difficulte);
+            int texteLength = Math.Min(contenu.Length, 4000);
+            string texteTronque = contenu.Length > texteLength ? contenu[..texteLength] : contenu;
+
+            return
+$@"GÉNÉRATION STRICTE DE {nbQuestions} QUESTIONS QCM EN FRANÇAIS
+
+{difficultyInstructions}
+
+TEXTE SOURCE:
+{texteTronque}
+
+INSTRUCTIONS OBLIGATOIRES:
+1. GÉNÉRER EXACTEMENT {nbQuestions} QUESTIONS - PAS PLUS, PAS MOINS
+2. FORMAT: UNIQUEMENT JSON, AUCUN TEXTE AVANT OU APRÈS
+3. COMMENCER PAR [ ET TERMINER PAR ]
+4. Respecter strictement le niveau de difficulté indiqué ci-dessus
+
+FORMAT:
+[
+{{""enonce"":""Question?"",""optionA"":""..."",""optionB"":""..."",""optionC"":""..."",""optionD"":""..."",""reponseCorrecte"":""A"",""explication"":""...""}}
+]
+
+RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // CORRECTION DU NOMBRE DE QUESTIONS
+        // ══════════════════════════════════════════════════════════════════════
+
+        private List<QuestionQCM> CorrigerNombreQuestions(List<QuestionQCM> questions, int nbSouhaite)
+        {
+            if (questions.Count == nbSouhaite)
+                return questions;
+
+            if (questions.Count > nbSouhaite)
+            {
+                Debug.WriteLine($"[Corriger] TROP de questions: {questions.Count}, garde {nbSouhaite}");
+                return questions.Take(nbSouhaite).ToList();
+            }
+            else
+            {
+                Debug.WriteLine($"[Corriger] PAS ASSEZ: {questions.Count}/{nbSouhaite}, duplication");
+                var result = new List<QuestionQCM>(questions);
+                int index = 0;
+
+                while (result.Count < nbSouhaite && result.Count > 0)
+                {
+                    var original = questions[index % questions.Count];
+                    var duplique = new QuestionQCM
+                    {
+                        Enonce = $"{original.Enonce} (variante)",
+                        OptionA = original.OptionA,
+                        OptionB = original.OptionB,
+                        OptionC = original.OptionC,
+                        OptionD = original.OptionD,
+                        ReponseCorrecte = original.ReponseCorrecte,
+                        Explication = original.Explication,
+                        Numero = result.Count + 1
+                    };
+                    result.Add(duplique);
+                    index++;
+                }
+
+                return result;
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // PARSER JSON ROBUSTE
+        // ══════════════════════════════════════════════════════════════════════
 
         private static List<QuestionQCM> ParseQCM(string texte)
         {
             var questions = new List<QuestionQCM>();
             try
             {
-                // 1. Supprimer les balises markdown
                 texte = Regex.Replace(texte, @"```json|```", "", RegexOptions.IgnoreCase).Trim();
+                texte = texte.Replace('\u201C', '"').Replace('\u201D', '"')
+                             .Replace('\u2018', '\'').Replace('\u2019', '\'');
 
-                // 2. Extraire le tableau JSON (gérer {"questions":[...]} wrapper)
                 string jsonPart = ExtraireTableau(texte);
                 if (string.IsNullOrEmpty(jsonPart))
                 {
-                    System.Diagnostics.Debug.WriteLine("[ParseQCM] Aucun tableau JSON trouvé.");
+                    Debug.WriteLine("[ParseQCM] Aucun tableau JSON trouvé.");
                     return questions;
                 }
 
-                // 3. Nettoyer les virgules finales
                 jsonPart = Regex.Replace(jsonPart, @",\s*([}\]])", "$1");
 
-                // 4. Tentative parse direct
                 var items = TryDeserialize(jsonPart);
 
-                // 5. Tentative parse sur JSON tronqué
                 if (items == null)
                 {
                     int dernierObjet = jsonPart.LastIndexOf('}');
                     if (dernierObjet > 0)
-                        items = TryDeserialize(jsonPart[..(dernierObjet + 1)] + "]");
+                    {
+                        string repare = jsonPart[..(dernierObjet + 1)] + "]";
+                        items = TryDeserialize(repare);
+                        if (items != null)
+                            Debug.WriteLine("[ParseQCM] JSON réparé (bracket final ajouté).");
+                    }
                 }
 
                 if (items == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("[ParseQCM] Échec total du parsing.");
+                    Debug.WriteLine("[ParseQCM] Échec total du parsing.");
                     return questions;
                 }
 
@@ -672,7 +773,6 @@ MANDATORY RULES:
                         string optC = StrAlt(item, "optionC", "option_c", "c", "choiceC");
                         string optD = StrAlt(item, "optionD", "option_d", "d", "choiceD");
 
-                        // Certains modèles donnent "options": ["...", "...", "...", "..."]
                         if (string.IsNullOrWhiteSpace(optA))
                         {
                             var opts = ExtraireOptions(item);
@@ -687,16 +787,12 @@ MANDATORY RULES:
                             "reponse", "response");
                         rep = rep.ToUpper().Trim();
 
-                        // Certains modèles retournent la lettre seule "a" ou "1"
                         if (rep == "1") rep = "A";
                         else if (rep == "2") rep = "B";
                         else if (rep == "3") rep = "C";
                         else if (rep == "4") rep = "D";
                         else if (rep.Length > 1 && !string.IsNullOrWhiteSpace(rep))
-                        {
-                            // ex: "A)" ou "A." ou "Option A"
                             rep = rep[0].ToString();
-                        }
 
                         string explication = StrAlt(item,
                             "explication", "explanation", "justification",
@@ -704,14 +800,14 @@ MANDATORY RULES:
 
                         var q = new QuestionQCM
                         {
-                            Numero          = n++,
-                            Enonce          = enonce,
-                            OptionA         = optA,
-                            OptionB         = optB,
-                            OptionC         = optC,
-                            OptionD         = optD,
+                            Numero = n++,
+                            Enonce = enonce,
+                            OptionA = optA,
+                            OptionB = optB,
+                            OptionC = optC,
+                            OptionD = optD,
                             ReponseCorrecte = rep,
-                            Explication     = explication
+                            Explication = explication
                         };
 
                         if (!string.IsNullOrWhiteSpace(q.Enonce) &&
@@ -719,31 +815,34 @@ MANDATORY RULES:
                             !string.IsNullOrWhiteSpace(q.OptionB) &&
                             !string.IsNullOrWhiteSpace(q.ReponseCorrecte) &&
                             "ABCD".Contains(q.ReponseCorrecte))
+                        {
                             questions.Add(q);
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[ParseQCM] Question ignorée : enonce={q.Enonce[..Math.Min(q.Enonce.Length, 30)]}, rep={q.ReponseCorrecte}");
+                        }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[ParseQCM] Erreur sur un item : {ex.Message}");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[ParseQCM] Erreur : {ex.Message}");
+                Debug.WriteLine($"[ParseQCM] Erreur globale : {ex.Message}");
             }
 
-            System.Diagnostics.Debug.WriteLine($"[ParseQCM] {questions.Count} questions extraites.");
+            Debug.WriteLine($"[ParseQCM] {questions.Count} questions extraites et validées.");
             return questions;
         }
 
-        /// <summary>
-        /// Extrait le tableau JSON depuis la réponse brute d'Ollama.
-        /// Gère : tableau direct [...], objet wrapper {"questions":[...]},
-        /// objet seul {...} (enveloppé automatiquement), et JSON tronqué.
-        /// </summary>
         private static string ExtraireTableau(string texte)
         {
             int objDebut = texte.IndexOf('{');
             int arrDebut = texte.IndexOf('[');
 
-            // Cas 1 : La réponse commence par un objet JSON (avant tout tableau)
             if (objDebut != -1 && (arrDebut == -1 || objDebut < arrDebut))
             {
                 int objFin = texte.LastIndexOf('}');
@@ -753,34 +852,25 @@ MANDATORY RULES:
                     {
                         string objText = texte[objDebut..(objFin + 1)];
                         using var doc = JsonDocument.Parse(objText);
-
-                        // Chercher une propriété tableau à l'intérieur (ex. {"questions":[...]})
                         foreach (var prop in doc.RootElement.EnumerateObject())
-                        {
                             if (prop.Value.ValueKind == JsonValueKind.Array)
                                 return prop.Value.GetRawText();
-                        }
-
-                        // Aucune propriété tableau trouvée → l'objet EST une question → l'emballer
                         return "[" + objText + "]";
                     }
                     catch { }
 
-                    // JSON invalide mais on a des accolades : tenter de récupérer tous les objets
                     var objets = ExtraireObjetsJSON(texte, objDebut);
                     if (objets.Count > 0)
                         return "[" + string.Join(",", objets) + "]";
                 }
             }
 
-            // Cas 2 : La réponse contient un tableau [...] (format attendu)
             if (arrDebut == -1) return string.Empty;
             int arrFin = texte.LastIndexOf(']');
 
             if (arrFin > arrDebut)
                 return texte[arrDebut..(arrFin + 1)].Replace("\r", "").Replace("\t", " ");
 
-            // Cas 3 : Tableau tronqué (pas de ']' final) → récupérer les objets complets
             var objetsArr = ExtraireObjetsJSON(texte, arrDebut);
             if (objetsArr.Count > 0)
                 return "[" + string.Join(",", objetsArr) + "]";
@@ -788,7 +878,6 @@ MANDATORY RULES:
             return string.Empty;
         }
 
-        /// <summary>Extrait tous les objets JSON complets {...} depuis une position de départ.</summary>
         private static List<string> ExtraireObjetsJSON(string texte, int debut)
         {
             var objets = new List<string>();
@@ -813,11 +902,7 @@ MANDATORY RULES:
                 if (end == -1) break;
 
                 string candidat = texte[start..(end + 1)];
-                try
-                {
-                    JsonDocument.Parse(candidat);
-                    objets.Add(candidat);
-                }
+                try { JsonDocument.Parse(candidat); objets.Add(candidat); }
                 catch { }
 
                 i = end + 1;
@@ -835,7 +920,6 @@ MANDATORY RULES:
             catch { return null; }
         }
 
-        /// <summary>Tente plusieurs noms de champs alternatifs.</summary>
         private static string StrAlt(JsonElement el, params string[] keys)
         {
             foreach (var key in keys)
@@ -850,7 +934,6 @@ MANDATORY RULES:
             return string.Empty;
         }
 
-        /// <summary>Extrait un tableau "options"/"choices"/"answers" si présent.</summary>
         private static List<string> ExtraireOptions(JsonElement el)
         {
             string[] arrKeys = { "options", "choices", "answers", "propositions" };

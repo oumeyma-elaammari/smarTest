@@ -13,7 +13,7 @@ namespace smartest_desktop.ViewModels
 {
     public class ExamenResultViewModel : BaseViewModel
     {
-        private readonly LocalDbContext     _db;
+        private readonly LocalDbContext _db;
         private readonly ExamenLocalService _service;
 
         // ── Données de l'examen ───────────────────────────────────────────────
@@ -25,7 +25,7 @@ namespace smartest_desktop.ViewModels
             set => SetProperty(ref _titreExamen, value);
         }
 
-        public int    Duree     { get; }
+        public int Duree { get; }
         public string Difficulte { get; }
 
         public string CoursSourceLabel { get; }
@@ -51,7 +51,7 @@ namespace smartest_desktop.ViewModels
         }
 
         public bool HasQuestion => QuestionSelectionnee != null;
-        public bool NoQuestion  => QuestionSelectionnee == null;
+        public bool NoQuestion => QuestionSelectionnee == null;
 
         // ── Messages ──────────────────────────────────────────────────────────
 
@@ -65,13 +65,19 @@ namespace smartest_desktop.ViewModels
 
         // ── Commandes ─────────────────────────────────────────────────────────
 
-        public ICommand SelectionnerCommand      { get; }
-        public ICommand SupprimerCommand         { get; }
-        public ICommand AttacherImageCommand     { get; }
-        public ICommand SupprimerImageCommand    { get; }
-        public ICommand ValiderExamenCommand     { get; }
-        public ICommand RegenerarCommand         { get; }
-        public ICommand RetourCommand            { get; }
+        public ICommand SelectionnerCommand { get; }
+        public ICommand SupprimerCommand { get; }
+        public ICommand AttacherImageCommand { get; }
+        public ICommand SupprimerImageCommand { get; }
+        public ICommand ValiderExamenCommand { get; }
+        public ICommand RegenerarCommand { get; }
+        public ICommand RetourCommand { get; }
+
+        /// <summary>
+        /// Modifie la bonne réponse d'une question QCM.
+        /// Paramètre attendu : une string "A", "B", "C" ou "D".
+        /// </summary>
+        public ICommand SetReponseCorrecteCommand { get; }
 
         // ── Événements ────────────────────────────────────────────────────────
 
@@ -84,16 +90,16 @@ namespace smartest_desktop.ViewModels
         public ExamenResultViewModel(
             List<QuestionExamen> questions,
             string titre,
-            int    duree,
+            int duree,
             string difficulte,
             string coursTitre)
         {
-            _db      = App.LocalDb;
+            _db = App.LocalDb;
             _service = new ExamenLocalService(_db);
 
-            TitreExamen    = titre;
-            Duree          = duree;
-            Difficulte     = difficulte;
+            TitreExamen = titre;
+            Duree = duree;
+            Difficulte = difficulte;
             CoursSourceLabel = coursTitre;
 
             int n = 1;
@@ -143,13 +149,27 @@ namespace smartest_desktop.ViewModels
                 ShowSuccess("🗑 Question supprimée");
             });
 
+            // ── NOUVEAU : changer la bonne réponse QCM ───────────────────────
+            // Le paramètre est "A", "B", "C" ou "D"
+            SetReponseCorrecteCommand = new RelayCommand(p =>
+            {
+                if (p is not string lettre) return;
+                if (QuestionSelectionnee == null) return;
+                if (!QuestionSelectionnee.IsQCM) return;
+
+                QuestionSelectionnee.ReponseCorrecte = lettre.ToUpper();
+                // Forcer le rafraîchissement des DataTriggers sur ReponseCorrecte
+                OnPropertyChanged(nameof(QuestionSelectionnee));
+               
+            });
+
             AttacherImageCommand = new RelayCommand(_ =>
             {
                 if (QuestionSelectionnee == null) return;
 
                 var dlg = new OpenFileDialog
                 {
-                    Title  = "Sélectionner une image",
+                    Title = "Sélectionner une image",
                     Filter = "Images|*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.webp"
                 };
 
@@ -157,15 +177,18 @@ namespace smartest_desktop.ViewModels
 
                 try
                 {
-                    byte[] bytes  = File.ReadAllBytes(dlg.FileName);
+                    byte[] bytes = File.ReadAllBytes(dlg.FileName);
                     string base64 = Convert.ToBase64String(bytes);
-                    string ext    = Path.GetExtension(dlg.FileName).TrimStart('.').ToLower();
+                    string ext = Path.GetExtension(dlg.FileName).TrimStart('.').ToLower();
 
                     QuestionSelectionnee.ImageBase64 = base64;
-                    QuestionSelectionnee.ImageType   = ext;
-                    QuestionSelectionnee.ImageNom    = Path.GetFileName(dlg.FileName);
+                    QuestionSelectionnee.ImageType = ext;
+                    QuestionSelectionnee.ImageNom = Path.GetFileName(dlg.FileName);
 
-                    ShowSuccess("🖼 Image attachée avec succès");
+                    // Rafraîchir la liste (badge image dans la sidebar)
+                    OnPropertyChanged(nameof(QuestionSelectionnee));
+                    
+
                 }
                 catch (Exception ex)
                 {
@@ -178,9 +201,10 @@ namespace smartest_desktop.ViewModels
             {
                 if (QuestionSelectionnee == null) return;
                 QuestionSelectionnee.ImageBase64 = string.Empty;
-                QuestionSelectionnee.ImageType   = string.Empty;
-                QuestionSelectionnee.ImageNom    = string.Empty;
-                ShowSuccess("🗑 Image supprimée");
+                QuestionSelectionnee.ImageType = string.Empty;
+                QuestionSelectionnee.ImageNom = string.Empty;
+                OnPropertyChanged(nameof(QuestionSelectionnee));
+               
             });
 
             ValiderExamenCommand = new RelayCommand(
@@ -234,9 +258,9 @@ namespace smartest_desktop.ViewModels
             {
                 var examen = new ExamenLocal
                 {
-                    Titre       = TitreExamen,
-                    Duree       = Duree,
-                    Statut      = "BROUILLON",
+                    Titre = TitreExamen,
+                    Duree = Duree,
+                    Statut = "BROUILLON",
                     DateCreation = DateTime.Now
                 };
 
@@ -269,6 +293,5 @@ namespace smartest_desktop.ViewModels
 
         private static string Tronquer(string t, int max) =>
             t.Length <= max ? t : t[..max] + "…";
-
     }
 }
