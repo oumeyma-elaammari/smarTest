@@ -1,10 +1,12 @@
 using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
 namespace smartest_desktop.Services
 {
@@ -27,39 +29,76 @@ namespace smartest_desktop.Services
             string coursTitre = "")
         {
             examen.Cours.Clear();
+            if (!string.IsNullOrWhiteSpace(coursTitre))
+            {
+                var titreTrim = coursTitre.Trim();
+                var cours = await _db.Cours.FirstOrDefaultAsync(c =>
+                    c.Titre != null &&
+                    string.Equals(c.Titre.Trim(), titreTrim, StringComparison.OrdinalIgnoreCase));
+                if (cours != null)
+                    examen.Cours.Add(cours);
+            }
+
             _db.Examens.Add(examen);
             await _db.SaveChangesAsync();
 
-            // Persister les questions liées à l'examen
+            await AjouterQuestionsAsync(examen.Id, questions);
+            return examen.Id;
+        }
+
+        /// <summary>Remplace le contenu (métadonnées + questions) d'un examen déjà enregistré.</summary>
+        public async Task MettreAJourContenuAsync(int examenId, string titre, int duree, List<QuestionExamen> questions)
+        {
+            var examen = await _db.Examens
+                .Include(e => e.Questions)
+                .FirstOrDefaultAsync(e => e.Id == examenId);
+            if (examen == null)
+                throw new InvalidOperationException("Examen introuvable ou déjà supprimé.");
+
+            examen.Titre = titre;
+            examen.Duree = duree;
+
+            var anciennes = examen.Questions.ToList();
+            if (anciennes.Count > 0)
+                _db.Questions.RemoveRange(anciennes);
+
+            await AjouterQuestionsAsync(examenId, questions);
+        }
+
+        private async Task AjouterQuestionsAsync(int examenId, List<QuestionExamen> questions)
+        {
             int numero = 1;
             foreach (var q in questions)
             {
-                var entity = new QuestionLocale
-                {
-                    ExamenLocalId        = examen.Id,
-                    Numero               = numero++,
-                    Enonce               = q.Enonce,
-                    Type                 = q.Type,
-                    Difficulte           = q.Difficulte,
-                    Explication          = q.Explication,
-                    OptionA              = q.OptionA,
-                    OptionB              = q.OptionB,
-                    OptionC              = q.OptionC,
-                    OptionD              = q.OptionD,
-                    ReponseCorrecte      = q.ReponseCorrecte,
-                    ReponseModele        = q.ReponseModele,
-                    ReponsesCorrectesJson = q.IsCheckbox
-                        ? JsonSerializer.Serialize(q.ReponsesCorrectes)
-                        : string.Empty,
-                    ImageBase64 = q.ImageBase64,
-                    ImageType   = q.ImageType,
-                    ImageNom    = q.ImageNom,
-                };
-                _db.Questions.Add(entity);
+                _db.Questions.Add(CreerQuestionLocale(q, examenId, numero++));
             }
 
             await _db.SaveChangesAsync();
-            return examen.Id;
+        }
+
+        private static QuestionLocale CreerQuestionLocale(QuestionExamen q, int examenId, int numero)
+        {
+            return new QuestionLocale
+            {
+                ExamenLocalId = examenId,
+                Numero = numero,
+                Enonce = q.Enonce,
+                Type = q.Type,
+                Difficulte = q.Difficulte,
+                Explication = q.Explication,
+                OptionA = q.OptionA,
+                OptionB = q.OptionB,
+                OptionC = q.OptionC,
+                OptionD = q.OptionD,
+                ReponseCorrecte = q.ReponseCorrecte,
+                ReponseModele = q.ReponseModele,
+                ReponsesCorrectesJson = q.IsCheckbox
+                    ? JsonSerializer.Serialize(q.ReponsesCorrectes)
+                    : string.Empty,
+                ImageBase64 = q.ImageBase64,
+                ImageType = q.ImageType,
+                ImageNom = q.ImageNom,
+            };
         }
 
         public async Task<List<ExamenLocal>> ChargerTousAsync()

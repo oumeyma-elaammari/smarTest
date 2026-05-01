@@ -1,0 +1,220 @@
+<Window x:Class="smartest_desktop.Views.GroqKeySetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Clé API Groq"
+        Height="550" Width="530"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#FBFBFB">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Views/Styles/Stylesglobal.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28">
+
+            <!-- ── Carte principale ───────────────────────────── -->
+            <Border Background="White" CornerRadius="12"
+                    BorderBrush="#e2e8f4" BorderThickness="1"
+                    Padding="24" Margin="0,0,0,14">
+                <StackPanel>
+
+                    <TextBlock Text="Votre clé API Groq"
+                               FontSize="17" FontWeight="Bold"
+                               Foreground="#0f1e3d" Margin="0,0,0,4"/>
+
+                    <TextBlock Text="Gratuit · Quota personnel · Clé stockée chiffrée sur votre machine"
+                               FontSize="11" Foreground="#6b7a99" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="Clé API (commence par gsk_)"
+                               FontSize="12" Foreground="#0f1e3d" Margin="0,0,0,6"/>
+
+                    <TextBox x:Name="TxtCle"
+                             Height="36" FontSize="13"
+                             Padding="10,0" VerticalContentAlignment="Center"
+                             BorderBrush="#e2e8f4" BorderThickness="1"
+                             Background="#f0f3f9"
+                             TextChanged="TxtCle_TextChanged"/>
+
+                    <!-- Ligne état : icône + message (valide / invalide) -->
+                    <Grid x:Name="PanneauEtat" Margin="0,8,0,0" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="18"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="IconeEtat" Grid.Column="0"
+                                   FontSize="12" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtErreur" Grid.Column="1"
+                                   FontSize="11" TextWrapping="Wrap"
+                                   VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </Grid>
+
+                    <Grid Margin="0,18,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Bouton Tester (gauche) -->
+                        <Button x:Name="BtnTester"
+                                Grid.Column="0"
+                                Content="Tester la clé"
+                                Width="110" Height="34"
+                                HorizontalAlignment="Left"
+                                Background="#f0f3f9" BorderBrush="#e2e8f4"
+                                Foreground="#0f1e3d"
+                                Click="BtnTester_Click"/>
+
+                        <!-- Boutons Annuler / Enregistrer (droite) -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Annuler"
+                                    Width="90" Height="34" Margin="0,0,10,0"
+                                    Background="White" BorderBrush="#e2e8f4"
+                                    Foreground="#0f1e3d"
+                                    Click="BtnAnnuler_Click"/>
+                            <Button Content="Enregistrer"
+                                    Width="110" Height="34"
+                                    Background="#4f8ef7" Foreground="White"
+                                    BorderThickness="0" IsDefault="True"
+                                    Click="BtnEnregistrer_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ── Guide obtenir une clé ─────────────────────── -->
+            <Border Background="White" CornerRadius="12"
+                    BorderBrush="#e2e8f4" BorderThickness="1"
+                    Padding="24">
+                <StackPanel>
+
+                    <TextBlock Text="Comment obtenir une clé gratuite ?"
+                               FontSize="13" FontWeight="Bold"
+                               Foreground="#0f1e3d" Margin="0,0,0,16"/>
+
+                    <!-- Étape 1 -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Width="22" Height="22"
+                                Background="#4f8ef7" CornerRadius="11"
+                                VerticalAlignment="Top">
+                            <TextBlock Text="1" Foreground="White" FontSize="11"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#0f1e3d">
+                                Ouvrir <Hyperlink x:Name="LienGroq"
+                                                  RequestNavigate="LienGroq_RequestNavigate"
+                                                  NavigateUri="https://console.groq.com">
+                                    console.groq.com
+                                </Hyperlink>
+                            </TextBlock>
+                            <TextBlock Text="Créer un compte gratuit (Google, GitHub ou email)"
+                                       FontSize="11" Foreground="#6b7a99"
+                                       TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Étape 2 -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Width="22" Height="22"
+                                Background="#4f8ef7" CornerRadius="11"
+                                VerticalAlignment="Top">
+                            <TextBlock Text="2" Foreground="White" FontSize="11"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text='Cliquer sur "API Keys" dans le menu gauche'
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#0f1e3d"/>
+                            <TextBlock Text="Dans la barre latérale de la console Groq"
+                                       FontSize="11" Foreground="#6b7a99"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Étape 3 -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Width="22" Height="22"
+                                Background="#4f8ef7" CornerRadius="11"
+                                VerticalAlignment="Top">
+                            <TextBlock Text="3" Foreground="White" FontSize="11"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text='Cliquer sur "Create API Key"'
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#0f1e3d"/>
+                            <TextBlock Text="Donnez un nom (ex: SmarTest) et confirmez"
+                                       FontSize="11" Foreground="#6b7a99"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Étape 4 -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Width="22" Height="22"
+                                Background="#4f8ef7" CornerRadius="11"
+                                VerticalAlignment="Top">
+                            <TextBlock Text="4" Foreground="White" FontSize="11"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Copier la clé et la coller ci-dessus"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#0f1e3d"/>
+                            <TextBlock FontSize="11" Foreground="#6b7a99"
+                                       Margin="0,2,0,0" TextWrapping="Wrap">
+                                La clé commence par
+                                <Run Text="gsk_" FontFamily="Courier New"
+                                     Background="#f0f3f9" Foreground="#4f8ef7"/>
+                                — elle ne s'affiche qu'une seule fois
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Note quota -->
+                    <Border Background="#f0f3f9" CornerRadius="8"
+                            Padding="12,10" Margin="0,16,0,0">
+                        <TextBlock FontSize="11" Foreground="#6b7a99"
+                                   TextWrapping="Wrap">
+                            <Run Text="Quota gratuit : " FontWeight="SemiBold" Foreground="#0f1e3d"/>
+                            30 000 tokens/min · 500 000 tokens/jour · 30 requêtes/min
+                        </TextBlock>
+                    </Border>
+
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>

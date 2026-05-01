@@ -1,7 +1,9 @@
 using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace smartest_desktop.Services
@@ -60,6 +62,41 @@ namespace smartest_desktop.Services
                 quiz.Statut = statut;
                 await _db.SaveChangesAsync();
             }
+        }
+
+        /// <summary>Met à jour un quiz existant : métadonnées et remplace toutes les questions liées.</summary>
+        public async Task MettreAJourContenuAsync(
+            int quizId,
+            string titre,
+            string difficulte,
+            string coursTitre,
+            string statut,
+            IReadOnlyList<QuestionLocale> nouvellesQuestions)
+        {
+            var quiz = await _db.Quiz
+                .Include(q => q.Questions)
+                .FirstOrDefaultAsync(q => q.Id == quizId);
+            if (quiz == null)
+                throw new InvalidOperationException("Quiz introuvable ou déjà supprimé.");
+
+            quiz.Titre = titre;
+            quiz.Difficulte = difficulte;
+            quiz.CoursSourceTitre = coursTitre ?? string.Empty;
+            quiz.Statut = statut;
+            quiz.NombreQuestions = nouvellesQuestions.Count;
+
+            var anciennes = quiz.Questions.ToList();
+            if (anciennes.Count > 0)
+                _db.Questions.RemoveRange(anciennes);
+
+            foreach (var q in nouvellesQuestions)
+            {
+                q.Id = 0;
+                q.QuizLocalId = quizId;
+                _db.Questions.Add(q);
+            }
+
+            await _db.SaveChangesAsync();
         }
     }
 }

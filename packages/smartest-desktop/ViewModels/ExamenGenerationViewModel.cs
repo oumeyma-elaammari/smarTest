@@ -4,6 +4,7 @@ using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
+using smartest_desktop.Views;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
@@ -44,7 +45,7 @@ namespace smartest_desktop.ViewModels
     public class ExamenGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
-        private readonly GroqService _groq = new();
+        private GroqService? _groq;
         private CancellationTokenSource? _cts;
 
         // ── Fichier importé ───────────────────────────────────────────────────
@@ -402,7 +403,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"❌ Erreur lors de l'import : {ex.Message}";
+                ErrorMessage = "❌ Impossible d'importer le fichier. Vérifiez qu'il n'est pas ouvert dans un autre programme.";
                 StatusMessage = string.Empty;
             }
             finally
@@ -499,6 +500,45 @@ namespace smartest_desktop.ViewModels
             return wordDoc.MainDocumentPart?.Document.Body?.InnerText ?? string.Empty;
         }
 
+        private static string NettoyerTexteSlides(string texte)
+        {
+            if (string.IsNullOrWhiteSpace(texte)) return string.Empty;
+            var original = texte;
+
+            var lignes = texte.Replace("\r\n", "\n").Split('\n');
+            var sorties = new List<string>(lignes.Length);
+            string previous = string.Empty;
+
+            foreach (var brute in lignes)
+            {
+                var ligne = brute.Trim();
+                if (ligne.Length == 0)
+                {
+                    if (sorties.Count > 0 && sorties[^1].Length > 0)
+                        sorties.Add(string.Empty);
+                    continue;
+                }
+
+                if (EstBruitDeSlide(ligne)) continue;
+                if (string.Equals(previous, ligne, StringComparison.Ordinal)) continue;
+
+                sorties.Add(ligne);
+                previous = ligne;
+            }
+
+            var nettoye = string.Join("\n", sorties).Trim();
+            return string.IsNullOrWhiteSpace(nettoye) ? original.Trim() : nettoye;
+        }
+
+        private static bool EstBruitDeSlide(string ligne)
+        {
+            if (ligne.StartsWith("©", StringComparison.Ordinal)) return true;
+            if (ligne.Contains("Chapitre", StringComparison.OrdinalIgnoreCase)
+                && ligne.Contains("AU:", StringComparison.OrdinalIgnoreCase)
+                && ligne.Any(char.IsDigit)) return true;
+            return false;
+        }
+
         // ── Génération via Groq (avec génération par lots) ────────────────────
 
         private async Task GenererExamen()
@@ -507,14 +547,23 @@ namespace smartest_desktop.ViewModels
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
 
+            // Vérifier / demander la clé API avant de démarrer
+            string? apiKey = GroqKeyService.LireCle(App.LocalDb);
+            if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+            {
+                var dialog = new GroqKeySetupWindow();
+                if (dialog.ShowDialog() != true) return;
+                apiKey = GroqKeyService.LireCle(App.LocalDb);
+                if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+            }
+
             IsGenerating = true;
             ErrorMessage = string.Empty;
             StatusMessage = "🤖 Connexion à Groq...";
+            _groq = new GroqService(apiKey!);
 
             try
             {
-                // Vérification clé API
-                GroqService.VerifierConfiguration();
                 StatusMessage = $"✅ Modèle : {GroqService.NomModele}";
                 await Task.Delay(300, ct);
 
@@ -600,8 +649,6 @@ namespace smartest_desktop.ViewModels
 
                     StatusMessage = $"🧠 Génération par lots : {totalQuestions} questions en {nbLots} lots...";
 
-                    var toutesQuestions = new List<QuestionExamen>();
-                    int questionDepart = 1;
                     var swTotal = System.Diagnostics.Stopwatch.StartNew();
 
                     // Fonction qui construit le prompt pour un lot donné
@@ -670,9 +717,17 @@ namespace smartest_desktop.ViewModels
                 StatusMessage = "⛔ Génération annulée.";
                 ErrorMessage = string.Empty;
             }
+            catch (System.Net.Http.HttpRequestException ex) when (ex.Message.Contains("401") || ex.Message.Contains("invalide"))
+            {
+                GroqKeyService.SupprimerCle(App.LocalDb);
+                ErrorMessage = string.Empty;
+                StatusMessage = string.Empty;
+                var dialog = new GroqKeySetupWindow("Votre clé a été révoquée ou supprimée sur console.groq.com.");
+                dialog.ShowDialog();
+            }
             catch (System.Net.Http.HttpRequestException ex)
             {
-                ErrorMessage = $"❌ Groq inaccessible.\n\nVérifiez votre connexion internet.\n\nDétail : {ex.Message}";
+                ErrorMessage = $"❌ {ex.Message}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)
@@ -920,12 +975,13 @@ namespace smartest_desktop.ViewModels
                 jsonPart = System.Text.RegularExpressions.Regex.Replace(
                     jsonPart, @",\s*([}\]])", "$1");
 
-                List<JsonElement>? items = null;
+                List<JsonElement> items;
                 try
                 {
                     items = JsonSerializer.Deserialize<List<JsonElement>>(
                         jsonPart,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                        ?? new List<JsonElement>();
                 }
                 catch (JsonException)
                 {
@@ -934,7 +990,7 @@ namespace smartest_desktop.ViewModels
                     items = ExtraireObjetsJSON(jsonPart);
                 }
 
-                if (items == null) return result;
+                if (items.Count == 0) return result;
 
                 int n = 1;
                 foreach (var item in items)

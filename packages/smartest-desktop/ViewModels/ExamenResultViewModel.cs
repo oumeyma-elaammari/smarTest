@@ -1,10 +1,10 @@
 using Microsoft.Win32;
-using smartest_desktop.Data;
-using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Helpers;
-using smartest_desktop.Services;
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -13,32 +13,32 @@ namespace smartest_desktop.ViewModels
 {
     public class ExamenResultViewModel : BaseViewModel
     {
-        private readonly LocalDbContext _db;
-        private readonly ExamenLocalService _service;
+        private readonly int _dureeMinutes;
 
-        // ── Données de l'examen ───────────────────────────────────────────────
+        private readonly string _empreinteInitiale;
 
-        private string _titreExamen = string.Empty;
+        private readonly Func<Task>? _supprimerExamenPersisteAsync;
+
         public string TitreExamen
         {
             get => _titreExamen;
             set => SetProperty(ref _titreExamen, value);
         }
 
-        public int Duree { get; }
+        private string _titreExamen = string.Empty;
+
+        public int Duree => _dureeMinutes;
+
         public string Difficulte { get; }
 
         public string CoursSourceLabel { get; }
-
-        // ── Liste de questions ────────────────────────────────────────────────
 
         public ObservableCollection<QuestionExamen> Questions { get; } = new();
 
         public int NombreQuestions => Questions.Count;
 
-        // ── Question sélectionnée ─────────────────────────────────────────────
-
         private QuestionExamen? _questionSelectionnee;
+
         public QuestionExamen? QuestionSelectionnee
         {
             get => _questionSelectionnee;
@@ -53,17 +53,25 @@ namespace smartest_desktop.ViewModels
         public bool HasQuestion => QuestionSelectionnee != null;
         public bool NoQuestion => QuestionSelectionnee == null;
 
-        // ── Messages ──────────────────────────────────────────────────────────
+        public int? ExamenIdExistant { get; }
 
-        private string _successMessage = string.Empty;
-        public string SuccessMessage
-        {
-            get => _successMessage;
-            set { SetProperty(ref _successMessage, value); OnPropertyChanged(nameof(HasSuccess)); }
-        }
-        public bool HasSuccess => !string.IsNullOrEmpty(SuccessMessage);
+        public bool IsEditionExistant => ExamenIdExistant.HasValue;
 
-        // ── Commandes ─────────────────────────────────────────────────────────
+        public string TitreFenetre =>
+            IsEditionExistant ? "SmarTest — Modifier l'examen" : "SmarTest — Révision de l'examen";
+
+        public string LibelleBoutonValider =>
+            IsEditionExistant ? "Enregistrer les modifications" : "Valider et sauvegarder";
+
+        public string SousTitreEtape =>
+            IsEditionExistant
+                ? "Modifiez puis enregistrez dans la base locale"
+                : "Vérifiez et ajustez avant validation";
+
+        public string SousTitreCompteur =>
+            IsEditionExistant
+                ? $"{NombreQuestions} questions · {Duree} min · {Difficulte} · {CoursSourceLabel}"
+                : $"{NombreQuestions} questions générées · {Duree} min · {Difficulte} · {CoursSourceLabel}";
 
         public ICommand SelectionnerCommand { get; }
         public ICommand SupprimerCommand { get; }
@@ -73,32 +81,29 @@ namespace smartest_desktop.ViewModels
         public ICommand RegenerarCommand { get; }
         public ICommand RetourCommand { get; }
 
-        /// <summary>
-        /// Modifie la bonne réponse d'une question QCM.
-        /// Paramètre attendu : une string "A", "B", "C" ou "D".
-        /// </summary>
         public ICommand SetReponseCorrecteCommand { get; }
 
-        // ── Événements ────────────────────────────────────────────────────────
+        private readonly RelayCommand _validerExamenCommand;
 
         public event Action<List<QuestionExamen>, string, int, string, string>? ExamenValide;
+
         public event Action? NavigationRegenerarRequested;
         public event Action? NavigationRetourRequested;
-
-        // ── Constructeur ──────────────────────────────────────────────────────
 
         public ExamenResultViewModel(
             List<QuestionExamen> questions,
             string titre,
             int duree,
             string difficulte,
-            string coursTitre)
+            string coursTitre,
+            int? examenIdExistant = null,
+            Func<Task>? supprimerExamenPersisteAsync = null)
         {
-            _db = App.LocalDb;
-            _service = new ExamenLocalService(_db);
+            ExamenIdExistant = examenIdExistant;
+            _supprimerExamenPersisteAsync = supprimerExamenPersisteAsync;
 
+            _dureeMinutes = duree;
             TitreExamen = titre;
-            Duree = duree;
             Difficulte = difficulte;
             CoursSourceLabel = coursTitre;
 
@@ -115,7 +120,7 @@ namespace smartest_desktop.ViewModels
                 QuestionSelectionnee = Questions[0];
             }
 
-            // ── Commandes ────────────────────────────────────────────────────
+            _empreinteInitiale = CalculerEmpreinte();
 
             SelectionnerCommand = new RelayCommand(p =>
             {
@@ -132,35 +137,37 @@ namespace smartest_desktop.ViewModels
             {
                 if (p is not QuestionExamen q) return;
 
-                var res = MessageBox.Show(
-                    $"Supprimer la question {q.Numero} ?\n\n\"{Tronquer(q.Enonce, 80)}\"",
-                    "Supprimer",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (res != MessageBoxResult.Yes) return;
-
-                if (QuestionSelectionnee == q)
-                    QuestionSelectionnee = null;
+                int idx = Questions.IndexOf(q);
+                if (idx < 0) return;
 
                 Questions.Remove(q);
                 Renuméroter();
                 OnPropertyChanged(nameof(NombreQuestions));
-                ShowSuccess("🗑 Question supprimée");
+                OnPropertyChanged(nameof(SousTitreCompteur));
+                _validerExamenCommand.RaiseCanExecuteChanged();
+
+                if (Questions.Count > 0)
+                    QuestionSelectionnee = Questions[Math.Min(idx, Questions.Count - 1)];
+                else
+                    QuestionSelectionnee = null;
+
+                foreach (var item in Questions)
+                    item.IsSelected = item == QuestionSelectionnee;
+                if (QuestionSelectionnee != null)
+                    QuestionSelectionnee.IsSelected = true;
+
+                if (Questions.Count == 0 && _supprimerExamenPersisteAsync != null)
+                    _ = SupprimerExamenVideEtFermerAsync();
             });
 
-            // ── NOUVEAU : changer la bonne réponse QCM ───────────────────────
-            // Le paramètre est "A", "B", "C" ou "D"
             SetReponseCorrecteCommand = new RelayCommand(p =>
             {
                 if (p is not string lettre) return;
                 if (QuestionSelectionnee == null) return;
                 if (!QuestionSelectionnee.IsQCM) return;
 
-                QuestionSelectionnee.ReponseCorrecte = lettre.ToUpper();
-                // Forcer le rafraîchissement des DataTriggers sur ReponseCorrecte
+                QuestionSelectionnee.ReponseCorrecte = lettre.ToUpperInvariant();
                 OnPropertyChanged(nameof(QuestionSelectionnee));
-               
             });
 
             AttacherImageCommand = new RelayCommand(_ =>
@@ -179,16 +186,13 @@ namespace smartest_desktop.ViewModels
                 {
                     byte[] bytes = File.ReadAllBytes(dlg.FileName);
                     string base64 = Convert.ToBase64String(bytes);
-                    string ext = Path.GetExtension(dlg.FileName).TrimStart('.').ToLower();
+                    string ext = Path.GetExtension(dlg.FileName).TrimStart('.').ToLowerInvariant();
 
                     QuestionSelectionnee.ImageBase64 = base64;
                     QuestionSelectionnee.ImageType = ext;
                     QuestionSelectionnee.ImageNom = Path.GetFileName(dlg.FileName);
 
-                    // Rafraîchir la liste (badge image dans la sidebar)
                     OnPropertyChanged(nameof(QuestionSelectionnee));
-                    
-
                 }
                 catch (Exception ex)
                 {
@@ -204,12 +208,60 @@ namespace smartest_desktop.ViewModels
                 QuestionSelectionnee.ImageType = string.Empty;
                 QuestionSelectionnee.ImageNom = string.Empty;
                 OnPropertyChanged(nameof(QuestionSelectionnee));
-               
             });
 
-            ValiderExamenCommand = new RelayCommand(
-                async _ => await ValiderExamen(),
+            _validerExamenCommand = new RelayCommand(
+                _ =>
+                {
+                    if (Questions.Count == 0)
+                    {
+                        MessageBox.Show(
+                            "L'examen ne contient aucune question.",
+                            "Examen vide",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    MessageBoxResult res;
+                    if (IsEditionExistant)
+                    {
+                        res = MessageBox.Show(
+                            $"Enregistrer les modifications de l'examen « {TitreExamen} » ?\n\n" +
+                            $"• {Questions.Count} questions\n" +
+                            $"• Difficulté : {Difficulte}\n" +
+                            $"• Durée : {Duree} min\n\n" +
+                            "Les données en base seront mises à jour.",
+                            "Enregistrer les modifications",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+                    }
+                    else
+                    {
+                        res = MessageBox.Show(
+                            $"Valider et sauvegarder l'examen « {TitreExamen} » ?\n\n" +
+                            $"• {Questions.Count} questions\n" +
+                            $"• Difficulté : {Difficulte}\n" +
+                            $"• Durée : {Duree} min\n\n" +
+                            "L'examen sera enregistré localement.",
+                            "Valider et sauvegarder",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+                    }
+
+                    if (res != MessageBoxResult.Yes) return;
+
+                    ExamenValide?.Invoke(
+                        Questions.ToList(),
+                        TitreExamen,
+                        Duree,
+                        Difficulte,
+                        CoursSourceLabel);
+                },
                 _ => Questions.Count > 0);
+            ValiderExamenCommand = _validerExamenCommand;
+
+            Questions.CollectionChanged += (_, __) => _validerExamenCommand.RaiseCanExecuteChanged();
 
             RegenerarCommand = new RelayCommand(_ =>
             {
@@ -225,8 +277,18 @@ namespace smartest_desktop.ViewModels
 
             RetourCommand = new RelayCommand(_ =>
             {
+                if (!ADesModificationsDepuisOuverture())
+                {
+                    NavigationRetourRequested?.Invoke();
+                    return;
+                }
+
+                string msg = IsEditionExistant
+                    ? "Quitter sans enregistrer les modifications ?\nLes changements seront perdus."
+                    : "Quitter sans sauvegarder ?\nL'examen généré sera perdu.";
+
                 var res = MessageBox.Show(
-                    "Quitter sans valider ?\nL'examen généré sera perdu.",
+                    msg,
                     "Confirmation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
@@ -236,62 +298,61 @@ namespace smartest_desktop.ViewModels
             });
         }
 
-        // ── Sauvegarde ────────────────────────────────────────────────────────
-
-        private async Task ValiderExamen()
+        private string CalculerEmpreinte()
         {
-            if (Questions.Count == 0) return;
-
-            var res = MessageBox.Show(
-                $"Valider l'examen \"{TitreExamen}\" ?\n\n" +
-                $"• {Questions.Count} questions\n" +
-                $"• Difficulté : {Difficulte}\n" +
-                $"• Durée : {Duree} min\n\n" +
-                $"L'examen sera sauvegardé localement.",
-                "Valider l'examen",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (res != MessageBoxResult.Yes) return;
-
-            try
+            var qs = Questions.Select(q => new
             {
-                var examen = new ExamenLocal
-                {
-                    Titre = TitreExamen,
-                    Duree = Duree,
-                    Statut = "BROUILLON",
-                    DateCreation = DateTime.Now
-                };
+                q.Numero,
+                q.Type,
+                q.Enonce,
+                q.Difficulte,
+                q.OptionA,
+                q.OptionB,
+                q.OptionC,
+                q.OptionD,
+                q.ReponseCorrecte,
+                q.OptionACorrecte,
+                q.OptionBCorrecte,
+                q.OptionCCorrecte,
+                q.OptionDCorrecte,
+                q.ReponseModele,
+                q.Explication,
+                ImgLen = q.ImageBase64?.Length ?? 0,
+                q.ImageNom,
+                q.ImageType
+            }).ToList();
 
-                await _service.SauvegarderAsync(examen, Questions.ToList(), CoursSourceLabel);
-
-                ExamenValide?.Invoke(
-                    Questions.ToList(), TitreExamen, Duree, Difficulte, CoursSourceLabel);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erreur lors de la sauvegarde :\n{ex.Message}",
-                    "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            return JsonSerializer.Serialize(new { TitreExamen, Duree = _dureeMinutes, questions = qs });
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────
+        private bool ADesModificationsDepuisOuverture() =>
+            CalculerEmpreinte() != _empreinteInitiale;
 
         private void Renuméroter()
         {
             int n = 1;
-            foreach (var q in Questions) q.Numero = n++;
+            foreach (var q in Questions)
+                q.Numero = n++;
         }
 
-        private void ShowSuccess(string msg)
+        private async Task SupprimerExamenVideEtFermerAsync()
         {
-            SuccessMessage = msg;
-            Task.Delay(2500).ContinueWith(_ =>
-                Application.Current.Dispatcher.Invoke(() => SuccessMessage = string.Empty));
+            try
+            {
+                if (_supprimerExamenPersisteAsync != null)
+                    await _supprimerExamenPersisteAsync();
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                    NavigationRetourRequested?.Invoke());
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                    MessageBox.Show(
+                        $"Impossible de supprimer l'examen vide :\n{ex.Message}",
+                        "Erreur",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error));
+            }
         }
-
-        private static string Tronquer(string t, int max) =>
-            t.Length <= max ? t : t[..max] + "…";
     }
 }

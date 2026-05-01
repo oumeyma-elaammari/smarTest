@@ -15,6 +15,7 @@ namespace smartest_desktop.Data
         public DbSet<QuizLocal> Quiz { get; set; }
         public DbSet<ExamenLocal> Examens { get; set; }
         public DbSet<SessionLocale> SessionsLocales { get; set; }
+        public DbSet<AppSetting> AppSettings { get; set; }
 
 
         // ══════════════════════════════════════════════════════════
@@ -149,6 +150,15 @@ namespace smartest_desktop.Data
                 entity.Property(s => s.Email).HasMaxLength(200);
                 entity.Property(s => s.Nom).HasMaxLength(200);
                 entity.Property(s => s.Role).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<AppSetting>(entity =>
+            {
+                entity.ToTable("app_setting");
+                entity.HasKey(s => s.Id);
+                entity.HasIndex(s => s.Cle).IsUnique();
+                entity.Property(s => s.Cle).IsRequired().HasMaxLength(100);
+                entity.Property(s => s.Valeur).IsRequired().HasColumnType("TEXT");
             });
 
         }

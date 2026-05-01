@@ -14,11 +14,8 @@
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+				<ResourceDictionary Source="/Views/Styles/GenerationSharedStyles.xaml"/>
 			</ResourceDictionary.MergedDictionaries>
-
-			<!-- Convertisseurs -->
-			<BooleanToVisibilityConverter x:Key="BoolToVis"/>
-			<BooleanToVisibilityConverter x:Key="BoolToVisInverse"/>
 
 			<Style x:Key="CounterBtn" TargetType="Border">
 				<Setter Property="Width" Value="30"/>
@@ -32,16 +29,6 @@
 					</Trigger>
 				</Style.Triggers>
 			</Style>
-
-			<Style x:Key="DiffBtn" TargetType="Border">
-				<Setter Property="CornerRadius" Value="9"/>
-				<Setter Property="Padding" Value="16,10"/>
-				<Setter Property="Cursor" Value="Hand"/>
-				<Setter Property="Width" Value="108"/>
-				<Setter Property="Background" Value="#f8fafc"/>
-				<Setter Property="BorderBrush" Value="#e2e8f4"/>
-				<Setter Property="BorderThickness" Value="1.5"/>
-			</Style>
 		</ResourceDictionary>
 	</Window.Resources>
 
@@ -52,8 +39,8 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<!-- HEADER -->
-		<Border Grid.Row="0" Background="White" Padding="28,20,28,22">
+		<!-- HEADER (aligné Générer un quiz) -->
+		<Border Grid.Row="0" Background="White" Padding="14,10" Margin="0,0,0,0">
 			<Border.Effect>
 				<DropShadowEffect BlurRadius="24" ShadowDepth="1" Direction="270"
                                   Opacity="0.04" Color="#0f1e3d"/>
@@ -62,11 +49,10 @@
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"/>
 					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="Auto"/>
 				</Grid.ColumnDefinitions>
 
-				<Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
-                        Background="#eef3fd" Cursor="Hand" Margin="0,0,18,0"
+				<Border Grid.Column="0" Width="28" Height="28" CornerRadius="7"
+                        Background="#eef3fd" Cursor="Hand" Margin="0,0,8,0"
                         BorderBrush="#d0ddf5" BorderThickness="1">
 					<Border.InputBindings>
 						<MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerCommand}"/>
@@ -78,25 +64,14 @@
 
 				<StackPanel Grid.Column="1" VerticalAlignment="Center">
 					<TextBlock Text="Nouvel examen" FontSize="20" FontWeight="700" Foreground="#0f1e3d"/>
-					<TextBlock Text="IA Groq" FontSize="12" Foreground="#8899b8" Margin="0,6,0,0"/>
 				</StackPanel>
-
-				<Border Grid.Column="2" Background="#f5f8ff" BorderBrush="#dbe8fc"
-                        BorderThickness="1" CornerRadius="12" Padding="12,8">
-					<StackPanel Orientation="Horizontal">
-						<TextBlock Text="&#xE99A;" FontSize="14" FontFamily="Segoe MDL2 Assets"
-                                   Foreground="#4f8ef7" Margin="0,0,8,0" VerticalAlignment="Center"/>
-						<TextBlock Text="Groq" FontSize="12" FontWeight="SemiBold" Foreground="#0f1e3d"
-                                   VerticalAlignment="Center"/>
-					</StackPanel>
-				</Border>
 			</Grid>
 		</Border>
 
 		<!-- CONTENU -->
 		<Grid Grid.Row="1">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="420"/>
+				<ColumnDefinition Width="380"/>
 				<ColumnDefinition Width="*"/>
 			</Grid.ColumnDefinitions>
 
@@ -112,37 +87,36 @@
 
 						<!-- Titre -->
 						<TextBlock Text="TITRE DE L'EXAMEN" FontSize="10" FontWeight="700"
-                                   Foreground="#9CA3AF" Margin="0,0,0,8"/>
+                                   Foreground="#6b7a99" Margin="0,0,0,8"/>
 						<Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
                                 BorderThickness="1" Padding="14,12" Margin="0,0,0,24">
 							<TextBox Text="{Binding TitreExamen, UpdateSourceTrigger=PropertyChanged}"
                                      BorderThickness="0" Background="Transparent"
                                      FontSize="12" Foreground="#0f1e3d"
-                                     VerticalAlignment="Center" CaretBrush="#1A1A1A"/>
+                                     VerticalAlignment="Center" CaretBrush="#4f8ef7"/>
 						</Border>
 
 						<!-- Durée -->
 						<TextBlock Text="DURÉE (MINUTES)" FontSize="10" FontWeight="700"
-                                   Foreground="#9CA3AF" Margin="0,0,0,8"/>
-						<ComboBox ItemsSource="{Binding DureesDisponibles}"
+                                   Foreground="#6b7a99" Margin="0,0,0,8"/>
+						<ComboBox Style="{StaticResource StyledCombo}"
+                                  ItemsSource="{Binding DureesDisponibles}"
                                   SelectedItem="{Binding Duree}"
-                                  Background="White" BorderBrush="#e2e8f4" BorderThickness="1"
-                                  Padding="12,10" FontSize="13" Height="44"
                                   Margin="0,0,0,24"/>
 
-						<!-- Difficulté -->
+						<!-- Difficulté (même gabarit que quiz) -->
 						<TextBlock Text="NIVEAU DE DIFFICULTÉ" FontSize="10" FontWeight="700"
-                                   Foreground="#9CA3AF" Margin="0,0,0,10"/>
+                                   Foreground="#6b7a99" Margin="0,0,0,10"/>
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,28">
 
-							<Border Margin="0,0,8,0">
+							<Border>
 								<Border.InputBindings>
 									<MouseBinding MouseAction="LeftClick"
                                                   Command="{Binding SetDifficulteCommand}"
                                                   CommandParameter="Facile"/>
 								</Border.InputBindings>
 								<Border.Style>
-									<Style TargetType="Border" BasedOn="{StaticResource DiffBtn}">
+									<Style TargetType="Border" BasedOn="{StaticResource GenDiffChip}">
 										<Style.Triggers>
 											<DataTrigger Binding="{Binding Difficulte}" Value="Facile">
 												<Setter Property="Background" Value="#F0FDF4"/>
@@ -159,14 +133,14 @@
 								</StackPanel>
 							</Border>
 
-							<Border Margin="0,0,8,0">
+							<Border>
 								<Border.InputBindings>
 									<MouseBinding MouseAction="LeftClick"
                                                   Command="{Binding SetDifficulteCommand}"
                                                   CommandParameter="Moyen"/>
 								</Border.InputBindings>
 								<Border.Style>
-									<Style TargetType="Border" BasedOn="{StaticResource DiffBtn}">
+									<Style TargetType="Border" BasedOn="{StaticResource GenDiffChip}">
 										<Style.Triggers>
 											<DataTrigger Binding="{Binding Difficulte}" Value="Moyen">
 												<Setter Property="Background" Value="#FFFBEB"/>
@@ -190,7 +164,8 @@
                                                   CommandParameter="Difficile"/>
 								</Border.InputBindings>
 								<Border.Style>
-									<Style TargetType="Border" BasedOn="{StaticResource DiffBtn}">
+									<Style TargetType="Border" BasedOn="{StaticResource GenDiffChip}">
+										<Setter Property="Margin" Value="0"/>
 										<Style.Triggers>
 											<DataTrigger Binding="{Binding Difficulte}" Value="Difficile">
 												<Setter Property="Background" Value="#FFF1F2"/>
@@ -210,7 +185,7 @@
 
 						<!-- Types de questions -->
 						<TextBlock Text="TYPES DE QUESTIONS" FontSize="10" FontWeight="700"
-                                   Foreground="#9CA3AF" Margin="0,0,0,12"/>
+                                   Foreground="#6b7a99" Margin="0,0,0,12"/>
 
 						<!-- QCM -->
 						<Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
@@ -332,21 +307,19 @@
 							</Grid>
 						</Border>
 
-						<!-- Messages de statut -->
-						<Border Background="#F0FDF4" CornerRadius="10" Padding="16,12"
-                                Margin="0,0,0,12"
+						<!-- Statut / erreur (même schéma que générer quiz) -->
+						<Border CornerRadius="10" Padding="14,12" Margin="0,0,0,12"
+                                Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1"
                                 Visibility="{Binding HasStatus, Converter={StaticResource BoolToVis}}">
-							<TextBlock Text="{Binding StatusMessage}"
-                                       FontSize="12" Foreground="#166534"
-                                       TextWrapping="Wrap"/>
+							<TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                                       Foreground="#1D4ED8" TextWrapping="Wrap"/>
 						</Border>
 
-						<Border Background="#FEF2F2" CornerRadius="10" Padding="16,12"
-                                Margin="0,0,0,12"
+						<Border CornerRadius="10" Padding="14,12" Margin="0,0,0,12"
+                                Background="#FDF0F0" BorderBrush="#F5C6C6" BorderThickness="1"
                                 Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-							<TextBlock Text="{Binding ErrorMessage}"
-                                       FontSize="12" Foreground="#991B1B"
-                                       TextWrapping="Wrap"/>
+							<TextBlock Text="{Binding ErrorMessage}" FontSize="12"
+                                       Foreground="#C84B4B" TextWrapping="Wrap"/>
 						</Border>
 
 						<!-- Bouton Générer -->
@@ -355,10 +328,15 @@
 							<Border.Style>
 								<Style TargetType="Border">
 									<Setter Property="Background" Value="#0f1e3d"/>
+									<Setter Property="Cursor" Value="Hand"/>
 									<Style.Triggers>
 										<Trigger Property="IsMouseOver" Value="True">
 											<Setter Property="Background" Value="#1a2e5a"/>
 										</Trigger>
+										<DataTrigger Binding="{Binding HasCours}" Value="False">
+											<Setter Property="Background" Value="#B2C2DB"/>
+											<Setter Property="Cursor" Value="Arrow"/>
+										</DataTrigger>
 									</Style.Triggers>
 								</Style>
 							</Border.Style>
@@ -367,7 +345,7 @@
 							</Border.InputBindings>
 							<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
 								<TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                           Foreground="White" Margin="0,0,8,0"
+                                           Foreground="White" Margin="0,0,5,0"
                                            VerticalAlignment="Center"/>
 								<TextBlock Text="Générer l'examen"
                                            FontSize="14" FontWeight="600" Foreground="White"
@@ -432,19 +410,6 @@
 								</Style>
 							</Border.Style>
 							<StackPanel Orientation="Horizontal">
-								<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,8,0"
-                                           VerticalAlignment="Center">
-									<TextBlock.Style>
-										<Style TargetType="TextBlock">
-											<Setter Property="Text" Value="&#xE838;"/>
-											<Style.Triggers>
-												<DataTrigger Binding="{Binding IsImporting}" Value="True">
-													<Setter Property="Text" Value="&#xE72C;"/>
-												</DataTrigger>
-											</Style.Triggers>
-										</Style>
-									</TextBlock.Style>
-								</TextBlock>
 								<TextBlock FontSize="12" FontWeight="600" Foreground="White">
 									<TextBlock.Style>
 										<Style TargetType="TextBlock">

@@ -1,5 +1,7 @@
 using smartest_desktop.Helpers;
 using System.Collections.ObjectModel;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -56,15 +58,9 @@ namespace smartest_desktop.ViewModels
         public bool HasQuestionSelectionnee => QuestionSelectionnee != null;
         public bool HasNoQuestionSelectionnee => QuestionSelectionnee == null;
 
-        // ── Messages ──────────────────────────────────────────────────────────
-        private string _successMessage = string.Empty;
-        public string SuccessMessage
-        {
-            get => _successMessage;
-            set { SetProperty(ref _successMessage, value); OnPropertyChanged(nameof(HasSuccess)); }
-        }
+        private readonly string _empreinteInitiale;
 
-        public bool HasSuccess => !string.IsNullOrEmpty(SuccessMessage);
+        private readonly Func<Task>? _supprimerQuizPersisteAsync;
 
         // ── Commandes ─────────────────────────────────────────────────────────
         public ICommand SelectionnerQuestionCommand { get; }
@@ -90,19 +86,47 @@ namespace smartest_desktop.ViewModels
                 q.Numero = n++;
         }
 
-        private void AfficherSucces(string message)
+        private string CalculerEmpreinte()
         {
-            SuccessMessage = message;
-            Task.Delay(2500).ContinueWith(_ =>
-                System.Windows.Application.Current.Dispatcher.Invoke(
-                    () => SuccessMessage = string.Empty));
+            var payload = Questions.Select(q => new
+            {
+                q.Numero,
+                q.Enonce,
+                q.OptionA,
+                q.OptionB,
+                q.OptionC,
+                q.OptionD,
+                q.ReponseCorrecte,
+                q.Explication
+            }).ToList();
+            return JsonSerializer.Serialize(payload);
         }
 
-        private static string TronquerTexte(string texte, int max) =>
-            texte.Length <= max ? texte : texte[..max] + "…";
-
+        private bool ADesModificationsDepuisOuverture() =>
+            CalculerEmpreinte() != _empreinteInitiale;
 
         public string Statut { get; }
+
+        /// <summary>Id en base si le quiz est ouvert depuis la liste ; sinon première génération.</summary>
+        public int? QuizIdExistant { get; }
+
+        public bool IsEditionQuizExistant => QuizIdExistant.HasValue;
+
+        public string TitreFenetre =>
+            IsEditionQuizExistant ? "SmarTest — Modifier le quiz" : "SmarTest — Quiz généré";
+
+        public string LibelleBoutonValider =>
+            IsEditionQuizExistant ? "Enregistrer les modifications" : "Valider et sauvegarder";
+
+        public string SousTitreEtape =>
+            IsEditionQuizExistant
+                ? "Modifiez puis enregistrez dans la base locale"
+                : "Vérifiez et ajustez avant validation";
+
+        public string SousTitreCompteur =>
+            IsEditionQuizExistant
+                ? $"{NombreQuestions} questions"
+                : $"{NombreQuestions} questions générées";
 
 
 
@@ -111,8 +135,12 @@ namespace smartest_desktop.ViewModels
     string titre,
     string difficulte,
     string coursTitre,
-    string statut)
+    string statut,
+    int? quizIdExistant = null,
+    Func<Task>? supprimerQuizPersisteAsync = null)
         {
+            QuizIdExistant = quizIdExistant;
+            _supprimerQuizPersisteAsync = supprimerQuizPersisteAsync;
             // Initialisation des propriétés
             TitreQuiz = titre;
             Difficulte = difficulte;
@@ -130,6 +158,8 @@ namespace smartest_desktop.ViewModels
             if (Questions.Count > 0)
                 QuestionSelectionnee = Questions[0];
 
+            _empreinteInitiale = CalculerEmpreinte();
+
             // Commande : sélectionner une question
             SelectionnerQuestionCommand = new RelayCommand(param =>
             {
@@ -142,21 +172,21 @@ namespace smartest_desktop.ViewModels
             {
                 if (param is not QuestionQCM q) return;
 
-                var res = MessageBox.Show(
-                    $"Supprimer la question {q.Numero} ?\n\n\"{TronquerTexte(q.Enonce, 80)}\"",
-                    "Supprimer la question",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (res != MessageBoxResult.Yes) return;
-
-                if (QuestionSelectionnee == q)
-                    QuestionSelectionnee = null;
+                int idx = Questions.IndexOf(q);
+                if (idx < 0) return;
 
                 Questions.Remove(q);
                 RenuméroterQuestions();
                 OnPropertyChanged(nameof(NombreQuestions));
-                AfficherSucces("🗑 Question supprimée");
+                OnPropertyChanged(nameof(SousTitreCompteur));
+
+                if (Questions.Count > 0)
+                    QuestionSelectionnee = Questions[Math.Min(idx, Questions.Count - 1)];
+                else
+                    QuestionSelectionnee = null;
+
+                if (Questions.Count == 0 && _supprimerQuizPersisteAsync != null)
+                    _ = SupprimerQuizVideEtFermerAsync();
             });
 
             // Commande : valider le quiz
@@ -173,15 +203,31 @@ namespace smartest_desktop.ViewModels
                         return;
                     }
 
-                    var res = MessageBox.Show(
-                        $"Valider le quiz \"{TitreQuiz}\" ?\n\n" +
-                        $"• {Questions.Count} questions\n" +
-                        $"• Difficulté : {Difficulte}\n" +
-                        $"• Statut : {Statut}\n\n" +
-                        $"Le quiz sera sauvegardé et prêt à être publié.",
-                        "Valider le quiz",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question);
+                    MessageBoxResult res;
+                    if (IsEditionQuizExistant)
+                    {
+                        res = MessageBox.Show(
+                            $"Enregistrer les modifications du quiz « {TitreQuiz} » ?\n\n" +
+                            $"• {Questions.Count} questions\n" +
+                            $"• Difficulté : {Difficulte}\n" +
+                            $"• Statut : {Statut}\n\n" +
+                            "Les données en base seront mises à jour.",
+                            "Enregistrer les modifications",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+                    }
+                    else
+                    {
+                        res = MessageBox.Show(
+                            $"Valider et sauvegarder le quiz « {TitreQuiz} » ?\n\n" +
+                            $"• {Questions.Count} questions\n" +
+                            $"• Difficulté : {Difficulte}\n" +
+                            $"• Statut : {Statut}\n\n" +
+                            "Le quiz sera enregistré localement et prêt à être publié.",
+                            "Valider et sauvegarder",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+                    }
 
                     if (res != MessageBoxResult.Yes) return;
 
@@ -189,7 +235,7 @@ namespace smartest_desktop.ViewModels
                 },
                 _ => Questions.Count > 0);
 
-            // Commande : regénérer
+            // Commande : regénérer (masquée en édition d’un quiz déjà enregistré)
             RegenerarCommand = new RelayCommand(_ =>
             {
                 var res = MessageBox.Show(
@@ -205,8 +251,18 @@ namespace smartest_desktop.ViewModels
             // Commande : retour
             RetourCommand = new RelayCommand(_ =>
             {
+                if (!ADesModificationsDepuisOuverture())
+                {
+                    NavigationRetourRequested?.Invoke();
+                    return;
+                }
+
+                string msg = IsEditionQuizExistant
+                    ? "Quitter sans enregistrer les modifications ?\nLes changements seront perdus."
+                    : "Quitter sans sauvegarder ?\nLe quiz généré sera perdu.";
+
                 var res = MessageBox.Show(
-                    "Quitter sans valider ?\nLe quiz généré sera perdu.",
+                    msg,
                     "Confirmation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
@@ -214,6 +270,26 @@ namespace smartest_desktop.ViewModels
                 if (res == MessageBoxResult.Yes)
                     NavigationRetourRequested?.Invoke();
             });
+        }
+
+        private async Task SupprimerQuizVideEtFermerAsync()
+        {
+            try
+            {
+                if (_supprimerQuizPersisteAsync != null)
+                    await _supprimerQuizPersisteAsync();
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    NavigationRetourRequested?.Invoke());
+            }
+            catch (System.Exception ex)
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    MessageBox.Show(
+                        $"Impossible de supprimer le quiz vide :\n{ex.Message}",
+                        "Erreur",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error));
+            }
         }
 
     }

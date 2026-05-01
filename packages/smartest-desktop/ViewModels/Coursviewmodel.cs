@@ -238,7 +238,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Exception ex)
             {
-                ErrorMessage = $"Erreur chargement : {ex.Message}";
+                ErrorMessage = "Impossible de charger les cours. Réessayez ou relancez l'application.";
             }
             finally
             {
@@ -371,7 +371,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Exception ex)
             {
-                ErrorMessage = $"Erreur import : {ex.Message}";
+                ErrorMessage = "Impossible d'importer le fichier. Vérifiez qu'il n'est pas ouvert dans un autre programme.";
                 SuccessMessage = string.Empty;
             }
             finally
@@ -411,7 +411,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Exception ex)
             {
-                ErrorMessage = $"Erreur suppression : {ex.Message}";
+                ErrorMessage = "Impossible de supprimer ce cours. Il est peut-être utilisé dans un quiz ou un examen.";
                 SuccessMessage = string.Empty;
             }
             finally

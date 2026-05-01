@@ -18,6 +18,7 @@ namespace smartest_desktop.Services
         public async Task<List<ExamenLocal>> GetAllAsync()
         {
             return await _db.Examens
+                .Include(e => e.Questions)
                 .OrderByDescending(e => e.DateCreation)
                 .ToListAsync();
         }
