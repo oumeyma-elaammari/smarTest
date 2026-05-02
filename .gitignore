@@ -34,3 +34,5 @@ obj/
 
 # Base locale app desktop
 **/smartest_local.db
+**/users/
+**/users/current_user.txt                                         
