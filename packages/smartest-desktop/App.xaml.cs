@@ -1,8 +1,6 @@
 using smartest_desktop.Data;
 using System;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using smartest_desktop.Services;
 
@@ -12,66 +10,6 @@ namespace smartest_desktop
     {
         public static LocalDbContext LocalDb { get; private set; } = null!;
 
-        // ── Chemins ─────────────────────────────────────────────────
-        private static string UsersFolder =>
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "users");
-
-        private static string CurrentUserFile =>
-            Path.Combine(UsersFolder, "current_user.txt");
-
-        private static string GetDbPath(string email)
-        {
-            var safe = Regex.Replace(email.ToLower().Trim(), @"[^a-z0-9]", "_");
-            return Path.Combine(UsersFolder, $"{safe}.db");
-        }
-
-        // ── API publique ─────────────────────────────────────────────
-        /// <summary>
-        /// Appelé après un login réussi pour initialiser la base de l'utilisateur.
-        /// </summary>
-        public static void ReinitialiserPourUtilisateur(string email)
-        {
-            LocalDb?.Dispose();
-            Directory.CreateDirectory(UsersFolder);
-            File.WriteAllText(CurrentUserFile, email.Trim().ToLower());
-            LocalDb = InitialiserBase(GetDbPath(email));
-        }
-
-        /// <summary>
-        /// Appelé lors d'un logout pour effacer le pointeur de session.
-        /// </summary>
-        public static void SupprimerFichierSession()
-        {
-            if (File.Exists(CurrentUserFile))
-                File.Delete(CurrentUserFile);
-        }
-
-        /// <summary>
-        /// Déconnecte l'utilisateur depuis n'importe quelle fenêtre :
-        /// supprime la session, ferme toutes les fenêtres, ouvre LoginWindow.
-        /// </summary>
-        public static void Deconnecter()
-        {
-            if (LocalDb != null)
-                new SessionService(LocalDb).SupprimerSession();
-            else
-                SupprimerFichierSession();
-
-            Current.Properties["Token"] = null;
-            Current.Properties["Nom"]   = null;
-            Current.Properties["Email"] = null;
-
-            Current.Dispatcher.Invoke(() =>
-            {
-                var login = new Views.LoginWindow();
-                login.Show();
-
-                foreach (var w in Current.Windows.OfType<Window>().Where(w => w is not Views.LoginWindow).ToList())
-                    w.Close();
-            });
-        }
-
-        // ── Démarrage ────────────────────────────────────────────────
         protected override void OnStartup(StartupEventArgs e)
         {
             AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
@@ -88,41 +26,32 @@ namespace smartest_desktop
 
             try
             {
+                LocalDb = InitialiserBase();
+
                 ShutdownMode = ShutdownMode.OnLastWindowClose;
 
-                // Vérifier si un utilisateur était connecté
-                if (File.Exists(CurrentUserFile))
+                // Vérifier session existante
+                var sessionService = new SessionService(LocalDb);
+                var session = sessionService.ChargerSession();
+
+                if (session != null)
                 {
-                    var email = File.ReadAllText(CurrentUserFile).Trim();
-                    if (!string.IsNullOrEmpty(email))
-                    {
-                        LocalDb = InitialiserBase(GetDbPath(email));
-                        var session = new SessionService(LocalDb).ChargerSession();
+                    // Session valide: restaurer Properties et aller au Dashboard
+                    Current.Properties["Token"] = session.TokenChiffre; 
+                    Current.Properties["Nom"] = session.Nom;
+                    Current.Properties["Email"] = session.Email;
 
-                        if (session != null)
-                        {
-                            Current.Properties["Token"] = session.TokenChiffre;
-                            Current.Properties["Nom"] = session.Nom;
-                            Current.Properties["Email"] = session.Email;
-
-                            var dashboard = new Views.DashboardWindow();
-                            MainWindow = dashboard;
-                            dashboard.Show();
-                            base.OnStartup(e);
-                            return;
-                        }
-
-                        // Session expirée/corrompue : nettoyer
-                        SupprimerFichierSession();
-                        LocalDb?.Dispose();
-                        LocalDb = null!;
-                    }
+                    var dashboard = new Views.DashboardWindow();
+                    MainWindow = dashboard;
+                    dashboard.Show();
                 }
-
-                // Pas de session valide : LoginWindow
-                var login = new MainWindow();
-                MainWindow = login;
-                login.Show();
+                else
+                {
+                    // Pas de session : LoginWindow
+                    var login = new MainWindow();
+                    MainWindow = login;
+                    login.Show();
+                }
             }
             catch (Exception ex)
             {
@@ -135,15 +64,20 @@ namespace smartest_desktop
             base.OnStartup(e);
         }
 
-        private static LocalDbContext InitialiserBase(string dbPath)
+        /// <summary>
+        /// Initialise la base SQLite. Si le schéma est incompatible avec le modèle actuel
+        /// (par exemple après une migration de colonnes), la base est supprimée et recréée.
+        /// </summary>
+        private static LocalDbContext InitialiserBase()
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+            const string dbPath = "smartest_local.db";
 
-            var ctx = new LocalDbContext(dbPath);
+            var ctx = new LocalDbContext();
             try
             {
                 ctx.Database.EnsureCreated();
 
+                // Vérification rapide : on lit une ligne de chaque table critique
                 _ = ctx.SessionsLocales.Count();
                 _ = ctx.Cours.Count();
                 _ = ctx.Quiz.Count();
@@ -152,9 +86,14 @@ namespace smartest_desktop
             }
             catch
             {
-                try { ctx.Database.EnsureDeleted(); }
+                // Schéma obsolète — supprimer via EF Core (ferme proprement les connexions SQLite)
+                try
+                {
+                    ctx.Database.EnsureDeleted();
+                }
                 catch
                 {
+                    // Si EF Core ne peut pas supprimer (fichier verrouillé), on force
                     ctx.Dispose();
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
@@ -162,9 +101,12 @@ namespace smartest_desktop
                     foreach (var f in new[] { dbPath, dbPath + "-shm", dbPath + "-wal" })
                         if (File.Exists(f)) File.Delete(f);
                 }
-                finally { ctx.Dispose(); }
+                finally
+                {
+                    ctx.Dispose();
+                }
 
-                ctx = new LocalDbContext(dbPath);
+                ctx = new LocalDbContext();
                 ctx.Database.EnsureCreated();
             }
 

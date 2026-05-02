@@ -137,7 +137,7 @@ namespace smartest_desktop.Services
                         error = "Email ou mot de passe incorrect";
                 }
                 else if (status == 403)
-                    error = "EMAIL_NOT_VERIFIED";
+                    error = "Email non confirmé. Vérifiez votre boîte mail.";
                 else if (status == 400)
                     error = ParseValidationError(content);
                 else if (status >= 500)

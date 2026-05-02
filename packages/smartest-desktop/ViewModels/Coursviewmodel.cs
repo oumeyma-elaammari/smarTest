@@ -428,7 +428,18 @@ namespace smartest_desktop.ViewModels
                 "Déconnexion", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
-            App.Deconnecter();
+
+            WpfApp.Current.Properties["Token"] = null;
+            WpfApp.Current.Properties["Nom"] = null;
+            WpfApp.Current.Properties["Email"] = null;
+
+            var login = new Views.LoginWindow();
+            login.Show();
+
+            foreach (Window w in WpfApp.Current.Windows)
+            {
+                if (w is Views.CoursWindow) { w.Close(); break; }
+            }
         }
 
         // ── Text extractors ───────────────────────────────────────────────────

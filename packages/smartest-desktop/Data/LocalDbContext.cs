@@ -5,13 +5,6 @@ namespace smartest_desktop.Data
 {
     public class LocalDbContext : DbContext
     {
-        private readonly string _connectionString;
-
-        public LocalDbContext(string dbPath = "smartest_local.db")
-        {
-            _connectionString = $"Data Source={dbPath}";
-        }
-
         // ══════════════════════════════════════════════════════════
         //  TABLES SQLite
         // ══════════════════════════════════════════════════════════
@@ -31,7 +24,7 @@ namespace smartest_desktop.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite(_connectionString);
+            options.UseSqlite("Data Source=smartest_local.db");
         }
 
         // ══════════════════════════════════════════════════════════

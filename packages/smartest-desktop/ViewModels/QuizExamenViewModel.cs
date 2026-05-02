@@ -490,7 +490,12 @@ namespace smartest_desktop.ViewModels
                 "Déconnexion", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
-            App.Deconnecter();
+
+            WpfApp.Current.Properties["Token"] = null;
+            WpfApp.Current.Properties["Nom"] = null;
+            WpfApp.Current.Properties["Email"] = null;
+
+            NavigateToDashboard?.Invoke();
         }
     }
 }

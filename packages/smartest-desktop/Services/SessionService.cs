@@ -51,7 +51,6 @@ namespace smartest_desktop.Services
         {
             _db.SessionsLocales.RemoveRange(_db.SessionsLocales.ToList());
             _db.SaveChanges();
-            App.SupprimerFichierSession();
         }
     }
 }

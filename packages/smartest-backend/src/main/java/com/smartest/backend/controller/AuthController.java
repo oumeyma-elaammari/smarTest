@@ -31,8 +31,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(message);
         } catch (PasswordMismatchException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (EmailPendingVerificationException e) {
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(e.getMessage());
         } catch (EmailAlreadyUsedException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
@@ -45,8 +43,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(message);
         } catch (PasswordMismatchException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (EmailPendingVerificationException e) {
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(e.getMessage());
         } catch (EmailAlreadyUsedException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }

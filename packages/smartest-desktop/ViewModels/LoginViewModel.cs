@@ -86,12 +86,6 @@ namespace smartest_desktop.ViewModels
 
             if (error != null)
             {
-                if (error == "EMAIL_NOT_VERIFIED")
-                {
-                    var verifyWindow = new Views.EmailVerificationWindow(Email.Trim().ToLower());
-                    NavigationService.NavigateTo<Views.LoginWindow>(verifyWindow);
-                    return;
-                }
                 ErrorMessage = error;
                 return;
             }
@@ -100,7 +94,6 @@ namespace smartest_desktop.ViewModels
             WpfApp.Current.Properties["Nom"] = auth.Nom;
             WpfApp.Current.Properties["Email"] = auth.Email;
 
-            App.ReinitialiserPourUtilisateur(auth.Email);
             var sessionService = new SessionService(App.LocalDb);
             sessionService.SauvegarderSession(auth);
 

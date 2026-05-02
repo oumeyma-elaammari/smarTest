@@ -46,10 +46,8 @@
 
 			<StackPanel>
 
-				<!-- Brand (couleurs comme sidebar, sans pastille) -->
-				<TextBlock Style="{StaticResource BrandTitleSplit}">
-					Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
-				</TextBlock>
+				<!-- Brand -->
+				<TextBlock Text="SmarTest" Style="{StaticResource BrandTitle}"/>
 				<TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
 
 				<TextBlock Text="Bon retour !" FontFamily="Georgia" FontSize="22"
