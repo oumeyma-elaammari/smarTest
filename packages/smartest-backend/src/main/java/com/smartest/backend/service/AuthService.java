@@ -54,12 +54,24 @@ public class AuthService {
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
 
-        if (professeurRepository.existsByEmail(request.getEmail()))
+        // Si le compte professeur existe déjà mais n'est pas vérifié, renvoyer le code
+        var existingProf = professeurRepository.findByEmail(request.getEmail());
+        if (existingProf.isPresent()) {
+            if (!existingProf.get().isEmailVerifie()) {
+                String code = generateCode();
+                existingProf.get().setNom(request.getNom());
+                existingProf.get().setPassword(passwordEncoder.encode(request.getPassword()));
+                existingProf.get().setTokenVerification(code);
+                existingProf.get().setTokenVerificationExpiry(LocalDateTime.now().plusMinutes(15));
+                professeurRepository.save(existingProf.get());
+                emailService.sendVerificationCode(request.getEmail(), code);
+                throw new EmailPendingVerificationException();
+            }
             throw new EmailAlreadyUsedException(request.getEmail());
+        }
         if (etudiantRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
 
-        // ✅ Code 6 chiffres au lieu d'un UUID
         String code = generateCode();
 
         Professeur professeur = new Professeur();
@@ -68,12 +80,9 @@ public class AuthService {
         professeur.setPassword(passwordEncoder.encode(request.getPassword()));
         professeur.setEmailVerifie(false);
         professeur.setTokenVerification(code);
-        // ✅ Expiration 15 minutes
         professeur.setTokenVerificationExpiry(LocalDateTime.now().plusMinutes(15));
 
         professeurRepository.save(professeur);
-
-        // ✅ Envoyer le code par email (pas un lien)
         emailService.sendVerificationCode(request.getEmail(), code);
 
         return "Inscription réussie ! Vérifiez votre email.";
@@ -83,8 +92,20 @@ public class AuthService {
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
 
-        if (etudiantRepository.existsByEmail(request.getEmail()))
+        // Si le compte étudiant existe déjà mais n'est pas vérifié, renvoyer l'email
+        var existingEtudiant = etudiantRepository.findByEmail(request.getEmail());
+        if (existingEtudiant.isPresent()) {
+            if (!existingEtudiant.get().isEmailVerifie()) {
+                String token = UUID.randomUUID().toString();
+                existingEtudiant.get().setNom(request.getNom());
+                existingEtudiant.get().setPassword(passwordEncoder.encode(request.getPassword()));
+                existingEtudiant.get().setTokenVerification(token);
+                etudiantRepository.save(existingEtudiant.get());
+                emailService.sendVerificationEmail(request.getEmail(), token, "ETUDIANT");
+                throw new EmailPendingVerificationException();
+            }
             throw new EmailAlreadyUsedException(request.getEmail());
+        }
         if (professeurRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
 

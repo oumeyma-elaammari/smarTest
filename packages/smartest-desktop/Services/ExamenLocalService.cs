@@ -32,9 +32,11 @@ namespace smartest_desktop.Services
             if (!string.IsNullOrWhiteSpace(coursTitre))
             {
                 var titreTrim = coursTitre.Trim();
+                // Comparaison insensible à la casse traduisible en SQL (pas string.Equals + StringComparison).
+                var titreLower = titreTrim.ToLowerInvariant();
                 var cours = await _db.Cours.FirstOrDefaultAsync(c =>
                     c.Titre != null &&
-                    string.Equals(c.Titre.Trim(), titreTrim, StringComparison.OrdinalIgnoreCase));
+                    c.Titre.Trim().ToLower() == titreLower);
                 if (cours != null)
                     examen.Cours.Add(cours);
             }

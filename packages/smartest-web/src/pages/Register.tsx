@@ -58,13 +58,14 @@ export default function Register() {
         setError(null)
         setIsLoading(true)
         try {
-            await api.post('/auth/register/etudiant', {
+            const res = await api.post('/auth/register/etudiant', {
                 nom:             data.nom.trim(),
                 email:           data.email.trim().toLowerCase(),
                 password:        data.password,
                 confirmPassword: data.confirmPassword,
             })
-            navigate('/email-sent')
+            // 201 = nouvelle inscription, 202 = email non vérifié → renvoi du lien
+            if (res.status === 201 || res.status === 202) navigate('/email-sent')
         } catch (err: any) {
             if (!err?.response)                   setError('Impossible de contacter le serveur.')
             else if (err.response.status === 409) setError('Cet email est déjà utilisé.')

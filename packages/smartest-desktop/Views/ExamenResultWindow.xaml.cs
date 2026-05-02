@@ -119,8 +119,8 @@ namespace smartest_desktop.Views
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
 
-                            var dashboard = new DashboardWindow();
-                            dashboard.Show();
+                            var hub = new QuizExamenWindow();
+                            hub.Show();
                             Close();
                         });
                     }

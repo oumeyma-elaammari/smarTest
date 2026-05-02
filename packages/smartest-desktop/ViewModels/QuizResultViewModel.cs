@@ -251,18 +251,28 @@ namespace smartest_desktop.ViewModels
             // Commande : retour
             RetourCommand = new RelayCommand(_ =>
             {
+                // Pas encore en base : toujours confirmer (le contenu généré n'est pas persisté)
+                if (!IsEditionQuizExistant)
+                {
+                    var resNouveau = MessageBox.Show(
+                        "Quitter sans sauvegarder ?\nLe quiz généré sera perdu.",
+                        "Confirmation",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+                    if (resNouveau == MessageBoxResult.Yes)
+                        NavigationRetourRequested?.Invoke();
+                    return;
+                }
+
+                // Déjà en base : retour direct si rien n'a changé
                 if (!ADesModificationsDepuisOuverture())
                 {
                     NavigationRetourRequested?.Invoke();
                     return;
                 }
 
-                string msg = IsEditionQuizExistant
-                    ? "Quitter sans enregistrer les modifications ?\nLes changements seront perdus."
-                    : "Quitter sans sauvegarder ?\nLe quiz généré sera perdu.";
-
                 var res = MessageBox.Show(
-                    msg,
+                    "Quitter sans enregistrer les modifications ?\nLes changements seront perdus.",
                     "Confirmation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);

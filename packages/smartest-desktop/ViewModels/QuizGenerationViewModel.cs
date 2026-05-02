@@ -240,14 +240,7 @@ namespace smartest_desktop.ViewModels
                 MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
-
-            new Services.SessionService(App.LocalDb).SupprimerSession();
-
-            WpfApp.Current.Properties["Token"] = null;
-            WpfApp.Current.Properties["Nom"] = null;
-            WpfApp.Current.Properties["Email"] = null;
-
-            NavigateToLogin?.Invoke();
+            App.Deconnecter();
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -453,9 +446,10 @@ namespace smartest_desktop.ViewModels
                             await Task.Delay(2000, token);
                         }
 
+                        var enoncesExistants = toutesQuestions.Select(q => q.Enonce).ToList();
                         string prompt = tentative == 1
-                            ? BuildPrompt(contenuLot, nbCeLot, Difficulte)
-                            : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte);
+                            ? BuildPrompt(contenuLot, nbCeLot, Difficulte, enoncesExistants)
+                            : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte, enoncesExistants);
 
                         var sw = System.Diagnostics.Stopwatch.StartNew();
                         var reponse = await _groq.GenererAvecRetryAsync(prompt, token);
@@ -642,15 +636,28 @@ namespace smartest_desktop.ViewModels
                 "- Example question style: 'Comment fonctionne X ?' / 'Quel est l'effet de Y sur Z ?'"
         };
 
-        private string BuildPrompt(string contenu, int nbQuestions, string difficulte)
+        private static string BuildAvoidSection(IReadOnlyList<string>? avoid)
+        {
+            if (avoid == null || avoid.Count == 0) return string.Empty;
+            var lines = avoid
+                .TakeLast(15)
+                .Select((e, i) => $"{i + 1}. \"{(e.Length > 90 ? e[..90] + "…" : e)}\"");
+            return
+                "\nALREADY GENERATED — do NOT repeat, rephrase or paraphrase these questions:\n" +
+                string.Join("\n", lines) +
+                "\nGenerate COMPLETELY DIFFERENT questions covering other aspects of the content.\n";
+        }
+
+        private string BuildPrompt(string contenu, int nbQuestions, string difficulte, IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
+            string avoidSection = BuildAvoidSection(avoid);
 
             return
 $@"Generate EXACTLY {nbQuestions} multiple-choice questions in FRENCH about the text below.
 
 {difficultyInstructions}
-
+{avoidSection}
 TEXT:
 {contenu}
 
@@ -669,9 +676,10 @@ RULES:
 7. No commentary outside the JSON array";
         }
 
-        private string BuildPromptStrict(string contenu, int nbQuestions, string difficulte)
+        private string BuildPromptStrict(string contenu, int nbQuestions, string difficulte, IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
+            string avoidSection = BuildAvoidSection(avoid);
             int texteLength = Math.Min(contenu.Length, 4000);
             string texteTronque = contenu.Length > texteLength ? contenu[..texteLength] : contenu;
 
@@ -679,7 +687,7 @@ RULES:
 $@"GÉNÉRATION STRICTE DE {nbQuestions} QUESTIONS QCM EN FRANÇAIS
 
 {difficultyInstructions}
-
+{avoidSection}
 TEXTE SOURCE:
 {texteTronque}
 
@@ -701,42 +709,15 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
         // CORRECTION DU NOMBRE DE QUESTIONS
         // ══════════════════════════════════════════════════════════════════════
 
-        private List<QuestionQCM> CorrigerNombreQuestions(List<QuestionQCM> questions, int nbSouhaite)
+        private static List<QuestionQCM> CorrigerNombreQuestions(List<QuestionQCM> questions, int nbSouhaite)
         {
-            if (questions.Count == nbSouhaite)
-                return questions;
-
             if (questions.Count > nbSouhaite)
             {
                 Debug.WriteLine($"[Corriger] TROP de questions: {questions.Count}, garde {nbSouhaite}");
                 return questions.Take(nbSouhaite).ToList();
             }
-            else
-            {
-                Debug.WriteLine($"[Corriger] PAS ASSEZ: {questions.Count}/{nbSouhaite}, duplication");
-                var result = new List<QuestionQCM>(questions);
-                int index = 0;
-
-                while (result.Count < nbSouhaite && result.Count > 0)
-                {
-                    var original = questions[index % questions.Count];
-                    var duplique = new QuestionQCM
-                    {
-                        Enonce = $"{original.Enonce} (variante)",
-                        OptionA = original.OptionA,
-                        OptionB = original.OptionB,
-                        OptionC = original.OptionC,
-                        OptionD = original.OptionD,
-                        ReponseCorrecte = original.ReponseCorrecte,
-                        Explication = original.Explication,
-                        Numero = result.Count + 1
-                    };
-                    result.Add(duplique);
-                    index++;
-                }
-
-                return result;
-            }
+            // Si pas assez, on retourne ce qu'on a — ne jamais dupliquer
+            return questions;
         }
 
         // ══════════════════════════════════════════════════════════════════════

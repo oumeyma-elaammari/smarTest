@@ -331,14 +331,7 @@ namespace smartest_desktop.ViewModels
                 MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
-
-            new SessionService(App.LocalDb).SupprimerSession();
-
-            WpfApp.Current.Properties["Token"] = null;
-            WpfApp.Current.Properties["Nom"] = null;
-            WpfApp.Current.Properties["Email"] = null;
-
-            NavigateToLogin?.Invoke();
+            App.Deconnecter();
         }
 
         // ── Import de fichier ─────────────────────────────────────────────────
@@ -632,66 +625,65 @@ namespace smartest_desktop.ViewModels
                 }
                 else
                 {
-                    // ── CAS BATCHING : plusieurs lots de questions ────────────────────
-                    //
-                    // On répartit les types de questions proportionnellement sur les lots.
-                    // Exemple : 6 QCM + 4 CHECKBOX + 2 REDACTION = 12 questions
-                    //   Lot 1 : 2 QCM + 1 CHECKBOX + 1 REDACTION = 4 questions
-                    //   Lot 2 : 2 QCM + 2 CHECKBOX + 0 REDACTION = 4 questions
-                    //   Lot 3 : 2 QCM + 1 CHECKBOX + 1 REDACTION = 4 questions
+                    // ── CAS BATCHING : boucle custom par lot ─────────────────────────
+                    // Chaque lot reçoit sa propre répartition exacte (QCM/CHECKBOX/REDACTION)
+                    // et la liste des énoncés déjà générés pour éviter les répétitions.
 
                     int nbLots = (int)Math.Ceiling((double)totalQuestions / 4.0);
 
-                    // Distribuer les types sur les lots
                     var lotsQCM = DistribuerSurLots(NbQCM, nbLots);
                     var lotsCheckbox = DistribuerSurLots(NbCheckbox, nbLots);
                     var lotsRedaction = DistribuerSurLots(NbRedaction, nbLots);
 
+                    var segmentsContenu = DecoupeContenuEnSegments(contenuComplet, nbLots);
+
                     StatusMessage = $"🧠 Génération par lots : {totalQuestions} questions en {nbLots} lots...";
 
+                    var toutesQuestionsExamen = new List<QuestionExamen>();
+                    var toutesEnonces = new List<string>();
                     var swTotal = System.Diagnostics.Stopwatch.StartNew();
 
-                    // Fonction qui construit le prompt pour un lot donné
-                    // Elle fait "tourner" la fenêtre de contexte dans le cours
-                    string BuildPromptPourLot(int nbQInLot, int numeroPremiereLigne)
+                    for (int lotIdx = 0; lotIdx < nbLots && !ct.IsCancellationRequested; lotIdx++)
                     {
-                        // Indice du lot courant (0-based)
-                        int idxLot = (numeroPremiereLigne - 1) / 4;
+                        int qcmLot = lotsQCM[lotIdx];
+                        int cbkLot = lotsCheckbox[lotIdx];
+                        int redLot = lotsRedaction[lotIdx];
+                        int totalLot = qcmLot + cbkLot + redLot;
+                        if (totalLot == 0) continue;
 
-                        // Faire tourner la fenêtre de contexte pour varier les questions
-                        int debut = (idxLot * tailleContexte / 2) % Math.Max(1, contenuComplet.Length - tailleContexte);
-                        string extrait = contenuComplet.Length <= tailleContexte
-                            ? contenuComplet
-                            : contenuComplet[debut..Math.Min(debut + tailleContexte, contenuComplet.Length)];
+                        if (lotIdx > 0)
+                            await Task.Delay(GroqService.DelaiEntreLotsMs, ct);
 
-                        // Calculer la répartition pour CE lot spécifique
-                        int idxLotSafe = Math.Min(idxLot, nbLots - 1);
-                        int qcmLot = idxLotSafe < lotsQCM.Length ? lotsQCM[idxLotSafe] : 0;
-                        int cbkLot = idxLotSafe < lotsCheckbox.Length ? lotsCheckbox[idxLotSafe] : 0;
-                        int redLot = idxLotSafe < lotsRedaction.Length ? lotsRedaction[idxLotSafe] : 0;
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                            StatusMessage = $"🧠 Lot {lotIdx + 1}/{nbLots} — {totalLot} questions ({qcmLot} QCM / {cbkLot} Checkbox / {redLot} Rédaction)...");
 
-                        return GroqService.BuildPromptExamenLot(
-                            extrait, qcmLot, cbkLot, redLot, Difficulte, numeroPremiereLigne);
+                        string prompt = GroqService.BuildPromptExamenLot(
+                            segmentsContenu[lotIdx], qcmLot, cbkLot, redLot,
+                            Difficulte, toutesQuestionsExamen.Count + 1, toutesEnonces);
+
+                        string texte = await _groq!.GenererAvecRetryAsync(prompt, ct);
+
+                        var questionsLot = ParseQuestions(texte);
+
+                        foreach (var q in questionsLot)
+                        {
+                            if (!string.IsNullOrWhiteSpace(q.Enonce) &&
+                                !toutesEnonces.Contains(q.Enonce.Trim(), StringComparer.OrdinalIgnoreCase))
+                            {
+                                toutesQuestionsExamen.Add(q);
+                                toutesEnonces.Add(q.Enonce.Trim());
+                            }
+                        }
+
+                        System.Diagnostics.Debug.WriteLine(
+                            $"[ExamenBatch] Lot {lotIdx + 1}: {questionsLot.Count} générées, {toutesQuestionsExamen.Count} total");
                     }
 
-                    // Appel batching avec callback de progression
-                    var (jsonFusionne, dureeTotal) = await _groq.GenererParLotsAsync(
-                        buildPromptPourLot: (nbQInLot, numDepart) => BuildPromptPourLot(nbQInLot, numDepart),
-                        totalQuestions: totalQuestions,
-                        onProgres: (lotActuel, nbTotalLots) =>
-                        {
-                            // Mise à jour UI depuis le thread de travail → Dispatcher requis
-                            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                StatusMessage = $"🧠 Lot {lotActuel}/{nbTotalLots} généré...";
-                            });
-                        },
-                        ct: ct);
+                    swTotal.Stop();
 
-                    StatusMessage = "📝 Extraction et fusion des questions...";
+                    StatusMessage = "📝 Ajustement des types et fusion...";
 
-                    var questions = ParseQuestions(jsonFusionne);
-                    questions = AjusterTypesQuestions(questions, NbQCM, NbCheckbox, NbRedaction);
+                    var questions = AjusterTypesQuestions(toutesQuestionsExamen, NbQCM, NbCheckbox, NbRedaction);
 
                     if (questions.Count == 0)
                         throw new Exception(
@@ -706,7 +698,7 @@ namespace smartest_desktop.ViewModels
                         ? $"\n⚠️ {questions.Count}/{totalQuestions} obtenues (certains lots incomplets)"
                         : string.Empty;
 
-                    StatusMessage = $"✅ {questions.Count} questions en {dureeTotal.TotalSeconds:F1} s !{avertissement}";
+                    StatusMessage = $"✅ {questions.Count} questions en {swTotal.Elapsed.TotalSeconds:F1} s !{avertissement}";
                     await Task.Delay(400, ct);
 
                     ExamenGenereAvecSucces?.Invoke(questions, titre, Duree, Difficulte, TitreCours);
@@ -907,6 +899,11 @@ namespace smartest_desktop.ViewModels
             {
                 var q = restants[0]; restants.RemoveAt(0);
                 q.Type = "CHECKBOX";
+                // Cocher la bonne option existante (sinon le checkbox s'affiche sans réponse)
+                q.OptionACorrecte = q.ReponseCorrecte == "A";
+                q.OptionBCorrecte = q.ReponseCorrecte == "B";
+                q.OptionCCorrecte = q.ReponseCorrecte == "C";
+                q.OptionDCorrecte = q.ReponseCorrecte == "D";
                 checks.Add(q);
             }
 

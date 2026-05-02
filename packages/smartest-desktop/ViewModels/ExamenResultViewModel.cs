@@ -277,18 +277,28 @@ namespace smartest_desktop.ViewModels
 
             RetourCommand = new RelayCommand(_ =>
             {
+                // Pas encore en base : toujours confirmer (le contenu généré n'est pas persisté)
+                if (!IsEditionExistant)
+                {
+                    var resNouveau = MessageBox.Show(
+                        "Quitter sans sauvegarder ?\nL'examen généré sera perdu.",
+                        "Confirmation",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+                    if (resNouveau == MessageBoxResult.Yes)
+                        NavigationRetourRequested?.Invoke();
+                    return;
+                }
+
+                // Déjà en base : retour direct si rien n'a changé
                 if (!ADesModificationsDepuisOuverture())
                 {
                     NavigationRetourRequested?.Invoke();
                     return;
                 }
 
-                string msg = IsEditionExistant
-                    ? "Quitter sans enregistrer les modifications ?\nLes changements seront perdus."
-                    : "Quitter sans sauvegarder ?\nL'examen généré sera perdu.";
-
                 var res = MessageBox.Show(
-                    msg,
+                    "Quitter sans enregistrer les modifications ?\nLes changements seront perdus.",
                     "Confirmation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);

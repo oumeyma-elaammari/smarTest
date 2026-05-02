@@ -1,34 +1,77 @@
-# Dépendances et sorties front
+# ══════════════════════════════════════════════
+#  JAVA / SPRING BOOT  (smartest-backend)
+# ══════════════════════════════════════════════
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+.mvn/wrapper/maven-wrapper.jar
+hs_err_pid*
+
+# ══════════════════════════════════════════════
+#  REACT / NODE  (smartest-web)
+# ══════════════════════════════════════════════
 node_modules/
 dist/
 build/
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Secrets et logs
-.env
-*.log
-.DS_Store
-
-# IDE
-.vs/
-**/.vs/
-.idea/
-**/.idea/
-packages/smartest-backend/.idea/
-
-# Build .NET (tout le dépôt)
+# ══════════════════════════════════════════════
+#  C# / .NET / WPF  (smartest-desktop)
+# ══════════════════════════════════════════════
 bin/
 obj/
-
-# Binaires souvent générés localement
 *.exe
 *.dll
+*.pdb
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+**/.vs/
+*.nupkg
 
-# SQLite — rester local uniquement
+# ══════════════════════════════════════════════
+#  BASE DE DONNÉES LOCALE  (SQLite)
+# ══════════════════════════════════════════════
 *.db
 *.sqlite
 *.sqlite3
 *.db-shm
 *.db-wal
+**/smartest_local.db
+**/users/
+**/users/current_user.txt
 
-# Base locale app desktop (y compris variantes WAL/SHM si même préfixe)
-**/smartest_local.db*
+# ══════════════════════════════════════════════
+#  SECRETS ET CONFIGURATION SENSIBLE
+# ══════════════════════════════════════════════
+.env
+.env.local
+.env.*.local
+*.key
+application-local.yml
+application-local.properties
+
+# ══════════════════════════════════════════════
+#  IDE
+# ══════════════════════════════════════════════
+.idea/
+**/.idea/
+*.iws
+.vscode/
+*.code-workspace
+
+# ══════════════════════════════════════════════
+#  SYSTÈME
+# ══════════════════════════════════════════════
+.DS_Store
+Thumbs.db
+*.log
