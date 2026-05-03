@@ -86,6 +86,12 @@ namespace smartest_desktop.ViewModels
 
             if (error != null)
             {
+                if (error == AuthService.EmailNotVerifiedCode)
+                {
+                    var verifyWindow = new Views.EmailVerificationWindow(Email.Trim().ToLower());
+                    NavigationService.NavigateTo<Views.LoginWindow>(verifyWindow);
+                    return;
+                }
                 ErrorMessage = error;
                 return;
             }
@@ -93,6 +99,9 @@ namespace smartest_desktop.ViewModels
             WpfApp.Current.Properties["Token"] = auth.Token;
             WpfApp.Current.Properties["Nom"] = auth.Nom;
             WpfApp.Current.Properties["Email"] = auth.Email;
+
+            // Initialiser la base de données propre à cet email
+            App.InitialiserPourEmail(auth.Email);
 
             var sessionService = new SessionService(App.LocalDb);
             sessionService.SauvegarderSession(auth);

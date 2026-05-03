@@ -26,9 +26,9 @@ namespace smartest_desktop.Services
         private const int QUESTIONS_PAR_LOT = 4;
 
         /// <summary>Espace les lots pour rester sous le TPM (tokens/minute) Groq gratuit.</summary>
-        private const int DELAI_ENTRE_LOTS_MS = 3_000;
+        private const int DELAI_ENTRE_LOTS_MS = 4_000;
 
-        private const int TAILLE_CONTEXTE_PAR_LOT = 1500;
+        private const int TAILLE_CONTEXTE_PAR_LOT = 2500;
 
         // ══════════════════════════════════════════════════════════════════════
 
@@ -55,9 +55,18 @@ namespace smartest_desktop.Services
         }
 
         
+        /// <summary>Retourne la température adaptée au niveau de difficulté.</summary>
+        public static double TemperaturePourDifficulte(string difficulte) => difficulte switch
+        {
+            "Facile"    => 0.4,  // précis, factuel, peu de créativité
+            "Difficile" => 0.8,  // nuancé, analytique, plus créatif
+            _           => 0.65  // Moyen
+        };
+
         public async Task<(string Texte, TimeSpan Duree)> GenererAsync(
             string prompt,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            double temperature = 0.65)
         {
             VerifierConfiguration();
 
@@ -81,8 +90,8 @@ namespace smartest_desktop.Services
                         content = prompt
                     }
                 },
-                temperature = 0.1,
-                max_tokens = 700,
+                temperature,
+                max_tokens = 2000,
                 stream = false
             };
 
@@ -171,7 +180,7 @@ namespace smartest_desktop.Services
         /// Envoie un prompt avec retry en cas d'erreur 429 (TPM). Utilise le délai indiqué par Groq
         /// (« try again in Xs ») ou un backoff progressif.
         /// </summary>
-        public async Task<string> GenererAvecRetryAsync(string prompt, CancellationToken ct)
+        public async Task<string> GenererAvecRetryAsync(string prompt, CancellationToken ct, double temperature = 0.65)
         {
             const int MAX_TENTATIVES = 6;
 
@@ -179,7 +188,7 @@ namespace smartest_desktop.Services
             {
                 try
                 {
-                    var (texte, _) = await GenererAsync(prompt, ct);
+                    var (texte, _) = await GenererAsync(prompt, ct, temperature);
                     return texte;
                 }
                 catch (HttpRequestException ex) when (MessageIndiqueQuotaGroq(ex.Message))
@@ -272,6 +281,14 @@ namespace smartest_desktop.Services
                     choices.GetArrayLength() > 0)
                 {
                     var firstChoice = choices[0];
+
+                    // Détecter une réponse tronquée par max_tokens
+                    if (firstChoice.TryGetProperty("finish_reason", out var finishReason) &&
+                        finishReason.GetString() == "length")
+                    {
+                        Debug.WriteLine("[GroqService] ⚠️ Réponse tronquée (finish_reason=length) — JSON incomplet possible");
+                    }
+
                     if (firstChoice.TryGetProperty("message", out var message) &&
                         message.TryGetProperty("content", out var textContent))
                     {
@@ -366,47 +383,129 @@ namespace smartest_desktop.Services
         public const int LIMITE_CONTENU_CHARS = TAILLE_CONTEXTE_PAR_LOT;
 
        
-        public static string BuildPromptQcmLot(string contenuCours, int nbQuestions, int numeroDepart)
+        public static string BuildPromptQcmLot(string contenuCours, int nbQuestions, int numeroDepart, string difficulte = "Moyen", IReadOnlyList<string>? avoid = null)
         {
-            return $@"Generate exactly {nbQuestions} multiple-choice questions (QCM) from this course content.
+            string difficultyInstructions = GetDifficultyInstructions(difficulte);
+            string avoidSection = BuildAvoidSection(avoid);
+            return $@"Generate EXACTLY {nbQuestions} multiple-choice questions (QCM) from this course content.
 Start question numbering at {numeroDepart}.
 
+{difficultyInstructions}
+IMPORTANT: Base ALL questions STRICTLY on the provided course content below. Do NOT invent or assume any information not explicitly mentioned in the text.
+{avoidSection}
 Course content:
 {contenuCours}
 
-Return ONLY a JSON array with exactly {nbQuestions} objects. Each object must have:
+Return ONLY a JSON array of EXACTLY {nbQuestions} objects. Each object must have:
 - ""type"": ""QCM""
 - ""enonce"": the question text (in the same language as the course)
-- ""optionA"", ""optionB"", ""optionC"", ""optionD"": the 4 answer choices
-- ""reponseCorrecte"": ""A"", ""B"", ""C"", or ""D""
+- ""optionA"", ""optionB"", ""optionC"", ""optionD"": 4 distinct answer choices
+- ""reponseCorrecte"": exactly one of ""A"", ""B"", ""C"", or ""D""
 - ""explication"": brief explanation of the correct answer
 
+RULES:
+1. Start with [ — nothing before
+2. End with ] — nothing after
+3. EXACTLY {nbQuestions} objects in the array — no more, no less
+4. All 4 options must be distinct and plausible
+5. Strictly respect the difficulty level
 Output ONLY the JSON array, nothing else.";
+        }
+
+        private static string BuildAvoidSection(IReadOnlyList<string>? avoid)
+        {
+            if (avoid == null || avoid.Count == 0) return string.Empty;
+            var lines = avoid
+                .TakeLast(15)
+                .Select((e, i) => $"{i + 1}. \"{(e.Length > 90 ? e[..90] + "…" : e)}\"");
+            return
+                "\nALREADY GENERATED — do NOT repeat, rephrase or paraphrase these questions:\n" +
+                string.Join("\n", lines) +
+                "\nGenerate COMPLETELY DIFFERENT questions covering other aspects of the content.\n";
         }
 
         /// <summary>
         /// Construit le prompt pour un lot de questions d'examen mixtes (QCM + Checkbox + Rédaction).
         /// </summary>
+        private static string GetDifficultyInstructions(string difficulte) => difficulte switch
+        {
+            "Facile" =>
+                "DIFFICULTY: EASY (Facile)\n" +
+                "- Ask about basic definitions and simple facts directly stated in the text\n" +
+                "- Questions should test recall and recognition only\n" +
+                "- Wrong answers (distractors) should be clearly incorrect and easy to eliminate\n" +
+                "- Open answers (REDACTION) should be short and factual (1-2 sentences)\n" +
+                "- Use simple, short sentences\n" +
+                "- Example style: 'Qu'est-ce que X ?' / 'Quel est le rôle de Y ?'",
+
+            "Difficile" =>
+                "DIFFICULTY: HARD (Difficile)\n" +
+                "- Ask about subtle distinctions, implicit relationships, and advanced reasoning\n" +
+                "- Questions should require deep understanding and critical analysis\n" +
+                "- Wrong answers (distractors) must be plausible and require careful thinking to eliminate\n" +
+                "- For CHECKBOX, use 2 or 3 correct answers; prefer 3 when the content allows it\n" +
+                "- Open answers (REDACTION) should require detailed explanation, analysis or comparison (3-5 sentences)\n" +
+                "- Include questions about causes, consequences, comparisons, and exceptions\n" +
+                "- Example style: 'Pourquoi X entraîne-t-il Y dans le contexte de Z ?' / 'Quelle distinction fondamentale existe entre A et B ?'",
+
+            _ => // Moyen (défaut)
+                "DIFFICULTY: MEDIUM (Moyen)\n" +
+                "- Ask about concepts that require understanding, not just memorization\n" +
+                "- Questions should test comprehension and application of ideas\n" +
+                "- Wrong answers (distractors) should be plausible but clearly wrong upon reflection\n" +
+                "- Open answers (REDACTION) should require a structured explanation (2-3 sentences)\n" +
+                "- Mix factual and conceptual questions\n" +
+                "- Example style: 'Comment fonctionne X ?' / 'Quel est l'effet de Y sur Z ?'"
+        };
+
         public static string BuildPromptExamenLot(
             string contenuCours,
             int nbQCM, int nbCheckbox, int nbRedaction,
             string difficulte,
-            int numeroDepart)
+            int numeroDepart,
+            IReadOnlyList<string>? avoid = null)
         {
+            string difficultyInstructions = GetDifficultyInstructions(difficulte);
+            string avoidSection = BuildAvoidSection(avoid);
+            int total = nbQCM + nbCheckbox + nbRedaction;
+
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"Generate exactly {nbQCM + nbCheckbox + nbRedaction} exam questions from this course content.");
-            sb.AppendLine($"Difficulty: {difficulte}. Start numbering at {numeroDepart}.");
-            sb.AppendLine($"Breakdown: {nbQCM} QCM, {nbCheckbox} CHECKBOX (multiple correct answers), {nbRedaction} REDACTION (open answer).");
+            sb.AppendLine($"Generate EXACTLY {total} exam questions from this course content. Start numbering at {numeroDepart}.");
+            sb.AppendLine($"MANDATORY BREAKDOWN — you MUST generate EXACTLY: {nbQCM} questions of type QCM, {nbCheckbox} questions of type CHECKBOX, {nbRedaction} questions of type REDACTION. No substitutions allowed.");
             sb.AppendLine();
+            sb.AppendLine(difficultyInstructions);
+            sb.AppendLine();
+            sb.AppendLine("CRITICAL: Base ALL questions STRICTLY on the provided course content. Do NOT invent or assume any information not explicitly mentioned in the text.");
+            if (!string.IsNullOrEmpty(avoidSection)) sb.AppendLine(avoidSection);
             sb.AppendLine("Course content:");
             sb.AppendLine(contenuCours);
             sb.AppendLine();
-            sb.AppendLine("Return ONLY a JSON array. Each object must have:");
-            sb.AppendLine("- \"type\": \"QCM\", \"CHECKBOX\", or \"REDACTION\"");
-            sb.AppendLine("- \"enonce\": question text (same language as the course)");
-            sb.AppendLine("For QCM: \"optionA\", \"optionB\", \"optionC\", \"optionD\", \"reponseCorrecte\" (A/B/C/D), \"explication\"");
-            sb.AppendLine("For CHECKBOX: \"optionA\"..\"optionD\", \"reponsesCorrectes\" (array of letters like [\"A\",\"C\"]), \"explication\"");
-            sb.AppendLine("For REDACTION: \"reponseModele\" (model answer), \"explication\"");
+            sb.AppendLine("Return ONLY a JSON array of EXACTLY " + total + " objects. Use ONLY these formats:");
+            sb.AppendLine();
+            sb.AppendLine("QCM format (use for EXACTLY " + nbQCM + " questions, exactly 1 correct answer):");
+            sb.AppendLine("{\"type\":\"QCM\",\"enonce\":\"Question?\",\"optionA\":\"...\",\"optionB\":\"...\",\"optionC\":\"...\",\"optionD\":\"...\",\"reponseCorrecte\":\"A\",\"explication\":\"...\"}");
+            if (nbCheckbox > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("CHECKBOX format (use for EXACTLY " + nbCheckbox + " questions, 1 to 4 correct answers — choose the most appropriate number for each question):");
+                sb.AppendLine("{\"type\":\"CHECKBOX\",\"enonce\":\"Question?\",\"optionA\":\"...\",\"optionB\":\"...\",\"optionC\":\"...\",\"optionD\":\"...\",\"reponsesCorrectes\":[\"A\",\"C\"],\"explication\":\"...\"}");
+                sb.AppendLine("Note: reponsesCorrectes is an array of 1 to 4 letters (e.g. [\"B\"], [\"A\",\"C\"], [\"A\",\"B\",\"D\"])");
+            }
+            if (nbRedaction > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("REDACTION format (use for EXACTLY " + nbRedaction + " questions, open answer requiring a written response):");
+                sb.AppendLine("{\"type\":\"REDACTION\",\"enonce\":\"Question?\",\"reponseModele\":\"Complete detailed model answer based on the course...\",\"explication\":\"...\"}");
+            }
+            sb.AppendLine();
+            sb.AppendLine("RULES:");
+            sb.AppendLine("1. Start with [ — nothing before");
+            sb.AppendLine("2. End with ] — nothing after");
+            sb.AppendLine($"3. EXACTLY {total} objects total: {nbQCM} QCM + {nbCheckbox} CHECKBOX + {nbRedaction} REDACTION");
+            sb.AppendLine("4. \"type\" field must be exactly \"QCM\", \"CHECKBOX\", or \"REDACTION\"");
+            sb.AppendLine("5. Same language as the course content");
+            sb.AppendLine("6. Strictly respect the difficulty level");
+            sb.AppendLine("7. All options (A/B/C/D) must be distinct and plausible");
             sb.AppendLine("Output ONLY the JSON array, nothing else.");
 
             return sb.ToString();

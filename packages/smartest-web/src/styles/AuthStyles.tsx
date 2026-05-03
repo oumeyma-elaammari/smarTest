@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Loader2, AlertCircle, CheckCircle, ArrowLeft, Eye, EyeOff, Mail } from 'lucide-react'
+import { AlertCircle, CheckCircle, ArrowLeft, Eye, EyeOff, Mail } from 'lucide-react'
 
 // ════════════════════════════════════════════════════
 //  STYLES — objets React.CSSProperties

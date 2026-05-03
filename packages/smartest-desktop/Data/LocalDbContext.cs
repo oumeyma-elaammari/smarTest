@@ -1,10 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using smartest_desktop.Data.LocalEntities;
+using System.IO;
 
 namespace smartest_desktop.Data
 {
     public class LocalDbContext : DbContext
     {
+        private static string _cheminBase = "smartest_local.db";
+
+        /// <summary>
+        /// Chemin vers la base SQLite. Doit être défini via App.InitialiserPourEmail()
+        /// avant de créer une instance de LocalDbContext.
+        /// </summary>
+        public static string CheminBase
+        {
+            get => _cheminBase;
+            set
+            {
+                string? dir = Path.GetDirectoryName(value);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+                _cheminBase = value;
+            }
+        }
         // ══════════════════════════════════════════════════════════
         //  TABLES SQLite
         // ══════════════════════════════════════════════════════════
@@ -24,7 +42,7 @@ namespace smartest_desktop.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite("Data Source=smartest_local.db");
+            options.UseSqlite($"Data Source={CheminBase}");
         }
 
         // ══════════════════════════════════════════════════════════

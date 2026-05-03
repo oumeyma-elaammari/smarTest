@@ -6,7 +6,7 @@ import {
 
 const steps = [
     { step: '1', text: 'Ouvrez votre boîte mail académique' },
-    { step: '2', text: 'Cherchez un email de SmarTest' },
+    { step: '2', text: <>Cherchez un email de Smar<span style={{ color: '#4f8ef7' }}>Test</span></> },
     { step: '3', text: <>Cliquez sur <strong>"Confirmer mon email"</strong></> },
     { step: '4', text: 'Connectez-vous à la plateforme' },
 ]
@@ -16,7 +16,7 @@ export default function EmailSent() {
         <main style={pageStyle}>
             <div style={{ ...cardStyle, maxWidth: 450, textAlign: 'center' }}>
 
-                <h1 style={brandStyle}>SmarTest</h1>
+                <h1 style={brandStyle}>Smar<span style={{ color: '#4f8ef7' }}>Test</span></h1>
                 <p style={brandSubStyle}>Plateforme d'évaluation</p>
 
                 <div style={{

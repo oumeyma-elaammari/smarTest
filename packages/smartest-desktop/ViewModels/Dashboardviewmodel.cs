@@ -219,19 +219,7 @@ namespace smartest_desktop.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
-            new Services.SessionService(App.LocalDb).SupprimerSession();
-
-            WpfApp.Current.Properties["Token"] = null;
-            WpfApp.Current.Properties["Nom"] = null;
-            WpfApp.Current.Properties["Email"] = null;
-
-            var login = new Views.LoginWindow();
-            login.Show();
-
-            foreach (Window w in WpfApp.Current.Windows)
-            {
-                if (w is Views.DashboardWindow) { w.Close(); break; }
-            }
+            App.Deconnecter();
         }
 
 

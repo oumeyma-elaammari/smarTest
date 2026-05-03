@@ -169,6 +169,19 @@
 							<TextBlock Text="Questions du quiz" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
 							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
 									   Text="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
+							<Button Margin="0,14,0,0" HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="14,9" Cursor="Hand"
+                                    Background="#f0f3f9" BorderBrush="#e2e8f4" BorderThickness="1"
+                                    Command="{Binding AjouterQuestionCommand}"
+                                    FocusVisualStyle="{x:Null}">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                               Foreground="#0f1e3d" Margin="0,0,8,0" VerticalAlignment="Center"/>
+									<TextBlock Text="Ajouter une question" FontSize="12" FontWeight="600" Foreground="#444444"
+                                               VerticalAlignment="Center"/>
+								</StackPanel>
+							</Button>
 						</StackPanel>
 					</Border>
 
@@ -351,12 +364,41 @@
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
-										<StackPanel>
-											<TextBlock Text="A" FontSize="10" FontWeight="700"
-                                                       Foreground="#6B6B6B" Margin="0,0,0,4"/>
-											<TextBox Style="{StaticResource QREditField}"
-                                                     Text="{Binding OptionA, UpdateSourceTrigger=PropertyChanged}"/>
-										</StackPanel>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="*"/>
+												<ColumnDefinition Width="Auto"/>
+											</Grid.ColumnDefinitions>
+											<StackPanel Grid.Column="0">
+												<TextBlock Text="A" FontSize="10" FontWeight="700"
+                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+												<TextBox Style="{StaticResource QREditField}"
+                                                         Text="{Binding OptionA, UpdateSourceTrigger=PropertyChanged}"/>
+											</StackPanel>
+											<Border Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    Cursor="Hand" ToolTip="Indiquer comme bonne réponse">
+												<Border.InputBindings>
+													<MouseBinding MouseAction="LeftClick"
+                                                                  Command="{Binding DataContext.SetReponseCorrecteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  CommandParameter="A"/>
+												</Border.InputBindings>
+												<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+													<TextBlock.Style>
+														<Style TargetType="TextBlock">
+															<Setter Property="Text" Value="&#xE719;"/>
+															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Style.Triggers>
+																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="A">
+																	<Setter Property="Text" Value="&#xE73E;"/>
+																	<Setter Property="Foreground" Value="#16A34A"/>
+																</DataTrigger>
+															</Style.Triggers>
+														</Style>
+													</TextBlock.Style>
+												</TextBlock>
+											</Border>
+										</Grid>
 									</Border>
 
 									<!-- Option B -->
@@ -374,12 +416,41 @@
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
-										<StackPanel>
-											<TextBlock Text="B" FontSize="10" FontWeight="700"
-                                                       Foreground="#6B6B6B" Margin="0,0,0,4"/>
-											<TextBox Style="{StaticResource QREditField}"
-                                                     Text="{Binding OptionB, UpdateSourceTrigger=PropertyChanged}"/>
-										</StackPanel>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="*"/>
+												<ColumnDefinition Width="Auto"/>
+											</Grid.ColumnDefinitions>
+											<StackPanel Grid.Column="0">
+												<TextBlock Text="B" FontSize="10" FontWeight="700"
+                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+												<TextBox Style="{StaticResource QREditField}"
+                                                         Text="{Binding OptionB, UpdateSourceTrigger=PropertyChanged}"/>
+											</StackPanel>
+											<Border Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    Cursor="Hand" ToolTip="Indiquer comme bonne réponse">
+												<Border.InputBindings>
+													<MouseBinding MouseAction="LeftClick"
+                                                                  Command="{Binding DataContext.SetReponseCorrecteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  CommandParameter="B"/>
+												</Border.InputBindings>
+												<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+													<TextBlock.Style>
+														<Style TargetType="TextBlock">
+															<Setter Property="Text" Value="&#xE719;"/>
+															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Style.Triggers>
+																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="B">
+																	<Setter Property="Text" Value="&#xE73E;"/>
+																	<Setter Property="Foreground" Value="#16A34A"/>
+																</DataTrigger>
+															</Style.Triggers>
+														</Style>
+													</TextBlock.Style>
+												</TextBlock>
+											</Border>
+										</Grid>
 									</Border>
 
 									<!-- Option C -->
@@ -397,12 +468,41 @@
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
-										<StackPanel>
-											<TextBlock Text="C" FontSize="10" FontWeight="700"
-                                                       Foreground="#6B6B6B" Margin="0,0,0,4"/>
-											<TextBox Style="{StaticResource QREditField}"
-                                                     Text="{Binding OptionC, UpdateSourceTrigger=PropertyChanged}"/>
-										</StackPanel>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="*"/>
+												<ColumnDefinition Width="Auto"/>
+											</Grid.ColumnDefinitions>
+											<StackPanel Grid.Column="0">
+												<TextBlock Text="C" FontSize="10" FontWeight="700"
+                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+												<TextBox Style="{StaticResource QREditField}"
+                                                         Text="{Binding OptionC, UpdateSourceTrigger=PropertyChanged}"/>
+											</StackPanel>
+											<Border Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    Cursor="Hand" ToolTip="Indiquer comme bonne réponse">
+												<Border.InputBindings>
+													<MouseBinding MouseAction="LeftClick"
+                                                                  Command="{Binding DataContext.SetReponseCorrecteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  CommandParameter="C"/>
+												</Border.InputBindings>
+												<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+													<TextBlock.Style>
+														<Style TargetType="TextBlock">
+															<Setter Property="Text" Value="&#xE719;"/>
+															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Style.Triggers>
+																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="C">
+																	<Setter Property="Text" Value="&#xE73E;"/>
+																	<Setter Property="Foreground" Value="#16A34A"/>
+																</DataTrigger>
+															</Style.Triggers>
+														</Style>
+													</TextBlock.Style>
+												</TextBlock>
+											</Border>
+										</Grid>
 									</Border>
 
 									<!-- Option D -->
@@ -420,12 +520,41 @@
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
-										<StackPanel>
-											<TextBlock Text="D" FontSize="10" FontWeight="700"
-                                                       Foreground="#6B6B6B" Margin="0,0,0,4"/>
-											<TextBox Style="{StaticResource QREditField}"
-                                                     Text="{Binding OptionD, UpdateSourceTrigger=PropertyChanged}"/>
-										</StackPanel>
+										<Grid>
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="*"/>
+												<ColumnDefinition Width="Auto"/>
+											</Grid.ColumnDefinitions>
+											<StackPanel Grid.Column="0">
+												<TextBlock Text="D" FontSize="10" FontWeight="700"
+                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+												<TextBox Style="{StaticResource QREditField}"
+                                                         Text="{Binding OptionD, UpdateSourceTrigger=PropertyChanged}"/>
+											</StackPanel>
+											<Border Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                    Cursor="Hand" ToolTip="Indiquer comme bonne réponse">
+												<Border.InputBindings>
+													<MouseBinding MouseAction="LeftClick"
+                                                                  Command="{Binding DataContext.SetReponseCorrecteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  CommandParameter="D"/>
+												</Border.InputBindings>
+												<TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+													<TextBlock.Style>
+														<Style TargetType="TextBlock">
+															<Setter Property="Text" Value="&#xE719;"/>
+															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Style.Triggers>
+																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="D">
+																	<Setter Property="Text" Value="&#xE73E;"/>
+																	<Setter Property="Foreground" Value="#16A34A"/>
+																</DataTrigger>
+															</Style.Triggers>
+														</Style>
+													</TextBlock.Style>
+												</TextBlock>
+											</Border>
+										</Grid>
 									</Border>
 								</Grid>
 							</StackPanel>

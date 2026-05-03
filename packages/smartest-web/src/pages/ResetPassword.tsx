@@ -45,7 +45,7 @@ export default function ResetPassword() {
     if (!token) return (
         <main style={pageStyle}>
             <div style={{ ...cardStyle, textAlign: 'center' }}>
-                <h1 style={brandStyle}>SmarTest</h1>
+                <h1 style={brandStyle}>Smar<span style={{ color: '#4f8ef7' }}>Test</span></h1>
                 <p style={brandSubStyle}>Plateforme d'évaluation</p>
                 <div style={{
                     width: 56, height: 56, borderRadius: '50%',
@@ -97,7 +97,7 @@ export default function ResetPassword() {
         <main style={pageStyle}>
             <div style={cardStyle}>
 
-                <h1 style={brandStyle}>SmarTest</h1>
+                <h1 style={brandStyle}>Smar<span style={{ color: '#4f8ef7' }}>Test</span></h1>
                 <p style={brandSubStyle}>Plateforme d'évaluation</p>
 
                 <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
