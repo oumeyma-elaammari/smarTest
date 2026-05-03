@@ -21,7 +21,6 @@ type LoginForm = z.infer<typeof loginSchema>
 const ERR = {
     INVALID_CREDENTIALS: 'Email ou mot de passe incorrect',
     NOT_STUDENT:         "Ce compte n'est pas un compte étudiant",
-    EMAIL_NOT_VERIFIED:  'Veuillez confirmer votre email avant de vous connecter',
     NETWORK_ERROR:       'Impossible de contacter le serveur',
     SERVER_ERROR:        'Erreur serveur. Réessayez plus tard',
     UNKNOWN:             'Une erreur inattendue est survenue',
@@ -62,7 +61,7 @@ export default function Login() {
             if (!error?.response) { setLoginError(ERR.NETWORK_ERROR); return }
             const s = error.response.status
             if (s === 401)      setLoginError(ERR.INVALID_CREDENTIALS)
-            else if (s === 403) setLoginError(ERR.EMAIL_NOT_VERIFIED)
+            else if (s === 403) { navigate('/email-sent', { state: { email: data.email.trim().toLowerCase() } }); return }
             else if (s >= 500)  setLoginError(ERR.SERVER_ERROR)
             else                setLoginError(ERR.UNKNOWN)
         }

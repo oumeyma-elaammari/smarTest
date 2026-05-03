@@ -87,11 +87,11 @@
 
 				<StackPanel Grid.Row="0" Margin="22,28,22,32">
 					<StackPanel Orientation="Horizontal">
-						<Ellipse Width="8" Height="8" Fill="#4f8ef7"
+						<Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}"
                                  VerticalAlignment="Center" Margin="0,0,8,0"/>
 						<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold"
-                                   Foreground="#0f1e3d" VerticalAlignment="Center">
-							Smar<Run Foreground="#4f8ef7">Test</Run>
+						   Foreground="{StaticResource NavyBrush}" VerticalAlignment="Center">
+							Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
 						</TextBlock>
 					</StackPanel>
 					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#8899b8" Margin="16,5,0,0"/>

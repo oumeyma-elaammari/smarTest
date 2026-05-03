@@ -64,11 +64,11 @@ export default function Register() {
                 password:        data.password,
                 confirmPassword: data.confirmPassword,
             })
-            navigate('/email-sent')
+            navigate('/email-sent', { state: { email: data.email.trim().toLowerCase() } })
         } catch (err: any) {
             setIsLoading(false)
             if (!err?.response)                   { setError('Impossible de contacter le serveur.'); return }
-            if (err.response.status === 403)      { navigate('/email-sent'); return }
+            if (err.response.status === 403)      { navigate('/email-sent', { state: { email: data.email.trim().toLowerCase() } }); return }
             if (err.response.status === 409)      setError('Cet email est déjà utilisé.')
             else if (err.response.status >= 500)  setError('Erreur serveur. Réessayez plus tard.')
             else                                  setError('Une erreur inattendue est survenue.')

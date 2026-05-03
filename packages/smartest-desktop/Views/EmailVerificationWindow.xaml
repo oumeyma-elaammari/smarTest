@@ -29,7 +29,9 @@
 
 			<StackPanel>
 
-				<TextBlock Text="SmarTest" Style="{StaticResource BrandTitle}"/>
+				<TextBlock Style="{StaticResource BrandTitleSplit}">
+					Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
+				</TextBlock>
 				<TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
 
 				<Border Style="{StaticResource IconRing}">
