@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+.env
+*.log
+.DS_Store
+**/.vs/
+**/.idea/
+.idea/
+packages/smartest-backend/.idea/
+bin/
+obj/
+*.exe
+*.dll
+
+*.db
+*.sqlite
+*.sqlite3
+# SQLite fichiers auxiliaires (toujours locaux)
+*.db-shm
+*.db-wal
+# Base locale app desktop  ne pas versionner
+**/smartest_local.db*
