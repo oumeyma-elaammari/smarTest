@@ -27,12 +27,12 @@
 		<Ellipse Width="500" Height="500"
                  HorizontalAlignment="Right" VerticalAlignment="Top"
                  Margin="0,-200,-120,0"
-                 Fill="#4f8ef7" Opacity="0.05"
+                 Fill="{StaticResource AccentBrush}" Opacity="0.05"
                  Grid.RowSpan="3"/>
 		<Ellipse Width="350" Height="350"
                  HorizontalAlignment="Left" VerticalAlignment="Bottom"
                  Margin="-80,0,0,-120"
-                 Fill="#0f1e3d" Opacity="0.03"
+                 Fill="{StaticResource NavyBrush}" Opacity="0.03"
                  Grid.RowSpan="3"/>
 
 		<!-- NAVBAR -->
@@ -41,10 +41,10 @@
                 Padding="56,0" Height="48">
 			<Grid>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-					<Ellipse Width="8" Height="8" Fill="#4f8ef7" Margin="0,0,10,0"/>
+					<Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}" Margin="0,0,10,0"/>
 					<TextBlock FontFamily="Georgia" FontSize="20" FontWeight="Bold"
-                               Foreground="#0f1e3d" VerticalAlignment="Center">
-						Smar<Run Foreground="#4f8ef7">Test</Run>
+                               Foreground="{StaticResource NavyBrush}" VerticalAlignment="Center">
+						Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
 					</TextBlock>
 				</StackPanel>
 				<Border HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -68,17 +68,17 @@
                         Padding="18,6" HorizontalAlignment="Center"
                         Margin="0,0,0,24">
 					<StackPanel Orientation="Horizontal">
-						<Ellipse Width="6" Height="6" Fill="#4f8ef7"
+						<Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}"
                                  VerticalAlignment="Center" Margin="0,0,8,0"/>
 						<TextBlock Text="PLATEFORME D'ÉVALUATION INTELLIGENTE"
-                                   FontSize="10" Foreground="#4f8ef7" FontWeight="Bold"/>
+                                   FontSize="10" Foreground="{StaticResource AccentBrush}" FontWeight="Bold"/>
 					</StackPanel>
 				</Border>
 
 				<!-- Titre -->
 				<TextBlock FontFamily="Georgia" FontSize="52" FontWeight="Bold"
-						   Foreground="#0f1e3d" HorizontalAlignment="Center">
-					Smar<Run Foreground="#4f8ef7">Test</Run>
+						   Foreground="{StaticResource NavyBrush}" HorizontalAlignment="Center">
+					Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
 				</TextBlock>
 
 				<!-- Sous-titre -->
@@ -87,7 +87,7 @@
                            HorizontalAlignment="Center" Margin="0,0,0,14"/>
 
 				<!-- Ligne accent -->
-				<Border Width="44" Height="2" Background="#0f1e3d"
+				<Border Width="44" Height="2" Background="{StaticResource NavyBrush}"
                         CornerRadius="2" HorizontalAlignment="Center"
                         Margin="0,0,0,22"/>
 

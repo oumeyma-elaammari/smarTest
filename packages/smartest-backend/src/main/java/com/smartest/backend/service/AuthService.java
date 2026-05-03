@@ -182,6 +182,22 @@ public class AuthService {
     }
 
     // ══════════════════════════════════════════════
+    //  RENVOYER LE LIEN de vérification étudiant
+    // ══════════════════════════════════════════════
+    public void resendVerificationEmailEtudiant(String email) {
+        var etudiant = etudiantRepository.findByEmail(email)
+                .orElseThrow(InvalidTokenException::new);
+
+        if (etudiant.isEmailVerifie()) return;
+
+        String token = UUID.randomUUID().toString();
+        etudiant.setTokenVerification(token);
+        etudiantRepository.save(etudiant);
+
+        emailService.sendVerificationEmail(email, token, "ETUDIANT");
+    }
+
+    // ══════════════════════════════════════════════
     //  LOGIN
     // ══════════════════════════════════════════════
     public AuthResponse login(LoginRequest request) {

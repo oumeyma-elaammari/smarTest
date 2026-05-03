@@ -40,7 +40,8 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/verify-email",
                                 "/auth/verify-email/code",    // ✅ vérification par code (desktop)
-                                "/auth/verify-email/resend",  // ✅ renvoi du code (desktop)
+                                "/auth/verify-email/resend",          // ✅ renvoi du code (desktop)
+                                "/auth/verify-email/resend/etudiant", // ✅ renvoi du lien (web)
                                 "/auth/forgot-password/etudiant",
                                 "/auth/forgot-password/professeur",
                                 "/auth/reset-password/etudiant",

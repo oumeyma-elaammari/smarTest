@@ -117,6 +117,17 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/verify-email/resend/etudiant")
+    public ResponseEntity<String> resendVerificationEmailEtudiant(@RequestParam String email) {
+        try {
+            authService.resendVerificationEmailEtudiant(email);
+            return ResponseEntity.ok("Email de vérification renvoyé.");
+        } catch (InvalidTokenException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Compte introuvable.");
+        }
+    }
+
     @PostMapping("/forgot-password/etudiant")
     public ResponseEntity<String> forgotPasswordEtudiant(@RequestBody ForgotPasswordRequest request) {
         authService.forgotPasswordEtudiant(request.getEmail());

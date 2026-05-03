@@ -15,7 +15,11 @@
 	</Window.DataContext>
 
 	<Window.Resources>
-		<BooleanToVisibilityConverter x:Key="BoolToVis"/>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+			</ResourceDictionary.MergedDictionaries>
+			<BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
 		<Style x:Key="Card" TargetType="Border">
 			<Setter Property="Background" Value="White"/>
@@ -152,6 +156,7 @@
 				</MultiDataTrigger>
 			</DataTemplate.Triggers>
 		</DataTemplate>
+		</ResourceDictionary>
 	</Window.Resources>
 
 	<Grid>
@@ -180,13 +185,13 @@
 				</Border>
 
 				<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-					<Border Width="8" Height="8" CornerRadius="4" Background="#1A1A1A"
+					<Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}"
                             VerticalAlignment="Center" Margin="0,0,8,0"/>
-					<TextBlock FontSize="17" FontWeight="700" Foreground="#1A1A1A">
-						<Run Text="Smar"/>
-						<Run Text="Test" Foreground="#6B6B6B"/>
+					<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold"
+                               Foreground="{StaticResource NavyBrush}" VerticalAlignment="Center">
+						Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
 					</TextBlock>
-					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#ABABAB" Margin="16,2,0,0"/>
+					<TextBlock Text="Espace professeur" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="16,2,0,0"/>
 				</StackPanel>
 
 				<Border Grid.Column="2" Background="#F0EFE8" CornerRadius="10" Padding="12,8">
