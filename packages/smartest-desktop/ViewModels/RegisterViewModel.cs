@@ -93,6 +93,12 @@ namespace smartest_desktop.ViewModels
 
             if (error != null)
             {
+                if (error == AuthService.EmailNotVerifiedCode)
+                {
+                    var windowVerification = new Views.EmailVerificationWindow(Email.Trim().ToLower());
+                    NavigationService.NavigateTo<Views.RegisterWindow>(windowVerification);
+                    return;
+                }
                 ErrorMessage = error;
                 return;
             }

@@ -240,14 +240,7 @@ namespace smartest_desktop.ViewModels
                 MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
-
-            new Services.SessionService(App.LocalDb).SupprimerSession();
-
-            WpfApp.Current.Properties["Token"] = null;
-            WpfApp.Current.Properties["Nom"] = null;
-            WpfApp.Current.Properties["Email"] = null;
-
-            NavigateToLogin?.Invoke();
+            App.Deconnecter();
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -453,12 +446,13 @@ namespace smartest_desktop.ViewModels
                             await Task.Delay(2000, token);
                         }
 
+                        var enoncesExistants = toutesQuestions.Select(q => q.Enonce).ToList();
                         string prompt = tentative == 1
-                            ? BuildPrompt(contenuLot, nbCeLot, Difficulte)
-                            : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte);
+                            ? BuildPrompt(contenuLot, nbCeLot, Difficulte, enoncesExistants)
+                            : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte, enoncesExistants);
 
                         var sw = System.Diagnostics.Stopwatch.StartNew();
-                        var reponse = await _groq.GenererAvecRetryAsync(prompt, token);
+                        var reponse = await _groq.GenererAvecRetryAsync(prompt, token, GroqService.TemperaturePourDifficulte(Difficulte));
                         sw.Stop();
                         var duree = sw.Elapsed;
                         dureeTotale += duree;
@@ -642,15 +636,29 @@ namespace smartest_desktop.ViewModels
                 "- Example question style: 'Comment fonctionne X ?' / 'Quel est l'effet de Y sur Z ?'"
         };
 
-        private string BuildPrompt(string contenu, int nbQuestions, string difficulte)
+        private static string BuildAvoidSection(IReadOnlyList<string>? avoid)
+        {
+            if (avoid == null || avoid.Count == 0) return string.Empty;
+            var lines = avoid
+                .TakeLast(15)
+                .Select((e, i) => $"{i + 1}. \"{(e.Length > 90 ? e[..90] + "…" : e)}\"");
+            return
+                "\nALREADY GENERATED — do NOT repeat, rephrase or paraphrase these questions:\n" +
+                string.Join("\n", lines) +
+                "\nGenerate COMPLETELY DIFFERENT questions covering other aspects of the content.\n";
+        }
+
+        private string BuildPrompt(string contenu, int nbQuestions, string difficulte, IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
+            string avoidSection = BuildAvoidSection(avoid);
 
             return
 $@"Generate EXACTLY {nbQuestions} multiple-choice questions in FRENCH about the text below.
 
 {difficultyInstructions}
-
+IMPORTANT: Base ALL questions STRICTLY on the provided text. Do NOT invent or assume any information not explicitly present in the text.
+{avoidSection}
 TEXT:
 {contenu}
 
@@ -665,13 +673,15 @@ RULES:
 3. reponseCorrecte = exactly one of: A, B, C or D
 4. EXACTLY {nbQuestions} objects in the array
 5. All text in French
-6. Respect the difficulty level strictly — adapt complexity of questions AND distractors
-7. No commentary outside the JSON array";
+6. All 4 options must be distinct and plausible
+7. Respect the difficulty level strictly — adapt complexity of questions AND distractors
+8. No commentary outside the JSON array";
         }
 
-        private string BuildPromptStrict(string contenu, int nbQuestions, string difficulte)
+        private string BuildPromptStrict(string contenu, int nbQuestions, string difficulte, IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
+            string avoidSection = BuildAvoidSection(avoid);
             int texteLength = Math.Min(contenu.Length, 4000);
             string texteTronque = contenu.Length > texteLength ? contenu[..texteLength] : contenu;
 
@@ -679,7 +689,8 @@ RULES:
 $@"GÉNÉRATION STRICTE DE {nbQuestions} QUESTIONS QCM EN FRANÇAIS
 
 {difficultyInstructions}
-
+IMPORTANT: Baser TOUTES les questions UNIQUEMENT sur le texte fourni. Ne pas inventer d'informations absentes du texte.
+{avoidSection}
 TEXTE SOURCE:
 {texteTronque}
 
@@ -688,6 +699,7 @@ INSTRUCTIONS OBLIGATOIRES:
 2. FORMAT: UNIQUEMENT JSON, AUCUN TEXTE AVANT OU APRÈS
 3. COMMENCER PAR [ ET TERMINER PAR ]
 4. Respecter strictement le niveau de difficulté indiqué ci-dessus
+5. Les 4 options (A/B/C/D) doivent être distinctes et plausibles
 
 FORMAT:
 [
@@ -701,42 +713,15 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
         // CORRECTION DU NOMBRE DE QUESTIONS
         // ══════════════════════════════════════════════════════════════════════
 
-        private List<QuestionQCM> CorrigerNombreQuestions(List<QuestionQCM> questions, int nbSouhaite)
+        private static List<QuestionQCM> CorrigerNombreQuestions(List<QuestionQCM> questions, int nbSouhaite)
         {
-            if (questions.Count == nbSouhaite)
-                return questions;
-
             if (questions.Count > nbSouhaite)
             {
                 Debug.WriteLine($"[Corriger] TROP de questions: {questions.Count}, garde {nbSouhaite}");
                 return questions.Take(nbSouhaite).ToList();
             }
-            else
-            {
-                Debug.WriteLine($"[Corriger] PAS ASSEZ: {questions.Count}/{nbSouhaite}, duplication");
-                var result = new List<QuestionQCM>(questions);
-                int index = 0;
-
-                while (result.Count < nbSouhaite && result.Count > 0)
-                {
-                    var original = questions[index % questions.Count];
-                    var duplique = new QuestionQCM
-                    {
-                        Enonce = $"{original.Enonce} (variante)",
-                        OptionA = original.OptionA,
-                        OptionB = original.OptionB,
-                        OptionC = original.OptionC,
-                        OptionD = original.OptionD,
-                        ReponseCorrecte = original.ReponseCorrecte,
-                        Explication = original.Explication,
-                        Numero = result.Count + 1
-                    };
-                    result.Add(duplique);
-                    index++;
-                }
-
-                return result;
-            }
+            // Si pas assez, on retourne ce qu'on a sans dupliquer
+            return questions;
         }
 
         // ══════════════════════════════════════════════════════════════════════

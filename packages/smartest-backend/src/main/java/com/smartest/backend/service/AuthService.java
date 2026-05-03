@@ -54,8 +54,18 @@ public class AuthService {
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
 
-        if (professeurRepository.existsByEmail(request.getEmail()))
+        var existingProf = professeurRepository.findByEmail(request.getEmail());
+        if (existingProf.isPresent()) {
+            if (!existingProf.get().isEmailVerifie()) {
+                String code = generateCode();
+                existingProf.get().setTokenVerification(code);
+                existingProf.get().setTokenVerificationExpiry(LocalDateTime.now().plusMinutes(15));
+                professeurRepository.save(existingProf.get());
+                emailService.sendVerificationCode(request.getEmail(), code);
+                throw new EmailNotVerifiedException();
+            }
             throw new EmailAlreadyUsedException(request.getEmail());
+        }
         if (etudiantRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
 
@@ -83,8 +93,17 @@ public class AuthService {
         if (!request.getPassword().equals(request.getConfirmPassword()))
             throw new PasswordMismatchException();
 
-        if (etudiantRepository.existsByEmail(request.getEmail()))
+        var existingEtudiant = etudiantRepository.findByEmail(request.getEmail());
+        if (existingEtudiant.isPresent()) {
+            if (!existingEtudiant.get().isEmailVerifie()) {
+                String token = UUID.randomUUID().toString();
+                existingEtudiant.get().setTokenVerification(token);
+                etudiantRepository.save(existingEtudiant.get());
+                emailService.sendVerificationEmail(request.getEmail(), token, "ETUDIANT");
+                throw new EmailNotVerifiedException();
+            }
             throw new EmailAlreadyUsedException(request.getEmail());
+        }
         if (professeurRepository.existsByEmail(request.getEmail()))
             throw new EmailAlreadyUsedException(request.getEmail());
 

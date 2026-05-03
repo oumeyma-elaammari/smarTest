@@ -65,7 +65,12 @@ namespace smartest_desktop.ViewModels
         // ── Commandes ─────────────────────────────────────────────────────────
         public ICommand SelectionnerQuestionCommand { get; }
         public ICommand SupprimerQuestionCommand { get; }
+        public ICommand AjouterQuestionCommand { get; }
+        /// <summary>Paramètre : A, B, C ou D — définit la réponse correcte du QCM sélectionné.</summary>
+        public ICommand SetReponseCorrecteCommand { get; }
         public ICommand ValiderQuizCommand { get; }
+
+        private readonly RelayCommand _validerQuizCommandRelay;
         public ICommand RegenerarCommand { get; }
         public ICommand RetourCommand { get; }
 
@@ -189,8 +194,31 @@ namespace smartest_desktop.ViewModels
                     _ = SupprimerQuizVideEtFermerAsync();
             });
 
+            // Commande : ajouter une question vide (saisie manuelle)
+            AjouterQuestionCommand = new RelayCommand(_ =>
+            {
+                var q = new QuestionQCM
+                {
+                    Enonce = "Nouvelle question",
+                    ReponseCorrecte = string.Empty,
+                };
+                Questions.Add(q);
+                RenuméroterQuestions();
+                OnPropertyChanged(nameof(NombreQuestions));
+                OnPropertyChanged(nameof(SousTitreCompteur));
+                QuestionSelectionnee = q;
+            });
+
+            SetReponseCorrecteCommand = new RelayCommand(p =>
+            {
+                if (p is not string lettre) return;
+                if (QuestionSelectionnee == null) return;
+                QuestionSelectionnee.ReponseCorrecte = lettre.Trim().ToUpperInvariant();
+                OnPropertyChanged(nameof(QuestionSelectionnee));
+            });
+
             // Commande : valider le quiz
-            ValiderQuizCommand = new RelayCommand(
+            _validerQuizCommandRelay = new RelayCommand(
                 _ =>
                 {
                     if (Questions.Count == 0)
@@ -234,6 +262,9 @@ namespace smartest_desktop.ViewModels
                     QuizValide?.Invoke(Questions, TitreQuiz, Difficulte, CoursSourceTitre, Statut);
                 },
                 _ => Questions.Count > 0);
+            ValiderQuizCommand = _validerQuizCommandRelay;
+
+            Questions.CollectionChanged += (_, __) => _validerQuizCommandRelay.RaiseCanExecuteChanged();
 
             // Commande : regénérer (masquée en édition d’un quiz déjà enregistré)
             RegenerarCommand = new RelayCommand(_ =>
@@ -251,18 +282,28 @@ namespace smartest_desktop.ViewModels
             // Commande : retour
             RetourCommand = new RelayCommand(_ =>
             {
+                // Pas encore enregistré en base : toujours confirmer (même sans modification d'empreinte)
+                if (!IsEditionQuizExistant)
+                {
+                    var resNouveau = MessageBox.Show(
+                        "Quitter sans sauvegarder ?\n" +
+                        "Le quiz n'est pas enregistré dans la base locale. Vous perdrez le contenu généré.",
+                        "Quitter sans sauvegarder",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+                    if (resNouveau == MessageBoxResult.Yes)
+                        NavigationRetourRequested?.Invoke();
+                    return;
+                }
+
                 if (!ADesModificationsDepuisOuverture())
                 {
                     NavigationRetourRequested?.Invoke();
                     return;
                 }
 
-                string msg = IsEditionQuizExistant
-                    ? "Quitter sans enregistrer les modifications ?\nLes changements seront perdus."
-                    : "Quitter sans sauvegarder ?\nLe quiz généré sera perdu.";
-
                 var res = MessageBox.Show(
-                    msg,
+                    "Quitter sans enregistrer les modifications ?\nLes changements seront perdus.",
                     "Confirmation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);

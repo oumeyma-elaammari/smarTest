@@ -10,6 +10,8 @@ namespace smartest_desktop.Services
 {
     public class AuthService
     {
+        public const string EmailNotVerifiedCode = "__EMAIL_NOT_VERIFIED__";
+
         private readonly HttpClient _httpClient;
         private const string BaseUrl = "http://localhost:8081";
 
@@ -42,6 +44,7 @@ namespace smartest_desktop.Services
 
                 return (int)response.StatusCode switch
                 {
+                    403 => EmailNotVerifiedCode,
                     409 => "Cet email est déjà utilisé par un autre compte",
                     400 => ParseValidationError(content),
                     500 => "Erreur serveur. Réessayez plus tard",
@@ -137,7 +140,7 @@ namespace smartest_desktop.Services
                         error = "Email ou mot de passe incorrect";
                 }
                 else if (status == 403)
-                    error = "Email non confirmé. Vérifiez votre boîte mail.";
+                    error = EmailNotVerifiedCode;
                 else if (status == 400)
                     error = ParseValidationError(content);
                 else if (status >= 500)

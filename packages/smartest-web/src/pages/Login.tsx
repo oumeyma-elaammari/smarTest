@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -72,7 +72,7 @@ export default function Login() {
         <main style={pageStyle}>
             <div style={cardStyle}>
 
-                <h1 style={brandStyle}>SmarTest</h1>
+                <h1 style={brandStyle}>Smar<span style={{ color: '#4f8ef7' }}>Test</span></h1>
                 <p style={brandSubStyle}>Plateforme d'évaluation</p>
 
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>

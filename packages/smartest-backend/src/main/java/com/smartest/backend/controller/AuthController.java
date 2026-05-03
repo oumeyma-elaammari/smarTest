@@ -31,6 +31,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(message);
         } catch (PasswordMismatchException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (EmailNotVerifiedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("EMAIL_NOT_VERIFIED");
         } catch (EmailAlreadyUsedException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
@@ -43,6 +45,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CREATED).body(message);
         } catch (PasswordMismatchException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (EmailNotVerifiedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("EMAIL_NOT_VERIFIED");
         } catch (EmailAlreadyUsedException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
@@ -53,6 +57,8 @@ public class AuthController {
         try {
             AuthResponse response = authService.login(request);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (EmailNotVerifiedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("EMAIL_NOT_VERIFIED");
         } catch (InvalidPasswordException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         } catch (AccountNotFoundException e) {

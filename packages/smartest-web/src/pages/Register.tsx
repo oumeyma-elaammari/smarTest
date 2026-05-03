@@ -66,11 +66,12 @@ export default function Register() {
             })
             navigate('/email-sent')
         } catch (err: any) {
-            if (!err?.response)                   setError('Impossible de contacter le serveur.')
-            else if (err.response.status === 409) setError('Cet email est déjà utilisé.')
+            setIsLoading(false)
+            if (!err?.response)                   { setError('Impossible de contacter le serveur.'); return }
+            if (err.response.status === 403)      { navigate('/email-sent'); return }
+            if (err.response.status === 409)      setError('Cet email est déjà utilisé.')
             else if (err.response.status >= 500)  setError('Erreur serveur. Réessayez plus tard.')
             else                                  setError('Une erreur inattendue est survenue.')
-            setIsLoading(false)
         }
     }
 

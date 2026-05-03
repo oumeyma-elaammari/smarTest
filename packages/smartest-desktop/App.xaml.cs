@@ -1,6 +1,8 @@
 using smartest_desktop.Data;
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Windows;
 using smartest_desktop.Services;
 
@@ -9,6 +11,49 @@ namespace smartest_desktop
     public partial class App : Application
     {
         public static LocalDbContext LocalDb { get; private set; } = null!;
+
+        // ── Chemins de stockage par email ─────────────────────────────────────
+
+        private static readonly string DossierApp = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SmarTest");
+
+        private static string FichierDernierEmail =>
+            Path.Combine(DossierApp, "last_user.txt");
+
+        private static string CheminDbPourEmail(string email)
+        {
+            string dossier = Path.Combine(DossierApp,
+                email.Trim().ToLowerInvariant()
+                     .Replace("@", "_at_")
+                     .Replace(" ", "_"));
+            Directory.CreateDirectory(dossier);
+            return Path.Combine(dossier, "smartest_local.db");
+        }
+
+        private static string? LireDernierEmail()
+        {
+            try
+            {
+                if (File.Exists(FichierDernierEmail))
+                    return File.ReadAllText(FichierDernierEmail, Encoding.UTF8).Trim();
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>
+        /// Initialise (ou réinitialise) la base de données locale pour un email donné.
+        /// Appelé au login et au démarrage si un email est connu.
+        /// </summary>
+        public static void InitialiserPourEmail(string email)
+        {
+            LocalDb?.Dispose();
+            LocalDbContext.CheminBase = CheminDbPourEmail(email);
+            LocalDb = InitialiserBase();
+            Directory.CreateDirectory(DossierApp);
+            File.WriteAllText(FichierDernierEmail, email.Trim().ToLower(), Encoding.UTF8);
+        }
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -26,32 +71,36 @@ namespace smartest_desktop
 
             try
             {
-                LocalDb = InitialiserBase();
-
                 ShutdownMode = ShutdownMode.OnLastWindowClose;
 
-                // Vérifier session existante
-                var sessionService = new SessionService(LocalDb);
-                var session = sessionService.ChargerSession();
-
-                if (session != null)
+                // Charger la DB du dernier utilisateur connu (si existant)
+                string? dernierEmail = LireDernierEmail();
+                if (!string.IsNullOrWhiteSpace(dernierEmail))
                 {
-                    // Session valide: restaurer Properties et aller au Dashboard
-                    Current.Properties["Token"] = session.TokenChiffre; 
-                    Current.Properties["Nom"] = session.Nom;
-                    Current.Properties["Email"] = session.Email;
+                    LocalDbContext.CheminBase = CheminDbPourEmail(dernierEmail);
+                    LocalDb = InitialiserBase();
 
-                    var dashboard = new Views.DashboardWindow();
-                    MainWindow = dashboard;
-                    dashboard.Show();
+                    var session = new SessionService(LocalDb).ChargerSession();
+                    if (session != null)
+                    {
+                        // Session valide : restaurer Properties et aller au Dashboard
+                        Current.Properties["Token"] = session.TokenChiffre;
+                        Current.Properties["Nom"]   = session.Nom;
+                        Current.Properties["Email"] = session.Email;
+
+                        var dashboard = new Views.DashboardWindow();
+                        MainWindow = dashboard;
+                        dashboard.Show();
+                        base.OnStartup(e);
+                        return;
+                    }
                 }
-                else
-                {
-                    // Pas de session : LoginWindow
-                    var login = new MainWindow();
-                    MainWindow = login;
-                    login.Show();
-                }
+
+                // Aucun utilisateur connu ou session expirée → LoginWindow
+                // LocalDb sera initialisé lors du login via InitialiserPourEmail()
+                var login = new MainWindow();
+                MainWindow = login;
+                login.Show();
             }
             catch (Exception ex)
             {
@@ -70,7 +119,7 @@ namespace smartest_desktop
         /// </summary>
         private static LocalDbContext InitialiserBase()
         {
-            const string dbPath = "smartest_local.db";
+            string dbPath = LocalDbContext.CheminBase;
 
             var ctx = new LocalDbContext();
             try
@@ -86,14 +135,13 @@ namespace smartest_desktop
             }
             catch
             {
-                // Schéma obsolète — supprimer via EF Core (ferme proprement les connexions SQLite)
+                // Schéma obsolète — supprimer via EF Core
                 try
                 {
                     ctx.Database.EnsureDeleted();
                 }
                 catch
                 {
-                    // Si EF Core ne peut pas supprimer (fichier verrouillé), on force
                     ctx.Dispose();
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
@@ -111,6 +159,29 @@ namespace smartest_desktop
             }
 
             return ctx;
+        }
+
+        /// <summary>
+        /// Déconnecte l'utilisateur depuis n'importe quelle fenêtre :
+        /// supprime la session persistante, efface les Properties, ouvre LoginWindow
+        /// et ferme toutes les autres fenêtres.
+        /// </summary>
+        public static void Deconnecter()
+        {
+            try { new SessionService(LocalDb).SupprimerSession(); } catch { }
+
+            Current.Properties["Token"] = null;
+            Current.Properties["Nom"]   = null;
+            Current.Properties["Email"] = null;
+
+            var login = new Views.LoginWindow();
+            login.Show();
+
+            foreach (Window w in Current.Windows.Cast<Window>().ToList())
+            {
+                if (w is not Views.LoginWindow)
+                    w.Close();
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)

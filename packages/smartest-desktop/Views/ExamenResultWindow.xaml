@@ -182,6 +182,28 @@
 							<TextBlock Text="Questions de l'examen" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
 							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
 									   Text="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
+							<TextBlock Text="Ajouter une question" FontSize="10" FontWeight="700"
+                                       Foreground="#9CA3AF" Margin="0,14,0,8"/>
+							<StackPanel Orientation="Horizontal">
+								<Button Margin="0,0,6,0" Padding="10,8" Cursor="Hand"
+                                        Background="#f0f3f9" BorderBrush="#e2e8f4" BorderThickness="1"
+                                        Command="{Binding AjouterQuestionCommand}" CommandParameter="QCM"
+                                        FocusVisualStyle="{x:Null}">
+									<TextBlock Text="QCM" FontSize="11" FontWeight="600" Foreground="#0f1e3d"/>
+								</Button>
+								<Button Margin="0,0,6,0" Padding="10,8" Cursor="Hand"
+                                        Background="#f5f3ff" BorderBrush="#ddd6fe" BorderThickness="1"
+                                        Command="{Binding AjouterQuestionCommand}" CommandParameter="CHECKBOX"
+                                        FocusVisualStyle="{x:Null}">
+									<TextBlock Text="Cases à cocher" FontSize="11" FontWeight="600" Foreground="#5b21b6"/>
+								</Button>
+								<Button Padding="10,8" Cursor="Hand"
+                                        Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1"
+                                        Command="{Binding AjouterQuestionCommand}" CommandParameter="REDACTION"
+                                        FocusVisualStyle="{x:Null}">
+									<TextBlock Text="Rédaction" FontSize="11" FontWeight="600" Foreground="#b45309"/>
+								</Button>
+							</StackPanel>
 						</StackPanel>
 					</Border>
 

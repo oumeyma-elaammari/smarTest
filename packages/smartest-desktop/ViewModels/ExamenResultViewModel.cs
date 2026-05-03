@@ -75,6 +75,8 @@ namespace smartest_desktop.ViewModels
 
         public ICommand SelectionnerCommand { get; }
         public ICommand SupprimerCommand { get; }
+        /// <summary>Paramètre : type de question — QCM, CHECKBOX ou REDACTION.</summary>
+        public ICommand AjouterQuestionCommand { get; }
         public ICommand AttacherImageCommand { get; }
         public ICommand SupprimerImageCommand { get; }
         public ICommand ValiderExamenCommand { get; }
@@ -158,6 +160,48 @@ namespace smartest_desktop.ViewModels
 
                 if (Questions.Count == 0 && _supprimerExamenPersisteAsync != null)
                     _ = SupprimerExamenVideEtFermerAsync();
+            });
+
+            AjouterQuestionCommand = new RelayCommand(p =>
+            {
+                string type = p as string ?? "QCM";
+                if (type != "QCM" && type != "CHECKBOX" && type != "REDACTION")
+                    type = "QCM";
+
+                var q = new QuestionExamen
+                {
+                    Type = type,
+                    Difficulte = Difficulte,
+                    Enonce = "Nouvelle question"
+                };
+
+                if (type == "QCM")
+                {
+                    q.ReponseCorrecte = string.Empty;
+                }
+                else if (type == "CHECKBOX")
+                {
+                    q.OptionACorrecte = false;
+                    q.OptionBCorrecte = false;
+                    q.OptionCCorrecte = false;
+                    q.OptionDCorrecte = false;
+                }
+                else
+                {
+                    q.ReponseModele = string.Empty;
+                }
+
+                int idx = CalculerIndexInsertionParType(Questions, type);
+                Questions.Insert(idx, q);
+                Renuméroter();
+                OnPropertyChanged(nameof(NombreQuestions));
+                OnPropertyChanged(nameof(SousTitreCompteur));
+                _validerExamenCommand.RaiseCanExecuteChanged();
+
+                foreach (var item in Questions)
+                    item.IsSelected = false;
+                q.IsSelected = true;
+                QuestionSelectionnee = q;
             });
 
             SetReponseCorrecteCommand = new RelayCommand(p =>
@@ -277,18 +321,28 @@ namespace smartest_desktop.ViewModels
 
             RetourCommand = new RelayCommand(_ =>
             {
+                // Pas encore enregistré en base : toujours confirmer (même sans modification d'empreinte)
+                if (!IsEditionExistant)
+                {
+                    var resNouveau = MessageBox.Show(
+                        "Quitter sans sauvegarder ?\n" +
+                        "L'examen n'est pas enregistré dans la base locale. Vous perdrez le contenu généré.",
+                        "Quitter sans sauvegarder",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+                    if (resNouveau == MessageBoxResult.Yes)
+                        NavigationRetourRequested?.Invoke();
+                    return;
+                }
+
                 if (!ADesModificationsDepuisOuverture())
                 {
                     NavigationRetourRequested?.Invoke();
                     return;
                 }
 
-                string msg = IsEditionExistant
-                    ? "Quitter sans enregistrer les modifications ?\nLes changements seront perdus."
-                    : "Quitter sans sauvegarder ?\nL'examen généré sera perdu.";
-
                 var res = MessageBox.Show(
-                    msg,
+                    "Quitter sans enregistrer les modifications ?\nLes changements seront perdus.",
                     "Confirmation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
@@ -333,6 +387,34 @@ namespace smartest_desktop.ViewModels
             int n = 1;
             foreach (var q in Questions)
                 q.Numero = n++;
+        }
+
+        /// <summary>
+        /// Ordre d'affichage aligné sur la génération : QCM, puis CHECKBOX, puis RÉDACTION, puis IMAGE.
+        /// La nouvelle question est insérée dans le bloc de son type (après les questions du même type déjà présentes).
+        /// </summary>
+        private static int TypeOrder(string t) => t switch
+        {
+            "QCM" => 0,
+            "CHECKBOX" => 1,
+            "REDACTION" => 2,
+            "IMAGE" => 3,
+            _ => 0
+        };
+
+        private static int CalculerIndexInsertionParType(ObservableCollection<QuestionExamen> questions, string type)
+        {
+            int want = TypeOrder(type);
+            int insertAt = 0;
+            for (int i = 0; i < questions.Count; i++)
+            {
+                int o = TypeOrder(questions[i].Type);
+                if (o > want)
+                    return i;
+                insertAt = i + 1;
+            }
+
+            return insertAt;
         }
 
         private async Task SupprimerExamenVideEtFermerAsync()

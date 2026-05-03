@@ -210,6 +210,16 @@
         <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
 
+    <!-- Logo « Smar » + « Test » : mêmes couleurs que la sidebar (sans pastille à gauche) -->
+    <Style x:Key="BrandTitleSplit" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Georgia"/>
+        <Setter Property="FontSize" Value="26"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource NavyBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+
     <!-- ══════════════════════════════════════════
          BRAND SUBTITLE
     ══════════════════════════════════════════ -->

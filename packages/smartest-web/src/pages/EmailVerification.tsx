@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { CheckCircle, XCircle, Mail } from 'lucide-react'
+import { CheckCircle, XCircle } from 'lucide-react'
 import {
     pageStyle, cardStyle, brandStyle, brandSubStyle,
     submitBtnStyle, Footer,
@@ -41,7 +41,7 @@ export default function EmailVerification() {
                     </span>
                 )}
 
-                <h1 style={brandStyle}>SmarTest</h1>
+                <h1 style={brandStyle}>Smar<span style={{ color: '#4f8ef7' }}>Test</span></h1>
                 <p style={brandSubStyle}>Plateforme d'évaluation</p>
 
                 {/* ── SUCCESS ── */}
