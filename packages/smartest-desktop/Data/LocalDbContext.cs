@@ -139,6 +139,8 @@ namespace smartest_desktop.Data
                       .WithMany(c => c.Quiz)   // Correction : ajouter navigation côté CoursLocal
                       .UsingEntity(j => j.ToTable("quiz_local_cours"));
 
+                entity.Property(q => q.BackendQuizId);
+                entity.Property(q => q.EmailsPublicationWebJson).HasColumnType("TEXT");
             });
 
             // ── ExamenLocal ───────────────────────────────────────

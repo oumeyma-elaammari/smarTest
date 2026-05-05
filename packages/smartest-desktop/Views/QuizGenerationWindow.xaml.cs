@@ -13,7 +13,7 @@ namespace smartest_desktop.Views
             var vm = (QuizGenerationViewModel)DataContext;
 
             // Quiz généré → ouvrir QuizResultWindow
-            vm.QuizGenereAvecSucces += (questions, titre, difficulte, nbQuestions, coursTitre) =>
+            vm.QuizGenereAvecSucces += (questions, titre, difficulte, nbQuestions, coursTitre, emailsPublicationWebJson) =>
             {
                 Dispatcher.Invoke(() =>
                 {
@@ -22,8 +22,9 @@ namespace smartest_desktop.Views
                         titre,
                         difficulte,
                         coursTitre ?? string.Empty,
-                        "Validé"
-                    );
+                        "Validé",
+                        quizIdExistant: null,
+                        emailsPublicationWebJson: emailsPublicationWebJson);
                     resultWindow.Show();
                     if (IsVisible) Close();
                 });

@@ -35,4 +35,25 @@ public interface ResultatRepository extends JpaRepository<Resultat, Long> {
     // récupérer résultats d’un quiz
     List<Resultat> findByQuizId(Long quizId);
 
+    void deleteByQuizId(Long quizId);
+
+    /**
+     * Résultats liés à un quiz ({@code quizId} renseigné) — pas les examens en session.
+     * Ordre chronologique des réponses pour regroupement par tentative.
+     */
+    List<Resultat> findByEtudiant_IdAndQuizIdOrderByIdAsc(Long etudiantId, Long quizId);
+
+    /**
+     * Résultats de <strong>quiz</strong> uniquement : filtrés par {@code quizId} (les examens en session
+     * n’enregistrent pas de {@code quizId} sur {@link com.smartest.backend.entity.Resultat}).
+     */
+    @Query("SELECT COUNT(DISTINCT r.etudiant.id) FROM Resultat r WHERE r.quizId = :quizId AND r.estPremiereTentative = true")
+    long countEtudiantsDistinctsPremiereTentativePourQuiz(@Param("quizId") Long quizId);
+
+    @Query("SELECT COUNT(r) FROM Resultat r WHERE r.quizId = :quizId AND r.question.id = :questionId AND r.estPremiereTentative = true")
+    long countPremiereTentativePourQuestionPourQuiz(@Param("quizId") Long quizId, @Param("questionId") Long questionId);
+
+    @Query("SELECT COUNT(r) FROM Resultat r WHERE r.quizId = :quizId AND r.question.id = :questionId AND r.estPremiereTentative = true AND r.correcte = true")
+    long countPremiereTentativeCorrectesPourQuestionPourQuiz(@Param("quizId") Long quizId, @Param("questionId") Long questionId);
+
 }

@@ -1,6 +1,14 @@
 package com.smartest.backend.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
@@ -24,15 +32,17 @@ public class Reponse {
     // private SessionExamen sessionExamen;
 
 
-    @ManyToOne
-    @JoinColumn(name = "etudiant_id")
-    private Etudiant etudiant;  // ← rajouter ceci
+    /** Null pour les propositions QCM « modèle » liées à une question ; renseigné pour une réponse d’étudiant en session. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "etudiant_id", nullable = true)
+    private Etudiant etudiant;
 
-    @ManyToOne
-    @JoinColumn(name = "question_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @ManyToOne
-    @JoinColumn(name = "session_examen_id")
-    private SessionExamen sessionExamen; // ← manquant
+    /** Null pour les propositions QCM ; renseigné en contexte d’examen supervisé. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_examen_id", nullable = true)
+    private SessionExamen sessionExamen;
 }

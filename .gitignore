@@ -10,6 +10,8 @@ build/
 packages/smartest-backend/.idea/
 bin/
 obj/
+# Sorties dotnet build -o (compilations vers dossier personnalisé)
+**/_build_out*/
 *.exe
 *.dll
 

@@ -1,15 +1,28 @@
 using smartest_desktop.Data;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using smartest_desktop.Services;
+using Microsoft.EntityFrameworkCore;
+using PdfSharp.Fonts;
 
 namespace smartest_desktop
 {
     public partial class App : Application
     {
+        /// <summary>
+        /// PDFsharp 6 (build Core) : résolution des polices système Windows (Arial, etc.).
+        /// À exécuter avant toute création de <see cref="PdfSharp.Drawing.XFont"/>.
+        /// </summary>
+        static App()
+        {
+            GlobalFontSettings.UseWindowsFontsUnderWindows = true;
+        }
+
         public static LocalDbContext LocalDb { get; private set; } = null!;
 
         // ── Chemins de stockage par email ─────────────────────────────────────
@@ -125,6 +138,7 @@ namespace smartest_desktop
             try
             {
                 ctx.Database.EnsureCreated();
+                ApplyQuizLocalColumnPatches(ctx);
 
                 // Vérification rapide : on lit une ligne de chaque table critique
                 _ = ctx.SessionsLocales.Count();
@@ -156,9 +170,49 @@ namespace smartest_desktop
 
                 ctx = new LocalDbContext();
                 ctx.Database.EnsureCreated();
+                ApplyQuizLocalColumnPatches(ctx);
             }
 
             return ctx;
+        }
+
+        /// <summary>
+        /// SQLite : <see cref="DbContext.Database.EnsureCreated"/> ne migre pas les colonnes ajoutées au modèle.
+        /// </summary>
+        private static void ApplyQuizLocalColumnPatches(LocalDbContext ctx)
+        {
+            var conn = ctx.Database.GetDbConnection();
+            var wasOpen = conn.State == ConnectionState.Open;
+            if (!wasOpen) conn.Open();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "PRAGMA table_info(quiz_local);";
+                var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                        existing.Add(r.GetString(1));
+                }
+
+                void AddColumnIfMissing(string columnName, string alterSql)
+                {
+                    if (existing.Contains(columnName)) return;
+                    using var c = conn.CreateCommand();
+                    c.CommandText = alterSql;
+                    c.ExecuteNonQuery();
+                }
+
+                AddColumnIfMissing("BackendQuizId",
+                    "ALTER TABLE quiz_local ADD COLUMN BackendQuizId INTEGER NULL;");
+                AddColumnIfMissing("EmailsPublicationWebJson",
+                    "ALTER TABLE quiz_local ADD COLUMN EmailsPublicationWebJson TEXT NULL;");
+            }
+            finally
+            {
+                if (!wasOpen && conn.State == ConnectionState.Open)
+                    conn.Close();
+            }
         }
 
         /// <summary>

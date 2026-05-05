@@ -1,9 +1,11 @@
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.Win32;
+using smartest_desktop.Constants;
 using smartest_desktop.Data;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using smartest_desktop.Views;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -128,6 +130,28 @@ namespace smartest_desktop.ViewModels
 
         public List<int> NombresQuestions { get; } = new() { 3, 5, 7, 10, 15, 20 };
 
+        // ── Emails publication web (importés ici, enregistrés avec le quiz à la validation) ──
+
+        private readonly List<string> _emailsPublicationWeb = new();
+
+        public int NombreEmailsPublicationWeb => _emailsPublicationWeb.Count;
+
+        public bool HasEmailsPublicationWeb => _emailsPublicationWeb.Count > 0;
+
+        public string LibelleEmailsPublicationWeb =>
+            HasEmailsPublicationWeb
+                ? $"{NombreEmailsPublicationWeb} email(s) — plafond {QuizPublicationLimits.MaxAuthorizedStudentEmails}"
+                : "Aucun fichier importé (requis pour « Publier sur le web » depuis le hub).";
+
+        private void NotifierEmailsPublicationWeb()
+        {
+            OnPropertyChanged(nameof(NombreEmailsPublicationWeb));
+            OnPropertyChanged(nameof(HasEmailsPublicationWeb));
+            OnPropertyChanged(nameof(LibelleEmailsPublicationWeb));
+            if (ImporterEmailsPublicationWebCommand is RelayCommand ri) ri.RaiseCanExecuteChanged();
+            if (EffacerEmailsPublicationWebCommand is RelayCommand re) re.RaiseCanExecuteChanged();
+        }
+
         // ── État UI ───────────────────────────────────────────────────────────
 
         private bool _isImporting;
@@ -175,6 +199,8 @@ namespace smartest_desktop.ViewModels
         // ── Commandes ─────────────────────────────────────────────────────────
 
         public ICommand ImporterFichierCommand { get; }
+        public ICommand ImporterEmailsPublicationWebCommand { get; }
+        public ICommand EffacerEmailsPublicationWebCommand { get; }
         public ICommand EffacerContenuCommand { get; }
         public ICommand SetDifficulteCommand { get; }
         public ICommand GenererCommand { get; }
@@ -183,7 +209,8 @@ namespace smartest_desktop.ViewModels
         public ICommand RetourDashboardCommand { get; }
         public ICommand LogoutCommand { get; }
 
-        public event Action<List<QuestionQCM>, string, string, int, string?>? QuizGenereAvecSucces;
+        /// <summary>Dernier paramètre : JSON du tableau d'emails (publication web), ou null si aucun import.</summary>
+        public event Action<List<QuestionQCM>, string, string, int, string?, string?>? QuizGenereAvecSucces;
         public event Action? NavigationAnnulee;
         public event Action? NavigateToDashboard;
         public event Action? NavigateToLogin;
@@ -197,6 +224,18 @@ namespace smartest_desktop.ViewModels
             ImporterFichierCommand = new RelayCommand(
                 async _ => await ImporterFichierAsync(),
                 _ => !IsImporting && !IsGenerating);
+
+            ImporterEmailsPublicationWebCommand = new RelayCommand(
+                _ => ImporterEmailsPublicationWeb(),
+                _ => !IsGenerating);
+
+            EffacerEmailsPublicationWebCommand = new RelayCommand(
+                _ =>
+                {
+                    _emailsPublicationWeb.Clear();
+                    NotifierEmailsPublicationWeb();
+                },
+                _ => HasEmailsPublicationWeb && !IsGenerating);
 
             EffacerContenuCommand = new RelayCommand(
                 _ => EffacerContenu(),
@@ -301,6 +340,71 @@ namespace smartest_desktop.ViewModels
             finally
             {
                 IsImporting = false;
+            }
+        }
+
+        private void ImporterEmailsPublicationWeb()
+        {
+            var dlg = new OpenFileDialog
+            {
+                Filter = "CSV ou Excel|*.csv;*.xlsx|CSV (*.csv)|*.csv|Excel (*.xlsx)|*.xlsx",
+                Title = "Importer les emails autorisés (colonne « email » ou une adresse par ligne)"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                var detail = ImportEtudiantsService.ImporterDepuisFichierDetaille(dlg.FileName);
+                var liste = detail.EmailsValides;
+                if (liste.Count == 0)
+                {
+                    MessageBox.Show(
+                        "Aucun email valide trouvé dans le fichier.",
+                        "Publication web",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                if (liste.Count > QuizPublicationLimits.MaxAuthorizedStudentEmails)
+                {
+                    MessageBox.Show(
+                        $"Le fichier contient plus de {QuizPublicationLimits.MaxAuthorizedStudentEmails} emails. " +
+                        $"Seuls les {QuizPublicationLimits.MaxAuthorizedStudentEmails} premiers seront conservés.",
+                        "Publication web",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    liste = liste.Take(QuizPublicationLimits.MaxAuthorizedStudentEmails).ToList();
+                }
+
+                _emailsPublicationWeb.Clear();
+                _emailsPublicationWeb.AddRange(liste);
+                NotifierEmailsPublicationWeb();
+                StatusMessage = $"✅ {NombreEmailsPublicationWeb} email(s) importé(s) pour la publication web.";
+            }
+            catch (NotSupportedException)
+            {
+                MessageBox.Show(
+                    "Format non supporté. Utilisez un fichier .csv ou .xlsx.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show(
+                    $"Lecture du fichier impossible : {ex.Message}",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Import impossible : {ex.Message}",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
@@ -515,7 +619,11 @@ namespace smartest_desktop.ViewModels
 
                 Debug.WriteLine($"[GenererQuiz] ✅ Terminé — {toutesQuestions.Count} questions en {dureeTotale.TotalSeconds:F1} s");
 
-                QuizGenereAvecSucces?.Invoke(toutesQuestions, titre, Difficulte, NombreQuestions, TitreCours);
+                string? emailsJson = _emailsPublicationWeb.Count > 0
+                    ? JsonSerializer.Serialize(_emailsPublicationWeb)
+                    : null;
+
+                QuizGenereAvecSucces?.Invoke(toutesQuestions, titre, Difficulte, NombreQuestions, TitreCours, emailsJson);
             }
             catch (OperationCanceledException)
             {

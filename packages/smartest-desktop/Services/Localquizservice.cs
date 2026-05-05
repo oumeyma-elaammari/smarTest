@@ -64,14 +64,33 @@ namespace smartest_desktop.Services
             }
         }
 
+        public async Task MettreAJourPublicationWebLocaleAsync(
+            int quizLocalId,
+            long? backendQuizId,
+            string emailsPublicationWebJson,
+            string statut)
+        {
+            var quiz = await _db.Quiz.FindAsync(quizLocalId);
+            if (quiz == null)
+                throw new InvalidOperationException("Quiz introuvable ou déjà supprimé.");
+
+            if (backendQuizId.HasValue)
+                quiz.BackendQuizId = backendQuizId.Value;
+            quiz.EmailsPublicationWebJson = emailsPublicationWebJson ?? string.Empty;
+            quiz.Statut = statut;
+            await _db.SaveChangesAsync();
+        }
+
         /// <summary>Met à jour un quiz existant : métadonnées et remplace toutes les questions liées.</summary>
+        /// <param name="emailsPublicationWebJson">Si non null, remplace la liste JSON des emails publication web.</param>
         public async Task MettreAJourContenuAsync(
             int quizId,
             string titre,
             string difficulte,
             string coursTitre,
             string statut,
-            IReadOnlyList<QuestionLocale> nouvellesQuestions)
+            IReadOnlyList<QuestionLocale> nouvellesQuestions,
+            string? emailsPublicationWebJson = null)
         {
             var quiz = await _db.Quiz
                 .Include(q => q.Questions)
@@ -84,6 +103,9 @@ namespace smartest_desktop.Services
             quiz.CoursSourceTitre = coursTitre ?? string.Empty;
             quiz.Statut = statut;
             quiz.NombreQuestions = nouvellesQuestions.Count;
+
+            if (emailsPublicationWebJson != null)
+                quiz.EmailsPublicationWebJson = emailsPublicationWebJson;
 
             var anciennes = quiz.Questions.ToList();
             if (anciennes.Count > 0)

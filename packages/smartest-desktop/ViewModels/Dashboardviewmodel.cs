@@ -78,6 +78,7 @@ namespace smartest_desktop.ViewModels
         public ICommand LogoutCommand { get; }
         public ICommand OpenCoursCommand { get; }
         public ICommand OpenQuizCommand { get; }
+        public ICommand OpenStatistiquesCommand { get; }
 
         public DashboardViewModel()
         {
@@ -90,6 +91,7 @@ namespace smartest_desktop.ViewModels
             OpenCoursCommand = new RelayCommand(_ => ExecuteOpenCours());
 
 
+            OpenStatistiquesCommand = new RelayCommand(_ => ExecuteOpenStatistiques());
             OpenQuizCommand = new RelayCommand(_ => ExecuteOpenQuiz());
 
             _ = ChargerDonnees();
@@ -246,6 +248,30 @@ namespace smartest_desktop.ViewModels
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void ExecuteOpenStatistiques()
+        {
+            try
+            {
+                var win = new Views.StatistiquesProfWindow();
+                win.Show();
+                Application.Current.MainWindow = win;
+
+                foreach (Window w in WpfApp.Current.Windows)
+                {
+                    if (w is Views.DashboardWindow)
+                    {
+                        w.Close();
+                        break;
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
 
     }
 }
