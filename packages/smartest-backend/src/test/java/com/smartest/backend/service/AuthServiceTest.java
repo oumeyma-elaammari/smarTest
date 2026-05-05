@@ -106,8 +106,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Inscription réussie")
         void register_Success() {
-            when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
-            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.existsByEmail("ikram@ensa.ma")).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             String result = authService.register(validProfRequest);
@@ -121,7 +121,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Email déjà utilisé par un professeur")
         void register_EmailAlreadyUsed_ByProf() {
-            when(professeurRepository.existsByEmail("ikram@ensa.ma")).thenReturn(true);
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
 
             assertThatThrownBy(() -> authService.register(validProfRequest))
                     .isInstanceOf(EmailAlreadyUsedException.class);
@@ -133,7 +133,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Email déjà utilisé par un étudiant")
         void register_EmailAlreadyUsed_ByEtudiant() {
-            when(professeurRepository.existsByEmail("ikram@ensa.ma")).thenReturn(false);
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.empty());
             when(etudiantRepository.existsByEmail("ikram@ensa.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.register(validProfRequest))
@@ -156,8 +156,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ emailVerifie = false à la création")
         void register_EmailNotVerifiedByDefault() {
-            when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
-            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.existsByEmail("ikram@ensa.ma")).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             authService.register(validProfRequest);
@@ -170,8 +170,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Code envoyé par email (sans lien web)")
         void register_EmailSentWithCorrectRole() {
-            when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
-            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
+            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.existsByEmail("ikram@ensa.ma")).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             authService.register(validProfRequest);
@@ -191,8 +191,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Inscription réussie")
         void registerEtudiant_Success() {
-            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
-            when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(professeurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             String result = authService.registerEtudiant(validEtudiantRequest);
@@ -206,7 +206,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Email déjà utilisé par un étudiant")
         void registerEtudiant_EmailUsedByEtudiant() {
-            when(etudiantRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
                     .isInstanceOf(EmailAlreadyUsedException.class);
@@ -217,7 +217,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Email déjà utilisé par un professeur")
         void registerEtudiant_EmailUsedByProfesseur() {
-            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
             when(professeurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(true);
 
             assertThatThrownBy(() -> authService.registerEtudiant(validEtudiantRequest))
@@ -240,8 +240,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ emailVerifie = false à la création")
         void registerEtudiant_EmailNotVerifiedByDefault() {
-            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
-            when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(professeurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             authService.registerEtudiant(validEtudiantRequest);
@@ -254,8 +254,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Email envoyé avec rôle ETUDIANT")
         void registerEtudiant_EmailSentWithCorrectRole() {
-            when(etudiantRepository.existsByEmail(anyString())).thenReturn(false);
-            when(professeurRepository.existsByEmail(anyString())).thenReturn(false);
+            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(professeurRepository.existsByEmail("nissrine@ump.ac.ma")).thenReturn(false);
             when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
 
             authService.registerEtudiant(validEtudiantRequest);

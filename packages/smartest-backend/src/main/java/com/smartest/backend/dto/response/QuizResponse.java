@@ -30,4 +30,10 @@ public class QuizResponse {
 
     private Integer nombreQuestions;
     private List<QuestionResponse> questions;
+
+    /** Renseigné pour {@code GET /api/quizs/mes-publications-web} : aucune soumission encore enregistrée pour ce quiz. */
+    private Boolean premiereTentative;
+
+    /** Renseigné pour {@code GET /api/quizs/mes-publications-web} : meilleur pourcentage parmi les tentatives (hors examen). */
+    private Double meilleurScore;
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -32,6 +32,12 @@ namespace smartest_desktop.Data.LocalEntities
 
         /// <summary>"Brouillon" | "Validé" | "Publié"</summary>
         public string Statut { get; set; } = "Brouillon";
+
+        /// <summary>Identifiant du quiz côté API après création / sync (publication web).</summary>
+        public long? BackendQuizId { get; set; }
+
+        /// <summary>JSON : tableau d'emails (minuscules) autorisés pour la publication web.</summary>
+        public string EmailsPublicationWebJson { get; set; }
 
         public List<QuestionLocale> Questions { get; set; } = new();
 

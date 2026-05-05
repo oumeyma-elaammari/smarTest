@@ -17,6 +17,12 @@ public class StatistiquesQuizResponse {
     private Integer nombreParticipants;
     private Double moyenneGenerale;
     private Double tauxReussiteGlobal;
+    /** Moyenne des notes sur 20 (1ʳᵉ tentative : bonnes réponses / nombre de réponses × 20 par étudiant). */
+    private Double moyenneNoteSur20;
+    /**
+     * Effectifs par tranche de note sur 20 (ordre : 0–5, 5–8, 8–10, 10–12, 12–15, 15–18, 18–20).
+     */
+    private List<Integer> repartitionParTranche;
     private Long questionsAlerteCount;
     private List<StatistiqueQuestionResponse> statistiquesParQuestion;
 }

@@ -3,6 +3,7 @@ package com.smartest.backend.security;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -48,9 +49,16 @@ public class SecurityConfig {
                                 "/auth/reset-password/professeur",
                                 "/ws/**"
                         ).permitAll()
-                        .requestMatchers("/api/quiz/publies").hasRole("ETUDIANT")
-                        .requestMatchers("/api/quiz/*/soumettre").hasRole("ETUDIANT")
-                        .requestMatchers("/api/quiz/*/publier").hasRole("PROFESSEUR")
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/verifier-question-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/publication-web").hasRole("PROFESSEUR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/quizs/*").hasRole("PROFESSEUR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/quizs/*/publier").hasRole("PROFESSEUR")
+                        .requestMatchers(HttpMethod.GET, "/api/statistiques/**").hasRole("PROFESSEUR")
                         .requestMatchers("/api/examens-publies/**").authenticated()
                         .requestMatchers("/api/professeur/**").hasRole("PROFESSEUR")
                         .requestMatchers("/api/etudiant/**").hasRole("ETUDIANT")

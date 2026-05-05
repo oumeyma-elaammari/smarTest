@@ -37,6 +37,14 @@ namespace smartest_desktop.Views
                     this.Close();
                 };
 
+                vm.OuvrirStatistiques += () =>
+                {
+                    var win = new StatistiquesProfWindow();
+                    win.Show();
+                    Application.Current.MainWindow = win;
+                    Close();
+                };
+
                 vm.NavigateToQuizDetails += async quiz =>
                 {
                     var quizService = new LocalQuizService(App.LocalDb);
@@ -74,7 +82,8 @@ namespace smartest_desktop.Views
                         quizComplet.Difficulte,
                         quizComplet.CoursSourceTitre,
                         quizComplet.Statut,
-                        quizComplet.Id);
+                        quizComplet.Id,
+                        emailsPublicationWebJson: quizComplet.EmailsPublicationWebJson);
 
                     resultWindow.Show();
                     this.Close();

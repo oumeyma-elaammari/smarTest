@@ -1,4 +1,4 @@
-﻿<Window x:Class="smartest_desktop.Views.QuizExamenWindow"
+<Window x:Class="smartest_desktop.Views.QuizExamenWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
@@ -66,6 +66,39 @@
 				</Setter>
 			</Style>
 
+			<!-- Suppression : icône, fond léger, padding minimal -->
+			<Style x:Key="IconDeleteBtn" TargetType="Button">
+				<Setter Property="Width" Value="26"/>
+				<Setter Property="Height" Value="26"/>
+				<Setter Property="MinWidth" Value="26"/>
+				<Setter Property="Padding" Value="2"/>
+				<Setter Property="Background" Value="#FEF2F2"/>
+				<Setter Property="BorderBrush" Value="#FEF2F2"/>
+				<Setter Property="BorderThickness" Value="1"/>
+				<Setter Property="Cursor" Value="Hand"/>
+				<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="Button">
+							<Border x:Name="BdIconDelete"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}"
+                                    CornerRadius="4">
+								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="BdIconDelete" Property="Background" Value="#FEE2E2"/>
+									<Setter TargetName="BdIconDelete" Property="BorderBrush" Value="#FCA5A5"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
 		</ResourceDictionary>
 	</Window.Resources>
 
@@ -126,6 +159,9 @@
 					</Border>
 
 					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
+						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding OuvrirStatistiquesCommand}"/>
+						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 							<TextBlock Text="&#xE9D2;" FontSize="13" Foreground="#6b7a99"
                                        FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
@@ -390,18 +426,18 @@
 													<Button Style="{StaticResource ActionBtn}"
                                                             Background="#eef3fd" BorderBrush="#eef3fd"
                                                             Foreground="#4f8ef7" Margin="0,0,6,0"
-                                                            Command="{Binding DataContext.PublierQuizCommand,
+                                                            Command="{Binding DataContext.PublierSurLeWebCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}">
 														<TextBlock Text="Publier"/>
 													</Button>
-													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#fcebeb" BorderBrush="#fcebeb"
-                                                            Foreground="#dc2626"
+													<Button Style="{StaticResource IconDeleteBtn}"
+                                                            ToolTip="Supprimer ce quiz"
                                                             Command="{Binding DataContext.SupprimerQuizCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}">
-														<TextBlock Text="Supprimer"/>
+														<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                                                    Foreground="#DC2626"/>
 													</Button>
 												</StackPanel>
 
@@ -592,13 +628,13 @@
                                                             CommandParameter="{Binding}">
 														<TextBlock Text="Lancer"/>
 													</Button>
-													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#fcebeb" BorderBrush="#fcebeb"
-                                                            Foreground="#dc2626"
+													<Button Style="{StaticResource IconDeleteBtn}"
+                                                            ToolTip="Supprimer cet examen"
                                                             Command="{Binding DataContext.SupprimerExamenCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}">
-														<TextBlock Text="Supprimer"/>
+														<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                                                    Foreground="#DC2626"/>
 													</Button>
 												</StackPanel>
 

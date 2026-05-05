@@ -13,6 +13,9 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Value("${app.web.dashboard-url:http://localhost:5173/dashboard}")
+    private String webDashboardUrl;
+
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -81,6 +84,27 @@ public class EmailService {
             );
         }
 
+        mailSender.send(message);
+    }
+
+    /**
+     * Notifie un étudiant autorisé qu’un quiz vient d’être publié sur le web.
+     */
+    public void sendQuizWebPublishedEmail(String toEmail, String professeurNom, String quizTitre) {
+        String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
+        String titre = quizTitre != null && !quizTitre.isBlank() ? quizTitre.trim() : "Quiz";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("SmarTest — Nouveau quiz publié");
+        message.setText(
+                "Bonjour,\n\n" +
+                        "Le professeur " + nom + " a publié un nouveau quiz : « " + titre + " ».\n\n" +
+                        "Connectez-vous à votre espace pour le passer :\n" +
+                        webDashboardUrl + "\n\n" +
+                        "— L'équipe SmarTest"
+        );
         mailSender.send(message);
     }
 }

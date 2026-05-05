@@ -89,6 +89,9 @@
 
 					<!-- Statistiques -->
 					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
+						<Border.InputBindings>
+							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenStatistiquesCommand}"/>
+						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 							<TextBlock Text="&#xE9D2;" FontSize="13" Foreground="#6b7a99"
                                        FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>

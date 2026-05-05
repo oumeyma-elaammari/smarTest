@@ -39,14 +39,20 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     List<Quiz> findByStatut(StatutQuiz statut);
 
-    // 🔥 version simple
-    @Query("SELECT q FROM Quiz q WHERE q.statut = 'PUBLIE'")
+    //  version simple — plus récemment publié en premier
+    @Query("SELECT q FROM Quiz q WHERE q.statut = 'PUBLIE' ORDER BY q.datePublication DESC NULLS LAST, q.id DESC")
     List<Quiz> findPublies();
 
     List<Quiz> findByProfesseurId(Long professeurId);
 
+    @Query("SELECT DISTINCT q FROM Quiz q JOIN q.emailsAutorisesWeb e WHERE q.statut = 'PUBLIE' AND LOWER(e) = LOWER(:email) ORDER BY q.datePublication DESC NULLS LAST, q.id DESC")
+    List<Quiz> findPubliesAutorisesPourEmail(@Param("email") String email);
 
+    @Query("SELECT DISTINCT q FROM Quiz q LEFT JOIN FETCH q.questions WHERE q.id = :id")
+    Optional<Quiz> findByIdWithQuestions(@Param("id") Long id);
 
-
+    /** Nombre de quiz contenant cette question (liaison {@code quiz_question}). */
+    @Query("SELECT COUNT(DISTINCT q.id) FROM Quiz q JOIN q.questions qq WHERE qq.id = :questionId")
+    long countQuizzesWithQuestion(@Param("questionId") Long questionId);
 
 }

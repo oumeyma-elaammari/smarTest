@@ -1,12 +1,15 @@
+using smartest_desktop.Constants;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Newtonsoft.Json;
 using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
@@ -158,14 +161,16 @@ namespace smartest_desktop.ViewModels
         public event Action? NavigateToDashboard;
         public event Action<QuizLocal>? NavigateToQuizDetails;
         public event Action<ExamenLocal>? NavigateToExamenDetails;
+        public event Action? OuvrirStatistiques;
 
         public ICommand GenererQuizCommand { get; }
         public ICommand GenererExamenCommand { get; }
         public ICommand RetourDashboardCommand { get; }
+        public ICommand OuvrirStatistiquesCommand { get; }
         public ICommand LogoutCommand { get; }
 
         public ICommand SupprimerQuizCommand { get; }
-        public ICommand PublierQuizCommand { get; }
+        public ICommand PublierSurLeWebCommand { get; }
 
         public ICommand SupprimerExamenCommand { get; }
         public ICommand LancerExamenCommand { get; }
@@ -185,15 +190,16 @@ namespace smartest_desktop.ViewModels
             GenererQuizCommand = new RelayCommand(_ => NavigateToQuizGeneration?.Invoke());
             GenererExamenCommand = new RelayCommand(_ => NavigateToExamenGeneration?.Invoke());
             RetourDashboardCommand = new RelayCommand(_ => NavigateToDashboard?.Invoke());
+            OuvrirStatistiquesCommand = new RelayCommand(_ => OuvrirStatistiques?.Invoke());
             LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
             SupprimerQuizCommand = new RelayCommand(
                 async p => await SupprimerQuizAsync(p),
                 p => p is QuizListeRow);
 
-            PublierQuizCommand = new RelayCommand(
-                async p => await PublierQuizAsync(p),
-                p => p is QuizListeRow { Quiz: var q } && EstQuizPublisable(q));
+            PublierSurLeWebCommand = new RelayCommand(
+                async p => await PublierSurLeWebAsync(p),
+                p => p is QuizListeRow { Quiz: var q } && EstQuizPublisableSurLeWeb(q));
 
             SupprimerExamenCommand = new RelayCommand(
                 async p => await SupprimerExamenAsync(p),
@@ -392,13 +398,6 @@ namespace smartest_desktop.ViewModels
             if (ExamenPageSuivanteCommand is RelayCommand es) es.RaiseCanExecuteChanged();
         }
 
-        private static bool EstQuizPublisable(QuizLocal q)
-        {
-            var s = q.Statut?.Trim();
-            return string.Equals(s, "Brouillon", System.StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(s, "BROUILLON", System.StringComparison.OrdinalIgnoreCase);
-        }
-
         private async Task ChargerDonneesAsync()
         {
             try
@@ -419,6 +418,9 @@ namespace smartest_desktop.ViewModels
 
                 RafraichirPaginationQuiz();
                 RafraichirPaginationExamens();
+
+                if (PublierSurLeWebCommand is RelayCommand rpw)
+                    rpw.RaiseCanExecuteChanged();
             }
             catch (System.Exception ex)
             {
@@ -432,24 +434,168 @@ namespace smartest_desktop.ViewModels
             var quiz = row.Quiz;
 
             var result = MessageBox.Show(
-                $"Supprimer le quiz « {row.TitreAffiche} » ?",
-                "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                $"Supprimer le quiz « {row.TitreAffiche} » ?\n\n" +
+                "Le quiz sera retiré de la plateforme pour tous les étudiants concernés " +
+                "(ils ne pourront plus y accéder sur le web). " +
+                "S'il a été synchronisé avec le serveur, la suppression côté serveur (résultats, statistiques, questions) " +
+                "doit réussir avant la suppression locale.\n\n" +
+                "Cette action est définitive.",
+                "Confirmation de suppression",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
+
+            var token = WpfApp.Current.Properties["Token"]?.ToString();
+            if (quiz.BackendQuizId is long bid && bid > 0)
+            {
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    MessageBox.Show(
+                        "Ce quiz est lié au serveur (publication web). Connectez-vous pour le supprimer aussi sur la plateforme.",
+                        "Suppression impossible",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                var api = new QuizWebPublicationApiService();
+                var errServeur = await api.DeleteQuizAsync(token, bid);
+                if (errServeur != null)
+                {
+                    MessageBox.Show(
+                        "La suppression sur le serveur a échoué. Le quiz n'a pas été supprimé localement non plus.\n\n" +
+                        errServeur,
+                        "Synchronisation serveur",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+            }
 
             await _quizService.SupprimerAsync(quiz.Id);
             _quizTous.RemoveAll(q => q.Id == quiz.Id);
             RafraichirPaginationQuiz();
             if (SelectedQuiz?.Id == quiz.Id) SelectedQuiz = null;
+            if (PublierSurLeWebCommand is RelayCommand rpw)
+                rpw.RaiseCanExecuteChanged();
         }
 
-        private async Task PublierQuizAsync(object? parameter)
+        private static bool EstQuizPublisableSurLeWeb(QuizLocal q)
+        {
+            var s = q.Statut?.Trim();
+            return string.Equals(s, "Validé", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool TryGetSavedPublicationEmails(QuizLocal quiz, out List<string> emails)
+        {
+            emails = new List<string>();
+            if (string.IsNullOrWhiteSpace(quiz.EmailsPublicationWebJson))
+                return false;
+            try
+            {
+                var list = JsonConvert.DeserializeObject<List<string>>(quiz.EmailsPublicationWebJson);
+                if (list == null) return false;
+                emails.AddRange(list);
+                return emails.Count > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task PublierSurLeWebAsync(object? parameter)
         {
             if (parameter is not QuizListeRow row) return;
             var quiz = row.Quiz;
-            if (!EstQuizPublisable(quiz)) return;
+            if (!EstQuizPublisableSurLeWeb(quiz)) return;
 
-            await _quizService.ChangerStatutAsync(quiz.Id, "Publié");
+            var token = WpfApp.Current.Properties["Token"]?.ToString();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                MessageBox.Show(
+                    "Session invalide ou expirée. Reconnectez-vous pour publier sur le web.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!TryGetSavedPublicationEmails(quiz, out var emails) || emails.Count == 0)
+            {
+                MessageBox.Show(
+                    "Ce quiz n'a pas de liste d'emails pour la publication web.\n\n" +
+                    "Ouvrez le quiz depuis la liste (icône / ligne), puis dans la colonne de gauche " +
+                    "remplissez ou importez les emails sous « Publication web », et validez. " +
+                    "Vous pouvez aussi les définir dès « Générer un quiz » avant la première validation.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (emails.Count > QuizPublicationLimits.MaxAuthorizedStudentEmails)
+            {
+                MessageBox.Show(
+                    $"La liste comporte plus de {QuizPublicationLimits.MaxAuthorizedStudentEmails} emails. " +
+                    $"Seuls les {QuizPublicationLimits.MaxAuthorizedStudentEmails} premiers seront envoyés au serveur.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                emails = emails.Take(QuizPublicationLimits.MaxAuthorizedStudentEmails).ToList();
+            }
+
+            var titreQuiz = string.IsNullOrWhiteSpace(quiz.Titre) ? row.TitreAffiche : quiz.Titre.Trim();
+            var confPub = MessageBox.Show(
+                $"Publier le quiz « {titreQuiz} » sur le web ?\n\n" +
+                $"{emails.Count} adresse(s) autorisée(s) : ces étudiants pourront voir et passer le quiz sur la plateforme. " +
+                "Vous pourrez modifier la liste d'emails plus tard en réouvrant le quiz et en validant les changements.\n\n" +
+                "Confirmer la publication ?",
+                "Publication web — confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            if (confPub != MessageBoxResult.Yes)
+                return;
+
+            var api = new QuizWebPublicationApiService();
+            var (profId, errProf) = await api.GetProfesseurIdAsync(token);
+            if (errProf != null)
+            {
+                MessageBox.Show(errProf, "Publication web", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            long backendId = quiz.BackendQuizId ?? 0;
+            if (backendId <= 0)
+            {
+                int duree = Math.Max(1, Math.Min(120, Math.Max(quiz.NombreQuestions * 2, 15)));
+                var (id, errCreate) = await api.CreateQuizAsync(
+                    token,
+                    string.IsNullOrWhiteSpace(quiz.Titre) ? "Quiz" : quiz.Titre.Trim(),
+                    duree,
+                    profId);
+                if (errCreate != null)
+                {
+                    MessageBox.Show(errCreate, "Publication web", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                backendId = id;
+            }
+
+            var quizComplet = await _quizService.GetByIdAsync(quiz.Id);
+            var questionsPublication = quizComplet?.Questions ?? new List<QuestionLocale>();
+
+            var errPub = await api.PostPublicationWebAsync(token, backendId, emails, questionsPublication);
+            if (errPub != null)
+            {
+                MessageBox.Show(errPub, "Publication web", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string json = JsonConvert.SerializeObject(emails);
+            await _quizService.MettreAJourPublicationWebLocaleAsync(quiz.Id, backendId, json, "Publié");
             await ChargerDonneesAsync();
         }
 

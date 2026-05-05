@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Helpers;
@@ -147,9 +147,11 @@ namespace smartest_desktop.ViewModels
         public ICommand ImporterCommand { get; }
         public ICommand SupprimerCommand { get; }
         public ICommand RetourDashboardCommand { get; }
+        public ICommand OuvrirStatistiquesCommand { get; }
         public ICommand LogoutCommand { get; }
 
         public event Action? NavigateToDashboardRequested;
+        public event Action? NavigateToStatistiquesRequested;
 
         // ── Constructor ───────────────────────────────────────────────────────
         public CoursViewModel()
@@ -190,6 +192,9 @@ namespace smartest_desktop.ViewModels
 
             RetourDashboardCommand = new RelayCommand(
                 _ => NavigateToDashboardRequested?.Invoke());
+
+            OuvrirStatistiquesCommand = new RelayCommand(
+                _ => NavigateToStatistiquesRequested?.Invoke());
 
             LogoutCommand = new RelayCommand(_ => ExecuteLogout());
 
