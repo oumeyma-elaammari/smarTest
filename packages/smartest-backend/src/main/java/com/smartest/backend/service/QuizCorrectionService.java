@@ -8,8 +8,10 @@ import com.smartest.backend.entity.Reponse;
 import com.smartest.backend.repository.QuestionRepository;
 import com.smartest.backend.repository.ReponseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,21 +28,24 @@ public class QuizCorrectionService {
      */
     @Transactional(readOnly = true)
     public CorrectionResponse corrigerReponse(ReponseEtudiantRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requête de correction invalide");
+        }
 
-        // Récupérer la question
         Question question = questionRepository.findById(request.getQuestionId())
-                .orElseThrow(() -> new RuntimeException("Question non trouvée avec l'id: " + request.getQuestionId()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Question non trouvée avec l'id: " + request.getQuestionId()));
 
-        // Récupérer la réponse choisie par l'étudiant
         Reponse reponseChoisie = reponseRepository.findById(request.getReponseId())
-                .orElseThrow(() -> new RuntimeException("Réponse non trouvée avec l'id: " + request.getReponseId()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Réponse non trouvée avec l'id: " + request.getReponseId()));
 
-        // Vérifier que la réponse appartient bien à la question
         boolean reponseAppartientALaQuestion = question.getReponses().stream()
                 .anyMatch(r -> r.getId().equals(reponseChoisie.getId()));
 
         if (!reponseAppartientALaQuestion) {
-            throw new RuntimeException("La réponse choisie n'appartient pas à cette question");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La réponse choisie n'appartient pas à cette question");
         }
 
         // Déterminer si la réponse est correcte
@@ -76,6 +81,10 @@ public class QuizCorrectionService {
      */
     @Transactional(readOnly = true)
     public List<CorrectionResponse> corrigerToutesLesReponses(List<ReponseEtudiantRequest> requests) {
+        if (requests == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La liste des corrections est obligatoire");
+        }
         return requests.stream()
                 .map(this::corrigerReponse)
                 .collect(Collectors.toList());
@@ -86,7 +95,13 @@ public class QuizCorrectionService {
      */
     @Transactional(readOnly = true)
     public double calculerScore(List<ReponseEtudiantRequest> requests) {
-        if (requests == null || requests.isEmpty()) return 0.0;
+        if (requests == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La liste des corrections est obligatoire");
+        }
+        if (requests.isEmpty()) {
+            return 0.0;
+        }
 
         List<CorrectionResponse> corrections = corrigerToutesLesReponses(requests);
         long bonnesReponses = corrections.stream().filter(CorrectionResponse::isCorrect).count();

@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QuizCorrectionServiceTest {
+
+    private static final String CONTENU_PARIS = "Paris";
 
     @Mock private QuestionRepository questionRepository;
     @Mock private ReponseRepository reponseRepository;
@@ -40,7 +44,7 @@ class QuizCorrectionServiceTest {
     void setUp() {
         reponseCorrecte = new Reponse();
         reponseCorrecte.setId(1L);
-        reponseCorrecte.setContenu("Paris");
+        reponseCorrecte.setContenu(CONTENU_PARIS);
         reponseCorrecte.setCorrecte(true);
 
         reponseIncorrecte = new Reponse();
@@ -63,7 +67,28 @@ class QuizCorrectionServiceTest {
     // ─── corrigerReponse ──────────────────────────────────────────────────────
 
     @Test
-    void corrigerReponse_returnsCorrect_whenReponseIsCorrecte() {
+    void corrigerReponseBadRequestWhenRequestNull() {
+        assertThatThrownBy(() -> quizCorrectionService.corrigerReponse(null))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void corrigerToutesLesReponsesBadRequestWhenListeNull() {
+        assertThatThrownBy(() -> quizCorrectionService.corrigerToutesLesReponses(null))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void calculerScoreBadRequestWhenListeNull() {
+        assertThatThrownBy(() -> quizCorrectionService.calculerScore(null))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void corrigerReponseReturnsCorrectWhenReponseIsCorrecte() {
         request.setReponseId(1L);
         when(questionRepository.findById(10L)).thenReturn(Optional.of(question));
         when(reponseRepository.findById(1L)).thenReturn(Optional.of(reponseCorrecte));
@@ -73,13 +98,13 @@ class QuizCorrectionServiceTest {
         assertThat(result.isCorrect()).isTrue();
         assertThat(result.getQuestionId()).isEqualTo(10L);
         assertThat(result.getReponseChoisieId()).isEqualTo(1L);
-        assertThat(result.getReponseChoisieContenu()).isEqualTo("Paris");
+        assertThat(result.getReponseChoisieContenu()).isEqualTo(CONTENU_PARIS);
         assertThat(result.getReponsesCorrectes()).hasSize(1);
         assertThat(result.getExplication()).contains("Bonne réponse");
     }
 
     @Test
-    void corrigerReponse_returnsIncorrect_whenReponseIsIncorrecte() {
+    void corrigerReponseReturnsIncorrectWhenReponseIsIncorrecte() {
         request.setReponseId(2L);
         when(questionRepository.findById(10L)).thenReturn(Optional.of(question));
         when(reponseRepository.findById(2L)).thenReturn(Optional.of(reponseIncorrecte));
@@ -89,35 +114,37 @@ class QuizCorrectionServiceTest {
         assertThat(result.isCorrect()).isFalse();
         assertThat(result.getReponseChoisieContenu()).isEqualTo("Lyon");
         assertThat(result.getReponsesCorrectes()).hasSize(1);
-        assertThat(result.getReponsesCorrectes().get(0).getContenu()).isEqualTo("Paris");
+        assertThat(result.getReponsesCorrectes().get(0).getContenu()).isEqualTo(CONTENU_PARIS);
         assertThat(result.getExplication()).contains("Mauvaise réponse");
-        assertThat(result.getExplication()).contains("Paris");
+        assertThat(result.getExplication()).contains(CONTENU_PARIS);
     }
 
     @Test
-    void corrigerReponse_throwsException_whenQuestionNotFound() {
+    void corrigerReponseThrowsExceptionWhenQuestionNotFound() {
         request.setReponseId(1L);
         when(questionRepository.findById(99L)).thenReturn(Optional.empty());
         request.setQuestionId(99L);
 
         assertThatThrownBy(() -> quizCorrectionService.corrigerReponse(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND))
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getReason()).contains("99"));
     }
 
     @Test
-    void corrigerReponse_throwsException_whenReponseNotFound() {
+    void corrigerReponseThrowsExceptionWhenReponseNotFound() {
         request.setReponseId(99L);
         when(questionRepository.findById(10L)).thenReturn(Optional.of(question));
         when(reponseRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> quizCorrectionService.corrigerReponse(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND))
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getReason()).contains("99"));
     }
 
     @Test
-    void corrigerReponse_throwsException_whenReponseNAppartientPasALaQuestion() {
+    void corrigerReponseThrowsExceptionWhenReponseNAppartientPasALaQuestion() {
         Reponse reponseAutreQuestion = new Reponse();
         reponseAutreQuestion.setId(99L);
         reponseAutreQuestion.setContenu("Berlin");
@@ -128,14 +155,15 @@ class QuizCorrectionServiceTest {
         when(reponseRepository.findById(99L)).thenReturn(Optional.of(reponseAutreQuestion));
 
         assertThatThrownBy(() -> quizCorrectionService.corrigerReponse(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("n'appartient pas");
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST))
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getReason()).contains("n'appartient pas"));
     }
 
     // ─── corrigerToutesLesReponses ────────────────────────────────────────────
 
     @Test
-    void corrigerToutesLesReponses_returnsAllCorrections() {
+    void corrigerToutesLesReponsesReturnsAllCorrections() {
         ReponseEtudiantRequest req1 = new ReponseEtudiantRequest();
         req1.setQuestionId(10L);
         req1.setReponseId(1L);
@@ -158,7 +186,7 @@ class QuizCorrectionServiceTest {
     }
 
     @Test
-    void corrigerToutesLesReponses_returnsEmptyList_whenNoRequests() {
+    void corrigerToutesLesReponsesReturnsEmptyListWhenNoRequests() {
         List<CorrectionResponse> results = quizCorrectionService.corrigerToutesLesReponses(List.of());
 
         assertThat(results).isEmpty();
@@ -167,7 +195,7 @@ class QuizCorrectionServiceTest {
     // ─── calculerScore ────────────────────────────────────────────────────────
 
     @Test
-    void calculerScore_returns100_whenToutesLesReponsesCorrectes() {
+    void calculerScoreReturns100WhenToutesLesReponsesCorrectes() {
         ReponseEtudiantRequest req = new ReponseEtudiantRequest();
         req.setQuestionId(10L);
         req.setReponseId(1L);
@@ -182,7 +210,7 @@ class QuizCorrectionServiceTest {
     }
 
     @Test
-    void calculerScore_returns0_whenAucuneReponseCorrecte() {
+    void calculerScoreReturns0WhenAucuneReponseCorrecte() {
         ReponseEtudiantRequest req = new ReponseEtudiantRequest();
         req.setQuestionId(10L);
         req.setReponseId(2L);
@@ -197,7 +225,7 @@ class QuizCorrectionServiceTest {
     }
 
     @Test
-    void calculerScore_returns50_whenMoitiéCorrectes() {
+    void calculerScoreReturns50WhenMoitieCorrectes() {
         ReponseEtudiantRequest req1 = new ReponseEtudiantRequest();
         req1.setQuestionId(10L);
         req1.setReponseId(1L);
@@ -218,7 +246,7 @@ class QuizCorrectionServiceTest {
     }
 
     @Test
-    void calculerScore_returns0_whenListeVide() {
+    void calculerScoreReturns0WhenListeVide() {
         double score = quizCorrectionService.calculerScore(List.of());
 
         assertThat(score).isEqualTo(0.0);

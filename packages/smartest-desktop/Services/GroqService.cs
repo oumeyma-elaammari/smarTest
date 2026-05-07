@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace smartest_desktop.Services
 {
    
-    public class GroqService
+    public class GroqService : IGroqGenerationClient
     {
         private readonly string _apiKey;
 

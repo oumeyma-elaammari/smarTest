@@ -56,8 +56,9 @@ namespace smartest_desktop.ViewModels
     public class QuizGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
-        private GroqService? _groq;
+        private readonly IGroqGenerationClient? _groqClientOverride;
         private CancellationTokenSource? _cts;
+        private bool _annulationDemandeeParUtilisateur;
 
         // ── Cours importé ─────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ namespace smartest_desktop.ViewModels
         public string LibelleEmailsPublicationWeb =>
             HasEmailsPublicationWeb
                 ? $"{NombreEmailsPublicationWeb} email(s) — plafond {QuizPublicationLimits.MaxAuthorizedStudentEmails}"
-                : "Aucun fichier importé (requis pour « Publier sur le web » depuis le hub).";
+                : "Aucun fichier importé.";
 
         private void NotifierEmailsPublicationWeb()
         {
@@ -193,21 +194,21 @@ namespace smartest_desktop.ViewModels
         public bool HasStatus => !string.IsNullOrEmpty(StatusMessage);
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-        public string Nom => WpfApp.Current.Properties["Nom"]?.ToString() ?? "Professeur";
-        public string Email => WpfApp.Current.Properties["Email"]?.ToString() ?? "";
+        public string Nom => WpfApp.Current?.Properties["Nom"]?.ToString() ?? "Professeur";
+        public string Email => WpfApp.Current?.Properties["Email"]?.ToString() ?? "";
 
         // ── Commandes ─────────────────────────────────────────────────────────
 
-        public ICommand ImporterFichierCommand { get; }
-        public ICommand ImporterEmailsPublicationWebCommand { get; }
-        public ICommand EffacerEmailsPublicationWebCommand { get; }
-        public ICommand EffacerContenuCommand { get; }
-        public ICommand SetDifficulteCommand { get; }
-        public ICommand GenererCommand { get; }
-        public ICommand AnnulerGenerationCommand { get; }
-        public ICommand AnnulerCommand { get; }
-        public ICommand RetourDashboardCommand { get; }
-        public ICommand LogoutCommand { get; }
+        public ICommand ImporterFichierCommand { get; private set; } = null!;
+        public ICommand ImporterEmailsPublicationWebCommand { get; private set; } = null!;
+        public ICommand EffacerEmailsPublicationWebCommand { get; private set; } = null!;
+        public ICommand EffacerContenuCommand { get; private set; } = null!;
+        public ICommand SetDifficulteCommand { get; private set; } = null!;
+        public ICommand GenererCommand { get; private set; } = null!;
+        public ICommand AnnulerGenerationCommand { get; private set; } = null!;
+        public ICommand AnnulerCommand { get; private set; } = null!;
+        public ICommand RetourDashboardCommand { get; private set; } = null!;
+        public ICommand LogoutCommand { get; private set; } = null!;
 
         /// <summary>Dernier paramètre : JSON du tableau d'emails (publication web), ou null si aucun import.</summary>
         public event Action<List<QuestionQCM>, string, string, int, string?, string?>? QuizGenereAvecSucces;
@@ -220,7 +221,22 @@ namespace smartest_desktop.ViewModels
         public QuizGenerationViewModel()
         {
             _db = App.LocalDb;
+            _groqClientOverride = null;
+            EnregistrerCommandes();
+        }
 
+        /// <summary>Constructeur pour les tests (base injectée + client Groq simulé, sans fenêtre clé).</summary>
+        public QuizGenerationViewModel(LocalDbContext db, IGroqGenerationClient groqClientOverride)
+        {
+            ArgumentNullException.ThrowIfNull(db);
+            ArgumentNullException.ThrowIfNull(groqClientOverride);
+            _db = db;
+            _groqClientOverride = groqClientOverride;
+            EnregistrerCommandes();
+        }
+
+        private void EnregistrerCommandes()
+        {
             ImporterFichierCommand = new RelayCommand(
                 async _ => await ImporterFichierAsync(),
                 _ => !IsImporting && !IsGenerating);
@@ -253,6 +269,7 @@ namespace smartest_desktop.ViewModels
             AnnulerGenerationCommand = new RelayCommand(
                 _ =>
                 {
+                    _annulationDemandeeParUtilisateur = true;
                     _cts?.Cancel();
                     StatusMessage = "⛔ Génération annulée.";
                     ErrorMessage = string.Empty;
@@ -262,6 +279,7 @@ namespace smartest_desktop.ViewModels
 
             AnnulerCommand = new RelayCommand(_ =>
             {
+                _annulationDemandeeParUtilisateur = true;
                 _cts?.Cancel();
                 NavigationAnnulee?.Invoke();
             });
@@ -489,27 +507,31 @@ namespace smartest_desktop.ViewModels
         {
             if (!HasCours) return;
 
-            // Vérifier / demander la clé API avant de démarrer
-            string? apiKey = GroqKeyService.LireCle(App.LocalDb);
-            if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+            string? apiKey = null;
+            if (_groqClientOverride == null)
             {
-                var dialog = new GroqKeySetupWindow();
-                if (dialog.ShowDialog() != true) return;
-                apiKey = GroqKeyService.LireCle(App.LocalDb);
-                if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+                apiKey = GroqKeyService.LireCle(_db);
+                if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+                {
+                    var dialog = new GroqKeySetupWindow();
+                    if (dialog.ShowDialog() != true) return;
+                    apiKey = GroqKeyService.LireCle(_db);
+                    if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+                }
             }
 
             _cts?.Cancel();
             _cts = new CancellationTokenSource();
+            _annulationDemandeeParUtilisateur = false;
             var token = _cts.Token;
 
             IsGenerating = true;
             ErrorMessage = string.Empty;
-            _groq = new GroqService(apiKey!);
+            IGroqGenerationClient groqClient = _groqClientOverride ?? new GroqService(apiKey!);
 
             try
             {
-                StatusMessage = $"🚀 Connexion à Groq ({GroqService.NomModele})...";
+                StatusMessage = $"Connexion à Groq ({GroqService.NomModele})...";
                 await Task.Delay(100, token);
 
                 // ── Découpe en lots de MAX 5 questions ───────────────────────
@@ -531,8 +553,8 @@ namespace smartest_desktop.ViewModels
                     string contenuLot = segmentsCours[lotIdx];
 
                     StatusMessage = nbLots > 1
-                        ? $"🧠 Lot {lotIdx + 1}/{nbLots} — génération de {nbCeLot} questions ({Difficulte})..."
-                        : $"🧠 Génération de {NombreQuestions} questions ({Difficulte})...";
+                        ? $"Lot {lotIdx + 1}/{nbLots} — génération de {nbCeLot} questions ({Difficulte})..."
+                        : $"Génération de {NombreQuestions} questions ({Difficulte})...";
 
                     // Délai anti-rate-limit entre lots (même réglage que GroqService.GenererParLotsAsync)
                     if (lotIdx > 0)
@@ -556,7 +578,7 @@ namespace smartest_desktop.ViewModels
                             : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte, enoncesExistants);
 
                         var sw = System.Diagnostics.Stopwatch.StartNew();
-                        var reponse = await _groq.GenererAvecRetryAsync(prompt, token, GroqService.TemperaturePourDifficulte(Difficulte));
+                        var reponse = await groqClient.GenererAvecRetryAsync(prompt, token, GroqService.TemperaturePourDifficulte(Difficulte));
                         sw.Stop();
                         var duree = sw.Elapsed;
                         dureeTotale += duree;
@@ -625,24 +647,38 @@ namespace smartest_desktop.ViewModels
 
                 QuizGenereAvecSucces?.Invoke(toutesQuestions, titre, Difficulte, NombreQuestions, TitreCours, emailsJson);
             }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                StatusMessage = "Génération annulée.";
+                ErrorMessage = string.Empty;
+            }
             catch (OperationCanceledException)
             {
-                StatusMessage = "⛔ Génération annulée.";
-                ErrorMessage = string.Empty;
+                ErrorMessage =
+                    "La requête vers Groq a expiré ou a été annulée par le réseau. Vérifiez votre connexion et réessayez.";
+                StatusMessage = string.Empty;
             }
             catch (InvalidOperationException)
             {
-                ErrorMessage = "⚙️ Clé API non configurée. Cliquez sur Générer pour en saisir une.";
+                ErrorMessage = "Clé API non configurée. Cliquez sur Générer pour en saisir une.";
                 StatusMessage = string.Empty;
             }
             catch (TimeoutException)
             {
-                ErrorMessage = "⏱️ La génération prend trop de temps. Vérifiez votre connexion internet et réessayez.";
-                StatusMessage = string.Empty;
+                if (_annulationDemandeeParUtilisateur || token.IsCancellationRequested)
+                {
+                    StatusMessage = "Génération annulée.";
+                    ErrorMessage = string.Empty;
+                }
+                else
+                {
+                    ErrorMessage = "La génération prend trop de temps. Vérifiez votre connexion internet et réessayez.";
+                    StatusMessage = string.Empty;
+                }
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("401") || ex.Message.Contains("invalide"))
             {
-                GroqKeyService.SupprimerCle(App.LocalDb);
+                GroqKeyService.SupprimerCle(_db);
                 ErrorMessage = string.Empty;
                 StatusMessage = string.Empty;
                 var dialog = new GroqKeySetupWindow("Votre clé a été révoquée ou supprimée sur console.groq.com.");
@@ -661,6 +697,7 @@ namespace smartest_desktop.ViewModels
             finally
             {
                 IsGenerating = false;
+                _annulationDemandeeParUtilisateur = false;
             }
         }
 

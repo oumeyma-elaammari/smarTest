@@ -252,7 +252,6 @@ export function Divider() {
         </div>
     )
 }
-
 export function Footer() {
     return (
         <div style={footerStyle}>
@@ -260,3 +259,4 @@ export function Footer() {
         </div>
     )
 }
+

@@ -14,6 +14,19 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
     const navigate = useNavigate()
     const { nom, logout } = useAuth()
 
+    const handleLogout = () => {
+        try {
+            logout()
+        } catch {
+            try {
+                localStorage.clear()
+            } catch {
+                /* stockage indisponible */
+            }
+            window.location.href = '/login'
+        }
+    }
+
     const shell: CSSProperties = {
         position: 'sticky',
         top: 0,
@@ -147,7 +160,7 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
 
                 <button
                     type="button"
-                    onClick={logout}
+                    onClick={handleLogout}
                     aria-label="Se déconnecter"
                     style={{
                         ...btnSm,

@@ -100,8 +100,15 @@
 					<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
 						<Border Width="8" Height="8" CornerRadius="4" Background="#16A34A"
                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
-						<TextBlock Text="{Binding TitreQuiz}" FontSize="16" FontWeight="700"
-                                   Foreground="#0f1e3d"/>
+						<TextBox Text="{Binding TitreQuiz, UpdateSourceTrigger=PropertyChanged}"
+                                 MinWidth="320"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 FontSize="16"
+                                 FontWeight="700"
+                                 Foreground="#0f1e3d"
+                                 VerticalContentAlignment="Center"/>
 					</StackPanel>
 					<StackPanel Orientation="Horizontal">
 						<TextBlock FontSize="11" Foreground="#8899b8"
@@ -137,7 +144,16 @@
 					</Border>
 
 					<!-- Valider -->
-					<Border Style="{StaticResource QRValidateBorder}">
+					<Border>
+						<Border.Style>
+							<Style TargetType="Border" BasedOn="{StaticResource QRValidateBorder}">
+								<Style.Triggers>
+									<DataTrigger Binding="{Binding IsValidationEnCours}" Value="True">
+										<Setter Property="Opacity" Value="0.7"/>
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</Border.Style>
 						<Border.InputBindings>
 							<MouseBinding MouseAction="LeftClick" Command="{Binding ValiderQuizCommand}"/>
 						</Border.InputBindings>
@@ -329,9 +345,7 @@
 						<Border Margin="12,12,12,16" Padding="14,12" CornerRadius="10"
                                 Background="White" BorderBrush="#e2e8f4" BorderThickness="1">
 							<StackPanel>
-								<TextBlock Text="Publication web" FontSize="13" FontWeight="700" Foreground="#0f1e3d"/>
-								<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#8899b8" Margin="0,4,0,10"
-                                           Text="Étudiants autorisés sur le web : import CSV / Excel, ajout d'une adresse, cochez des lignes puis supprimez la sélection. Enregistré avec le quiz à la validation."/>
+								<TextBlock Text="Publication vers la plateforme web" FontSize="13" FontWeight="700" Foreground="#0f1e3d"  Margin="0,0,0,8"/>
 								<StackPanel Orientation="Horizontal" Margin="0,0,0,8">
 									<Border CornerRadius="8" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" Background="#0f1e3d">
 										<Border.InputBindings>
@@ -406,24 +420,26 @@
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
 									<TextBlock Grid.Column="0" Text="Liste des emails" FontSize="10" FontWeight="700" Foreground="#0f1e3d" VerticalAlignment="Center"/>
-									<Button Grid.Column="1" Command="{Binding SupprimerEmailsSelectionnesWebCommand}"
-                                            Padding="10,6" FontSize="11" FontWeight="600" Cursor="Hand"
-                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" Foreground="#B91C1C"
-                                            FocusVisualStyle="{x:Null}" ToolTip="Retire de la liste les adresses cochées">
-										<Button.Style>
-											<Style TargetType="Button">
+									<Border Grid.Column="1" Width="28" Height="28" CornerRadius="7" Cursor="Hand"
+                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1"
+                                            ToolTip="Supprimer les emails sélectionnés"
+                                            Visibility="{Binding AEmailsSelectionnes, Converter={StaticResource BoolToVis}}">
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick" Command="{Binding SupprimerEmailsSelectionnesWebCommand}"/>
+										</Border.InputBindings>
+										<Border.Style>
+											<Style TargetType="Border">
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
 														<Setter Property="Background" Value="#FEE2E2"/>
 													</Trigger>
-													<Trigger Property="IsEnabled" Value="False">
-														<Setter Property="Opacity" Value="0.45"/>
-													</Trigger>
 												</Style.Triggers>
 											</Style>
-										</Button.Style>
-										Supprimer la sélection
-									</Button>
+										</Border.Style>
+										<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                   Foreground="#DC2626"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+									</Border>
 								</Grid>
 								<TextBlock Text="Aucun email pour l'instant. Importez un fichier ou ajoutez une adresse ci-dessus."
                                            FontSize="11" Foreground="#94a3b8" TextWrapping="Wrap"
@@ -444,7 +460,9 @@
 											<Border Margin="0,0,0,4" Padding="8,6" CornerRadius="6" Background="#f1f5f9" BorderBrush="#e2e8f4" BorderThickness="1">
 												<StackPanel Orientation="Horizontal">
 													<CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-													<TextBlock Text="{Binding Email}" FontSize="11" Foreground="#0f1e3d" FontFamily="Consolas" VerticalAlignment="Center"/>
+													<TextBox Text="{Binding Email, Mode=TwoWay}" FontSize="11" Foreground="#0f1e3d" FontFamily="Consolas" VerticalAlignment="Center"
+                                                             BorderThickness="0" Background="Transparent" MinWidth="220"
+                                                             ToolTip="Email modifiable"/>
 												</StackPanel>
 											</Border>
 										</DataTemplate>

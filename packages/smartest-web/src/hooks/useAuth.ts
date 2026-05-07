@@ -15,20 +15,59 @@ interface AuthState {
     isAuthenticated: boolean
     login: (data: AuthResponse) => void
     logout: () => void
+    rehydrateFromStorage: () => void
 }
 
+function readLs(key: string): string | null {
+    try {
+        return localStorage.getItem(key)
+    } catch {
+        return null
+    }
+}
+
+function writeLs(key: string, value: string): boolean {
+    try {
+        localStorage.setItem(key, value)
+        return true
+    } catch {
+        return false
+    }
+}
+
+function clearLs(): boolean {
+    try {
+        localStorage.clear()
+        return true
+    } catch {
+        return false
+    }
+}
+
+function removeLsKeys(keys: string[]): void {
+    for (const k of keys) {
+        try {
+            localStorage.removeItem(k)
+        } catch {
+            /* ignore */
+        }
+    }
+}
+
+const AUTH_KEYS = ['token', 'role', 'nom', 'email'] as const
+
 const useAuth = create<AuthState>((set) => ({
-    token: localStorage.getItem('token'),
-    role: localStorage.getItem('role'),
-    nom: localStorage.getItem('nom'),
-    email: localStorage.getItem('email'),
-    isAuthenticated: !!localStorage.getItem('token'),
+    token: readLs('token'),
+    role: readLs('role'),
+    nom: readLs('nom'),
+    email: readLs('email'),
+    isAuthenticated: !!readLs('token'),
 
     login: (data: AuthResponse) => {
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('role', data.role)
-        localStorage.setItem('nom', data.nom)
-        localStorage.setItem('email', data.email)
+        writeLs('token', data.token)
+        writeLs('role', data.role)
+        writeLs('nom', data.nom)
+        writeLs('email', data.email)
         set({
             token: data.token,
             role: data.role,
@@ -39,13 +78,13 @@ const useAuth = create<AuthState>((set) => ({
     },
 
     logout: () => {
-        // Confirmation native du navigateur
         const confirmed = window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')
-
         if (!confirmed) return
-        // Si l'utilisateur clique "Annuler" → rien ne se passe
 
-        localStorage.clear()
+        if (!clearLs()) {
+            removeLsKeys([...AUTH_KEYS])
+        }
+
         set({
             token: null,
             role: null,
@@ -53,7 +92,23 @@ const useAuth = create<AuthState>((set) => ({
             email: null,
             isAuthenticated: false,
         })
-        window.location.href = '/login'
+
+        try {
+            window.location.href = '/login'
+        } catch {
+            /* navigate fallback si location inaccessible */
+        }
+    },
+
+    rehydrateFromStorage: () => {
+        const token = readLs('token')
+        set({
+            token,
+            role: readLs('role'),
+            nom: readLs('nom'),
+            email: readLs('email'),
+            isAuthenticated: !!token,
+        })
     },
 }))
 

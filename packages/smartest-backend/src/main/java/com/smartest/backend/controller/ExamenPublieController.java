@@ -3,6 +3,7 @@ package com.smartest.backend.controller;
 import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.service.ExamenPublieService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ public class ExamenPublieController {
     private final ExamenPublieService service;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ExamenPublie publier(@RequestParam Long professeurId,
                                 @RequestParam String titre,
                                 @RequestParam Integer duree,
@@ -31,6 +33,11 @@ public class ExamenPublieController {
                 LocalDateTime.parse(dateDebut),
                 LocalDateTime.parse(dateFin)
         );
+    }
+
+    @GetMapping
+    public List<ExamenPublie> tous() {
+        return service.findAll();
     }
 
     @GetMapping("/disponibles")

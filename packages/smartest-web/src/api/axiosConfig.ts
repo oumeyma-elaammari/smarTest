@@ -1,21 +1,31 @@
-import axios from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import toast from 'react-hot-toast'
 
 const api = axios.create({
     baseURL: 'http://localhost:8081',
     headers: { 'Content-Type': 'application/json' },
+    timeout: 15_000,
 })
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token')
-    if (token) config.headers.Authorization = `Bearer ${token}`
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    try {
+        const token = localStorage.getItem('token')
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+        }
+    } catch {
+        /* stockage indisponible */
+    }
     return config
 })
 
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-   
-        const url = error.config?.url || ''
+    (error: AxiosError | unknown) => {
+        const ax = axios.isAxiosError(error) ? error : null
+        const status = ax?.response?.status
+        const url = ax?.config?.url ?? ''
+
         const isAuthRoute =
             url.includes('/auth/login') ||
             url.includes('/auth/register') ||
@@ -23,13 +33,21 @@ api.interceptors.response.use(
             url.includes('/auth/reset-password') ||
             url.includes('/auth/verify-email')
 
-        if (error.response?.status === 401 && !isAuthRoute) {
-            localStorage.clear()
+        if (status === 429) {
+            toast.error('Trop de requêtes. Réessayez dans quelques instants.')
+        }
+
+        if (status === 401 && !isAuthRoute) {
+            try {
+                localStorage.clear()
+            } catch {
+                /* quota / navigation privée */
+            }
             window.location.href = '/login'
         }
 
         return Promise.reject(error)
-    }
+    },
 )
 
 export default api
