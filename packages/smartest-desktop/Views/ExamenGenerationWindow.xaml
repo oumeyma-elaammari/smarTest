@@ -221,6 +221,40 @@
 							</Grid>
 						</Border>
 
+						<!-- VRAI / FAUX -->
+						<Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
+                                BorderThickness="1" Padding="16,12" Margin="0,0,0,8">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="Auto"/>
+								</Grid.ColumnDefinitions>
+								<TextBlock Text="Vrai / Faux (VF)"
+                                           FontSize="13" FontWeight="600" Foreground="#0f1e3d"
+                                           VerticalAlignment="Center"/>
+								<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+									<Border Style="{StaticResource CounterBtn}">
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick" Command="{Binding DecrVFCommand}"/>
+										</Border.InputBindings>
+										<TextBlock Text="−" FontSize="16" FontWeight="700" Foreground="#6B6B6B"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+									</Border>
+									<TextBlock Text="{Binding NbVF}" FontSize="16" FontWeight="700"
+                                               Foreground="#0f1e3d" Width="36"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               TextAlignment="Center"/>
+									<Border Style="{StaticResource CounterBtn}">
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick" Command="{Binding IncrVFCommand}"/>
+										</Border.InputBindings>
+										<TextBlock Text="+" FontSize="16" FontWeight="700" Foreground="#6B6B6B"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+									</Border>
+								</StackPanel>
+							</Grid>
+						</Border>
+
 						<!-- CHECKBOX -->
 						<Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
                                 BorderThickness="1" Padding="16,12" Margin="0,0,0,8">

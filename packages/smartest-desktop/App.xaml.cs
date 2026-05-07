@@ -73,12 +73,20 @@ namespace smartest_desktop
             AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
             {
                 var ex = (Exception)ev.ExceptionObject;
-                MessageBox.Show($"{ex.Message}\n\n{ex.StackTrace}", "Erreur critique");
+                MessageBox.Show(
+                    Helpers.UserErrorMessage.FromException(ex, "Une erreur critique est survenue. Redemarrez l'application."),
+                    "Erreur critique",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             };
 
             DispatcherUnhandledException += (s, ev) =>
             {
-                MessageBox.Show($"{ev.Exception.Message}\n\n{ev.Exception.StackTrace}", "Erreur WPF");
+                MessageBox.Show(
+                    Helpers.UserErrorMessage.FromException(ev.Exception, "Une erreur inattendue est survenue."),
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 ev.Handled = true;
             };
 
@@ -118,7 +126,7 @@ namespace smartest_desktop
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Erreur au démarrage :\n\n{ex.Message}\n\n{ex.InnerException?.Message}",
+                    Helpers.UserErrorMessage.FromException(ex, "Impossible de demarrer l'application."),
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
             }
@@ -207,6 +215,21 @@ namespace smartest_desktop
                     "ALTER TABLE quiz_local ADD COLUMN BackendQuizId INTEGER NULL;");
                 AddColumnIfMissing("EmailsPublicationWebJson",
                     "ALTER TABLE quiz_local ADD COLUMN EmailsPublicationWebJson TEXT NULL;");
+
+                cmd.CommandText = "PRAGMA table_info(question_locale);";
+                var questionColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                        questionColumns.Add(r.GetString(1));
+                }
+
+                if (!questionColumns.Contains("BaremePoints"))
+                {
+                    using var c = conn.CreateCommand();
+                    c.CommandText = "ALTER TABLE question_locale ADD COLUMN BaremePoints REAL NOT NULL DEFAULT 0;";
+                    c.ExecuteNonQuery();
+                }
             }
             finally
             {

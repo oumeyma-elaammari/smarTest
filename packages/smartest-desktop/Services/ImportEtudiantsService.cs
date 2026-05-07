@@ -59,7 +59,7 @@ namespace smartest_desktop.Services
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    $"Import des étudiants impossible : {ex.Message}", ex);
+                    "Import des etudiants impossible. Verifiez le fichier puis reessayez.", ex);
             }
         }
 

@@ -525,7 +525,7 @@ namespace smartest_desktop.ViewModels
                 {
                     MessageBox.Show(
                         "La suppression sur le serveur a échoué. Le quiz n'a pas été supprimé localement non plus.\n\n" +
-                        ex.Message,
+                        UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
                         "Synchronisation serveur",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -535,7 +535,7 @@ namespace smartest_desktop.ViewModels
                 {
                     MessageBox.Show(
                         "La suppression sur le serveur a échoué. Le quiz n'a pas été supprimé localement non plus.\n\n" +
-                        ex.Message,
+                        UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
                         "Synchronisation serveur",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -576,11 +576,11 @@ namespace smartest_desktop.ViewModels
             }
 
             long backendId = quiz.BackendQuizId ?? 0;
+            var apiCreate = new QuizWebPublicationApiService();
             if (backendId <= 0)
             {
                 try
                 {
-                    var apiCreate = new QuizWebPublicationApiService();
                     var profId = await apiCreate.GetProfesseurIdAsync(token);
 
                     int duree = Math.Max(1, Math.Min(120, Math.Max(quiz.NombreQuestions * 2, 15)));
@@ -593,12 +593,12 @@ namespace smartest_desktop.ViewModels
                 }
                 catch (SmartestApiException ex)
                 {
-                    MessageBox.Show(ex.Message, LibelleCodeQr, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Impossible d'activer le mode QR pour le moment."), LibelleCodeQr, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 catch (SmartestNetworkException ex)
                 {
-                    MessageBox.Show(ex.Message, LibelleCodeQr, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Impossible d'activer le mode QR pour le moment."), LibelleCodeQr, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -611,6 +611,41 @@ namespace smartest_desktop.ViewModels
                 quiz.BackendQuizId = backendId;
             }
 
+            var quizCompletLocal = await _quizService.GetByIdAsync(quiz.Id);
+            var questionsQr = quizCompletLocal?.Questions ?? new List<QuestionLocale>();
+            if (questionsQr.Count == 0)
+            {
+                MessageBox.Show(
+                    "Ce quiz ne contient aucune question locale. Ouvrez-le puis enregistrez au moins une question avant d'activer le QR.",
+                    LibelleCodeQr,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                await apiCreate.SyncQrQuestionsAsync(token, backendId, questionsQr);
+            }
+            catch (SmartestApiException ex)
+            {
+                MessageBox.Show(
+                    UserErrorMessage.FromText(ex.Message, "Impossible de synchroniser les questions du quiz pour le mode QR."),
+                    LibelleCodeQr,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+            catch (SmartestNetworkException ex)
+            {
+                MessageBox.Show(
+                    UserErrorMessage.FromText(ex.Message, "Connexion impossible pendant la synchronisation du mode QR."),
+                    LibelleCodeQr,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
             var url = $"{GetBaseWebUrl()}/quiz-live/{backendId}?token={Uri.EscapeDataString(token)}";
 
             try
@@ -620,7 +655,7 @@ namespace smartest_desktop.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Impossible d'ouvrir la page Code QR :\n{ex.Message}",
+                    UserErrorMessage.FromException(ex, "Impossible d'ouvrir la page du mode QR pour le moment."),
                     LibelleCodeQr,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -747,12 +782,12 @@ namespace smartest_desktop.ViewModels
             }
             catch (SmartestApiException ex)
             {
-                MessageBox.Show(ex.Message, LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(UserErrorMessage.FromText(ex.Message, "La publication web n'a pas pu etre preparee."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
             catch (SmartestNetworkException ex)
             {
-                MessageBox.Show(ex.Message, LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Connexion impossible pour publier sur le web."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
         }
@@ -787,12 +822,12 @@ namespace smartest_desktop.ViewModels
                 }
                 catch (SmartestApiException ex)
                 {
-                    MessageBox.Show(ex.Message, LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "La publication web a echoue. Reessayez."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 catch (SmartestNetworkException ex)
                 {
-                    MessageBox.Show(ex.Message, LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Connexion impossible pour publier sur le web."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 

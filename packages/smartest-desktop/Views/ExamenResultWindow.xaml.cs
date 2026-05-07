@@ -1,4 +1,5 @@
 using smartest_desktop.Data.LocalEntities;
+using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
 using System;
@@ -13,6 +14,8 @@ namespace smartest_desktop.Views
     public partial class ExamenResultWindow : Window
     {
         private bool _fermetureConfirmee;
+        private bool _isClosing;
+        private bool _navigationInProgress;
 
         public ExamenResultWindow(
             List<QuestionExamen> questions,
@@ -49,10 +52,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    _fermetureConfirmee = true;
-                    var hub = new QuizExamenWindow();
-                    hub.Show();
-                    Close();
+                    NaviguerEtFermer(() => new QuizExamenWindow());
                 });
             };
 
@@ -60,10 +60,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    _fermetureConfirmee = true;
-                    var examenGen = new ExamenGenerationWindow();
-                    examenGen.Show();
-                    Close();
+                    NaviguerEtFermer(() => new ExamenGenerationWindow());
                 });
             };
 
@@ -131,7 +128,7 @@ namespace smartest_desktop.Views
                 {
                     Dispatcher.Invoke(() =>
                         MessageBox.Show(
-                            $"Erreur lors de la sauvegarde :\n{ex.Message}",
+                            UserErrorMessage.FromException(ex, "Impossible d'enregistrer l'examen pour le moment."),
                             "Erreur",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error));
@@ -141,25 +138,34 @@ namespace smartest_desktop.Views
 
         private void OuvrirHubEtFermer()
         {
+            NaviguerEtFermer(() => new QuizExamenWindow());
+        }
+
+        private void NaviguerEtFermer(Func<Window> nextWindowFactory)
+        {
+            if (_navigationInProgress)
+                return;
+
+            _navigationInProgress = true;
             _fermetureConfirmee = true;
-            var hub = new QuizExamenWindow();
-            hub.Show();
-            Close();
+
+            var nextWindow = nextWindowFactory();
+            nextWindow.Show();
+
+            if (!_isClosing)
+                Close();
         }
 
         private void ExamenResultWindow_Closing(object? sender, CancelEventArgs e)
         {
+            _isClosing = true;
             if (_fermetureConfirmee)
             {
                 return;
             }
-
-            if (DataContext is ExamenResultViewModel vm &&
-                vm.RetourCommand?.CanExecute(null) == true)
-            {
-                e.Cancel = true;
-                vm.RetourCommand.Execute(null);
-            }
+            _fermetureConfirmee = true;
+            _navigationInProgress = true;
+            Application.Current.Shutdown();
         }
     }
 }

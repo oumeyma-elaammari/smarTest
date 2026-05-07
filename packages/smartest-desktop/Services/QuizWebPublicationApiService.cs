@@ -206,6 +206,56 @@ namespace smartest_desktop.Services
             }
         }
 
+        public async Task SyncQrQuestionsAsync(
+            string bearerToken,
+            long backendQuizId,
+            IReadOnlyList<QuestionLocale> questions,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var http = CreateHttp(bearerToken);
+                var payload = new
+                {
+                    questions = (questions ?? new List<QuestionLocale>())
+                        .Select(q => new
+                        {
+                            enonce = q.Enonce,
+                            optionA = q.OptionA,
+                            optionB = q.OptionB,
+                            optionC = q.OptionC,
+                            optionD = q.OptionD,
+                            reponseCorrecte = q.ReponseCorrecte,
+                            explication = q.Explication,
+                            difficulte = q.Difficulte
+                        })
+                        .ToList()
+                };
+                var response = await http.PostAsync(
+                    $"/api/quizs/{backendQuizId}/qr-sync-questions",
+                    ToJson(payload),
+                    cancellationToken);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                    throw SmartestApiException.FromHttpFailure(
+                        response.StatusCode, body, "Synchronisation QR");
+            }
+            catch (SmartestApiException)
+            {
+                throw;
+            }
+            catch (OperationCanceledException ex)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+        }
+
         /// <summary>Supprime le quiz sur le backend (professeur propriétaire uniquement).</summary>
         public async Task DeleteQuizAsync(string bearerToken, long backendQuizId, CancellationToken cancellationToken = default)
         {

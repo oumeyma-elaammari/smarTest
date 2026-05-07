@@ -101,7 +101,7 @@ public class QuizWebPublicationApiServiceTests
         var ex = await Assert.ThrowsAsync<SmartestNetworkException>(() =>
             svc.PostPublicationWebAsync("tok", 1L, Array.Empty<string>()));
 
-        Assert.Contains("serveur", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Connexion impossible", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

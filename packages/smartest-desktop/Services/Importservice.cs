@@ -111,12 +111,11 @@ namespace smartest_desktop.Services
 
                 return sb.ToString().Trim();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException(
                     $"Erreur lors de la lecture du PDF.\n" +
-                    $"Le fichier est peut-être protégé par mot de passe.\n" +
-                    $"Détail : {ex.Message}");
+                    "Le fichier est peut-être protégé par mot de passe.");
             }
         }
 
@@ -165,11 +164,10 @@ namespace smartest_desktop.Services
             {
                 throw; // propager l'exception .doc
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException(
-                    $"Erreur lors de la lecture du fichier Word.\n" +
-                    $"Détail : {ex.Message}");
+                    "Erreur lors de la lecture du fichier Word.");
             }
         }
 
@@ -186,11 +184,10 @@ namespace smartest_desktop.Services
             {
                 return File.ReadAllText(cheminFichier, Encoding.UTF8).Trim();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException(
-                    $"Erreur lors de la lecture du fichier texte.\n" +
-                    $"Détail : {ex.Message}");
+                    "Erreur lors de la lecture du fichier texte.");
             }
         }
 

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using smartest_desktop.Exceptions;
+using smartest_desktop.Helpers;
 using smartest_desktop.Models;
 
 namespace smartest_desktop.Services
@@ -57,7 +58,7 @@ namespace smartest_desktop.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     var ex = SmartestApiException.FromHttpFailure(response.StatusCode, body, "Statistiques");
-                    return (null, ex.Message);
+                    return (null, UserErrorMessage.FromText(ex.Message, "Impossible de charger les statistiques pour le moment."));
                 }
 
                 try
@@ -67,9 +68,9 @@ namespace smartest_desktop.Services
                         return (null, "Statistiques : réponse vide ou illisible.");
                     return (dto, null);
                 }
-                catch (JsonException jex)
+                catch (JsonException)
                 {
-                    return (null, $"Lecture des statistiques : corps JSON invalide ({jex.Message}).");
+                    return (null, "Les statistiques recues sont invalides. Reessayez plus tard.");
                 }
             }
             catch (OperationCanceledException ex)
@@ -77,16 +78,16 @@ namespace smartest_desktop.Services
                 if (cancellationToken.IsCancellationRequested)
                     throw;
                 var net = SmartestNetworkException.ServerUnreachable(ex);
-                return (null, $"{net.Message} (délai dépassé).");
+                return (null, net.Message);
             }
             catch (HttpRequestException ex)
             {
                 var net = SmartestNetworkException.ServerUnreachable(ex);
                 return (null, net.Message);
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                return (null, $"Statistiques : {ex.Message}");
+                return (null, "Impossible de charger les statistiques pour le moment.");
             }
         }
     }

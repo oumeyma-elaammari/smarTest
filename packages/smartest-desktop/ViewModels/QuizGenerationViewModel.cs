@@ -22,6 +22,9 @@ namespace smartest_desktop.ViewModels
 {
     public class QuestionQCM : BaseViewModel
     {
+        private string _type = "QCM";
+        public string Type { get => _type; set => SetProperty(ref _type, value); }
+
         private string _enonce = string.Empty;
         public string Enonce { get => _enonce; set => SetProperty(ref _enonce, value); }
 
@@ -411,7 +414,7 @@ namespace smartest_desktop.ViewModels
             catch (IOException ex)
             {
                 MessageBox.Show(
-                    $"Lecture du fichier impossible : {ex.Message}",
+                    UserErrorMessage.FromException(ex, "Lecture du fichier impossible. Verifiez qu'il n'est pas deja ouvert."),
                     "Publication web",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -419,7 +422,7 @@ namespace smartest_desktop.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Import impossible : {ex.Message}",
+                    UserErrorMessage.FromException(ex, "Import impossible. Verifiez le format du fichier puis reessayez."),
                     "Publication web",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -686,12 +689,12 @@ namespace smartest_desktop.ViewModels
             }
             catch (HttpRequestException ex)
             {
-                ErrorMessage = $"❌ {ex.Message}";
+                ErrorMessage = $"❌ {UserErrorMessage.FromException(ex, "Impossible de contacter le service de generation. Reessayez.")}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"❌ {ex.Message}";
+                ErrorMessage = $"❌ {UserErrorMessage.FromException(ex, "La generation du quiz a echoue. Reessayez.")}";
                 StatusMessage = string.Empty;
             }
             finally
@@ -793,15 +796,23 @@ namespace smartest_desktop.ViewModels
                 "\nGenerate COMPLETELY DIFFERENT questions covering other aspects of the content.\n";
         }
 
+        private static string BuildVariationSection() =>
+            "VARIATION REQUIREMENTS:\n" +
+            $"- Session identifier: {Guid.NewGuid()}\n" +
+            "- Vary the generated questions compared to previous generations.\n" +
+            "- Ne répète pas les mêmes questions. Génère des questions différentes à chaque appel, en explorant des angles variés du contenu.\n";
+
         private string BuildPrompt(string contenu, int nbQuestions, string difficulte, IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
+            string variationSection = BuildVariationSection();
 
             return
 $@"Generate EXACTLY {nbQuestions} multiple-choice questions in FRENCH about the text below.
 
 {difficultyInstructions}
+{variationSection}
 IMPORTANT: Base ALL questions STRICTLY on the provided text. Do NOT invent or assume any information not explicitly present in the text.
 {avoidSection}
 TEXT:
@@ -827,6 +838,7 @@ RULES:
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
+            string variationSection = BuildVariationSection();
             int texteLength = Math.Min(contenu.Length, 4000);
             string texteTronque = contenu.Length > texteLength ? contenu[..texteLength] : contenu;
 
@@ -834,6 +846,7 @@ RULES:
 $@"GÉNÉRATION STRICTE DE {nbQuestions} QUESTIONS QCM EN FRANÇAIS
 
 {difficultyInstructions}
+{variationSection}
 IMPORTANT: Baser TOUTES les questions UNIQUEMENT sur le texte fourni. Ne pas inventer d'informations absentes du texte.
 {avoidSection}
 TEXTE SOURCE:
@@ -918,9 +931,12 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                     {
                         string enonce = StrAlt(item,
                             "enonce", "question", "text", "texte", "questionText", "enoncé");
+                        string type = StrAlt(item, "type", "questionType", "question_type", "kind")
+                            .ToUpperInvariant().Trim();
+                        bool isVf = type == "VF" || type.Contains("VRAI") || type.Contains("FAUX") || type == "TRUE_FALSE";
 
-                        string optA = StrAlt(item, "optionA", "option_a", "a", "choiceA");
-                        string optB = StrAlt(item, "optionB", "option_b", "b", "choiceB");
+                        string optA = isVf ? "Vrai" : StrAlt(item, "optionA", "option_a", "a", "choiceA");
+                        string optB = isVf ? "Faux" : StrAlt(item, "optionB", "option_b", "b", "choiceB");
                         string optC = StrAlt(item, "optionC", "option_c", "c", "choiceC");
                         string optD = StrAlt(item, "optionD", "option_d", "d", "choiceD");
 
@@ -937,6 +953,15 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                             "correctAnswer", "correct", "bonne_reponse", "bonneReponse",
                             "reponse", "response");
                         rep = rep.ToUpper().Trim();
+                        if (isVf)
+                        {
+                            rep = rep switch
+                            {
+                                "A" or "VRAI" or "TRUE" or "1" => "A",
+                                "B" or "FAUX" or "FALSE" or "2" => "B",
+                                _ => "A"
+                            };
+                        }
 
                         if (rep == "1") rep = "A";
                         else if (rep == "2") rep = "B";
@@ -952,6 +977,7 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                         var q = new QuestionQCM
                         {
                             Numero = n++,
+                            Type = isVf ? "VF" : "QCM",
                             Enonce = enonce,
                             OptionA = optA,
                             OptionB = optB,
@@ -965,7 +991,7 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                             !string.IsNullOrWhiteSpace(q.OptionA) &&
                             !string.IsNullOrWhiteSpace(q.OptionB) &&
                             !string.IsNullOrWhiteSpace(q.ReponseCorrecte) &&
-                            "ABCD".Contains(q.ReponseCorrecte))
+                            (q.Type == "VF" ? "AB".Contains(q.ReponseCorrecte) : "ABCD".Contains(q.ReponseCorrecte)))
                         {
                             questions.Add(q);
                         }

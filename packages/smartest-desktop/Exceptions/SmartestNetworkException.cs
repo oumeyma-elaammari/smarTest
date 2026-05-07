@@ -18,7 +18,7 @@ namespace smartest_desktop.Exceptions
         public static SmartestNetworkException ServerUnreachable(Exception? innerException = null)
         {
             const string msg =
-                "Impossible de contacter le serveur. Vérifiez que le backend est démarré et l'URL configurée.";
+                "Connexion impossible pour le moment. Verifiez votre connexion internet puis reessayez.";
             return innerException == null
                 ? new SmartestNetworkException(msg)
                 : new SmartestNetworkException(msg, innerException);

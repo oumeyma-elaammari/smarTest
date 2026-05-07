@@ -387,10 +387,12 @@ namespace smartest_desktop.Services
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
+            string variationSection = BuildVariationSection();
             return $@"Generate EXACTLY {nbQuestions} multiple-choice questions (QCM) from this course content.
 Start question numbering at {numeroDepart}.
 
 {difficultyInstructions}
+{variationSection}
 IMPORTANT: Base ALL questions STRICTLY on the provided course content below. Do NOT invent or assume any information not explicitly mentioned in the text.
 {avoidSection}
 Course content:
@@ -423,6 +425,12 @@ Output ONLY the JSON array, nothing else.";
                 string.Join("\n", lines) +
                 "\nGenerate COMPLETELY DIFFERENT questions covering other aspects of the content.\n";
         }
+
+        private static string BuildVariationSection() =>
+            "VARIATION REQUIREMENTS:\n" +
+            $"- Session identifier: {Guid.NewGuid()}\n" +
+            "- Vary the generated questions compared to previous generations.\n" +
+            "- Ne répète pas les mêmes questions. Génère des questions différentes à chaque appel, en explorant des angles variés du contenu.\n";
 
         /// <summary>
         /// Construit le prompt pour un lot de questions d'examen mixtes (QCM + Checkbox + Rédaction).
@@ -460,21 +468,23 @@ Output ONLY the JSON array, nothing else.";
 
         public static string BuildPromptExamenLot(
             string contenuCours,
-            int nbQCM, int nbCheckbox, int nbRedaction,
+            int nbQCM, int nbVF, int nbCheckbox, int nbRedaction,
             string difficulte,
             int numeroDepart,
             IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
-            int total = nbQCM + nbCheckbox + nbRedaction;
+            string variationSection = BuildVariationSection();
+            int total = nbQCM + nbVF + nbCheckbox + nbRedaction;
 
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"Generate EXACTLY {total} exam questions from this course content. Start numbering at {numeroDepart}.");
-            sb.AppendLine($"MANDATORY BREAKDOWN — you MUST generate EXACTLY: {nbQCM} questions of type QCM, {nbCheckbox} questions of type CHECKBOX, {nbRedaction} questions of type REDACTION. No substitutions allowed.");
+            sb.AppendLine($"MANDATORY BREAKDOWN — you MUST generate EXACTLY: {nbQCM} questions of type QCM, {nbVF} questions of type VF, {nbCheckbox} questions of type CHECKBOX, {nbRedaction} questions of type REDACTION. No substitutions allowed.");
             sb.AppendLine();
             sb.AppendLine(difficultyInstructions);
             sb.AppendLine();
+            sb.AppendLine(variationSection);
             sb.AppendLine("CRITICAL: Base ALL questions STRICTLY on the provided course content. Do NOT invent or assume any information not explicitly mentioned in the text.");
             if (!string.IsNullOrEmpty(avoidSection)) sb.AppendLine(avoidSection);
             sb.AppendLine("Course content:");
@@ -484,6 +494,13 @@ Output ONLY the JSON array, nothing else.";
             sb.AppendLine();
             sb.AppendLine("QCM format (use for EXACTLY " + nbQCM + " questions, exactly 1 correct answer):");
             sb.AppendLine("{\"type\":\"QCM\",\"enonce\":\"Question?\",\"optionA\":\"...\",\"optionB\":\"...\",\"optionC\":\"...\",\"optionD\":\"...\",\"reponseCorrecte\":\"A\",\"explication\":\"...\"}");
+            if (nbVF > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("VF format (use for EXACTLY " + nbVF + " questions, only 'Vrai' and 'Faux' options):");
+                sb.AppendLine("{\"type\":\"VF\",\"enonce\":\"Question?\",\"optionA\":\"Vrai\",\"optionB\":\"Faux\",\"reponseCorrecte\":\"A\",\"explication\":\"...\"}");
+                sb.AppendLine("Note: reponseCorrecte must be \"A\" for Vrai or \"B\" for Faux.");
+            }
             if (nbCheckbox > 0)
             {
                 sb.AppendLine();
@@ -501,8 +518,8 @@ Output ONLY the JSON array, nothing else.";
             sb.AppendLine("RULES:");
             sb.AppendLine("1. Start with [ — nothing before");
             sb.AppendLine("2. End with ] — nothing after");
-            sb.AppendLine($"3. EXACTLY {total} objects total: {nbQCM} QCM + {nbCheckbox} CHECKBOX + {nbRedaction} REDACTION");
-            sb.AppendLine("4. \"type\" field must be exactly \"QCM\", \"CHECKBOX\", or \"REDACTION\"");
+            sb.AppendLine($"3. EXACTLY {total} objects total: {nbQCM} QCM + {nbVF} VF + {nbCheckbox} CHECKBOX + {nbRedaction} REDACTION");
+            sb.AppendLine("4. \"type\" field must be exactly \"QCM\", \"VF\", \"CHECKBOX\", or \"REDACTION\"");
             sb.AppendLine("5. Same language as the course content");
             sb.AppendLine("6. Strictly respect the difficulty level");
             sb.AppendLine("7. All options (A/B/C/D) must be distinct and plausible");
@@ -514,10 +531,10 @@ Output ONLY the JSON array, nothing else.";
     
         public static string BuildPromptExamen(
             string contenuCours,
-            int nbQCM, int nbCheckbox, int nbRedaction,
+            int nbQCM, int nbVF, int nbCheckbox, int nbRedaction,
             string difficulte)
         {
-            return BuildPromptExamenLot(contenuCours, nbQCM, nbCheckbox, nbRedaction, difficulte, 1);
+            return BuildPromptExamenLot(contenuCours, nbQCM, nbVF, nbCheckbox, nbRedaction, difficulte, 1);
         }
     }
 }

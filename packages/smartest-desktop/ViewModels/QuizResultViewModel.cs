@@ -601,7 +601,7 @@ namespace smartest_desktop.ViewModels
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                     MessageBox.Show(
-                        $"Impossible de supprimer le quiz vide :\n{ex.Message}",
+                        UserErrorMessage.FromException(ex, "Impossible de supprimer ce quiz pour le moment."),
                         "Erreur",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error));
@@ -764,7 +764,7 @@ namespace smartest_desktop.ViewModels
             catch (IOException ex)
             {
                 MessageBox.Show(
-                    $"Lecture du fichier impossible : {ex.Message}",
+                    UserErrorMessage.FromException(ex, "Lecture du fichier impossible. Verifiez qu'il n'est pas deja ouvert."),
                     TitreImport,
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -772,7 +772,7 @@ namespace smartest_desktop.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Import impossible : {ex.Message}",
+                    UserErrorMessage.FromException(ex, "Import impossible. Verifiez le format du fichier puis reessayez."),
                     TitreImport,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

@@ -59,7 +59,7 @@ namespace smartest_desktop.Tests
         [InlineData(HttpStatusCode.NotFound, "Ressource introuvable")]
         [InlineData(HttpStatusCode.BadRequest, "refusée")]
         [InlineData((HttpStatusCode)503, "Erreur serveur")]
-        [InlineData((HttpStatusCode)418, "418")]
+        [InlineData((HttpStatusCode)418, "Réessayez")]
         public void BuildMessage_fallback_selon_statut_si_corps_vide(HttpStatusCode status, string fragmentAttendu)
         {
             var msg = ApiFailureParser.BuildMessage(status, "");

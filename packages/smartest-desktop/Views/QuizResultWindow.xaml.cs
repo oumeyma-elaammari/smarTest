@@ -1,6 +1,7 @@
 using smartest_desktop.Constants;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Exceptions;
+using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
 using System;
@@ -17,6 +18,8 @@ namespace smartest_desktop.Views
     public partial class QuizResultWindow : Window
     {
         private bool _fermetureConfirmee;
+        private bool _isClosing;
+        private bool _navigationInProgress;
 
         private sealed class QuizSaveContext
         {
@@ -66,10 +69,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    _fermetureConfirmee = true;
-                    var hub = new QuizExamenWindow();
-                    hub.Show();
-                    Close();
+                    NaviguerEtFermer(() => new QuizExamenWindow());
                 });
             };
 
@@ -77,10 +77,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    _fermetureConfirmee = true;
-                    var quizGen = new QuizGenerationWindow();
-                    quizGen.Show();
-                    Close();
+                    NaviguerEtFermer(() => new QuizGenerationWindow());
                 });
             };
         }
@@ -105,7 +102,7 @@ namespace smartest_desktop.Views
                     vm.MarquerValidationTerminee();
                     Dispatcher.Invoke(() =>
                         MessageBox.Show(
-                            $"Erreur lors de la sauvegarde :\n{ex.Message}",
+                            UserErrorMessage.FromException(ex, "Impossible d'enregistrer le quiz pour le moment."),
                             "Erreur",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error));
@@ -125,13 +122,15 @@ namespace smartest_desktop.Views
             var questionsDb = questionsValidees.Select((q, idx) => new QuestionLocale
             {
                 Numero = idx + 1,
-                Type = "QCM",
+                Type = string.Equals(q.Type, "VF", StringComparison.OrdinalIgnoreCase) ? "VF" : "QCM",
                 Enonce = q.Enonce,
-                OptionA = q.OptionA,
-                OptionB = q.OptionB,
-                OptionC = q.OptionC,
-                OptionD = q.OptionD,
-                ReponseCorrecte = q.ReponseCorrecte,
+                OptionA = string.Equals(q.Type, "VF", StringComparison.OrdinalIgnoreCase) ? "Vrai" : q.OptionA,
+                OptionB = string.Equals(q.Type, "VF", StringComparison.OrdinalIgnoreCase) ? "Faux" : q.OptionB,
+                OptionC = string.Equals(q.Type, "VF", StringComparison.OrdinalIgnoreCase) ? string.Empty : q.OptionC,
+                OptionD = string.Equals(q.Type, "VF", StringComparison.OrdinalIgnoreCase) ? string.Empty : q.OptionD,
+                ReponseCorrecte = string.Equals(q.Type, "VF", StringComparison.OrdinalIgnoreCase)
+                    ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
+                    : q.ReponseCorrecte,
                 Explication = q.Explication,
                 Difficulte = difficulteQuiz
             }).ToList();
@@ -237,25 +236,34 @@ namespace smartest_desktop.Views
 
         private void OuvrirHubEtFermer()
         {
+            NaviguerEtFermer(() => new QuizExamenWindow());
+        }
+
+        private void NaviguerEtFermer(Func<Window> nextWindowFactory)
+        {
+            if (_navigationInProgress)
+                return;
+
+            _navigationInProgress = true;
             _fermetureConfirmee = true;
-            var hub = new QuizExamenWindow();
-            hub.Show();
-            Close();
+
+            var nextWindow = nextWindowFactory();
+            nextWindow.Show();
+
+            if (!_isClosing)
+                Close();
         }
 
         private void QuizResultWindow_Closing(object? sender, CancelEventArgs e)
         {
+            _isClosing = true;
             if (_fermetureConfirmee)
             {
                 return;
             }
-
-            if (DataContext is QuizResultViewModel vm &&
-                vm.RetourCommand?.CanExecute(null) == true)
-            {
-                e.Cancel = true;
-                vm.RetourCommand.Execute(null);
-            }
+            _fermetureConfirmee = true;
+            _navigationInProgress = true;
+            Application.Current.Shutdown();
         }
 
         private static Func<Task>? CreerActionSuppressionPersistante(int? quizIdExistant)
@@ -298,11 +306,11 @@ namespace smartest_desktop.Views
             }
             catch (SmartestApiException ex)
             {
-                return ex.Message;
+                return UserErrorMessage.FromText(ex.Message, "La synchronisation avec le serveur a echoue.");
             }
             catch (SmartestNetworkException ex)
             {
-                return ex.Message;
+                return UserErrorMessage.FromText(ex.Message, "Connexion impossible pendant la synchronisation serveur.");
             }
         }
 

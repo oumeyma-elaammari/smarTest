@@ -318,7 +318,7 @@ namespace smartest_desktop.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Impossible d’enregistrer le fichier :\n{ex.Message}",
+                    UserErrorMessage.FromException(ex, "Impossible d'enregistrer le fichier CSV."),
                     "Export CSV",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -439,7 +439,7 @@ namespace smartest_desktop.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Impossible d’enregistrer le PDF :\n{ex.Message}",
+                    UserErrorMessage.FromException(ex, "Impossible d'enregistrer le fichier PDF."),
                     "Export PDF",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -493,7 +493,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (Exception ex)
             {
-                Erreur = ex.Message;
+                Erreur = UserErrorMessage.FromException(ex, "Impossible de charger les statistiques pour le moment.");
             }
             finally
             {

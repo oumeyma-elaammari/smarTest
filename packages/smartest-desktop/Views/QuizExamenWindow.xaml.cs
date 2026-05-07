@@ -60,12 +60,15 @@ namespace smartest_desktop.Views
                         .Select(q => new QuestionQCM
                         {
                             Numero = q.Numero,
+                            Type = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? "VF" : "QCM",
                             Enonce = q.Enonce,
-                            OptionA = q.OptionA,
-                            OptionB = q.OptionB,
-                            OptionC = q.OptionC,
-                            OptionD = q.OptionD,
-                            ReponseCorrecte = q.ReponseCorrecte,
+                            OptionA = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? "Vrai" : q.OptionA,
+                            OptionB = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? "Faux" : q.OptionB,
+                            OptionC = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? string.Empty : q.OptionC,
+                            OptionD = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? string.Empty : q.OptionD,
+                            ReponseCorrecte = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase)
+                                ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
+                                : q.ReponseCorrecte,
                             Explication = q.Explication
                         })
                         .ToList();
@@ -132,6 +135,7 @@ namespace smartest_desktop.Views
 
         private static QuestionExamen ConvertirQuestionExamen(QuestionLocale q)
         {
+            bool isVf = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase);
             var vm = new QuestionExamen
             {
                 Numero = q.Numero,
@@ -139,12 +143,15 @@ namespace smartest_desktop.Views
                 Enonce = q.Enonce,
                 Difficulte = string.IsNullOrWhiteSpace(q.Difficulte) ? "Moyen" : q.Difficulte,
                 Explication = q.Explication,
-                OptionA = q.OptionA,
-                OptionB = q.OptionB,
-                OptionC = q.OptionC,
-                OptionD = q.OptionD,
-                ReponseCorrecte = q.ReponseCorrecte,
+                OptionA = isVf ? "Vrai" : q.OptionA,
+                OptionB = isVf ? "Faux" : q.OptionB,
+                OptionC = isVf ? string.Empty : q.OptionC,
+                OptionD = isVf ? string.Empty : q.OptionD,
+                ReponseCorrecte = isVf
+                    ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
+                    : q.ReponseCorrecte,
                 ReponseModele = q.ReponseModele,
+                BaremePoints = q.BaremePoints,
                 ImageBase64 = q.ImageBase64,
                 ImageType = q.ImageType,
                 ImageNom = q.ImageNom
