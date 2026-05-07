@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ReactElement, ReactNode } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
@@ -391,11 +391,8 @@ function QuizQrInvitePanel(props: {
     variant: 'hero' | 'compact'
     /** Affichage étroit (mobile / tablette). */
     isNarrow?: boolean
-    /** Bouton clôturer affiché tant que le panneau stats n’est pas visible. */
-    showCloturer?: boolean
-    onCloturer?: () => void
 }): ReactElement {
-    const { qrUrl, studentUrl, copyOk, onCopierLien, qrPixelSize, variant, isNarrow, showCloturer, onCloturer } = props
+    const { qrUrl, studentUrl, copyOk, onCopierLien, qrPixelSize, variant, isNarrow } = props
     const isHero = variant === 'hero'
 
     return (
@@ -720,12 +717,9 @@ function QuizQrLiveErrorBanner(props: { message: string }): ReactElement {
         <div
             role="alert"
             style={{
-                borderRadius: 14,
-                padding: '14px 16px',
                 color: colors.danger,
                 fontSize: 14,
-                background: colors.dangerSoft,
-                border: `1px solid ${colors.dangerBorder}`,
+                fontWeight: 500,
             }}
         >
             {props.message}
@@ -740,8 +734,6 @@ function QuizQrHeroOnlySection(props: {
     studentUrl: string
     copyOk: boolean
     onCopierLien: () => void
-    peutCloturerDepuisQrSeul: boolean
-    onCloturer: () => void
     isNarrow: boolean
 }): ReactElement {
     const {
@@ -751,8 +743,6 @@ function QuizQrHeroOnlySection(props: {
         studentUrl,
         copyOk,
         onCopierLien,
-        peutCloturerDepuisQrSeul,
-        onCloturer,
         isNarrow,
     } = props
 
@@ -784,8 +774,6 @@ function QuizQrHeroOnlySection(props: {
                 studentUrl={studentUrl}
                 copyOk={copyOk}
                 onCopierLien={onCopierLien}
-                showCloturer={peutCloturerDepuisQrSeul}
-                onCloturer={onCloturer}
             />
         </div>
     )
@@ -857,7 +845,6 @@ function QuizQrStatsTwoColumnSection(props: {
                         studentUrl={studentUrl}
                         copyOk={copyOk}
                         onCopierLien={onCopierLien}
-                        showCloturer={false}
                     />
                 </div>
                 <div style={{ minWidth: 0, paddingRight: desktopStatsLayout ? 6 : 0 }}>
@@ -893,6 +880,7 @@ export default function QuizQrLivePage() {
     const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
     const [copyOk, setCopyOk] = useState(false)
     const [wsNotice, setWsNotice] = useState<string | null>(null)
+    const hasWsConnectedRef = useRef(false)
 
     const quizIdNum = Number(quizId)
     const professeurToken = searchParams.get('token') ?? localStorage.getItem('token') ?? ''
@@ -921,7 +909,7 @@ export default function QuizQrLivePage() {
             return
         }
         if (!professeurToken) {
-            setError("Token manquant. Ouvrez cette page depuis l'application desktop (bouton Code QR).")
+            setError("Lien invalide. Ouvrez cette page depuis le QR code fourni par l'application.")
             return
         }
 
@@ -939,7 +927,9 @@ export default function QuizQrLivePage() {
                 setLastRefresh(new Date())
             } catch {
                 if (cancelled) return
-                setError("Impossible de charger les statistiques temps réel du quiz.")
+                // Le mode QR doit rester utilisable même sans stats live.
+                setError(null)
+                setWsNotice('Statistiques temps reel indisponibles pour le moment.')
             }
         }
 
@@ -992,6 +982,7 @@ export default function QuizQrLivePage() {
             brokerURL: WS_BASE_URL,
             reconnectDelay: 3000,
             onConnect: () => {
+                hasWsConnectedRef.current = true
                 client.subscribe(`/topic/quiz/${quizIdNum}/qr-live`, (message) => {
                     try {
                         const data = JSON.parse(message.body) as StatsQuiz
@@ -1010,20 +1001,17 @@ export default function QuizQrLivePage() {
             },
             onWebSocketClose: (evt) => {
                 if (cancelled) return
-                const detail =
-                    typeof evt.code === 'number' && evt.reason
-                        ? `${evt.code} — ${evt.reason}`
-                        : String(evt.code ?? '')
-                setWsNotice(detail ? `Connexion WebSocket fermée (${detail}).` : 'Connexion WebSocket fermée.')
+                if (hasWsConnectedRef.current || evt.wasClean === false) {
+                    setWsNotice('Connexion temps reel interrompue. Reconnexion en cours...')
+                }
             },
             onWebSocketError: () => {
                 if (cancelled) return
-                setWsNotice('Erreur WebSocket (temps réel).')
+                setWsNotice('Connexion temps reel indisponible temporairement.')
             },
-            onStompError: (frame) => {
+            onStompError: () => {
                 if (cancelled) return
-                const hint = frame.headers?.message ?? frame.body
-                setWsNotice(hint ? `Erreur STOMP : ${hint}` : 'Erreur STOMP.')
+                setWsNotice('Le canal temps reel est indisponible.')
             },
         })
 
@@ -1058,9 +1046,6 @@ export default function QuizQrLivePage() {
         }
     }
 
-    const peutCloturerDepuisQrSeul =
-        quizIdNum > 0 && !Number.isNaN(quizIdNum) && professeurToken.trim().length > 0 && !showLiveStats
-
     let grilleColonnes = 'minmax(280px, 380px)'
     let grilleGap = 0
     if (showLiveStats) {
@@ -1078,8 +1063,6 @@ export default function QuizQrLivePage() {
                 studentUrl={studentUrl}
                 copyOk={copyOk}
                 onCopierLien={copierLien}
-                peutCloturerDepuisQrSeul={peutCloturerDepuisQrSeul}
-                onCloturer={cloturerSessionQr}
                 isNarrow={isNarrow}
             />
         )
@@ -1138,12 +1121,9 @@ export default function QuizQrLivePage() {
                             maxWidth: 1120,
                             margin: '0 auto',
                             width: '100%',
-                            padding: '10px 14px',
-                            borderRadius: 10,
-                            background: '#fff7ed',
-                            border: '1px solid #fed7aa',
                             color: '#9a3412',
                             fontSize: 13,
+                            fontWeight: 500,
                             lineHeight: 1.45,
                             boxSizing: 'border-box',
                         }}

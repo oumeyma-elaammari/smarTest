@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { getUserErrorMessage } from '../utils/userErrorMessage'
 
 type ErrorBoundaryProps = {
     children: ReactNode
@@ -16,7 +17,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
     }
 
     static getDerivedStateFromError(error: unknown): Partial<ErrorBoundaryState> {
-        const message = error instanceof Error ? error.message : 'Une erreur est survenue.'
+        const message = getUserErrorMessage(error, 'Une erreur est survenue. Rechargez la page puis reessayez.')
         return { hasError: true, message }
     }
 
