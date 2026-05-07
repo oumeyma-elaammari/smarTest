@@ -62,9 +62,9 @@ public class ResultatController {
      * 🔹 Supprimer un résultat
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         resultatService.delete(id);
-        return ResponseEntity.ok("Résultat supprimé");
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/historique/{etudiantId}/session/{sessionId}")

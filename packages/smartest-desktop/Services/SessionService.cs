@@ -1,7 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Models;
 using System;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace smartest_desktop.Services
 {
@@ -13,44 +16,73 @@ namespace smartest_desktop.Services
 
         public void SauvegarderSession(AuthResponse auth)
         {
-            // Supprimer toute session existante
-            _db.SessionsLocales.RemoveRange(_db.SessionsLocales.ToList());
+            ArgumentNullException.ThrowIfNull(auth);
+            ArgumentNullException.ThrowIfNull(auth.Token);
 
-            _db.SessionsLocales.Add(new SessionLocale
+            try
             {
-                TokenChiffre = CryptoService.Chiffrer(auth.Token),
-                Nom = auth.Nom,
-                Email = auth.Email,
-                Role = auth.Role,
-                DateConnexion = DateTime.Now
-            });
+                _db.SessionsLocales.RemoveRange(_db.SessionsLocales.ToList());
 
-            _db.SaveChanges();
+                _db.SessionsLocales.Add(new SessionLocale
+                {
+                    TokenChiffre = CryptoService.Chiffrer(auth.Token),
+                    Nom = auth.Nom,
+                    Email = auth.Email,
+                    Role = auth.Role,
+                    DateConnexion = DateTime.Now
+                });
+
+                _db.SaveChanges();
+            }
+            catch (CryptographicException ex)
+            {
+                throw new InvalidOperationException(
+                    "Impossible de sécuriser le jeton avant enregistrement local.", ex);
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException(
+                    "Enregistrement de session local impossible.", ex);
+            }
         }
 
         public SessionLocale? ChargerSession()
         {
-            var session = _db.SessionsLocales.FirstOrDefault();
-            if (session == null) return null;
-
             try
             {
-                // Déchiffrer le token pour utilisation.
-                session.TokenChiffre = CryptoService.Dechiffrer(session.TokenChiffre);
-                return session;
+                var session = _db.SessionsLocales.FirstOrDefault();
+                if (session == null) return null;
+
+                try
+                {
+                    session.TokenChiffre = CryptoService.Dechiffrer(session.TokenChiffre);
+                    return session;
+                }
+                catch (Exception)
+                {
+                    SupprimerSession();
+                    return null;
+                }
             }
-            catch
+            catch (DbUpdateException ex)
             {
-                // Session locale corrompue ou créée avec une ancienne clé : on force une reconnexion.
-                SupprimerSession();
-                return null;
+                throw new InvalidOperationException(
+                    "Lecture de session locale impossible.", ex);
             }
         }
 
         public void SupprimerSession()
         {
-            _db.SessionsLocales.RemoveRange(_db.SessionsLocales.ToList());
-            _db.SaveChanges();
+            try
+            {
+                _db.SessionsLocales.RemoveRange(_db.SessionsLocales.ToList());
+                _db.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException(
+                    "Suppression de session locale impossible.", ex);
+            }
         }
     }
 }

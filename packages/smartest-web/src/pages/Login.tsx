@@ -13,13 +13,13 @@ import {
 } from '../styles/AuthStyles'
 
 const loginSchema = z.object({
-    email:    z.string().min(1, "L'email est obligatoire").email("Format email invalide"),
+    email:    z.string().min(1, "L'email est obligatoire").pipe(z.email("Format email invalide")),
     password: z.string().min(1, "Le mot de passe est obligatoire").min(8, "Minimum 8 caractères"),
 })
 type LoginForm = z.infer<typeof loginSchema>
 
 const ERR = {
-    INVALID_CREDENTIALS: 'Email ou mot de passe incorrect',
+    INVALID_CREDENTIALS: 'Identifiants incorrects',
     NOT_STUDENT:         "Ce compte n'est pas un compte étudiant",
     NETWORK_ERROR:       'Impossible de contacter le serveur',
     SERVER_ERROR:        'Erreur serveur. Réessayez plus tard',
@@ -55,6 +55,7 @@ export default function Login() {
             }
             setLoginError(null)
             login(authData)
+            setIsLoading(false)
             navigate('/dashboard')
         } catch (error: any) {
             setIsLoading(false)

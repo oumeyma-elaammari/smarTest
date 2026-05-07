@@ -84,13 +84,40 @@ namespace smartest_desktop.ViewModels
         private static SolidColorBrush CreerBrushCouleurPourPourcent(double pourcent)
         {
             double t = Math.Clamp(pourcent, 0, 100) / 100.0;
-            // #C62828 → #2E7D32
-            byte r = (byte)Math.Round(0xC6 + (0x2E - 0xC6) * t);
-            byte g = (byte)Math.Round(0x28 + (0x7D - 0x28) * t);
-            byte b = (byte)Math.Round(0x28 + (0x32 - 0x28) * t);
+            // Dégradé continu plus doux : teinte HSL de 0 (rouge) à 120 (vert).
+            double hue = 120.0 * t;
+            Color c = ColorFromHsl(hue, 0.68, 0.44);
+            byte r = c.R;
+            byte g = c.G;
+            byte b = c.B;
             var brush = new SolidColorBrush(Color.FromRgb(r, g, b));
             brush.Freeze();
             return brush;
+        }
+
+        private static Color ColorFromHsl(double h, double s, double l)
+        {
+            h = (h % 360 + 360) % 360;
+            s = Math.Clamp(s, 0, 1);
+            l = Math.Clamp(l, 0, 1);
+
+            double c = (1 - Math.Abs(2 * l - 1)) * s;
+            double hp = h / 60.0;
+            double x = c * (1 - Math.Abs(hp % 2 - 1));
+
+            double r1, g1, b1;
+            if (hp < 1) { r1 = c; g1 = x; b1 = 0; }
+            else if (hp < 2) { r1 = x; g1 = c; b1 = 0; }
+            else if (hp < 3) { r1 = 0; g1 = c; b1 = x; }
+            else if (hp < 4) { r1 = 0; g1 = x; b1 = c; }
+            else if (hp < 5) { r1 = x; g1 = 0; b1 = c; }
+            else { r1 = c; g1 = 0; b1 = x; }
+
+            double m = l - c / 2;
+            byte r = (byte)Math.Round((r1 + m) * 255);
+            byte g = (byte)Math.Round((g1 + m) * 255);
+            byte b = (byte)Math.Round((b1 + m) * 255);
+            return Color.FromRgb(r, g, b);
         }
     }
 

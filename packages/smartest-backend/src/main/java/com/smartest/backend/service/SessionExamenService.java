@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.smartest.backend.exception.InvalidSessionStateException;
+import com.smartest.backend.exception.SessionNotFoundException;
 import com.smartest.backend.entity.*;
 import com.smartest.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class SessionExamenService {
+    private static final String SESSION_INTROUVABLE_PREFIX = "Session introuvable : ";
+    private static final String EXAMEN_PUBLIE_INTROUVABLE_PREFIX = "Examen publié introuvable : ";
+    private static final String STATUT_TERMINE = "TERMINE";
 
     private final SessionExamenRepository sessionExamenRepository;
     private final ExamenPublieRepository examenPublieRepository;
@@ -39,7 +44,7 @@ public class SessionExamenService {
     @Transactional(readOnly = true)
     public SessionExamenResponse getSessionById(Long id) {
         SessionExamen session = sessionExamenRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+                .orElseThrow(() -> new SessionNotFoundException(SESSION_INTROUVABLE_PREFIX + id));
         return convertToResponseDTO(session);
     }
 
@@ -50,7 +55,7 @@ public class SessionExamenService {
     public List<SessionExamenResponse> getSessionsByExamenPublie(Long examenPublieId) {
 
         if (!examenPublieRepository.existsById(examenPublieId)) {
-            throw new RuntimeException("Examen publié non trouvé");
+            throw new IllegalArgumentException(EXAMEN_PUBLIE_INTROUVABLE_PREFIX + examenPublieId);
         }
 
         return sessionExamenRepository.findByExamenPublieId(examenPublieId)
@@ -58,17 +63,6 @@ public class SessionExamenService {
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }
-
-    /**
-     * 🔹 Sessions en cours
-     */
-    /*@Transactional(readOnly = true)
-    public List<SessionExamenResponse> getSessionsEnCours() {
-        return sessionExamenRepository.findSessionsEnCours()
-                .stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }*/
 
     /**
      * 🔹 Sessions à venir
@@ -88,10 +82,12 @@ public class SessionExamenService {
     public SessionExamenResponse createSession(SessionExamenRequest request) {
 
         ExamenPublie examenPublie = examenPublieRepository.findById(request.getExamenPublieId())
-                .orElseThrow(() -> new RuntimeException("Examen publié non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        EXAMEN_PUBLIE_INTROUVABLE_PREFIX + request.getExamenPublieId()));
 
         if (request.getDateDebut().isAfter(request.getDateFin())) {
-            throw new RuntimeException("Date début > date fin");
+            throw new IllegalArgumentException(
+                    "Dates invalides : la date de début doit être antérieure ou égale à la date de fin.");
         }
 
         SessionExamen session = new SessionExamen();
@@ -113,10 +109,11 @@ public class SessionExamenService {
     public SessionExamenResponse updateSession(Long id, SessionExamenRequest request) {
 
         SessionExamen session = sessionExamenRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+                .orElseThrow(() -> new SessionNotFoundException(SESSION_INTROUVABLE_PREFIX + id));
 
         if (request.getDateDebut().isAfter(request.getDateFin())) {
-            throw new RuntimeException("Date invalide");
+            throw new IllegalArgumentException(
+                    "Dates invalides : la date de début doit être antérieure ou égale à la date de fin.");
         }
 
         session.setDateDebut(request.getDateDebut());
@@ -130,7 +127,8 @@ public class SessionExamenService {
                 !session.getExamenPublie().getId().equals(request.getExamenPublieId())) {
 
             ExamenPublie examenPublie = examenPublieRepository.findById(request.getExamenPublieId())
-                    .orElseThrow(() -> new RuntimeException("Examen publié non trouvé"));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            EXAMEN_PUBLIE_INTROUVABLE_PREFIX + request.getExamenPublieId()));
 
             session.setExamenPublie(examenPublie);
         }
@@ -145,10 +143,15 @@ public class SessionExamenService {
     public SessionExamenResponse demarrerSession(Long id) {
 
         SessionExamen session = sessionExamenRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+                .orElseThrow(() -> new SessionNotFoundException(SESSION_INTROUVABLE_PREFIX + id));
+
+        if (STATUT_TERMINE.equals(session.getStatut()) || "ANNULE".equals(session.getStatut())) {
+            throw new InvalidSessionStateException(
+                    "Impossible de démarrer une session terminée ou annulée.");
+        }
 
         if (session.getDateDebut().isAfter(LocalDateTime.now())) {
-            throw new RuntimeException("Session pas encore commencée");
+            throw new InvalidSessionStateException("La session n'a pas encore commencé (date de début future).");
         }
 
         session.setStatut("EN_COURS");
@@ -163,9 +166,9 @@ public class SessionExamenService {
     public SessionExamenResponse terminerSession(Long id) {
 
         SessionExamen session = sessionExamenRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+                .orElseThrow(() -> new SessionNotFoundException(SESSION_INTROUVABLE_PREFIX + id));
 
-        session.setStatut("TERMINE");
+        session.setStatut(STATUT_TERMINE);
 
         return convertToResponseDTO(sessionExamenRepository.save(session));
     }
@@ -177,7 +180,7 @@ public class SessionExamenService {
     public SessionExamenResponse annulerSession(Long id) {
 
         SessionExamen session = sessionExamenRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+                .orElseThrow(() -> new SessionNotFoundException(SESSION_INTROUVABLE_PREFIX + id));
 
         session.setStatut("ANNULE");
 
@@ -191,30 +194,22 @@ public class SessionExamenService {
     public void deleteSession(Long id) {
 
         if (!sessionExamenRepository.existsById(id)) {
-            throw new RuntimeException("Session non trouvée");
+            throw new SessionNotFoundException(SESSION_INTROUVABLE_PREFIX + id);
         }
 
         sessionExamenRepository.deleteById(id);
     }
 
     /**
-     * 🔥 Vérifier examen en cours
-     */
-   /* @Transactional(readOnly = true)
-    public boolean isExamenEnCours(Long examenPublieId) {
-        return sessionExamenRepository.isExamenEnCours(examenPublieId);
-    }
-*/
-    /**
      * 🔥 CORRIGER EXAMEN
      */
     public double corrigerExamen(Long sessionId) {
 
         SessionExamen session = sessionExamenRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session non trouvée"));
+                .orElseThrow(() -> new SessionNotFoundException(SESSION_INTROUVABLE_PREFIX + sessionId));
 
-        if (!"TERMINE".equals(session.getStatut())) {
-            throw new RuntimeException("Examen non terminé");
+        if (!STATUT_TERMINE.equals(session.getStatut())) {
+            throw new InvalidSessionStateException("L'examen doit être terminé pour être corrigé.");
         }
 
         List<Resultat> resultats = resultatRepository.findBySessionExamenId(sessionId);

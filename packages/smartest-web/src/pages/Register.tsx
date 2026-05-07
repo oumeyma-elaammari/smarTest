@@ -17,14 +17,14 @@ const registerSchema = z.object({
     email: z
         .string()
         .min(1, "L'email est obligatoire")
-        .email("Format email invalide")
-        .regex(/^[a-zA-Z0-9._%+\-]+@ump\.ac\.ma$/, "Email académique @ump.ac.ma requis"),
+        .pipe(z.email("Format email invalide"))
+        .refine((value) => /^[a-zA-Z0-9._%+\-]+@ump\.ac\.ma$/.test(value), "Email académique @ump.ac.ma requis"),
     password: z
         .string()
         .min(1, "Le mot de passe est obligatoire")
         .min(8, "Au moins 8 caractères")
         .regex(/[A-Z]/, "Au moins une majuscule")
-        .regex(/[0-9]/, "Au moins un chiffre")
+        .regex(/\d/, "Au moins un chiffre")
         .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, "Au moins un caractère spécial"),
     confirmPassword: z.string().min(1, "La confirmation est obligatoire"),
 }).refine(data => data.password === data.confirmPassword, {
@@ -36,7 +36,7 @@ type RegisterForm = z.infer<typeof registerSchema>
 const pwRequirements = [
     { label: "8 caractères",      test: (p: string) => p.length >= 8 },
     { label: "Majuscule",         test: (p: string) => /[A-Z]/.test(p) },
-    { label: "Chiffre",           test: (p: string) => /[0-9]/.test(p) },
+    { label: "Chiffre",           test: (p: string) => /\d/.test(p) },
     { label: "Caractère spécial", test: (p: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(p) },
 ]
 
@@ -69,7 +69,7 @@ export default function Register() {
             setIsLoading(false)
             if (!err?.response)                   { setError('Impossible de contacter le serveur.'); return }
             if (err.response.status === 403)      { navigate('/email-sent', { state: { email: data.email.trim().toLowerCase() } }); return }
-            if (err.response.status === 409)      setError('Cet email est déjà utilisé.')
+            if (err.response.status === 409)      setError('Email déjà utilisé.')
             else if (err.response.status >= 500)  setError('Erreur serveur. Réessayez plus tard.')
             else                                  setError('Une erreur inattendue est survenue.')
         }
@@ -110,8 +110,8 @@ export default function Register() {
                         Plateforme d'évaluation
                     </p>
 
-                    {['Examens sécurisés en temps réel', 'Résultats et analyses instantanés', 'Interface simple et intuitive'].map((f, i) => (
-                        <div key={i} style={{
+                    {['Examens sécurisés en temps réel', 'Résultats et analyses instantanés', 'Interface simple et intuitive'].map((f) => (
+                        <div key={f} style={{
                             display: 'flex', alignItems: 'center', gap: '0.875rem',
                             padding: '0.875rem 1.25rem', borderRadius: 12,
                             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
@@ -175,10 +175,10 @@ export default function Register() {
                             </div>
                             {passwordValue && (
                                 <div style={{ marginTop: '0.5rem', padding: '0.625rem 0.875rem', background: '#f8fafd', border: '1px solid #d8e0f0', borderRadius: 8, display: 'flex', flexWrap: 'wrap', gap: '0.4rem 1rem' }}>
-                                    {pwRequirements.map((req, i) => {
+                                    {pwRequirements.map((req) => {
                                         const ok = req.test(passwordValue)
                                         return (
-                                            <span key={i} style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: ok ? '#16a34a' : '#94a3b8', transition: 'color 0.2s' }}>
+                                            <span key={req.label} style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: ok ? '#16a34a' : '#94a3b8', transition: 'color 0.2s' }}>
                                                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', flexShrink: 0 }} />
                                                 {req.label}
                                             </span>

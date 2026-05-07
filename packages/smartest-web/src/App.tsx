@@ -1,158 +1,67 @@
-import { useState } from 'react'
-import type { CSSProperties } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import PrivateRoute from './components/PrivateRoute'
 import Navbar from './components/Navbar'
+import NotFound from './pages/NotFound'
 import Register from './pages/Register'
 import EmailSent from './pages/EmailSent'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import EmailVerification from './pages/EmailVerification'
+import QuizQrLivePage from './pages/QuizQrLivePage'
+import QuizPassageQr from './pages/QuizPassageQr'
+import Footer from './components/Footer'
 import MesQuizWeb from './pages/MesQuizWeb'
 import QuizPassageWeb from './pages/QuizPassageWeb'
 
-const sans = "'DM Sans', system-ui, sans-serif"
-const serif = "'DM Serif Display', Georgia, serif"
-const bleuTest = '#4f8ef7'
-
-function DashboardLayout({ children }: { children: React.ReactNode }) {
+export function DashboardLayout({
+    children,
+    showFooter = true,
+}: {
+    children: React.ReactNode
+    showFooter?: boolean
+}) {
     return (
         <>
             <Navbar />
-            <main
+            <div
                 style={{
                     minHeight: 'calc(100vh - 48px)',
                     width: '100%',
                     background: '#ffffff',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    overflowY: 'auto',
-                    paddingTop: 28,
-                    paddingBottom: 40,
-                    paddingLeft: 'clamp(1rem, 3vw, 2rem)',
-                    paddingRight: 'clamp(1rem, 3vw, 2rem)',
                     boxSizing: 'border-box',
                 }}
             >
-                {children}
-            </main>
-        </>
-    )
-}
-
-function Dashboard() {
-    const [onglet, setOnglet] = useState<'quiz' | 'examens'>('quiz')
-
-    /** Même style typographique que l’ancien titre « Mes quiz » : serif, pas de fond. */
-    const filtreBtn = (actif: boolean): CSSProperties => ({
-        border: 'none',
-        background: 'none',
-        padding: '0 10px 0 0',
-        margin: 0,
-        fontFamily: serif,
-        fontSize: '1.5rem',
-        fontWeight: actif ? 550 : 350,
-        cursor: 'pointer',
-        color: actif ? '#0f1e3d' : '#94a3b8',
-        lineHeight: 1.2,
-        transition: 'color 0.15s, font-weight 0.15s',
-    })
-
-    return (
-        <DashboardLayout>
-            <div
-                style={{
-                    width: '100%',
-                    maxWidth: 1040,
-                    margin: '0 auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'stretch',
-                    boxSizing: 'border-box',
-                }}
-            >
-                <div
+                <main
                     style={{
-                        display: 'flex',
-                        justifyContent: 'left',
-                        alignItems: 'baseline',
-                        flexWrap: 'wrap',
-                        gap: '4px 0',
-                        width: '100%',
-                        marginBottom: 22,
-                    }}
-                    role="tablist"
-                    aria-label="Filtrer le contenu"
-                >
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={onglet === 'quiz'}
-                        style={filtreBtn(onglet === 'quiz')}
-                        onClick={() => setOnglet('quiz')}
-                    >
-                        Mes quiz
-                    </button>
-                    <span
-                        style={{
-                            color: '#cbd5e1',
-                            fontFamily: serif,
-                            fontSize: '1.35rem',
-                            userSelect: 'none',
-                            padding: '0 6px',
-                            lineHeight: 1,
-                        }}
-                        aria-hidden
-                    >
-                        |
-                    </span>
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={onglet === 'examens'}
-                        style={filtreBtn(onglet === 'examens')}
-                        onClick={() => setOnglet('examens')}
-                    >
-                        Mes examens
-                    </button>
-                </div>
-
-                <div
-                    style={{
+                        flex: 1,
                         width: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'stretch',
+                        alignItems: 'center',
+                        overflowY: 'auto',
+                        paddingTop: 28,
+                        paddingBottom: 40,
+                        paddingLeft: 'clamp(1rem, 3vw, 2rem)',
+                        paddingRight: 'clamp(1rem, 3vw, 2rem)',
+                        boxSizing: 'border-box',
                     }}
                 >
-                    {onglet === 'quiz' ? (
-                        <MesQuizWeb accentBleu={bleuTest} />
-                    ) : (
-                        <p
-                            style={{
-                                fontFamily: sans,
-                                color: '#64748b',
-                                margin: 0,
-                                textAlign: 'center',
-                                lineHeight: 1.6,
-                                maxWidth: 520,
-                                alignSelf: 'center',
-                            }}
-                        >
-                            Les examens accessibles depuis le web seront listés ici dans une prochaine version.
-                        </p>
-                    )}
-                </div>
+                    {children}
+                </main>
+                {showFooter ? <Footer /> : null}
             </div>
-        </DashboardLayout>
+        </>
     )
 }
 
 export default function App() {
     return (
+        <ErrorBoundary>
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Home />} />
@@ -164,29 +73,114 @@ export default function App() {
 
                 <Route path="/verify-email" element={<EmailVerification />} />
 
-                <Route path="/dashboard" element={
-                    <PrivateRoute>
-                        <Dashboard />
-                    </PrivateRoute>
-                } />
-                <Route path="/quiz/:quizId" element={
-                    <PrivateRoute>
-                        <DashboardLayout>
+                <Route
+                    path="/dashboard"
+                    element={
+                        <PrivateRoute>
+                            <DashboardLayout>
+                                <MesQuizWeb />
+                            </DashboardLayout>
+                        </PrivateRoute>
+                    }
+                />
+
+                <Route
+                    path="/quiz/:quizId"
+                    element={
+                        <PrivateRoute>
+                            <DashboardLayout>
+                                <div
+                                    style={{
+                                        width: '100%',
+                                        maxWidth: 720,
+                                        margin: '0 auto',
+                                        padding: '1.5rem 1rem 2rem',
+                                        boxSizing: 'border-box',
+                                    }}
+                                >
+                                    <QuizPassageWeb />
+                                </div>
+                            </DashboardLayout>
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/passer-quiz/:quizId"
+                    element={
+                        <PrivateRoute>
+                            <DashboardLayout>
+                                <div
+                                    style={{
+                                        width: '100%',
+                                        maxWidth: 720,
+                                        margin: '0 auto',
+                                        padding: '1.5rem 1rem 2rem',
+                                        boxSizing: 'border-box',
+                                    }}
+                                >
+                                    <QuizPassageWeb />
+                                </div>
+                            </DashboardLayout>
+                        </PrivateRoute>
+                    }
+                />
+
+                <Route
+                    path="/examen/:quizId"
+                    element={
+                        <PrivateRoute>
+                            <DashboardLayout showFooter={false}>
+                                <div
+                                    style={{
+                                        width: '100%',
+                                        maxWidth: 720,
+                                        margin: '0 auto',
+                                        padding: '1.5rem 1rem 2rem',
+                                        boxSizing: 'border-box',
+                                    }}
+                                >
+                                    <QuizPassageWeb />
+                                </div>
+                            </DashboardLayout>
+                        </PrivateRoute>
+                    }
+                />
+
+                {/* QR : pas de navbar ni footer (écran mobile / scan) */}
+                <Route
+                    path="/quiz-qr/:quizId"
+                    element={
+                        <div
+                            style={{
+                                minHeight: '100vh',
+                                width: '100%',
+                                boxSizing: 'border-box',
+                                background: '#ffffff',
+                                padding: 'clamp(1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 2rem) 2rem',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                            }}
+                        >
                             <div
                                 style={{
                                     width: '100%',
                                     maxWidth: 720,
-                                    margin: '0 auto',
-                                    padding: '1.5rem 1rem 2rem',
+                                    marginTop: 'auto',
+                                    marginBottom: 'auto',
+                                    flexShrink: 0,
                                     boxSizing: 'border-box',
                                 }}
                             >
-                                <QuizPassageWeb />
+                                <QuizPassageQr />
                             </div>
-                        </DashboardLayout>
-                    </PrivateRoute>
-                } />
+                        </div>
+                    }
+                />
+                <Route path="/quiz-live/:quizId" element={<QuizQrLivePage />} />
+                <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>
+        </ErrorBoundary>
     )
 }

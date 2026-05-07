@@ -22,8 +22,13 @@ namespace smartest_desktop.Services
         private static readonly string[] FormatsTexte = { ".txt", ".md" };
 
         public ImportService()
+            : this(new LocalCoursService())
         {
-            _coursService = new LocalCoursService();
+        }
+
+        public ImportService(LocalCoursService coursService)
+        {
+            _coursService = coursService ?? throw new ArgumentNullException(nameof(coursService));
         }
 
         // ══════════════════════════════════════════════════════════

@@ -338,7 +338,7 @@
 									<ColumnDefinition Width="100"/>
 									<ColumnDefinition Width="90"/>
 									<ColumnDefinition Width="80"/>
-									<ColumnDefinition Width="180"/>
+									<ColumnDefinition Width="250"/>
 								</Grid.ColumnDefinitions>
 								<TextBlock Grid.Column="0" Text="Titre" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
 								<TextBlock Grid.Column="1" Text="Difficulté" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
@@ -361,7 +361,7 @@
 													<ColumnDefinition Width="100"/>
 													<ColumnDefinition Width="90"/>
 													<ColumnDefinition Width="80"/>
-													<ColumnDefinition Width="180"/>
+													<ColumnDefinition Width="250"/>
 												</Grid.ColumnDefinitions>
 
 												<StackPanel Grid.Column="0" VerticalAlignment="Center">
@@ -423,13 +423,49 @@
 												<!-- Actions -->
 												<StackPanel Grid.Column="4" Orientation="Horizontal"
                                                             VerticalAlignment="Center">
-													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#eef3fd" BorderBrush="#eef3fd"
+													<Button Background="#ecfeff" BorderBrush="#bae6fd"
+                                                            Foreground="#0369a1" Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.OuvrirCodeQrQuizCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="#ecfeff"/>
+																<Setter Property="BorderBrush" Value="#bae6fd"/>
+																<Setter Property="Foreground" Value="#0369a1"/>
+																<Style.Triggers>
+																	<Trigger Property="IsEnabled" Value="False">
+																		<Setter Property="Opacity" Value="0.45"/>
+																	</Trigger>
+																</Style.Triggers>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="Code QR"/>
+													</Button>
+													<Button Background="#eef3fd" BorderBrush="#eef3fd"
                                                             Foreground="#4f8ef7" Margin="0,0,6,0"
+                                                            IsEnabled="{Binding PeutPublier}"
                                                             Command="{Binding DataContext.PublierSurLeWebCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}">
-														<TextBlock Text="Publier"/>
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="#eef3fd"/>
+																<Setter Property="BorderBrush" Value="#eef3fd"/>
+																<Setter Property="Foreground" Value="#4f8ef7"/>
+																<Style.Triggers>
+																	<DataTrigger Binding="{Binding IsPublicationEnCours}" Value="True">
+																		<Setter Property="Background" Value="#e2e8f4"/>
+																		<Setter Property="BorderBrush" Value="#e2e8f4"/>
+																		<Setter Property="Foreground" Value="#64748b"/>
+																	</DataTrigger>
+																	<Trigger Property="IsEnabled" Value="False">
+																		<Setter Property="Opacity" Value="0.45"/>
+																	</Trigger>
+																</Style.Triggers>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="{Binding LibelleBoutonPublication}"/>
 													</Button>
 													<Button Style="{StaticResource IconDeleteBtn}"
                                                             ToolTip="Supprimer ce quiz"

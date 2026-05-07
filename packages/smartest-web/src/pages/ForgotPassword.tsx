@@ -7,11 +7,11 @@ import api from '../api/axiosConfig'
 import {
     pageStyle, cardStyle, brandStyle, brandSubStyle,
     inputStyle, submitBtnStyle,
-    Alert, Field, BackLink, Footer,
+    Alert, Field, BackLink,
 } from '../styles/AuthStyles'
 
 const schema = z.object({
-    email: z.string().min(1, "L'email est obligatoire").email("Format email invalide"),
+    email: z.string().min(1, "L'email est obligatoire").pipe(z.email({ error: 'Format email invalide' })),
 })
 type ForgotForm = z.infer<typeof schema>
 
@@ -95,7 +95,6 @@ export default function ForgotPassword() {
                 )}
 
                 <BackLink to="/login" />
-                <Footer />
             </div>
         </main>
     )

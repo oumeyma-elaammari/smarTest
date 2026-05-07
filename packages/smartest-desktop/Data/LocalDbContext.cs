@@ -6,6 +6,16 @@ namespace smartest_desktop.Data
 {
     public class LocalDbContext : DbContext
     {
+        public LocalDbContext(DbContextOptions<LocalDbContext> options)
+            : base(options)
+        {
+        }
+
+        /// <summary>SQLite local (sans options explicites) — même usage qu’historiquement.</summary>
+        public LocalDbContext()
+        {
+        }
+
         private static string _cheminBase = "smartest_local.db";
 
         /// <summary>
@@ -42,7 +52,8 @@ namespace smartest_desktop.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite($"Data Source={CheminBase}");
+            if (!options.IsConfigured)
+                options.UseSqlite($"Data Source={CheminBase}");
         }
 
         // ══════════════════════════════════════════════════════════

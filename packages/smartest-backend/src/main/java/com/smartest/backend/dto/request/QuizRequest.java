@@ -23,17 +23,12 @@ public class QuizRequest {
     @Min(value = 1, message = "La durée doit être au moins 1 minute")
     private Integer duree;
 
+    @NotNull(message = "L'identifiant du professeur est obligatoire")
     private Long professeurId;
 
-    private Long coursId;
-
-    private String description;
-    private List<Long> questionsIds;  // ← Champ
-
+    private List<Long> questionsIds;
 
     public Iterable<Long> getQuestionsIds() {
         return questionsIds;
     }
-
-    private String statut;
 }

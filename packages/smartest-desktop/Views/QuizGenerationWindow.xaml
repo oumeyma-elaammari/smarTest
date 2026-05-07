@@ -179,11 +179,11 @@
 						</StackPanel>
 
 						<!-- Publication web : liste d'emails (CSV / Excel) -->
-						<TextBlock Text="PUBLICATION WEB (ÉTUDIANTS AUTORISÉS)"
+						<TextBlock Text="ÉTUDIANTS CONCERNÉS"
                                    FontSize="10" FontWeight="700"
                                    Foreground="#6b7a99" Margin="0,0,0,8"/>
 						<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#8899b8" Margin="0,0,0,12"
-                                   Text="Importez ici un CSV ou Excel (même règles que pour les modules : colonne « email » ou une adresse par ligne). La liste est enregistrée avec le quiz lors de la validation."/>
+                                   Text="Importez ici une liste d'emails (CSV ou Excel)."/>
 
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
 							<Border CornerRadius="10" Padding="14,10" Margin="0,0,8,0" Cursor="Hand"

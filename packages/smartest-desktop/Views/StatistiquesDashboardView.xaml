@@ -230,16 +230,16 @@
 											<Grid.ColumnDefinitions>
 												<ColumnDefinition Width="36"/>
 												<ColumnDefinition Width="360"/>
-												<ColumnDefinition Width="48"/>
-												<ColumnDefinition Width="28"/>
+												<ColumnDefinition Width="Auto"/>
+												<ColumnDefinition Width="Auto"/>
 											</Grid.ColumnDefinitions>
 											<TextBlock Grid.Column="0" Text="{Binding LibelleQuestion}" FontWeight="600" Foreground="#0f1e3d" VerticalAlignment="Center"/>
-											<Border Grid.Column="1" Width="360" Height="26" Background="#e8eef8" CornerRadius="5" Margin="0,0,6,0" VerticalAlignment="Center">
+											<Border Grid.Column="1" Width="360" Height="26" Background="#e8eef8" CornerRadius="5" Margin="0,0,5,0" VerticalAlignment="Center">
 												<Border HorizontalAlignment="Left" CornerRadius="5" Height="26"
 														Width="{Binding LargeurBarrePx}"
 														Background="{Binding CouleurBarreReussite}"/>
 											</Border>
-											<TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="12" Foreground="#334155" FontWeight="500">
+											<TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="12" Foreground="#334155" FontWeight="500" Margin="0,0,5,0">
 												<TextBlock.Text>
 													<Binding Path="PourcentageReussite" StringFormat="{}{0:F0}%"/>
 												</TextBlock.Text>

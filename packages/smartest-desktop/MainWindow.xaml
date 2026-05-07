@@ -82,7 +82,7 @@
 				</TextBlock>
 
 				<!-- Sous-titre -->
-				<TextBlock Text="SYSTÈME SÉCURISÉ DE GESTION DES QUIZ &amp; EXAMENS"
+				<TextBlock Text="SYSTÈME SÉCURISÉ DE GESTION D'ÉVALUATIONS"
                            FontSize="11" Foreground="#8899b8" FontWeight="SemiBold"
                            HorizontalAlignment="Center" Margin="0,0,0,14"/>
 
@@ -96,11 +96,10 @@
                            Foreground="#6b7a99" TextWrapping="Wrap"
                            MaxWidth="500" TextAlignment="Center"
                            LineHeight="26" Margin="0,0,0,36">
-					Créez et supervisez vos évaluations avec une IA
-					<Run Foreground="#0f1e3d" FontWeight="SemiBold">100% locale</Run>
-					— vos données pédagogiques ne quittent
-					<Run Foreground="#0f1e3d" FontWeight="SemiBold">jamais</Run>
-					votre poste.
+					Créez et supervisez vos évaluations avec une
+					<Run Foreground="#0f1e3d" FontWeight="SemiBold">IA pédagogique</Run>
+					— générez rapidement des quiz et examens,
+					puis suivez les résultats de vos étudiants.
 				</TextBlock>
 
 				<!-- Boutons -->
@@ -133,11 +132,11 @@
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
 							</Border>
-							<TextBlock Text="IA locale Ollama"
+							<TextBlock Text="Génération intelligente"
                                        FontSize="12" FontWeight="Bold"
                                        Foreground="#0f1e3d"
                                        HorizontalAlignment="Center" Margin="0,0,0,6"/>
-							<TextBlock Text="Génération automatique de questions QCM, V/F et rédaction sans appel externe"
+							<TextBlock Text="Créez rapidement des quiz et examens avec assistance IA directement dans l'application."
                                        FontSize="11" Foreground="#8899b8"
                                        TextWrapping="Wrap" TextAlignment="Center"
                                        LineHeight="17"/>
@@ -156,11 +155,11 @@
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
 							</Border>
-							<TextBlock Text="Données confidentielles"
+							<TextBlock Text="Publication et sécurité"
                                        FontSize="12" FontWeight="Bold"
                                        Foreground="#0f1e3d"
                                        HorizontalAlignment="Center" Margin="0,0,0,6"/>
-							<TextBlock Text="Cours et questions stockés exclusivement en local — zéro cloud"
+							<TextBlock Text="Gérez les accès étudiants par email, publiez vos quiz sur le web et conservez un contrôle local des données."
                                        FontSize="11" Foreground="#8899b8"
                                        TextWrapping="Wrap" TextAlignment="Center"
                                        LineHeight="17"/>
@@ -179,11 +178,11 @@
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
 							</Border>
-							<TextBlock Text="Supervision en temps réel"
+							<TextBlock Text="Suivi et résultats détaillés"
                                        FontSize="12" FontWeight="Bold"
                                        Foreground="#0f1e3d"
                                        HorizontalAlignment="Center" Margin="0,0,0,6"/>
-							<TextBlock Text="Contrôle direct des sessions d'examen et correction automatique"
+							<TextBlock Text="Consultez les statistiques par question, identifiez les points à risque et exportez les résultats en CSV/PDF."
                                        FontSize="11" Foreground="#8899b8"
                                        TextWrapping="Wrap" TextAlignment="Center"
                                        LineHeight="17"/>

@@ -3,6 +3,7 @@ using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,6 +12,8 @@ namespace smartest_desktop.Views
 {
     public partial class ExamenResultWindow : Window
     {
+        private bool _fermetureConfirmee;
+
         public ExamenResultWindow(
             List<QuestionExamen> questions,
             string titre,
@@ -20,6 +23,7 @@ namespace smartest_desktop.Views
             int? examenIdExistant = null)
         {
             InitializeComponent();
+            Closing += ExamenResultWindow_Closing;
 
             Func<Task>? supprimerPersistant = null;
             if (examenIdExistant is int idEx)
@@ -45,6 +49,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
+                    _fermetureConfirmee = true;
                     var hub = new QuizExamenWindow();
                     hub.Show();
                     Close();
@@ -55,6 +60,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
+                    _fermetureConfirmee = true;
                     var examenGen = new ExamenGenerationWindow();
                     examenGen.Show();
                     Close();
@@ -87,9 +93,7 @@ namespace smartest_desktop.Views
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
 
-                            var hub = new QuizExamenWindow();
-                            hub.Show();
-                            Close();
+                            OuvrirHubEtFermer();
                         });
                     }
                     else
@@ -119,9 +123,7 @@ namespace smartest_desktop.Views
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
 
-                            var hub = new QuizExamenWindow();
-                            hub.Show();
-                            Close();
+                            OuvrirHubEtFermer();
                         });
                     }
                 }
@@ -135,6 +137,29 @@ namespace smartest_desktop.Views
                             MessageBoxImage.Error));
                 }
             };
+        }
+
+        private void OuvrirHubEtFermer()
+        {
+            _fermetureConfirmee = true;
+            var hub = new QuizExamenWindow();
+            hub.Show();
+            Close();
+        }
+
+        private void ExamenResultWindow_Closing(object? sender, CancelEventArgs e)
+        {
+            if (_fermetureConfirmee)
+            {
+                return;
+            }
+
+            if (DataContext is ExamenResultViewModel vm &&
+                vm.RetourCommand?.CanExecute(null) == true)
+            {
+                e.Cancel = true;
+                vm.RetourCommand.Execute(null);
+            }
         }
     }
 }

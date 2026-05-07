@@ -1,10 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
+using System;
+using System.Security.Cryptography;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
+using smartest_desktop.Exceptions;
 
 namespace smartest_desktop.Services
 {
@@ -17,43 +22,86 @@ namespace smartest_desktop.Services
 
         private static void EnsureTable(LocalDbContext db)
         {
-            db.Database.ExecuteSqlRaw(@"
+            try
+            {
+                db.Database.ExecuteSqlRaw(@"
                 CREATE TABLE IF NOT EXISTS app_setting (
                     Id     INTEGER PRIMARY KEY AUTOINCREMENT,
                     Cle    TEXT    NOT NULL UNIQUE,
                     Valeur TEXT    NOT NULL
                 )");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    "Impossible de préparer le stockage local de la clé Groq.", ex);
+            }
         }
 
         public static string? LireCle(LocalDbContext db)
         {
-            EnsureTable(db);
-            var setting = db.AppSettings.FirstOrDefault(s => s.Cle == CLE_NOM);
-            if (setting == null) return null;
-            try { return CryptoService.Dechiffrer(setting.Valeur); }
-            catch { return null; }
+            try
+            {
+                EnsureTable(db);
+                var setting = db.AppSettings.FirstOrDefault(s => s.Cle == CLE_NOM);
+                if (setting == null) return null;
+                try
+                {
+                    return CryptoService.Dechiffrer(setting.Valeur);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex) when (ex is not InvalidOperationException)
+            {
+                throw new InvalidOperationException(
+                    "Lecture de la clé Groq en base locale impossible.", ex);
+            }
         }
 
         public static void SauvegarderCle(LocalDbContext db, string cle)
         {
-            EnsureTable(db);
-            var existing = db.AppSettings.FirstOrDefault(s => s.Cle == CLE_NOM);
-            string chiffree = CryptoService.Chiffrer(cle);
-            if (existing != null)
-                existing.Valeur = chiffree;
-            else
-                db.AppSettings.Add(new AppSetting { Cle = CLE_NOM, Valeur = chiffree });
-            db.SaveChanges();
+            ArgumentNullException.ThrowIfNull(cle);
+            try
+            {
+                EnsureTable(db);
+                var existing = db.AppSettings.FirstOrDefault(s => s.Cle == CLE_NOM);
+                string chiffree = CryptoService.Chiffrer(cle);
+                if (existing != null)
+                    existing.Valeur = chiffree;
+                else
+                    db.AppSettings.Add(new AppSetting { Cle = CLE_NOM, Valeur = chiffree });
+                db.SaveChanges();
+            }
+            catch (CryptographicException ex)
+            {
+                throw new InvalidOperationException("Chiffrement de la clé Groq impossible.", ex);
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException(
+                    "Enregistrement de la clé Groq dans la base locale impossible.", ex);
+            }
         }
 
         public static void SupprimerCle(LocalDbContext db)
         {
-            EnsureTable(db);
-            var existing = db.AppSettings.FirstOrDefault(s => s.Cle == CLE_NOM);
-            if (existing != null)
+            try
             {
-                db.AppSettings.Remove(existing);
-                db.SaveChanges();
+                EnsureTable(db);
+                var existing = db.AppSettings.FirstOrDefault(s => s.Cle == CLE_NOM);
+                if (existing != null)
+                {
+                    db.AppSettings.Remove(existing);
+                    db.SaveChanges();
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException(
+                    "Suppression de la clé Groq en base locale impossible.", ex);
             }
         }
 
@@ -61,7 +109,9 @@ namespace smartest_desktop.Services
         /// Vérifie la clé auprès de l'API Groq (GET /models — aucun token consommé).
         /// Retourne (true, message) si active, (false, message) sinon.
         /// </summary>
-        public static async Task<(bool Valide, string Message)> TesterCleAsync(string apiKey)
+        public static async Task<(bool Valide, string Message)> TesterCleAsync(
+            string apiKey,
+            CancellationToken cancellationToken = default)
         {
             if (!CleEstValide(apiKey))
                 return (false, "Format de clé invalide (doit commencer par gsk_)");
@@ -70,19 +120,27 @@ namespace smartest_desktop.Services
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, GROQ_MODELS_URL);
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-                var response = await _http.SendAsync(request);
+                using var response = await _http.SendAsync(request, cancellationToken);
 
                 return response.StatusCode switch
                 {
-                    HttpStatusCode.OK          => (true,  "Clé active et fonctionnelle"),
-                    HttpStatusCode.Unauthorized => (false, "Clé révoquée ou supprimée sur console.groq.com"),
-                    HttpStatusCode.TooManyRequests => (true, "Clé valide (quota temporairement atteint)"),
+                    HttpStatusCode.OK => (true, "Clé active et fonctionnelle"),
+                    HttpStatusCode.Unauthorized => (false,
+                        "Clé révoquée ou supprimée sur console.groq.com"),
+                    HttpStatusCode.TooManyRequests => (true,
+                        "Clé valide (quota temporairement atteint)"),
                     _ => (false, $"Réponse inattendue ({(int)response.StatusCode})")
                 };
             }
-            catch
+            catch (OperationCanceledException ex)
             {
-                return (false, "Impossible de contacter Groq — vérifiez votre connexion");
+                if (cancellationToken.IsCancellationRequested)
+                    throw new OperationCanceledException("Vérification Groq annulée.", ex);
+                return (false, $"{SmartestNetworkException.ServerUnreachable(ex).Message} (délai dépassé.)");
+            }
+            catch (HttpRequestException ex)
+            {
+                return (false, SmartestNetworkException.ServerUnreachable(ex).Message);
             }
         }
 
