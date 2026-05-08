@@ -388,11 +388,13 @@ namespace smartest_desktop.Services
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
             string variationSection = BuildVariationSection();
+            string pedagogicalSection = BuildPedagogicalSection(difficulte);
             return $@"Generate EXACTLY {nbQuestions} multiple-choice questions (QCM) from this course content.
 Start question numbering at {numeroDepart}.
 
 {difficultyInstructions}
 {variationSection}
+{pedagogicalSection}
 IMPORTANT: Base ALL questions STRICTLY on the provided course content below. Do NOT invent or assume any information not explicitly mentioned in the text.
 {avoidSection}
 Course content:
@@ -431,6 +433,18 @@ Output ONLY the JSON array, nothing else.";
             $"- Session identifier: {Guid.NewGuid()}\n" +
             "- Vary the generated questions compared to previous generations.\n" +
             "- Ne répète pas les mêmes questions. Génère des questions différentes à chaque appel, en explorant des angles variés du contenu.\n";
+
+        private static string BuildPedagogicalSection(string difficulte) =>
+            "PEDAGOGICAL QUALITY REQUIREMENTS:\n" +
+            "- Each question must target one clear learning objective.\n" +
+            "- Keep wording explicit and avoid ambiguous wording.\n" +
+            "- Distractors should reflect plausible misconceptions.\n" +
+            "- Add a concise explanation linked to the course text.\n" +
+            (difficulte == "Facile"
+                ? "- Cognitive mix: mostly comprehension, some simple application.\n"
+                : difficulte == "Difficile"
+                    ? "- Cognitive mix: mostly application/reasoning, some comprehension.\n"
+                    : "- Cognitive mix: balanced comprehension and application.\n");
 
         /// <summary>
         /// Construit le prompt pour un lot de questions d'examen mixtes (QCM + Checkbox + Rédaction).
@@ -476,6 +490,7 @@ Output ONLY the JSON array, nothing else.";
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
             string variationSection = BuildVariationSection();
+            string pedagogicalSection = BuildPedagogicalSection(difficulte);
             int total = nbQCM + nbVF + nbCheckbox + nbRedaction;
 
             var sb = new System.Text.StringBuilder();
@@ -485,6 +500,7 @@ Output ONLY the JSON array, nothing else.";
             sb.AppendLine(difficultyInstructions);
             sb.AppendLine();
             sb.AppendLine(variationSection);
+            sb.AppendLine(pedagogicalSection);
             sb.AppendLine("CRITICAL: Base ALL questions STRICTLY on the provided course content. Do NOT invent or assume any information not explicitly mentioned in the text.");
             if (!string.IsNullOrEmpty(avoidSection)) sb.AppendLine(avoidSection);
             sb.AppendLine("Course content:");

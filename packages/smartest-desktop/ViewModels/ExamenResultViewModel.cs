@@ -93,7 +93,6 @@ namespace smartest_desktop.ViewModels
         public ICommand RetourCommand { get; }
 
         public ICommand SetReponseCorrecteCommand { get; }
-
         private readonly RelayCommand _validerExamenCommand;
 
         public event Action<List<QuestionExamen>, string, int, string, string>? ExamenValide;
@@ -133,6 +132,7 @@ namespace smartest_desktop.ViewModels
 
             if (Questions.Sum(q => q.BaremePoints) <= 0.001)
                 ExamenBaremeHelper.AppliquerBaremeParDefaut(Questions.ToList());
+            RafraichirQualitePedagogique();
             _empreinteInitiale = CalculerEmpreinte();
 
             SelectionnerCommand = new RelayCommand(p =>
@@ -344,6 +344,7 @@ namespace smartest_desktop.ViewModels
             {
                 RebrancherEvenementsQuestions();
                 ActualiserEtatBareme();
+                RafraichirQualitePedagogique();
                 _validerExamenCommand.RaiseCanExecuteChanged();
             };
             RebrancherEvenementsQuestions();
@@ -448,6 +449,17 @@ namespace smartest_desktop.ViewModels
                 ActualiserEtatBareme();
                 _validerExamenCommand.RaiseCanExecuteChanged();
             }
+            if (e.PropertyName is nameof(QuestionExamen.Enonce)
+                or nameof(QuestionExamen.OptionA)
+                or nameof(QuestionExamen.OptionB)
+                or nameof(QuestionExamen.OptionC)
+                or nameof(QuestionExamen.OptionD)
+                or nameof(QuestionExamen.ReponseCorrecte)
+                or nameof(QuestionExamen.ReponseModele)
+                or nameof(QuestionExamen.Explication))
+            {
+                RafraichirQualitePedagogique();
+            }
         }
 
         private void ActualiserEtatBareme()
@@ -456,6 +468,14 @@ namespace smartest_desktop.ViewModels
             OnPropertyChanged(nameof(EcartBareme));
             OnPropertyChanged(nameof(BaremeValide));
             OnPropertyChanged(nameof(ResumeBareme));
+        }
+
+        private void RafraichirQualitePedagogique()
+        {
+            foreach (var q in Questions)
+            {
+                _ = PedagogicalQualityEvaluator.EvaluateExamQuestion(q);
+            }
         }
 
         /// <summary>

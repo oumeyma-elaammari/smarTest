@@ -344,6 +344,7 @@ namespace smartest_desktop.ViewModels
             InitialiserCommandesEmails();
             VoirListeEtudiantsCommand = new RelayCommand(_ => AfficherListeEtudiants = true);
             InitialiserQuestions(questions);
+            RafraichirQualitePedagogique();
 
             _empreinteInitiale = CalculerEmpreinte();
 
@@ -351,11 +352,14 @@ namespace smartest_desktop.ViewModels
             InitialiserCommandesNavigation();
             Questions.CollectionChanged += (_, __) =>
             {
+                RebrancherEvenementsQuestions();
+                RafraichirQualitePedagogique();
                 _validerQuizCommandRelay.RaiseCanExecuteChanged();
                 _supprimerQuestionCommandRelay.RaiseCanExecuteChanged();
                 _ajouterQuestionCommandRelay.RaiseCanExecuteChanged();
                 _setReponseCorrecteCommandRelay.RaiseCanExecuteChanged();
             };
+            RebrancherEvenementsQuestions();
         }
 
         private void InitialiserCommandesEmails()
@@ -383,6 +387,37 @@ namespace smartest_desktop.ViewModels
 
             if (Questions.Count > 0)
                 QuestionSelectionnee = Questions[0];
+        }
+
+        private void RebrancherEvenementsQuestions()
+        {
+            foreach (var q in Questions)
+            {
+                q.PropertyChanged -= Question_PropertyChanged;
+                q.PropertyChanged += Question_PropertyChanged;
+            }
+        }
+
+        private void Question_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(QuestionQCM.Enonce)
+                or nameof(QuestionQCM.OptionA)
+                or nameof(QuestionQCM.OptionB)
+                or nameof(QuestionQCM.OptionC)
+                or nameof(QuestionQCM.OptionD)
+                or nameof(QuestionQCM.ReponseCorrecte)
+                or nameof(QuestionQCM.Explication))
+            {
+                RafraichirQualitePedagogique();
+            }
+        }
+
+        private void RafraichirQualitePedagogique()
+        {
+            foreach (var q in Questions)
+            {
+                _ = PedagogicalQualityEvaluator.EvaluateQuizQuestion(q);
+            }
         }
 
         private void InitialiserCommandesQuestionsEtValidation()

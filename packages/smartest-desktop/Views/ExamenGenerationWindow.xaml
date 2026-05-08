@@ -21,7 +21,7 @@
 				<Setter Property="Width" Value="30"/>
 				<Setter Property="Height" Value="30"/>
 				<Setter Property="CornerRadius" Value="8"/>
-				<Setter Property="Background" Value="#eef3fd"/>
+				<Setter Property="Background" Value="Transparent"/>
 				<Setter Property="Cursor" Value="Hand"/>
 				<Style.Triggers>
 					<Trigger Property="IsMouseOver" Value="True">
@@ -206,10 +206,12 @@
 										<TextBlock Text="−" FontSize="16" FontWeight="700" Foreground="#6B6B6B"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 									</Border>
-									<TextBlock Text="{Binding NbQCM}" FontSize="16" FontWeight="700"
-                                               Foreground="#0f1e3d" Width="36"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               TextAlignment="Center"/>
+									<TextBox Text="{Binding NbQCM, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="44" Height="30" Margin="6,0"
+                                             BorderThickness="0" Background="Transparent"
+                                             FontSize="15" FontWeight="700" Foreground="#0f1e3d"
+                                             VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                             TextAlignment="Center" Padding="0"/>
 									<Border Style="{StaticResource CounterBtn}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding IncrQCMCommand}"/>
@@ -240,10 +242,12 @@
 										<TextBlock Text="−" FontSize="16" FontWeight="700" Foreground="#6B6B6B"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 									</Border>
-									<TextBlock Text="{Binding NbVF}" FontSize="16" FontWeight="700"
-                                               Foreground="#0f1e3d" Width="36"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               TextAlignment="Center"/>
+									<TextBox Text="{Binding NbVF, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="44" Height="30" Margin="6,0"
+                                             BorderThickness="0" Background="Transparent"
+                                             FontSize="15" FontWeight="700" Foreground="#0f1e3d"
+                                             VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                             TextAlignment="Center" Padding="0"/>
 									<Border Style="{StaticResource CounterBtn}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding IncrVFCommand}"/>
@@ -274,10 +278,12 @@
 										<TextBlock Text="−" FontSize="16" FontWeight="700" Foreground="#6B6B6B"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 									</Border>
-									<TextBlock Text="{Binding NbCheckbox}" FontSize="16" FontWeight="700"
-                                               Foreground="#0f1e3d" Width="36"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               TextAlignment="Center"/>
+									<TextBox Text="{Binding NbCheckbox, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="44" Height="30" Margin="6,0"
+                                             BorderThickness="0" Background="Transparent"
+                                             FontSize="15" FontWeight="700" Foreground="#0f1e3d"
+                                             VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                             TextAlignment="Center" Padding="0"/>
 									<Border Style="{StaticResource CounterBtn}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding IncrCheckboxCommand}"/>
@@ -308,10 +314,12 @@
 										<TextBlock Text="−" FontSize="16" FontWeight="700" Foreground="#6B6B6B"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 									</Border>
-									<TextBlock Text="{Binding NbRedaction}" FontSize="16" FontWeight="700"
-                                               Foreground="#0f1e3d" Width="36"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               TextAlignment="Center"/>
+									<TextBox Text="{Binding NbRedaction, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="44" Height="30" Margin="6,0"
+                                             BorderThickness="0" Background="Transparent"
+                                             FontSize="15" FontWeight="700" Foreground="#0f1e3d"
+                                             VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                             TextAlignment="Center" Padding="0"/>
 									<Border Style="{StaticResource CounterBtn}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding IncrRedactionCommand}"/>

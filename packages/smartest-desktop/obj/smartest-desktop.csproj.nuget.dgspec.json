@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj": {}
+    "c:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj": {}
   },
   "projects": {
-    "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj": {
+    "c:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
+        "projectUniqueName": "c:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
         "projectName": "smartest-desktop",
-        "projectPath": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
+        "projectPath": "c:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
         "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\User\\smarTest\\packages\\smartest-desktop\\obj\\",
+        "outputPath": "c:\\Users\\User\\smarTest\\packages\\smartest-desktop\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

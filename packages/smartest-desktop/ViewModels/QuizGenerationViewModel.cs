@@ -802,17 +802,31 @@ namespace smartest_desktop.ViewModels
             "- Vary the generated questions compared to previous generations.\n" +
             "- Ne répète pas les mêmes questions. Génère des questions différentes à chaque appel, en explorant des angles variés du contenu.\n";
 
+        private static string BuildPedagogicalSection(string difficulte) =>
+            "PEDAGOGICAL QUALITY REQUIREMENTS:\n" +
+            "- Every question must have one clear learning objective.\n" +
+            "- Keep wording unambiguous and avoid trick wording.\n" +
+            "- Provide a concise explanation tied to the course text.\n" +
+            "- Use plausible distractors that target common misconceptions.\n" +
+            (difficulte == "Facile"
+                ? "- Cognitive mix: about 70% compréhension de base, 30% application simple.\n"
+                : difficulte == "Difficile"
+                    ? "- Cognitive mix: about 30% compréhension, 70% application/raisonnement.\n"
+                    : "- Cognitive mix: about 50% compréhension, 50% application/raisonnement.\n");
+
         private string BuildPrompt(string contenu, int nbQuestions, string difficulte, IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
             string variationSection = BuildVariationSection();
+            string pedagogicalSection = BuildPedagogicalSection(difficulte);
 
             return
 $@"Generate EXACTLY {nbQuestions} multiple-choice questions in FRENCH about the text below.
 
 {difficultyInstructions}
 {variationSection}
+{pedagogicalSection}
 IMPORTANT: Base ALL questions STRICTLY on the provided text. Do NOT invent or assume any information not explicitly present in the text.
 {avoidSection}
 TEXT:
@@ -839,6 +853,7 @@ RULES:
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
             string variationSection = BuildVariationSection();
+            string pedagogicalSection = BuildPedagogicalSection(difficulte);
             int texteLength = Math.Min(contenu.Length, 4000);
             string texteTronque = contenu.Length > texteLength ? contenu[..texteLength] : contenu;
 
@@ -847,6 +862,7 @@ $@"GÉNÉRATION STRICTE DE {nbQuestions} QUESTIONS QCM EN FRANÇAIS
 
 {difficultyInstructions}
 {variationSection}
+{pedagogicalSection}
 IMPORTANT: Baser TOUTES les questions UNIQUEMENT sur le texte fourni. Ne pas inventer d'informations absentes du texte.
 {avoidSection}
 TEXTE SOURCE:
