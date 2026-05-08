@@ -1,5 +1,6 @@
 using Microsoft.Win32;
 using smartest_desktop.Helpers;
+using System.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -73,9 +74,17 @@ namespace smartest_desktop.ViewModels
                 ? $"{NombreQuestions} questions · {Duree} min · {Difficulte} · {CoursSourceLabel}"
                 : $"{NombreQuestions} questions générées · {Duree} min · {Difficulte} · {CoursSourceLabel}";
 
+        public IReadOnlyList<double> ValeursBareme { get; } =
+            Enumerable.Range(0, 81).Select(i => i * ExamenBaremeHelper.Pas).ToList();
+
+        public double TotalBareme => Math.Round(Questions.Sum(q => q.BaremePoints), 2);
+        public double EcartBareme => Math.Round(ExamenBaremeHelper.TotalCible - TotalBareme, 2);
+        public bool BaremeValide => Math.Abs(EcartBareme) < 1e-9 && Questions.All(q => ExamenBaremeHelper.EstAuPas(q.BaremePoints));
+        public string ResumeBareme => $"Barème : {ExamenBaremeHelper.FormatPoints(TotalBareme)} / {ExamenBaremeHelper.FormatPoints(ExamenBaremeHelper.TotalCible)}";
+
         public ICommand SelectionnerCommand { get; }
         public ICommand SupprimerCommand { get; }
-        /// <summary>Paramètre : type de question — QCM, CHECKBOX ou REDACTION.</summary>
+        /// <summary>Paramètre : type de question — QCM, VF, CHECKBOX ou REDACTION.</summary>
         public ICommand AjouterQuestionCommand { get; }
         public ICommand AttacherImageCommand { get; }
         public ICommand SupprimerImageCommand { get; }
@@ -84,7 +93,6 @@ namespace smartest_desktop.ViewModels
         public ICommand RetourCommand { get; }
 
         public ICommand SetReponseCorrecteCommand { get; }
-
         private readonly RelayCommand _validerExamenCommand;
 
         public event Action<List<QuestionExamen>, string, int, string, string>? ExamenValide;
@@ -122,6 +130,9 @@ namespace smartest_desktop.ViewModels
                 QuestionSelectionnee = Questions[0];
             }
 
+            if (Questions.Sum(q => q.BaremePoints) <= 0.001)
+                ExamenBaremeHelper.AppliquerBaremeParDefaut(Questions.ToList());
+            RafraichirQualitePedagogique();
             _empreinteInitiale = CalculerEmpreinte();
 
             SelectionnerCommand = new RelayCommand(p =>
@@ -146,6 +157,7 @@ namespace smartest_desktop.ViewModels
                 Renuméroter();
                 OnPropertyChanged(nameof(NombreQuestions));
                 OnPropertyChanged(nameof(SousTitreCompteur));
+                ActualiserEtatBareme();
                 _validerExamenCommand.RaiseCanExecuteChanged();
 
                 if (Questions.Count > 0)
@@ -165,19 +177,28 @@ namespace smartest_desktop.ViewModels
             AjouterQuestionCommand = new RelayCommand(p =>
             {
                 string type = p as string ?? "QCM";
-                if (type != "QCM" && type != "CHECKBOX" && type != "REDACTION")
+                if (type != "QCM" && type != "VF" && type != "CHECKBOX" && type != "REDACTION")
                     type = "QCM";
 
                 var q = new QuestionExamen
                 {
                     Type = type,
                     Difficulte = Difficulte,
-                    Enonce = "Nouvelle question"
+                    Enonce = "Nouvelle question",
+                    BaremePoints = ExamenBaremeHelper.Pas
                 };
 
                 if (type == "QCM")
                 {
                     q.ReponseCorrecte = string.Empty;
+                }
+                else if (type == "VF")
+                {
+                    q.OptionA = "Vrai";
+                    q.OptionB = "Faux";
+                    q.OptionC = string.Empty;
+                    q.OptionD = string.Empty;
+                    q.ReponseCorrecte = "A";
                 }
                 else if (type == "CHECKBOX")
                 {
@@ -196,6 +217,7 @@ namespace smartest_desktop.ViewModels
                 Renuméroter();
                 OnPropertyChanged(nameof(NombreQuestions));
                 OnPropertyChanged(nameof(SousTitreCompteur));
+                ActualiserEtatBareme();
                 _validerExamenCommand.RaiseCanExecuteChanged();
 
                 foreach (var item in Questions)
@@ -208,7 +230,7 @@ namespace smartest_desktop.ViewModels
             {
                 if (p is not string lettre) return;
                 if (QuestionSelectionnee == null) return;
-                if (!QuestionSelectionnee.IsQCM) return;
+                if (!QuestionSelectionnee.IsQCM && !QuestionSelectionnee.IsVF) return;
 
                 QuestionSelectionnee.ReponseCorrecte = lettre.ToUpperInvariant();
                 OnPropertyChanged(nameof(QuestionSelectionnee));
@@ -240,7 +262,7 @@ namespace smartest_desktop.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lors de la lecture de l'image :\n{ex.Message}",
+                    MessageBox.Show(UserErrorMessage.FromException(ex, "Impossible de lire cette image."),
                         "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             });
@@ -262,6 +284,19 @@ namespace smartest_desktop.ViewModels
                         MessageBox.Show(
                             "L'examen ne contient aucune question.",
                             "Examen vide",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    if (!BaremeValide)
+                    {
+                        var msg = Questions.Any(q => !ExamenBaremeHelper.EstAuPas(q.BaremePoints))
+                            ? "Les points doivent etre saisis par pas de 0,25."
+                            : $"Le barème total doit être de 20 points (actuel: {ExamenBaremeHelper.FormatPoints(TotalBareme)}).";
+                        MessageBox.Show(
+                            msg,
+                            "Barème  invalide",
                             MessageBoxButton.OK,
                             MessageBoxImage.Warning);
                         return;
@@ -305,7 +340,15 @@ namespace smartest_desktop.ViewModels
                 _ => Questions.Count > 0);
             ValiderExamenCommand = _validerExamenCommand;
 
-            Questions.CollectionChanged += (_, __) => _validerExamenCommand.RaiseCanExecuteChanged();
+            Questions.CollectionChanged += (_, __) =>
+            {
+                RebrancherEvenementsQuestions();
+                ActualiserEtatBareme();
+                RafraichirQualitePedagogique();
+                _validerExamenCommand.RaiseCanExecuteChanged();
+            };
+            RebrancherEvenementsQuestions();
+            ActualiserEtatBareme();
 
             RegenerarCommand = new RelayCommand(_ =>
             {
@@ -370,6 +413,7 @@ namespace smartest_desktop.ViewModels
                 q.OptionCCorrecte,
                 q.OptionDCorrecte,
                 q.ReponseModele,
+                q.BaremePoints,
                 q.Explication,
                 ImgLen = q.ImageBase64?.Length ?? 0,
                 q.ImageNom,
@@ -389,6 +433,51 @@ namespace smartest_desktop.ViewModels
                 q.Numero = n++;
         }
 
+        private void RebrancherEvenementsQuestions()
+        {
+            foreach (var q in Questions)
+            {
+                q.PropertyChanged -= Question_PropertyChanged;
+                q.PropertyChanged += Question_PropertyChanged;
+            }
+        }
+
+        private void Question_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(QuestionExamen.BaremePoints))
+            {
+                ActualiserEtatBareme();
+                _validerExamenCommand.RaiseCanExecuteChanged();
+            }
+            if (e.PropertyName is nameof(QuestionExamen.Enonce)
+                or nameof(QuestionExamen.OptionA)
+                or nameof(QuestionExamen.OptionB)
+                or nameof(QuestionExamen.OptionC)
+                or nameof(QuestionExamen.OptionD)
+                or nameof(QuestionExamen.ReponseCorrecte)
+                or nameof(QuestionExamen.ReponseModele)
+                or nameof(QuestionExamen.Explication))
+            {
+                RafraichirQualitePedagogique();
+            }
+        }
+
+        private void ActualiserEtatBareme()
+        {
+            OnPropertyChanged(nameof(TotalBareme));
+            OnPropertyChanged(nameof(EcartBareme));
+            OnPropertyChanged(nameof(BaremeValide));
+            OnPropertyChanged(nameof(ResumeBareme));
+        }
+
+        private void RafraichirQualitePedagogique()
+        {
+            foreach (var q in Questions)
+            {
+                _ = PedagogicalQualityEvaluator.EvaluateExamQuestion(q);
+            }
+        }
+
         /// <summary>
         /// Ordre d'affichage aligné sur la génération : QCM, puis CHECKBOX, puis RÉDACTION, puis IMAGE.
         /// La nouvelle question est insérée dans le bloc de son type (après les questions du même type déjà présentes).
@@ -396,9 +485,10 @@ namespace smartest_desktop.ViewModels
         private static int TypeOrder(string t) => t switch
         {
             "QCM" => 0,
-            "CHECKBOX" => 1,
-            "REDACTION" => 2,
-            "IMAGE" => 3,
+            "VF" => 1,
+            "CHECKBOX" => 2,
+            "REDACTION" => 3,
+            "IMAGE" => 4,
             _ => 0
         };
 
@@ -430,7 +520,7 @@ namespace smartest_desktop.ViewModels
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                     MessageBox.Show(
-                        $"Impossible de supprimer l'examen vide :\n{ex.Message}",
+                        UserErrorMessage.FromException(ex, "Impossible de supprimer cet examen pour le moment."),
                         "Erreur",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error));

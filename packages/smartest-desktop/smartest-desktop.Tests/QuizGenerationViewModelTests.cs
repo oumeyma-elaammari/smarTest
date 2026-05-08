@@ -83,7 +83,7 @@ public class QuizGenerationViewModelTests
             await Task.Delay(50);
 
         Assert.True(vm.HasError);
-        Assert.Contains("timeout", vm.ErrorMessage);
+        Assert.Contains("Impossible de contacter le serveur", vm.ErrorMessage);
     }
 
     [Fact]

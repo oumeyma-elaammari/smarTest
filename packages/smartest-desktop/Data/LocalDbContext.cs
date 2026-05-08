@@ -87,6 +87,7 @@ namespace smartest_desktop.Data
                 entity.Property(q => q.Type).IsRequired().HasMaxLength(20);
                 entity.Property(q => q.Difficulte).HasMaxLength(20);
                 entity.Property(q => q.Explication).HasColumnType("TEXT");
+                entity.Property(q => q.BaremePoints).HasDefaultValue(0.0);
 
                 entity.Property(q => q.ReponseModele).HasColumnType("TEXT");
                 entity.Property(q => q.ReponsesCorrectesJson).HasColumnType("TEXT");

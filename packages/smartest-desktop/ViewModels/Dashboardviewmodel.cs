@@ -117,7 +117,11 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    UserErrorMessage.FromException(ex, "Impossible d'ouvrir cette page pour le moment."),
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
@@ -244,7 +248,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                MessageBox.Show(UserErrorMessage.FromException(ex, "Impossible d'ouvrir cette page pour le moment."), "Erreur",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -267,7 +271,7 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                MessageBox.Show(UserErrorMessage.FromException(ex, "Impossible d'ouvrir cette page pour le moment."), "Erreur",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

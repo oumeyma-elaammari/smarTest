@@ -73,7 +73,7 @@ public class AuthServiceTests
         var (user, err) = await auth.LoginAsync("a@b.c", "x");
 
         Assert.Null(user);
-        Assert.Contains("serveur", err, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Connexion impossible", err, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

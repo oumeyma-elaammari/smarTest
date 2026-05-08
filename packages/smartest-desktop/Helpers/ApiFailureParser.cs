@@ -47,7 +47,7 @@ namespace smartest_desktop.Helpers
                     }
                     catch { /* garder trimmed */ }
 
-                return trimmed;
+                return UserErrorMessage.FromText(trimmed, FallbackForStatus(status));
             }
 
             return FallbackForStatus(status);
@@ -70,7 +70,7 @@ namespace smartest_desktop.Helpers
                     int code = (int)status;
                     if (code >= 500)
                         return "Erreur serveur. Réessayez plus tard.";
-                    return $"Erreur HTTP {code}.";
+                    return "Une erreur est survenue. Réessayez.";
                 }
             }
         }

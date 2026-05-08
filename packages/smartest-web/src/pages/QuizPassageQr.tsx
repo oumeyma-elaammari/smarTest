@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import axios from 'axios'
 import api from '../api/axiosConfig'
 import { shuffleCopy } from '../utils/shuffle'
+import { getUserErrorMessage } from '../utils/userErrorMessage'
 
 type ReponseWeb = { id: number; contenu: string }
 type QuestionWeb = { id: number; enonce: string; reponses: ReponseWeb[] }
@@ -40,15 +41,9 @@ function makeRandomParticipantId(): string {
 }
 
 function apiErrorMessage(e: unknown, fallback: string): string {
-    if (axios.isAxiosError(e)) {
-        const d = e.response?.data
-        if (typeof d === 'string' && d.trim()) return d.trim()
-        if (e.code === 'ECONNABORTED') return 'Délai dépassé. Réessayez.'
-        if (!e.response) return 'Impossible de contacter le serveur.'
-        if (e.response.status === 404) return 'Quiz introuvable.'
-    }
-    if (e instanceof Error && e.message) return e.message
-    return fallback
+    if (axios.isAxiosError(e) && e.code === 'ECONNABORTED') return 'Delai depasse. Reessayez.'
+    if (axios.isAxiosError(e) && e.response?.status === 404) return 'Quiz introuvable.'
+    return getUserErrorMessage(e, fallback)
 }
 
 function buildQrRightActionButton(params: {

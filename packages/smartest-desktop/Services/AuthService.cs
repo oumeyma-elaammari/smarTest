@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using smartest_desktop.Exceptions;
+using smartest_desktop.Helpers;
 using smartest_desktop.Models;
 
 namespace smartest_desktop.Services
@@ -71,7 +72,7 @@ namespace smartest_desktop.Services
             {
                 return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de l'inscription."); }
         }
 
         // ══════════════════════════════════════════════
@@ -102,7 +103,7 @@ namespace smartest_desktop.Services
             {
                 return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la verification."); }
         }
 
         // ══════════════════════════════════════════════
@@ -129,7 +130,7 @@ namespace smartest_desktop.Services
             {
                 return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Impossible de renvoyer le code pour le moment."); }
         }
 
         // ══════════════════════════════════════════════
@@ -196,7 +197,7 @@ namespace smartest_desktop.Services
             {
                 return (null, SmartestNetworkException.ServerUnreachable(ex).Message);
             }
-            catch (Exception ex) { return (null, $"Erreur : {ex.Message}"); }
+            catch (Exception ex) { return (null, UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la connexion.")); }
         }
 
         // ══════════════════════════════════════════════
@@ -217,7 +218,7 @@ namespace smartest_desktop.Services
                 {
                     400 => "Format d'email invalide",
                     500 => "Erreur serveur lors de l'envoi de l'email. Réessayez",
-                    _ => $"Erreur ({(int)response.StatusCode}). Réessayez"
+                    _ => "La demande n'a pas pu aboutir. Réessayez."
                 };
             }
             catch (OperationCanceledException ex)
@@ -230,7 +231,7 @@ namespace smartest_desktop.Services
             {
                 return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la demande de reinitialisation."); }
         }
 
         // ══════════════════════════════════════════════
@@ -258,7 +259,7 @@ namespace smartest_desktop.Services
                         "Les mots de passe ne correspondent pas",
                     400 => "Code invalide ou expiré.",
                     500 => "Erreur serveur. Réessayez plus tard",
-                    _ => $"Erreur ({(int)response.StatusCode}). Réessayez"
+                    _ => "La demande n'a pas pu aboutir. Réessayez."
                 };
             }
             catch (OperationCanceledException ex)
@@ -271,7 +272,7 @@ namespace smartest_desktop.Services
             {
                 return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la reinitialisation du mot de passe."); }
         }
 
         // ══════════════════════════════════════════════

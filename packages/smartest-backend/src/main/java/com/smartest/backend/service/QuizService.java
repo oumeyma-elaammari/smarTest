@@ -200,7 +200,7 @@ public class QuizService {
 
     @Transactional(readOnly = true)
     public QuizPassageWebResponse getQuizPourPassageQr(Long quizId) {
-        Quiz quiz = chargerQuizPubliePourQr(quizId);
+        Quiz quiz = chargerQuizPourQr(quizId);
 
         QuizPassageWebResponse dto = new QuizPassageWebResponse();
         dto.setId(quiz.getId());
@@ -266,7 +266,7 @@ public class QuizService {
         if (request == null || request.getQuestionId() == null || request.getReponseId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requête incomplète");
         }
-        Quiz quiz = chargerQuizPubliePourQr(quizId);
+        Quiz quiz = chargerQuizPourQr(quizId);
         Question question = quiz.getQuestions().stream()
                 .filter(q -> q.getId().equals(request.getQuestionId()))
                 .findFirst()
@@ -523,7 +523,7 @@ public class QuizService {
     public ResultatQuizWebResponse soumettreQuizQr(
             Long quizId,
             SoumissionQuizWebRequest request) {
-        Quiz quiz = chargerQuizPubliePourQr(quizId);
+        Quiz quiz = chargerQuizPourQr(quizId);
 
         Map<Long, Long> reponsesParQuestion = new HashMap<>();
         if (request != null && request.getReponses() != null) {
@@ -659,12 +659,9 @@ public class QuizService {
         return quiz;
     }
 
-    private Quiz chargerQuizPubliePourQr(Long quizId) {
+    private Quiz chargerQuizPourQr(Long quizId) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new QuizNotFoundException(QUIZ_INTROUVABLE));
-        if (quiz.getStatut() == StatutQuiz.BROUILLON) {
-            throw new InvalidQuizStateException("Ce quiz n'est pas encore prêt pour l'accès QR.");
-        }
         return quiz;
     }
 

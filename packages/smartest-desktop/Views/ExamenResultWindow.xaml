@@ -189,6 +189,8 @@
 							<TextBlock Text="Questions de l'examen" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
 							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
 									   Text="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
+							<TextBlock FontSize="11" Foreground="#475569" Margin="0,4,0,0"
+									   Text="{Binding ResumeBareme}"/>
 							<TextBlock Text="Ajouter une question" FontSize="10" FontWeight="700"
                                        Foreground="#9CA3AF" Margin="0,14,0,8"/>
 							<StackPanel Orientation="Horizontal">
@@ -203,6 +205,12 @@
                                         Command="{Binding AjouterQuestionCommand}" CommandParameter="CHECKBOX"
                                         FocusVisualStyle="{x:Null}">
 									<TextBlock Text="Cases à cocher" FontSize="11" FontWeight="600" Foreground="#5b21b6"/>
+								</Button>
+								<Button Margin="0,0,6,0" Padding="10,8" Cursor="Hand"
+                                        Background="#ecfeff" BorderBrush="#99f6e4" BorderThickness="1"
+                                        Command="{Binding AjouterQuestionCommand}" CommandParameter="VF"
+                                        FocusVisualStyle="{x:Null}">
+									<TextBlock Text="Vrai / Faux" FontSize="11" FontWeight="600" Foreground="#0f766e"/>
 								</Button>
 								<Button Padding="10,8" Cursor="Hand"
                                         Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1"
@@ -317,6 +325,12 @@
                                                        TextTrimming="CharacterEllipsis"
                                                        Visibility="{Binding HasImage,
                                                                     Converter={StaticResource BoolToVis}}"/>
+											<TextBlock Grid.Row="2"
+                                                       Text="{Binding BaremePoints, StringFormat='{}{0:0.##} pt'}"
+                                                       FontSize="10" Foreground="#1D4ED8"
+                                                       FontWeight="600"
+                                                       HorizontalAlignment="Right"
+                                                       Margin="0,4,0,0"/>
 										</Grid>
 									</Border>
 								</DataTemplate>
@@ -365,6 +379,25 @@
                                      BorderThickness="0" Background="Transparent"
                                      FontSize="14" Foreground="#0f1e3d" TextWrapping="Wrap"
                                      AcceptsReturn="True" MinHeight="60"/>
+						</Border>
+
+						<TextBlock Text="BARÈME (sur 20)" FontSize="10" FontWeight="700"
+                                   Foreground="#9CA3AF" Margin="0,0,0,8"/>
+						<Border Background="White" CornerRadius="10"
+                                BorderBrush="#e2e8f4" BorderThickness="1"
+                                Padding="16,10" Margin="0,0,0,16">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="180"/>
+									<ColumnDefinition Width="*"/>
+								</Grid.ColumnDefinitions>
+								<ComboBox Grid.Column="0"
+                                          ItemsSource="{Binding ValeursBareme}"
+                                          SelectedItem="{Binding QuestionSelectionnee.BaremePoints, Mode=TwoWay}"
+                                          FontSize="13"
+                                          VerticalAlignment="Center"/>
+						
+							</Grid>
 						</Border>
 
 						<!-- Import d’image sous l’énoncé (toutes les questions, optionnel) -->
@@ -463,6 +496,14 @@
 												<Setter Property="Background" Value="#F0FDF4"/>
 												<Setter Property="BorderBrush" Value="#86EFAC"/>
 											</MultiDataTrigger>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsVF}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="A"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
 											<DataTrigger Binding="{Binding QuestionSelectionnee.OptionACorrecte}" Value="True">
 												<Setter Property="Background" Value="#F0FDF4"/>
 												<Setter Property="BorderBrush" Value="#86EFAC"/>
@@ -494,7 +535,7 @@
 									<!-- QCM : icône MDL2 (style quiz — ligne verte + coche) -->
 									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
                                             Cursor="Hand"
-                                            Visibility="{Binding QuestionSelectionnee.IsQCM,
+                                            Visibility="{Binding QuestionSelectionnee.IsQcmOuVf,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick"
@@ -542,6 +583,14 @@
 												<Setter Property="Background" Value="#F0FDF4"/>
 												<Setter Property="BorderBrush" Value="#86EFAC"/>
 											</MultiDataTrigger>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsVF}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="B"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
 											<DataTrigger Binding="{Binding QuestionSelectionnee.OptionBCorrecte}" Value="True">
 												<Setter Property="Background" Value="#F0FDF4"/>
 												<Setter Property="BorderBrush" Value="#86EFAC"/>
@@ -571,7 +620,7 @@
 
 									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
                                             Cursor="Hand"
-                                            Visibility="{Binding QuestionSelectionnee.IsQCM,
+                                            Visibility="{Binding QuestionSelectionnee.IsQcmOuVf,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick"
@@ -604,7 +653,8 @@
 							</Border>
 
 							<!-- Option C -->
-							<Border Margin="0,0,0,8" CornerRadius="8" Padding="12,10">
+							<Border Margin="0,0,0,8" CornerRadius="8" Padding="12,10"
+                                    Visibility="{Binding QuestionSelectionnee.HasQuatreOptions, Converter={StaticResource BoolToVis}}">
 								<Border.Style>
 									<Style TargetType="Border">
 										<Setter Property="Background" Value="#FBFBFB"/>
@@ -614,6 +664,14 @@
 											<MultiDataTrigger>
 												<MultiDataTrigger.Conditions>
 													<Condition Binding="{Binding QuestionSelectionnee.IsQCM}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="C"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsVF}" Value="True"/>
 													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="C"/>
 												</MultiDataTrigger.Conditions>
 												<Setter Property="Background" Value="#F0FDF4"/>
@@ -648,7 +706,7 @@
 
 									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
                                             Cursor="Hand"
-                                            Visibility="{Binding QuestionSelectionnee.IsQCM,
+                                            Visibility="{Binding QuestionSelectionnee.IsQcmOuVf,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick"
@@ -681,7 +739,8 @@
 							</Border>
 
 							<!-- Option D -->
-							<Border Margin="0,0,0,24" CornerRadius="8" Padding="12,10">
+							<Border Margin="0,0,0,24" CornerRadius="8" Padding="12,10"
+                                    Visibility="{Binding QuestionSelectionnee.HasQuatreOptions, Converter={StaticResource BoolToVis}}">
 								<Border.Style>
 									<Style TargetType="Border">
 										<Setter Property="Background" Value="#FBFBFB"/>
@@ -691,6 +750,14 @@
 											<MultiDataTrigger>
 												<MultiDataTrigger.Conditions>
 													<Condition Binding="{Binding QuestionSelectionnee.IsQCM}" Value="True"/>
+													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="D"/>
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Background" Value="#F0FDF4"/>
+												<Setter Property="BorderBrush" Value="#86EFAC"/>
+											</MultiDataTrigger>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding QuestionSelectionnee.IsVF}" Value="True"/>
 													<Condition Binding="{Binding QuestionSelectionnee.ReponseCorrecte}" Value="D"/>
 												</MultiDataTrigger.Conditions>
 												<Setter Property="Background" Value="#F0FDF4"/>
@@ -725,7 +792,7 @@
 
 									<Border Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center"
                                             Cursor="Hand"
-                                            Visibility="{Binding QuestionSelectionnee.IsQCM,
+                                            Visibility="{Binding QuestionSelectionnee.IsQcmOuVf,
                                                          Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick"
@@ -802,7 +869,10 @@
 				<TextBlock FontSize="12" Foreground="#6B6B6B" VerticalAlignment="Center"
                            Text="{Binding NombreQuestions, StringFormat='{}{0} questions dans cet examen'}"/>
 				<TextBlock Text=" · " FontSize="12" Foreground="#CACACA"/>
-				<TextBlock Text="Cliquez sur une question pour l'éditer directement ou la supprimer"
+				<TextBlock Text="{Binding ResumeBareme}"
+                           FontSize="12" Foreground="#475569" FontWeight="600"/>
+				<TextBlock Text=" · " FontSize="12" Foreground="#CACACA"/>
+				<TextBlock Text="Le total du barème doit être égal à 20 pour valider"
                            FontSize="12" Foreground="#ABABAB"/>
 			</StackPanel>
 		</Border>

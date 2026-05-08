@@ -34,7 +34,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.smartest.backend.exception.InvalidQuizStateException;
 import com.smartest.backend.exception.QuizNotFoundException;
 import com.smartest.backend.exception.UnauthorizedAccessException;
 
@@ -224,14 +223,18 @@ class QuizServiceWebFlowsTest {
     }
 
     @Test
-    void getQuizPourPassageQrInterditBrouillon() {
+    void getQuizPourPassageQrAutoriseBrouillon() {
         Quiz b = new Quiz();
         b.setId(11L);
+        b.setTitre("Quiz brouillon QR");
+        b.setDuree(15);
         b.setStatut(StatutQuiz.BROUILLON);
+        b.setQuestions(new ArrayList<>(quizPublieWeb.getQuestions()));
         when(quizRepository.findById(11L)).thenReturn(Optional.of(b));
 
-        assertThatThrownBy(() -> quizService.getQuizPourPassageQr(11L))
-                .isInstanceOf(InvalidQuizStateException.class);
+        QuizPassageWebResponse dto = quizService.getQuizPourPassageQr(11L);
+        assertThat(dto.getId()).isEqualTo(11L);
+        assertThat(dto.getNombreQuestions()).isEqualTo(1);
     }
 
     @Test

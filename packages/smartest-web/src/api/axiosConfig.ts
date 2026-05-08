@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import toast from 'react-hot-toast'
+import { getUserErrorMessage } from '../utils/userErrorMessage'
 
 const api = axios.create({
     baseURL: 'http://localhost:8081',
@@ -34,7 +35,7 @@ api.interceptors.response.use(
             url.includes('/auth/verify-email')
 
         if (status === 429) {
-            toast.error('Trop de requêtes. Réessayez dans quelques instants.')
+            toast.error(getUserErrorMessage(error, 'Trop de requetes. Reessayez dans quelques instants.'))
         }
 
         if (status === 401 && !isAuthRoute) {

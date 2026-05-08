@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartest.backend.dto.request.PublicationWebRequest;
+import com.smartest.backend.dto.request.QrQuestionsSyncRequest;
 import com.smartest.backend.dto.request.QuizRequest;
 import com.smartest.backend.dto.response.MessageResponse;
 import com.smartest.backend.dto.response.QuizResponse;
@@ -123,6 +124,15 @@ public class QuizController {
             quizService.synchroniserQuestionsPublicationWeb(id, userDetails.getUsername(), request.getQuestions());
         }
         return ResponseEntity.ok(new MessageResponse("Quiz publié sur le web", true, 200));
+    }
+
+    @PostMapping("/{id}/qr-sync-questions")
+    public ResponseEntity<MessageResponse> synchroniserQuestionsPourQr(
+            @PathVariable Long id,
+            @Valid @RequestBody QrQuestionsSyncRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        quizService.synchroniserQuestionsPublicationWeb(id, userDetails.getUsername(), request.getQuestions());
+        return ResponseEntity.ok(new MessageResponse("Questions QR synchronisées", true, 200));
     }
 
     // ================= QUIZ LOGIC =================
