@@ -90,23 +90,27 @@ namespace smartest_desktop.Services
 
         private static QuestionLocale CreerQuestionLocale(QuestionExamen q, int examenId, int numero)
         {
+            bool isVf = string.Equals(q.Type, "VF", StringComparison.OrdinalIgnoreCase);
             return new QuestionLocale
             {
                 ExamenLocalId = examenId,
                 Numero = numero,
                 Enonce = q.Enonce,
-                Type = q.Type,
+                Type = isVf ? "VF" : q.Type,
                 Difficulte = q.Difficulte,
                 Explication = q.Explication,
-                OptionA = q.OptionA,
-                OptionB = q.OptionB,
-                OptionC = q.OptionC,
-                OptionD = q.OptionD,
-                ReponseCorrecte = q.ReponseCorrecte,
+                OptionA = isVf ? "Vrai" : q.OptionA,
+                OptionB = isVf ? "Faux" : q.OptionB,
+                OptionC = isVf ? string.Empty : q.OptionC,
+                OptionD = isVf ? string.Empty : q.OptionD,
+                ReponseCorrecte = isVf
+                    ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
+                    : q.ReponseCorrecte,
                 ReponseModele = q.ReponseModele,
                 ReponsesCorrectesJson = q.IsCheckbox
                     ? JsonSerializer.Serialize(q.ReponsesCorrectes)
                     : string.Empty,
+                BaremePoints = q.BaremePoints,
                 ImageBase64 = q.ImageBase64,
                 ImageType = q.ImageType,
                 ImageNom = q.ImageNom,

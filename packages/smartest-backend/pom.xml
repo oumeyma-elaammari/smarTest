@@ -106,7 +106,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <!--  Security test pour MockMvc avec auth -->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -144,8 +143,6 @@
                         <id>default-compile</id>
                         <phase>compile</phase>
                         <goals>
-                            
-                        
                             <goal>compile</goal>
                         </goals>
                         <configuration>
@@ -159,7 +156,6 @@
                     </execution>
                     <execution>
                         <id>default-testCompile</id>
-                        
                         <phase>test-compile</phase>
                         <goals>
                             <goal>testCompile</goal>

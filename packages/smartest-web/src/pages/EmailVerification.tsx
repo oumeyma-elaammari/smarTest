@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { CheckCircle, XCircle } from 'lucide-react'
 import {
     pageStyle, cardStyle, brandStyle, brandSubStyle,
-    submitBtnStyle, Footer,
+    submitBtnStyle, 
 } from '../styles/AuthStyles'
 
 type Status = 'loading' | 'success' | 'error'
@@ -14,8 +14,22 @@ export default function EmailVerification() {
     const [countdown, setCountdown] = useState(5)
 
     const statusParam = searchParams.get('status')
-    const status: Status = statusParam === 'success' ? 'success'
-        : statusParam === 'error' ? 'error' : 'loading'
+    let status: Status = 'loading'
+    if (statusParam === 'success') {
+        status = 'success'
+    } else if (statusParam === 'error') {
+        status = 'error'
+    }
+
+    let badgeLabel = ''
+    let badgePalette: { background: string; color: string } | null = null
+    if (status !== 'loading') {
+        const ok = status === 'success'
+        badgeLabel = ok ? 'Succès' : 'Erreur'
+        badgePalette = ok
+            ? { background: '#eaf3de', color: '#3b6d11' }
+            : { background: '#fcebeb', color: '#791f1f' }
+    }
 
     useEffect(() => {
         if (status !== 'success') return
@@ -28,16 +42,14 @@ export default function EmailVerification() {
         <main style={pageStyle}>
             <div style={{ ...cardStyle, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-                {status !== 'loading' && (
+                {badgePalette && (
                     <span style={{
                         display: 'inline-block', fontSize: '0.65rem', fontWeight: 600,
                         letterSpacing: '0.1em', textTransform: 'uppercase',
                         padding: '3px 12px', borderRadius: 20, marginBottom: '1rem',
-                        ...(status === 'success'
-                            ? { background: '#eaf3de', color: '#3b6d11' }
-                            : { background: '#fcebeb', color: '#791f1f' }),
+                        ...badgePalette,
                     }}>
-                        {status === 'success' ? 'Succès' : 'Erreur'}
+                        {badgeLabel}
                     </span>
                 )}
 
@@ -126,8 +138,6 @@ export default function EmailVerification() {
                         </button>
                     </>
                 )}
-
-                <Footer />
             </div>
         </main>
     )

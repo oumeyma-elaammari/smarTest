@@ -66,6 +66,30 @@
 				</Setter>
 			</Style>
 
+			<Style x:Key="PaginationArrowBtn" TargetType="Button">
+				<Setter Property="Height" Value="30"/>
+				<Setter Property="MinWidth" Value="23"/>
+				<Setter Property="Padding" Value="2,1"/>
+				<Setter Property="BorderThickness" Value="0"/>
+				<Setter Property="Background" Value="Transparent"/>
+				<Setter Property="Foreground" Value="#0f1e3d"/>
+				<Setter Property="Cursor" Value="Hand"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="Button">
+							<Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Border>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter TargetName="Bg" Property="Background" Value="#e8eef8"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
 			<!-- Suppression : icône, fond léger, padding minimal -->
 			<Style x:Key="IconDeleteBtn" TargetType="Button">
 				<Setter Property="Width" Value="26"/>
@@ -338,7 +362,7 @@
 									<ColumnDefinition Width="100"/>
 									<ColumnDefinition Width="90"/>
 									<ColumnDefinition Width="80"/>
-									<ColumnDefinition Width="180"/>
+									<ColumnDefinition Width="250"/>
 								</Grid.ColumnDefinitions>
 								<TextBlock Grid.Column="0" Text="Titre" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
 								<TextBlock Grid.Column="1" Text="Difficulté" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
@@ -361,7 +385,7 @@
 													<ColumnDefinition Width="100"/>
 													<ColumnDefinition Width="90"/>
 													<ColumnDefinition Width="80"/>
-													<ColumnDefinition Width="180"/>
+													<ColumnDefinition Width="250"/>
 												</Grid.ColumnDefinitions>
 
 												<StackPanel Grid.Column="0" VerticalAlignment="Center">
@@ -423,13 +447,49 @@
 												<!-- Actions -->
 												<StackPanel Grid.Column="4" Orientation="Horizontal"
                                                             VerticalAlignment="Center">
-													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#eef3fd" BorderBrush="#eef3fd"
+													<Button Background="#ecfeff" BorderBrush="#bae6fd"
+                                                            Foreground="#0369a1" Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.OuvrirCodeQrQuizCommand,
+                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="#ecfeff"/>
+																<Setter Property="BorderBrush" Value="#bae6fd"/>
+																<Setter Property="Foreground" Value="#0369a1"/>
+																<Style.Triggers>
+																	<Trigger Property="IsEnabled" Value="False">
+																		<Setter Property="Opacity" Value="0.45"/>
+																	</Trigger>
+																</Style.Triggers>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="Code QR"/>
+													</Button>
+													<Button Background="#eef3fd" BorderBrush="#eef3fd"
                                                             Foreground="#4f8ef7" Margin="0,0,6,0"
+                                                            IsEnabled="{Binding PeutPublier}"
                                                             Command="{Binding DataContext.PublierSurLeWebCommand,
                                                                 RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}">
-														<TextBlock Text="Publier"/>
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="#eef3fd"/>
+																<Setter Property="BorderBrush" Value="#eef3fd"/>
+																<Setter Property="Foreground" Value="#4f8ef7"/>
+																<Style.Triggers>
+																	<DataTrigger Binding="{Binding IsPublicationEnCours}" Value="True">
+																		<Setter Property="Background" Value="#e2e8f4"/>
+																		<Setter Property="BorderBrush" Value="#e2e8f4"/>
+																		<Setter Property="Foreground" Value="#64748b"/>
+																	</DataTrigger>
+																	<Trigger Property="IsEnabled" Value="False">
+																		<Setter Property="Opacity" Value="0.45"/>
+																	</Trigger>
+																</Style.Triggers>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="{Binding LibelleBoutonPublication}"/>
 													</Button>
 													<Button Style="{StaticResource IconDeleteBtn}"
                                                             ToolTip="Supprimer ce quiz"
@@ -450,17 +510,17 @@
 							<!-- Pagination quiz -->
 							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0"
                                         Visibility="{Binding AfficherListeQuiz, Converter={StaticResource BoolToVis}}">
-								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
-                                        Margin="0,0,8,0" MinWidth="25" Padding="3,2"
+								<Button Style="{StaticResource PaginationArrowBtn}"
+                                        Margin="0,0,8,0" MinWidth="23" Padding="2,1"
                                         Command="{Binding QuizPagePrecedenteCommand}">
-									<TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+									<TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
 								</Button>
 								<TextBlock Text="{Binding LibellePaginationQuiz}" VerticalAlignment="Center"
                                            FontSize="12" FontWeight="600" Foreground="#6b7a99" Margin="8,0"/>
-								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
-                                        Margin="8,0,0,0" MinWidth="25" Padding="3,2"
+								<Button Style="{StaticResource PaginationArrowBtn}"
+                                        Margin="8,0,0,0" MinWidth="23" Padding="2,1"
                                         Command="{Binding QuizPageSuivanteCommand}">
-									<TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+									<TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
 								</Button>
 							</StackPanel>
 
@@ -645,17 +705,17 @@
 							<!-- Pagination examens -->
 							<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0"
                                         Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}">
-								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
-                                        Margin="0,0,8,0" MinWidth="25" Padding="3,2"
+								<Button Style="{StaticResource PaginationArrowBtn}"
+                                        Margin="0,0,8,0" MinWidth="23" Padding="2,1"
                                         Command="{Binding ExamenPagePrecedenteCommand}">
-									<TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+									<TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
 								</Button>
 								<TextBlock Text="{Binding LibellePaginationExamen}" VerticalAlignment="Center"
                                            FontSize="12" FontWeight="600" Foreground="#6b7a99" Margin="8,0"/>
-								<Button Style="{StaticResource ActionBtn}" Background="#f0f3f9" Foreground="#0f1e3d"
-                                        Margin="8,0,0,0" MinWidth="25" Padding="3,2"
+								<Button Style="{StaticResource PaginationArrowBtn}"
+                                        Margin="8,0,0,0" MinWidth="23" Padding="2,1"
                                         Command="{Binding ExamenPageSuivanteCommand}">
-									<TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+									<TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
 								</Button>
 							</StackPanel>
 

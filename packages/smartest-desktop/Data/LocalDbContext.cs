@@ -6,6 +6,16 @@ namespace smartest_desktop.Data
 {
     public class LocalDbContext : DbContext
     {
+        public LocalDbContext(DbContextOptions<LocalDbContext> options)
+            : base(options)
+        {
+        }
+
+        /// <summary>SQLite local (sans options explicites) — même usage qu’historiquement.</summary>
+        public LocalDbContext()
+        {
+        }
+
         private static string _cheminBase = "smartest_local.db";
 
         /// <summary>
@@ -42,7 +52,8 @@ namespace smartest_desktop.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite($"Data Source={CheminBase}");
+            if (!options.IsConfigured)
+                options.UseSqlite($"Data Source={CheminBase}");
         }
 
         // ══════════════════════════════════════════════════════════
@@ -76,6 +87,7 @@ namespace smartest_desktop.Data
                 entity.Property(q => q.Type).IsRequired().HasMaxLength(20);
                 entity.Property(q => q.Difficulte).HasMaxLength(20);
                 entity.Property(q => q.Explication).HasColumnType("TEXT");
+                entity.Property(q => q.BaremePoints).HasDefaultValue(0.0);
 
                 entity.Property(q => q.ReponseModele).HasColumnType("TEXT");
                 entity.Property(q => q.ReponsesCorrectesJson).HasColumnType("TEXT");

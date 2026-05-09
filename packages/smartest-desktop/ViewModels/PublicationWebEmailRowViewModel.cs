@@ -6,8 +6,19 @@ namespace smartest_desktop.ViewModels
     public sealed class PublicationWebEmailRowViewModel : BaseViewModel
     {
         private readonly Action? _onSelectionChanged;
+    private readonly Action? _onEmailChanged;
 
-        public string Email { get; }
+    private string _email;
+    public string Email
+    {
+        get => _email;
+        set
+        {
+            if (!SetProperty(ref _email, value ?? string.Empty))
+                return;
+            _onEmailChanged?.Invoke();
+        }
+    }
 
         private bool _isSelected;
 
@@ -22,10 +33,14 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        public PublicationWebEmailRowViewModel(string email, Action? onSelectionChanged = null)
+    public PublicationWebEmailRowViewModel(
+        string email,
+        Action? onSelectionChanged = null,
+        Action? onEmailChanged = null)
         {
-            Email = email;
+        _email = email;
             _onSelectionChanged = onSelectionChanged;
+        _onEmailChanged = onEmailChanged;
         }
     }
 }

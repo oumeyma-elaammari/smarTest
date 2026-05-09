@@ -178,61 +178,6 @@
 							</Border>
 						</StackPanel>
 
-						<!-- Publication web : liste d'emails (CSV / Excel) -->
-						<TextBlock Text="PUBLICATION WEB (ÉTUDIANTS AUTORISÉS)"
-                                   FontSize="10" FontWeight="700"
-                                   Foreground="#6b7a99" Margin="0,0,0,8"/>
-						<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#8899b8" Margin="0,0,0,12"
-                                   Text="Importez ici un CSV ou Excel (même règles que pour les modules : colonne « email » ou une adresse par ligne). La liste est enregistrée avec le quiz lors de la validation."/>
-
-						<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-							<Border CornerRadius="10" Padding="14,10" Margin="0,0,8,0" Cursor="Hand"
-                                    Background="#0f1e3d">
-								<Border.InputBindings>
-									<MouseBinding MouseAction="LeftClick" Command="{Binding ImporterEmailsPublicationWebCommand}"/>
-								</Border.InputBindings>
-								<Border.Style>
-									<Style TargetType="Border">
-										<Style.Triggers>
-											<DataTrigger Binding="{Binding IsGenerating}" Value="True">
-												<Setter Property="Background" Value="#B2C2DB"/>
-												<Setter Property="Cursor" Value="Arrow"/>
-											</DataTrigger>
-											<Trigger Property="IsMouseOver" Value="True">
-												<Setter Property="Background" Value="#1a2e5a"/>
-											</Trigger>
-										</Style.Triggers>
-									</Style>
-								</Border.Style>
-								<TextBlock Text="Importer emails" FontSize="12" FontWeight="600" Foreground="White"/>
-							</Border>
-							<Border CornerRadius="10" Padding="14,10" Cursor="Hand"
-                                    Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1">
-								<Border.InputBindings>
-									<MouseBinding MouseAction="LeftClick" Command="{Binding EffacerEmailsPublicationWebCommand}"/>
-								</Border.InputBindings>
-								<Border.Style>
-									<Style TargetType="Border">
-										<Setter Property="Visibility" Value="Collapsed"/>
-										<Style.Triggers>
-											<DataTrigger Binding="{Binding HasEmailsPublicationWeb}" Value="True">
-												<Setter Property="Visibility" Value="Visible"/>
-											</DataTrigger>
-											<DataTrigger Binding="{Binding IsGenerating}" Value="True">
-												<Setter Property="Visibility" Value="Collapsed"/>
-											</DataTrigger>
-											<Trigger Property="IsMouseOver" Value="True">
-												<Setter Property="Background" Value="#FEE2E2"/>
-											</Trigger>
-										</Style.Triggers>
-									</Style>
-								</Border.Style>
-								<TextBlock Text="Effacer la liste" FontSize="12" FontWeight="600" Foreground="#DC2626"/>
-							</Border>
-						</StackPanel>
-						<TextBlock Text="{Binding LibelleEmailsPublicationWeb}" FontSize="11" Foreground="#475569"
-                                   TextWrapping="Wrap" Margin="0,0,0,20"/>
-
 						<!-- Statut -->
 						<Border CornerRadius="10" Padding="14,12" Margin="0,0,0,12"
                                 Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1"

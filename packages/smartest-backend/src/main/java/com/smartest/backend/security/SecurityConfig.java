@@ -21,6 +21,8 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private static final String ROLE_ETUDIANT = "ETUDIANT";
+    private static final String ROLE_PROFESSEUR = "PROFESSEUR";
 
     private final JwtAuthFilter jwtAuthFilter;
 
@@ -47,24 +49,30 @@ public class SecurityConfig {
                                 "/auth/forgot-password/professeur",
                                 "/auth/reset-password/etudiant",
                                 "/auth/reset-password/professeur",
+                                "/api/quizs/*/passage-qr",
+                                "/api/quizs/*/verifier-question-qr",
+                                "/api/quizs/*/soumettre-qr",
                                 "/ws/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole(ROLE_ETUDIANT)
                         .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web")
-                                .hasAnyRole("ETUDIANT", "PROFESSEUR")
-                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata").hasAnyRole("ETUDIANT", "PROFESSEUR")
-                        .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole("ETUDIANT")
-                        .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole("ETUDIANT")
-                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre").hasRole("ETUDIANT")
-                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre-web").hasRole("ETUDIANT")
-                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/verifier-question-web").hasRole("ETUDIANT")
-                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/publication-web").hasRole("PROFESSEUR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/quizs/*").hasRole("PROFESSEUR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/quizs/*/publier").hasRole("PROFESSEUR")
-                        .requestMatchers(HttpMethod.GET, "/api/statistiques/**").hasRole("PROFESSEUR")
+                                .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata")
+                                .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/*/stats-qr-live").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.DELETE, "/api/quizs/*/stats-qr-live").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/verifier-question-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/publication-web").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.DELETE, "/api/quizs/*").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.PATCH, "/api/quizs/*/publier").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/statistiques/**").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers("/api/examens-publies/**").authenticated()
-                        .requestMatchers("/api/professeur/**").hasRole("PROFESSEUR")
-                        .requestMatchers("/api/etudiant/**").hasRole("ETUDIANT")
+                        .requestMatchers("/api/professeur/**").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers("/api/etudiant/**").hasRole(ROLE_ETUDIANT)
                         .anyRequest().authenticated()
                 )
 

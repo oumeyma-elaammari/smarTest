@@ -5,9 +5,16 @@ import com.smartest.backend.dto.request.*;
 import com.smartest.backend.dto.response.*;
 import com.smartest.backend.entity.*;
 import com.smartest.backend.entity.enumeration.StatutQuiz;
+import com.smartest.backend.entity.enumeration.TypeQuestion;
+import com.smartest.backend.exception.InvalidQuizStateException;
+import com.smartest.backend.exception.QuestionNotFoundException;
+import com.smartest.backend.exception.QuizNotFoundException;
+import com.smartest.backend.exception.QuizPublicationLimitExceededException;
+import com.smartest.backend.exception.UnauthorizedAccessException;
 import com.smartest.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,15 +31,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuizService {
+    private static final String QUIZ_NON_TROUVE = "Quiz non trouvé";
+    private static final String QUIZ_INTROUVABLE = "Quiz introuvable";
+    private static final String PROFESSEUR_INTROUVABLE = "Professeur introuvable";
+    private static final String QUIZ_HORS_PROPRIETE = "Ce quiz n'appartient pas à votre compte";
 
-    private static final Pattern EMAIL_SIMPLE =
-            Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", Pattern.CASE_INSENSITIVE);
+    private static ResponseStatusException badRequest(String message) {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+    }
 
     private final QuizRepository quizRepository;
     private final ProfesseurRepository professeurRepository;
@@ -47,6 +58,9 @@ public class QuizService {
     private final EmailService emailService;
 
     private final StatistiqueRecalculService statistiqueRecalculService;
+    private final StatistiqueService statistiqueService;
+    private final QuizQrLiveStatsService quizQrLiveStatsService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // ================= GET =================
 
@@ -65,7 +79,7 @@ public class QuizService {
     @Transactional(readOnly = true)
     public QuizResponse getQuizById(Long id) {
         Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_NON_TROUVE));
         return convertToDTO(quiz);
     }
 
@@ -77,7 +91,7 @@ public class QuizService {
     public QuizResponse createQuiz(QuizRequest request) {
 
         Professeur professeur = professeurRepository.findById(request.getProfesseurId())
-                .orElseThrow(() -> new RuntimeException("Professeur non trouvé"));
+                .orElseThrow(() -> new QuizNotFoundException("Professeur non trouvé"));
 
         Quiz quiz = new Quiz();
         quiz.setTitre(request.getTitre());
@@ -95,7 +109,11 @@ public class QuizService {
     public void publierQuiz(Long id) {
 
         Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz introuvable"));
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_INTROUVABLE));
+
+        if (quiz.getStatut() == StatutQuiz.PUBLIE) {
+            throw new InvalidQuizStateException("Ce quiz est déjà publié.");
+        }
 
         quiz.setStatut(StatutQuiz.PUBLIE);
         quiz.setDatePublication(LocalDateTime.now());
@@ -179,6 +197,19 @@ public class QuizService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
+    public QuizPassageWebResponse getQuizPourPassageQr(Long quizId) {
+        Quiz quiz = chargerQuizPourQr(quizId);
+
+        QuizPassageWebResponse dto = new QuizPassageWebResponse();
+        dto.setId(quiz.getId());
+        dto.setTitre(quiz.getTitre());
+        dto.setDuree(quiz.getDuree());
+        dto.setNombreQuestions(quiz.getQuestions().size());
+        dto.setQuestions(quiz.getQuestions().stream().map(this::toQuestionPassageWebDto).toList());
+        return dto;
+    }
+
     /**
      * Vérifie la réponse choisie sur une question (ne persiste rien : la soumission reste {@code soumettre-web}).
      */
@@ -186,7 +217,8 @@ public class QuizService {
     public VerificationQuestionWebResponse verifierQuestionPassageWeb(
             Long quizId,
             String emailEtudiant,
-            VerificationQuestionWebRequest request) {
+            VerificationQuestionWebRequest request,
+            String accessMode) {
         if (request == null || request.getQuestionId() == null || request.getReponseId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requête incomplète");
         }
@@ -194,7 +226,7 @@ public class QuizService {
         Question question = quiz.getQuestions().stream()
                 .filter(q -> q.getId().equals(request.getQuestionId()))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question introuvable pour ce quiz"));
+                .orElseThrow(() -> new QuestionNotFoundException("Question introuvable pour ce quiz"));
 
         Reponse choisie = question.getReponses().stream()
                 .filter(r -> r.getId().equals(request.getReponseId()))
@@ -207,6 +239,59 @@ public class QuizService {
                 .orElse(null);
 
         boolean estCorrecte = Boolean.TRUE.equals(choisie.getCorrecte());
+        if (isQrAccessMode(accessMode)) {
+            quizQrLiveStatsService.recordVerification(
+                    quizId,
+                    quiz.getTitre(),
+                    emailEtudiant,
+                    question.getId(),
+                    question.getEnonce(),
+                    estCorrecte
+            );
+            publierStatsQrLive(quizId);
+        }
+        return VerificationQuestionWebResponse.builder()
+                .correcte(estCorrecte)
+                .reponseCorrecteId(bonne != null ? bonne.getId() : null)
+                .reponseCorrecteContenu(bonne != null ? bonne.getContenu() : null)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public VerificationQuestionWebResponse verifierQuestionPassageQr(
+            Long quizId,
+            VerificationQuestionWebRequest request,
+            String participantKey) {
+        if (request == null || request.getQuestionId() == null || request.getReponseId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requête incomplète");
+        }
+        Quiz quiz = chargerQuizPourQr(quizId);
+        Question question = quiz.getQuestions().stream()
+                .filter(q -> q.getId().equals(request.getQuestionId()))
+                .findFirst()
+                .orElseThrow(() -> new QuestionNotFoundException("Question introuvable pour ce quiz"));
+
+        Reponse choisie = question.getReponses().stream()
+                .filter(r -> r.getId().equals(request.getReponseId()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Réponse invalide pour cette question"));
+
+        Reponse bonne = question.getReponses().stream()
+                .filter(r -> Boolean.TRUE.equals(r.getCorrecte()))
+                .findFirst()
+                .orElse(null);
+
+        boolean estCorrecte = Boolean.TRUE.equals(choisie.getCorrecte());
+        quizQrLiveStatsService.recordVerification(
+                quizId,
+                quiz.getTitre(),
+                participantKey,
+                question.getId(),
+                question.getEnonce(),
+                estCorrecte
+        );
+        publierStatsQrLive(quizId);
+
         return VerificationQuestionWebResponse.builder()
                 .correcte(estCorrecte)
                 .reponseCorrecteId(bonne != null ? bonne.getId() : null)
@@ -226,8 +311,7 @@ public class QuizService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aucun email valide dans la liste");
         }
         if (normalises.size() > QuizPublicationLimits.MAX_AUTHORIZED_STUDENT_EMAILS) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Maximum " + QuizPublicationLimits.MAX_AUTHORIZED_STUDENT_EMAILS + " emails autorisés");
+            throw new QuizPublicationLimitExceededException(QuizPublicationLimits.MAX_AUTHORIZED_STUDENT_EMAILS);
         }
 
         quiz.getEmailsAutorisesWeb().clear();
@@ -289,16 +373,34 @@ public class QuizService {
         }
         Set<String> out = new LinkedHashSet<>();
         for (String raw : emailsBruts) {
-            if (raw == null) continue;
-            String e = raw.trim().toLowerCase(Locale.ROOT);
-            if (e.isEmpty()) continue;
-            if (!EMAIL_SIMPLE.matcher(e).matches()) continue;
-            out.add(e);
-            if (out.size() > QuizPublicationLimits.MAX_AUTHORIZED_STUDENT_EMAILS) {
-                break;
+            if (raw != null) {
+                String e = raw.trim().toLowerCase(Locale.ROOT);
+                if (!e.isEmpty() && isSimpleEmailValid(e)) {
+                    out.add(e);
+                }
             }
         }
         return out;
+    }
+
+    private static boolean isSimpleEmailValid(String email) {
+        int at = email.indexOf('@');
+        if (at <= 0 || at != email.lastIndexOf('@') || at >= email.length() - 3) {
+            return false;
+        }
+
+        int dotAfterAt = email.indexOf('.', at + 1);
+        if (dotAfterAt <= at + 1 || dotAfterAt >= email.length() - 1) {
+            return false;
+        }
+
+        for (int i = 0; i < email.length(); i++) {
+            char c = email.charAt(i);
+            if (Character.isWhitespace(c)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // ================= LOGIC =================
@@ -309,9 +411,21 @@ public class QuizService {
 
     @Transactional
     public ResultatQuizResponse soumettreQuiz(Long quizId, SoumissionQuizRequest request) {
+        if (request == null) {
+            throw badRequest("Requête de soumission incomplète");
+        }
+        if (request.getEtudiantId() == null) {
+            throw badRequest("L'identifiant de l'étudiant est obligatoire");
+        }
+        if (request.getReponses() == null) {
+            throw badRequest("La liste des réponses est obligatoire");
+        }
+
+        quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_NON_TROUVE));
 
         Etudiant etudiant = etudiantRepository.findById(request.getEtudiantId())
-                .orElseThrow(() -> new RuntimeException("Etudiant introuvable"));
+                .orElseThrow(() -> new QuizNotFoundException("Etudiant introuvable"));
 
         boolean premiere = isPremiereTentative(quizId, etudiant.getId());
 
@@ -319,9 +433,12 @@ public class QuizService {
         int correct = 0;
 
         for (ReponseQuizDTO dto : request.getReponses()) {
+            if (dto == null || dto.getReponseId() == null) {
+                throw badRequest("Chaque réponse doit indiquer un identifiant de réponse");
+            }
 
             Reponse r = reponseRepository.findById(dto.getReponseId())
-                    .orElseThrow(() -> new RuntimeException("Réponse introuvable"));
+                    .orElseThrow(() -> new QuizNotFoundException("Réponse introuvable"));
 
             if (Boolean.TRUE.equals(r.getCorrecte())) correct++;
 
@@ -346,15 +463,21 @@ public class QuizService {
         response.setEstPremiereTentative(premiere);
 
         planifierRecalculStatistiquesApresCommit(quizId);
+        planifierPublicationStatistiquesTempsReelApresCommit(quizId);
 
         return response;
     }
 
     @Transactional
-    public ResultatQuizWebResponse soumettreQuizWeb(Long quizId, String emailEtudiant, SoumissionQuizWebRequest request) {
+    public ResultatQuizWebResponse soumettreQuizWeb(
+            Long quizId,
+            String emailEtudiant,
+            SoumissionQuizWebRequest request,
+            String accessMode) {
         Quiz quiz = chargerQuizPublieAutorise(quizId, emailEtudiant);
         Etudiant etudiant = etudiantRepository.findByEmail(emailEtudiant.trim().toLowerCase(Locale.ROOT))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Etudiant introuvable"));
+                .orElseThrow(() -> new UnauthorizedAccessException("Etudiant introuvable."));
+        boolean modeQr = isQrAccessMode(accessMode);
 
         boolean premiere = isPremiereTentative(quizId, etudiant.getId());
         Map<Long, Long> reponsesParQuestion = new HashMap<>();
@@ -368,7 +491,13 @@ public class QuizService {
         int totalQuestions = quiz.getQuestions().size();
         int bonnes = 0;
         List<QuestionCorrectionWebResponse> corrections = quiz.getQuestions().stream()
-                .map(question -> corrigerQuestion(question, reponsesParQuestion.get(question.getId()), etudiant, quizId, premiere))
+                .map(question -> corrigerQuestion(
+                        question,
+                        reponsesParQuestion.get(question.getId()),
+                        etudiant,
+                        quizId,
+                        premiere,
+                        !modeQr))
                 .toList();
         bonnes = (int) corrections.stream().filter(QuestionCorrectionWebResponse::isCorrecte).count();
 
@@ -379,9 +508,62 @@ public class QuizService {
         response.setScore(totalQuestions == 0 ? 0.0 : ((double) bonnes / totalQuestions) * 100.0);
         response.setCorrections(corrections);
 
-        planifierRecalculStatistiquesApresCommit(quizId);
+        if (!modeQr) {
+            planifierRecalculStatistiquesApresCommit(quizId);
+            planifierPublicationStatistiquesTempsReelApresCommit(quizId);
+        } else {
+            publierStatsQrLive(quizId);
+        }
 
         return response;
+    }
+
+    @Transactional(readOnly = true)
+    public ResultatQuizWebResponse soumettreQuizQr(
+            Long quizId,
+            SoumissionQuizWebRequest request) {
+        Quiz quiz = chargerQuizPourQr(quizId);
+
+        Map<Long, Long> reponsesParQuestion = new HashMap<>();
+        if (request != null && request.getReponses() != null) {
+            for (ReponseQuizDTO dto : request.getReponses()) {
+                if (dto == null || dto.getQuestionId() == null || dto.getReponseId() == null) continue;
+                reponsesParQuestion.put(dto.getQuestionId(), dto.getReponseId());
+            }
+        }
+
+        int totalQuestions = quiz.getQuestions().size();
+        List<QuestionCorrectionWebResponse> corrections = quiz.getQuestions().stream()
+                .map(question -> corrigerQuestion(
+                        question,
+                        reponsesParQuestion.get(question.getId()),
+                        null,
+                        quizId,
+                        false,
+                        false))
+                .toList();
+        int bonnes = (int) corrections.stream().filter(QuestionCorrectionWebResponse::isCorrecte).count();
+
+        ResultatQuizWebResponse response = new ResultatQuizWebResponse();
+        response.setBonnesReponses(bonnes);
+        response.setTotalQuestions(totalQuestions);
+        response.setEstPremiereTentative(true);
+        response.setScore(totalQuestions == 0 ? 0.0 : ((double) bonnes / totalQuestions) * 100.0);
+        response.setCorrections(corrections);
+        return response;
+    }
+
+    @Transactional(readOnly = true)
+    public QuizQrLiveStatsResponse getQrLiveStats(Long quizId, String professeurEmail) {
+        chargerQuizDuProfesseur(quizId, professeurEmail);
+        return quizQrLiveStatsService.snapshot(quizId);
+    }
+
+    @Transactional
+    public void clearQrLiveStats(Long quizId, String professeurEmail) {
+        chargerQuizDuProfesseur(quizId, professeurEmail);
+        quizQrLiveStatsService.clear(quizId);
+        publierStatsQrLive(quizId);
     }
 
     private void planifierRecalculStatistiquesApresCommit(Long quizId) {
@@ -395,6 +577,43 @@ public class QuizService {
         } else {
             statistiqueRecalculService.planifierApresDelai(quizId);
         }
+    }
+
+    private void planifierPublicationStatistiquesTempsReelApresCommit(Long quizId) {
+        Runnable action = () -> publierStatistiquesTempsReel(quizId);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
+        } else {
+            action.run();
+        }
+    }
+
+    private void publierStatistiquesTempsReel(Long quizId) {
+        try {
+            Quiz quiz = quizRepository.findById(quizId).orElse(null);
+            if (quiz == null || quiz.getProfesseur() == null || quiz.getProfesseur().getEmail() == null) {
+                return;
+            }
+            String emailProf = quiz.getProfesseur().getEmail();
+            StatistiquesQuizResponse stats = statistiqueService.obtenirStatistiquesQuizPourProfesseur(quizId, emailProf);
+            messagingTemplate.convertAndSend("/topic/quiz/" + quizId + "/stats", stats);
+        } catch (Exception ex) {
+            log.warn("Publication stats temps réel échouée pour quiz {}: {}", quizId, ex.getMessage());
+        }
+    }
+
+    private void publierStatsQrLive(Long quizId) {
+        QuizQrLiveStatsResponse stats = quizQrLiveStatsService.snapshot(quizId);
+        messagingTemplate.convertAndSend("/topic/quiz/" + quizId + "/qr-live", stats);
+    }
+
+    private static boolean isQrAccessMode(String accessMode) {
+        return accessMode != null && "QR".equalsIgnoreCase(accessMode.trim());
     }
 
     // ================= DTO =================
@@ -421,33 +640,39 @@ public class QuizService {
 
     private Quiz chargerQuizPublieAutorise(Long quizId, String emailEtudiant) {
         if (emailEtudiant == null || emailEtudiant.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte étudiant introuvable");
+            throw new UnauthorizedAccessException("Compte étudiant introuvable.");
         }
         String email = emailEtudiant.trim().toLowerCase(Locale.ROOT);
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz introuvable"));
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_INTROUVABLE));
 
         if (quiz.getStatut() != StatutQuiz.PUBLIE) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ce quiz n'est pas publié sur le web");
+            throw new InvalidQuizStateException("Ce quiz n'est pas publié sur le web.");
         }
         if (quiz.getEmailsAutorisesWeb() == null || quiz.getEmailsAutorisesWeb().stream()
                 .filter(Objects::nonNull)
                 .map(e -> e.trim().toLowerCase(Locale.ROOT))
                 .noneMatch(email::equals)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Vous n'êtes pas autorisé à passer ce quiz");
+            throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à passer ce quiz.");
         }
+        return quiz;
+    }
+
+    private Quiz chargerQuizPourQr(Long quizId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_INTROUVABLE));
         return quiz;
     }
 
     private Quiz chargerQuizDuProfesseur(Long quizId, String professeurEmail) {
         Professeur prof = professeurRepository.findByEmail(professeurEmail.trim().toLowerCase(Locale.ROOT))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Professeur introuvable"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, PROFESSEUR_INTROUVABLE));
 
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz introuvable"));
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_INTROUVABLE));
 
         if (quiz.getProfesseur() == null || !quiz.getProfesseur().getId().equals(prof.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ce quiz n'appartient pas à votre compte");
+            throw new UnauthorizedAccessException(QUIZ_HORS_PROPRIETE);
         }
         return quiz;
     }
@@ -470,7 +695,8 @@ public class QuizService {
             Long reponseChoisieId,
             Etudiant etudiant,
             Long quizId,
-            boolean premiere) {
+            boolean premiere,
+            boolean persisterResultat) {
         Reponse reponseCorrecte = question.getReponses().stream()
                 .filter(r -> Boolean.TRUE.equals(r.getCorrecte()))
                 .findFirst()
@@ -483,7 +709,7 @@ public class QuizService {
 
         boolean estCorrecte = reponseChoisie != null && Boolean.TRUE.equals(reponseChoisie.getCorrecte());
 
-        if (reponseChoisie != null) {
+        if (reponseChoisie != null && persisterResultat && etudiant != null) {
             Resultat resultat = new Resultat();
             resultat.setEtudiant(etudiant);
             resultat.setQuestion(question);
@@ -513,13 +739,13 @@ public class QuizService {
     @Transactional
     public void deleteQuiz(Long quizId, String professeurEmail) {
         Professeur prof = professeurRepository.findByEmail(professeurEmail.trim().toLowerCase(Locale.ROOT))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Professeur introuvable"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, PROFESSEUR_INTROUVABLE));
 
         Quiz quiz = quizRepository.findByIdWithQuestions(quizId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz introuvable"));
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_INTROUVABLE));
 
         if (quiz.getProfesseur() == null || !quiz.getProfesseur().getId().equals(prof.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ce quiz n'appartient pas à votre compte");
+            throw new UnauthorizedAccessException(QUIZ_HORS_PROPRIETE);
         }
 
         List<Question> questionsLiees = new ArrayList<>(quiz.getQuestions());
@@ -546,9 +772,9 @@ public class QuizService {
     @Transactional
     public QuizResponse addQuestionToQuiz(Long quizId, Long questionId) {
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_NON_TROUVE));
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question non trouvée"));
+                .orElseThrow(() -> new QuestionNotFoundException("Question non trouvée"));
 
         quiz.getQuestions().add(question);
         quizRepository.save(quiz);
@@ -559,9 +785,9 @@ public class QuizService {
     @Transactional
     public void removeQuestionFromQuiz(Long quizId, Long questionId) {
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+                .orElseThrow(() -> new QuizNotFoundException(QUIZ_NON_TROUVE));
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question non trouvée"));
+                .orElseThrow(() -> new QuestionNotFoundException("Question non trouvée"));
 
         quiz.getQuestions().remove(question);
         quizRepository.save(quiz);

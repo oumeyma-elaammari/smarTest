@@ -2,6 +2,7 @@ package com.smartest.backend.service;
 
 import com.smartest.backend.dto.request.PublicationWebQuestionRequest;
 import com.smartest.backend.dto.response.ExamenPublieMetadataResponse;
+import com.smartest.backend.exception.InvalidSessionStateException;
 import com.smartest.backend.entity.*;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import com.smartest.backend.repository.*;
@@ -175,7 +176,7 @@ public class ExamenPublieService {
                                 LocalDateTime debut, LocalDateTime fin) {
 
         Professeur prof = professeurRepository.findById(professeurId)
-                .orElseThrow(() -> new RuntimeException("Professeur non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException("Professeur introuvable"));
 
         ExamenPublie exam = new ExamenPublie();
         exam.setTitre(titre);
@@ -190,6 +191,10 @@ public class ExamenPublieService {
         return examenPublieRepository.save(exam);
     }
 
+    public List<ExamenPublie> findAll() {
+        return examenPublieRepository.findAll();
+    }
+
     public List<ExamenPublie> getDisponibles() {
         LocalDateTime now = LocalDateTime.now();
         return examenPublieRepository.findByStatutAndDateDebutBeforeAndDateFinAfter(
@@ -198,7 +203,12 @@ public class ExamenPublieService {
 
     public ExamenPublie demarrer(Long id) {
         ExamenPublie exam = examenPublieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Examen non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
+
+        if (exam.getStatut() != StatutExamen.PLANIFIE) {
+            throw new InvalidSessionStateException(
+                    "Impossible de démarrer cet examen dans son état actuel : " + exam.getStatut());
+        }
 
         exam.setStatut(StatutExamen.EN_COURS);
         return examenPublieRepository.save(exam);
@@ -206,7 +216,11 @@ public class ExamenPublieService {
 
     public ExamenPublie terminer(Long id) {
         ExamenPublie exam = examenPublieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Examen non trouvé"));
+                .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
+
+        if (exam.getStatut() != StatutExamen.EN_COURS) {
+            throw new InvalidSessionStateException("Impossible de terminer un examen qui n'est pas en cours.");
+        }
 
         exam.setStatut(StatutExamen.TERMINE);
         return examenPublieRepository.save(exam);

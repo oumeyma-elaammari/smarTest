@@ -13,7 +13,7 @@ import {
 } from '../styles/AuthStyles'
 
 const loginSchema = z.object({
-    email:    z.string().min(1, "L'email est obligatoire").email("Format email invalide"),
+    email:    z.string().min(1, "L'email est obligatoire").pipe(z.email("Format email invalide")),
     password: z.string().min(1, "Le mot de passe est obligatoire").min(8, "Minimum 8 caractères"),
 })
 type LoginForm = z.infer<typeof loginSchema>

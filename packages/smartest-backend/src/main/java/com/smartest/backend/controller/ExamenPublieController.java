@@ -13,8 +13,8 @@ import com.smartest.backend.repository.ProfesseurRepository;
 import com.smartest.backend.service.ExamenPublieService;
 import com.smartest.backend.service.ExamenSupervisionService;
 import com.smartest.backend.service.ExamenSupervisionService.NoteDraft;
-import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -41,6 +41,7 @@ public class ExamenPublieController {
     // --- Création (desktop) ---
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ExamenPublie publier(@RequestParam Long professeurId,
                                 @RequestParam String titre,
                                 @RequestParam Integer duree,
@@ -55,6 +56,11 @@ public class ExamenPublieController {
                 LocalDateTime.parse(dateDebut),
                 LocalDateTime.parse(dateFin)
         );
+    }
+
+    @GetMapping
+    public List<ExamenPublie> tous() {
+        return examenPublieService.findAll();
     }
 
     @GetMapping("/disponibles")

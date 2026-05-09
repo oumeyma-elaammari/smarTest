@@ -2,6 +2,9 @@ package com.smartest.backend.service;
 
 import com.smartest.backend.dto.response.StatistiqueQuestionResponse;
 import com.smartest.backend.dto.response.StatistiquesQuizResponse;
+import com.smartest.backend.exception.QuestionNotFoundException;
+import com.smartest.backend.exception.QuizNotFoundException;
+import com.smartest.backend.exception.UnauthorizedAccessException;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.Question;
 import com.smartest.backend.entity.Quiz;
@@ -12,10 +15,8 @@ import com.smartest.backend.repository.QuizRepository;
 import com.smartest.backend.repository.ResultatRepository;
 import com.smartest.backend.repository.StatistiqueQuestionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,14 +63,19 @@ public class StatistiqueService {
     }
 
     /**
-     * Statistiques pour une question ; vérifie la propriété du quiz.
+     * Statistiques pour une question ; vérifie la propriété du quiz et que la question appartient au quiz.
      */
     @Transactional
     public StatistiqueQuestionResponse obtenirStatistiqueQuestionPourProfesseur(
             Long quizId,
             Long questionId,
             String professeurEmail) {
-        verifierProprieteQuiz(quizId, professeurEmail);
+        Quiz quiz = verifierProprieteQuiz(quizId, professeurEmail);
+        boolean questionDuQuiz = quiz.getQuestions().stream()
+                .anyMatch(q -> q.getId().equals(questionId));
+        if (!questionDuQuiz) {
+            throw new QuestionNotFoundException("Question absente de ce quiz : " + questionId);
+        }
         return calculerEtPersisterUneQuestion(quizId, questionId);
     }
 
@@ -82,23 +88,24 @@ public class StatistiqueService {
                 .collect(Collectors.toList());
     }
 
-    private void verifierProprieteQuiz(Long quizId, String professeurEmail) {
+    private Quiz verifierProprieteQuiz(Long quizId, String professeurEmail) {
         if (professeurEmail == null || professeurEmail.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Professeur introuvable");
+            throw new UnauthorizedAccessException("Professeur introuvable");
         }
         String email = professeurEmail.trim().toLowerCase(Locale.ROOT);
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz non trouvé"));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz non trouvé"));
         Professeur prof = professeurRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Professeur introuvable"));
+                .orElseThrow(() -> new UnauthorizedAccessException("Professeur introuvable"));
         if (quiz.getProfesseur() == null || !quiz.getProfesseur().getId().equals(prof.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ce quiz n'appartient pas à votre compte");
+            throw new UnauthorizedAccessException("Ce quiz n'appartient pas à votre compte");
         }
+        return quiz;
     }
 
     private StatistiquesQuizResponse construireEtPersisterStatistiquesQuiz(Long quizId) {
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz non trouvé"));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz non trouvé"));
 
         List<StatistiqueQuestionResponse> statsParQuestion = new ArrayList<>();
         long participantsPremiere = resultatRepository.countEtudiantsDistinctsPremiereTentativePourQuiz(quizId);
@@ -199,7 +206,7 @@ public class StatistiqueService {
         boolean alerteEchec = pourcentageEchec >= SEUIL_ALERTE_ECHEC_POURCENT;
 
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question non trouvée"));
+                .orElseThrow(() -> new QuestionNotFoundException(questionId));
 
         StatistiqueQuestion statistique = statistiqueQuestionRepository
                 .findByQuestionIdAndQuizId(questionId, quizId)

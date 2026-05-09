@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState, type ReactElement } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import api from '../api/axiosConfig'
+import { quizPassageWebSchema } from '../api/quizSchemas'
+import { shuffleCopy } from '../utils/shuffle'
 
 type ReponseWeb = { id: number; contenu: string }
 type QuestionWeb = { id: number; enonce: string; reponses: ReponseWeb[] }
@@ -39,11 +41,227 @@ type VerificationFeedback = {
 }
 
 const sans = "'DM Sans', system-ui, sans-serif"
-const storageKey = (quizId: number) => `smartest.quiz.web.draft.${quizId}`
+
+export function getQuizWebDraftStorageKey(quizId: number): string {
+    return `smartest.quiz.web.draft.${quizId}`
+}
+
+type StoredDraft = {
+    choix?: Record<number, number>
+    indexCourant?: number
+    verification?: Record<string, VerificationFeedback>
+}
+
+function getLoadQuizErrorMessage(e: unknown): string {
+    const res = (e as { response?: { status?: number; data?: unknown } })?.response
+    const data = res?.data
+    if (typeof data === 'string' && data.trim()) return data.trim()
+    if (res?.status === 403) return 'Accès refusé'
+    if (res?.status === 404) return 'Quiz introuvable.'
+    if (e instanceof Error && e.message) return e.message
+    return 'Impossible de charger ce quiz.'
+}
+
+function getSimpleApiErrorMessage(e: unknown, fallback: string): string {
+    const res = (e as { response?: { data?: unknown } })?.response
+    const data = res?.data
+    return typeof data === 'string' && data.trim() ? data.trim() : fallback
+}
+
+function parseVerificationDraft(rawVerification: StoredDraft['verification']): Record<number, VerificationFeedback> {
+    if (!rawVerification || typeof rawVerification !== 'object') return {}
+    const out: Record<number, VerificationFeedback> = {}
+    for (const [key, val] of Object.entries(rawVerification)) {
+        const qid = Number(key)
+        if (!Number.isFinite(qid) || !val || typeof val.correcte !== 'boolean') continue
+        out[qid] = {
+            correcte: val.correcte,
+            reponseCorrecteId: val.reponseCorrecteId === null ? null : Number(val.reponseCorrecteId),
+            reponseCorrecteContenu: val.reponseCorrecteContenu === null ? null : String(val.reponseCorrecteContenu),
+        }
+    }
+    return out
+}
+
+function restoreDraftState(
+    quizData: QuizPassageWeb,
+    raw: string | null,
+    setChoix: (v: Record<number, number>) => void,
+    setIndexCourant: (v: number) => void,
+    setVerification: (v: Record<number, VerificationFeedback>) => void,
+) {
+    if (!raw) return
+    try {
+        const parsed = JSON.parse(raw) as StoredDraft
+        if (parsed.choix && typeof parsed.choix === 'object') setChoix(parsed.choix)
+        if (
+            typeof parsed.indexCourant === 'number' &&
+            parsed.indexCourant >= 0 &&
+            parsed.indexCourant < (quizData.questions?.length ?? 0)
+        ) {
+            setIndexCourant(parsed.indexCourant)
+        }
+        setVerification(parseVerificationDraft(parsed.verification))
+    } catch {
+        try {
+            sessionStorage.removeItem(getQuizWebDraftStorageKey(quizData.id))
+        } catch {
+            /* indisponible */
+        }
+    }
+}
+
+function buildRightActionButton(params: {
+    vCourante: VerificationFeedback | undefined
+    questionCourante: QuestionWeb
+    choix: Record<number, number>
+    verifying: boolean
+    derniereQuestion: boolean
+    submitting: boolean
+    peutSoumettre: boolean
+    onVerifier: () => void
+    onSuivant: () => void
+    onSoumettre: () => void
+}): ReactElement {
+    const {
+        vCourante,
+        questionCourante,
+        choix,
+        verifying,
+        derniereQuestion,
+        submitting,
+        peutSoumettre,
+        onVerifier,
+        onSuivant,
+        onSoumettre,
+    } = params
+
+    if (vCourante == null) {
+        return (
+            <button
+                type="button"
+                disabled={!choix[questionCourante.id] || verifying}
+                onClick={onVerifier}
+                style={{
+                    height: 30,
+                    borderRadius: 8,
+                    border: 'none',
+                    padding: '0 14px',
+                    cursor: 'pointer',
+                    background: '#0f1e3d',
+                    color: '#fff',
+                    fontSize : 14,
+                    opacity: !choix[questionCourante.id] || verifying ? 0.55 : 1,
+                }}
+            >
+                {verifying ? 'Vérification…' : 'Vérifier'}
+            </button>
+        )
+    }
+
+    if (!derniereQuestion) {
+        return (
+            <button
+                type="button"
+                onClick={onSuivant}
+                style={{
+                    height: 30,
+                    borderRadius: 8,
+                    border: 'none',
+                    padding: '0 14px',
+                    cursor: 'pointer',
+                    background: '#0f1e3d',
+                    color: '#fff',
+                    fontSize : 14,
+                }}
+            >
+                Suivant
+            </button>
+        )
+    }
+
+    return (
+        <button
+            type="button"
+            disabled={!peutSoumettre || submitting}
+            onClick={onSoumettre}
+            style={{
+                height: 30,
+                borderRadius: 8,
+                border: 'none',
+                padding: '0 14px',
+                cursor: 'pointer',
+                background: '#0f1e3d',
+                color: '#fff',
+                fontSize : 14,
+                opacity: !peutSoumettre || submitting ? 0.55 : 1,
+            }}
+        >
+            {submitting ? 'Soumission…' : 'Soumettre'}
+        </button>
+    )
+}
+
+function renderInitialState(params: {
+    loading: boolean
+    err: string | null
+    quiz: QuizPassageWeb | null
+    resultat: ResultatWeb | null
+    resultatEnAttente: ResultatWeb | null
+    onBackToDashboard: () => void
+}): ReactElement | null {
+    const { loading, err, quiz, resultat, resultatEnAttente, onBackToDashboard } = params
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: sans, color: '#64748b' }}>
+                <Loader2 size={20} className="animate-spin" aria-hidden />
+                Chargement du quiz…
+            </div>
+        )
+    }
+
+    if (err && !quiz && !resultat) {
+        return (
+            <div style={{ fontFamily: sans }}>
+                <p style={{ color: '#b91c1c' }}>{err}</p>
+                <button type="button" onClick={onBackToDashboard}>
+                    Retour
+                </button>
+            </div>
+        )
+    }
+
+    if (resultatEnAttente && !resultat) {
+        return (
+            <div
+                style={{
+                    fontFamily: sans,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 16,
+                    minHeight: 220,
+                    color: '#475569',
+                }}
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+            >
+                <Loader2 size={36} className="animate-spin" aria-hidden style={{ color: '#0f1e3d' }} />
+                <p style={{ margin: 0, fontSize: 16 }}>Calcul de votre score…</p>
+            </div>
+        )
+    }
+
+    return null
+}
 
 export default function QuizPassageWeb() {
     const navigate = useNavigate()
     const { quizId } = useParams()
+    const [searchParams] = useSearchParams()
     const [quiz, setQuiz] = useState<QuizPassageWeb | null>(null)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
@@ -55,6 +273,8 @@ export default function QuizPassageWeb() {
     const [indexCourant, setIndexCourant] = useState(0)
     const [choix, setChoix] = useState<Record<number, number>>({})
     const [verification, setVerification] = useState<Record<number, VerificationFeedback>>({})
+    const accessModeHeader =
+        searchParams.get('mode')?.toLowerCase() === 'qr' ? { 'X-Quiz-Access-Mode': 'QR' } : undefined
 
     useEffect(() => {
         let cancelled = false
@@ -64,58 +284,24 @@ export default function QuizPassageWeb() {
                 if (!Number.isFinite(id) || id <= 0) {
                     throw new Error('Quiz invalide')
                 }
-                const { data } = await api.get<QuizPassageWeb>(`/api/quizs/${id}/passage-web`)
+                const { data: raw } = await api.get<unknown>(`/api/quizs/${id}/passage-web`)
+                const parsed = quizPassageWebSchema.safeParse(raw)
+                if (!parsed.success) {
+                    throw new Error('Réponse du serveur invalide pour ce quiz.')
+                }
                 if (!cancelled) {
-                    setQuiz(data)
-                    const raw = sessionStorage.getItem(storageKey(id))
-                    if (raw) {
-                        try {
-                            const parsed = JSON.parse(raw) as {
-                                choix?: Record<number, number>
-                                indexCourant?: number
-                                verification?: Record<string, VerificationFeedback>
-                            }
-                            if (parsed.choix && typeof parsed.choix === 'object') {
-                                setChoix(parsed.choix)
-                            }
-                            if (
-                                typeof parsed.indexCourant === 'number' &&
-                                parsed.indexCourant >= 0 &&
-                                parsed.indexCourant < (data.questions?.length ?? 0)
-                            ) {
-                                setIndexCourant(parsed.indexCourant)
-                            }
-                            if (parsed.verification && typeof parsed.verification === 'object') {
-                                const v: Record<number, VerificationFeedback> = {}
-                                for (const [key, val] of Object.entries(parsed.verification)) {
-                                    const qid = Number(key)
-                                    if (Number.isFinite(qid) && val && typeof val.correcte === 'boolean') {
-                                        v[qid] = {
-                                            correcte: val.correcte,
-                                            reponseCorrecteId:
-                                                val.reponseCorrecteId != null ? Number(val.reponseCorrecteId) : null,
-                                            reponseCorrecteContenu:
-                                                val.reponseCorrecteContenu != null
-                                                    ? String(val.reponseCorrecteContenu)
-                                                    : null,
-                                        }
-                                    }
-                                }
-                                setVerification(v)
-                            }
-                        } catch {
-                            sessionStorage.removeItem(storageKey(id))
-                        }
-                    }
+                    setQuiz(parsed.data)
+                    restoreDraftState(
+                        parsed.data,
+                        sessionStorage.getItem(getQuizWebDraftStorageKey(id)),
+                        setChoix,
+                        setIndexCourant,
+                        setVerification,
+                    )
                 }
             } catch (e: unknown) {
-                const res = (e as { response?: { status?: number; data?: unknown } })?.response
-                const data = res?.data
                 if (!cancelled) {
-                    if (typeof data === 'string' && data.trim()) setErr(data.trim())
-                    else if (res?.status === 403) setErr("Vous n'êtes pas autorisé à passer ce quiz.")
-                    else if (res?.status === 404) setErr('Quiz introuvable.')
-                    else setErr('Impossible de charger ce quiz.')
+                    setErr(getLoadQuizErrorMessage(e))
                 }
             } finally {
                 if (!cancelled) setLoading(false)
@@ -128,11 +314,11 @@ export default function QuizPassageWeb() {
 
     useEffect(() => {
         if (!resultatEnAttente) return
-        const id = window.setTimeout(() => {
+        const id = globalThis.setTimeout(() => {
             setResultat(resultatEnAttente)
             setResultatEnAttente(null)
         }, 1500)
-        return () => window.clearTimeout(id)
+        return () => globalThis.clearTimeout(id)
     }, [resultatEnAttente])
 
     useEffect(() => {
@@ -141,20 +327,33 @@ export default function QuizPassageWeb() {
         for (const [k, v] of Object.entries(verification)) {
             verificationForStorage[String(k)] = v
         }
-        sessionStorage.setItem(
-            storageKey(quiz.id),
-            JSON.stringify({
-                choix,
-                indexCourant,
-                verification: verificationForStorage,
-            }),
-        )
+        try {
+            sessionStorage.setItem(
+                getQuizWebDraftStorageKey(quiz.id),
+                JSON.stringify({
+                    choix,
+                    indexCourant,
+                    verification: verificationForStorage,
+                }),
+            )
+        } catch {
+            /* sessionStorage indisponible */
+        }
     }, [quiz, choix, indexCourant, verification, resultat, resultatEnAttente])
 
     const questionCourante = useMemo(
         () => (quiz?.questions?.length ? quiz.questions[indexCourant] : null),
         [quiz, indexCourant],
     )
+
+    const reponsesMelangeesParQuestion = useMemo(() => {
+        const map: Record<number, ReponseWeb[]> = {}
+        if (!quiz) return map
+        for (const question of quiz.questions) {
+            map[question.id] = shuffleCopy(question.reponses ?? [])
+        }
+        return map
+    }, [quiz])
 
     const peutSoumettre = useMemo(() => {
         if (!quiz) return false
@@ -174,14 +373,19 @@ export default function QuizPassageWeb() {
                 questionId: q.id,
                 reponseId: choix[q.id],
             }))
-            const { data } = await api.post<ResultatWeb>(`/api/quizs/${quiz.id}/soumettre-web`, { reponses })
-            sessionStorage.removeItem(storageKey(quiz.id))
+            const { data } = await api.post<ResultatWeb>(
+                `/api/quizs/${quiz.id}/soumettre-web`,
+                { reponses },
+                accessModeHeader ? { headers: accessModeHeader } : undefined,
+            )
+            try {
+                sessionStorage.removeItem(getQuizWebDraftStorageKey(quiz.id))
+            } catch {
+                /* ignore */
+            }
             setResultatEnAttente(data)
         } catch (e: unknown) {
-            const res = (e as { response?: { data?: unknown } })?.response
-            const data = res?.data
-            if (typeof data === 'string' && data.trim()) setErr(data.trim())
-            else setErr('La soumission a échoué.')
+            setErr(getSimpleApiErrorMessage(e, 'La soumission a échoué.'))
         } finally {
             setSubmitting(false)
         }
@@ -198,10 +402,14 @@ export default function QuizPassageWeb() {
                 correcte: boolean
                 reponseCorrecteId?: number | null
                 reponseCorrecteContenu?: string | null
-            }>(`/api/quizs/${quiz.id}/verifier-question-web`, {
-                questionId: questionCourante.id,
-                reponseId: rid,
-            })
+            }>(
+                `/api/quizs/${quiz.id}/verifier-question-web`,
+                {
+                    questionId: questionCourante.id,
+                    reponseId: rid,
+                },
+                accessModeHeader ? { headers: accessModeHeader } : undefined,
+            )
             setVerification((prev) => ({
                 ...prev,
                 [questionCourante.id]: {
@@ -211,10 +419,7 @@ export default function QuizPassageWeb() {
                 },
             }))
         } catch (e: unknown) {
-            const res = (e as { response?: { data?: unknown } })?.response
-            const data = res?.data
-            if (typeof data === 'string' && data.trim()) setErr(data.trim())
-            else setErr('La vérification a échoué.')
+            setErr(getSimpleApiErrorMessage(e, 'La vérification a échoué.'))
         } finally {
             setVerifying(false)
         }
@@ -252,66 +457,31 @@ export default function QuizPassageWeb() {
         }
     }
 
-    if (loading) {
-        return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: sans, color: '#64748b' }}>
-                <Loader2 size={20} className="animate-spin" aria-hidden />
-                Chargement du quiz…
-            </div>
-        )
-    }
-
-    if (err && !quiz && !resultat) {
-        return (
-            <div style={{ fontFamily: sans }}>
-                <p style={{ color: '#b91c1c' }}>{err}</p>
-                <button type="button" onClick={() => navigate('/dashboard')}>
-                    Retour
-                </button>
-            </div>
-        )
-    }
+    const initialStateView = renderInitialState({
+        loading,
+        err,
+        quiz,
+        resultat,
+        resultatEnAttente,
+        onBackToDashboard: () => navigate('/dashboard'),
+    })
+    if (initialStateView) return initialStateView
 
     if (!quiz) return null
 
-    if (resultatEnAttente && !resultat) {
-        return (
-            <div
-                style={{
-                    fontFamily: sans,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 16,
-                    minHeight: 220,
-                    color: '#475569',
-                }}
-                role="status"
-                aria-live="polite"
-                aria-busy="true"
-            >
-                <Loader2 size={36} className="animate-spin" aria-hidden style={{ color: '#0f1e3d' }} />
-                <p style={{ margin: 0, fontSize: 16 }}>Calcul de votre score…</p>
-            </div>
-        )
-    }
-
     if (resultat) {
+        const scoreColor = resultat.score >= 50 ? '#2563eb' : '#dc2626'
         return (
-            <div style={{ fontFamily: sans, maxWidth: 860}}>
-                <h2 style={{ margin: '0 0 8px', color: '#0f1e3d', fontWeight: 600 }}>Résultat du quiz</h2>
-                <p style={{ margin: '0 0 16px', color: '#475569', fontWeight: 600 }}>
-                    Score :{' '}
-                    <strong
-                        style={{
-                            color: resultat.score > 75 ? '#4f8ef7' : '#b91c1c',
-                        }}
-                    >
-                        {resultat.score.toFixed(2)}%
-                    </strong>{' '}
-                    ({resultat.bonnesReponses}/{resultat.totalQuestions})
-                </p>
+            <div style={{ fontFamily: sans, width: '100%', maxWidth: 860, margin: '0 auto' }}>
+                <div style={{ textAlign: 'center', border: '1px solid #e2e8f4', borderRadius: 14, padding: '18px 16px', background: '#fff', marginBottom: 14 }}>
+                    <h2 style={{ margin: '0 0 8px', color: '#0f1e3d', fontWeight: 700 }}>Résultat du quiz</h2>
+                    <p style={{ margin: 0, color: '#475569', fontWeight: 600 }}>
+                        Score : <strong style={{ color: scoreColor, fontSize: 24 }}>{resultat.score.toFixed(2)}%</strong>
+                    </p>
+                    <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13 }}>
+                        {resultat.bonnesReponses}/{resultat.totalQuestions} bonnes réponses
+                    </p>
+                </div>
                 {resultat.corrections.map((c, idx) => (
                     <div
                         key={c.questionId}
@@ -329,11 +499,11 @@ export default function QuizPassageWeb() {
                         <p style={{ margin: '0 0 6px', color: c.correcte ? '#166534' : '#b91c1c', fontWeight: 500 }}>
                             {c.correcte ? 'Bonne réponse' : 'Réponse incorrecte'}
                         </p>
-                        {!c.correcte ? (
+                        {c.correcte ? null : (
                             <p style={{ margin: '0 0 4px', color: '#334155', fontSize: 13 }}>
                                 <strong>Votre réponse :</strong> {c.reponseChoisieContenu ?? 'Aucune réponse'}
                             </p>
-                        ) : null}
+                        )}
                         <p style={{ margin: '0 0 4px', color: '#334155', fontSize: 13 }}>
                             <strong>Bonne réponse :</strong> {c.reponseCorrecteContenu ?? 'N/A'}
                         </p>
@@ -343,7 +513,7 @@ export default function QuizPassageWeb() {
                         </p>
                     </div>
                 ))}
-                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
                     <button
                         type="button"
                         onClick={() => {
@@ -353,7 +523,11 @@ export default function QuizPassageWeb() {
                             setVerification({})
                             setIndexCourant(0)
                             setErr(null)
-                            sessionStorage.removeItem(storageKey(quiz.id))
+                            try {
+                                sessionStorage.removeItem(getQuizWebDraftStorageKey(quiz.id))
+                            } catch {
+                                /* ignore */
+                            }
                         }}
                         style={{
                             height: 30,
@@ -361,7 +535,7 @@ export default function QuizPassageWeb() {
                             borderRadius: 8,
                             padding: '0 14px',
                             cursor: 'pointer',
-                            fontSize : 13
+                            fontSize : 13,
                         }}
                     >
                         Refaire le quiz
@@ -377,7 +551,7 @@ export default function QuizPassageWeb() {
                             cursor: 'pointer',
                             background: '#0f1e3d',
                             color: '#fff',
-                            fontSize : 13
+                            fontSize : 13,
                         }}
                     >
                         Retour au tableau de bord
@@ -396,16 +570,16 @@ export default function QuizPassageWeb() {
     const verrouillee = !!vCourante
 
     return (
-        <div style={{ fontFamily: sans, minWidth: 750, maxWidth: 800,  }}>
-            <h2 style={{ margin: '0 0 6px', color: '#0f1e3d', fontWeight:650 }}>{quiz.titre}</h2>
+        <div style={{ fontFamily: sans, width: '100%', maxWidth: 800 }}>
+            <h2 style={{ margin: '0 0 6px', color: '#0f1e3d', fontWeight: 700 }}>{quiz.titre}</h2>
             <p style={{ margin: '0 0 18px', color: '#64748b', fontSize: 13 }}>
                 Question {indexCourant + 1} / {quiz.questions.length}
             </p>
 
-            <div style={{ border: '1px solid #e2e8f4', borderRadius: 10, padding: "35px 30px", background: '#fff', width: '100%' }}>
+            <div style={{ border: '1px solid #e2e8f4', borderRadius: 10, padding: '35px 30px', background: '#fff', width: '100%' }}>
                 <p style={{ margin: '0 0 13px', color: '#0f1e3d', fontWeight: 500 }}>{questionCourante.enonce}</p>
                 <div style={{ display: 'grid', gap: 9 }} role="radiogroup" aria-label="Réponses possibles">
-                    {questionCourante.reponses.map((r) => {
+                    {(reponsesMelangeesParQuestion[questionCourante.id] ?? questionCourante.reponses).map((r) => {
                         const checked = choix[questionCourante.id] === r.id
                         const st = styleOption(questionCourante, r)
                         return (
@@ -442,8 +616,7 @@ export default function QuizPassageWeb() {
                 </div>
 
                 {vCourante ? (
-                    <p
-                        role="status"
+                    <output
                         style={{
                             margin: '14px 0 0',
                             fontSize: 14,
@@ -452,7 +625,7 @@ export default function QuizPassageWeb() {
                         }}
                     >
                         {vCourante.correcte ? 'Réponse correcte.' : 'Réponse incorrecte.'}
-                    </p>
+                    </output>
                 ) : null}
             </div>
 
@@ -476,64 +649,18 @@ export default function QuizPassageWeb() {
                     Précédent
                 </button>
 
-                {!vCourante ? (
-                    <button
-                        type="button"
-                        disabled={!choix[questionCourante.id] || verifying}
-                        onClick={verifier}
-                        style={{
-                            height: 30,
-                            borderRadius: 8,
-                            border: 'none',
-                            padding: '0 14px',
-                            cursor: 'pointer',
-                            background: '#0f1e3d',
-                            color: '#fff',
-                            fontSize : 14,
-                            opacity: !choix[questionCourante.id] || verifying ? 0.55 : 1,
-                        }}
-                    >
-                        {verifying ? 'Vérification…' : 'Vérifier'}
-                    </button>
-                ) : !derniereQuestion ? (
-                    <button
-                        type="button"
-                        onClick={() =>
-                            setIndexCourant((i) => Math.min(quiz.questions.length - 1, i + 1))
-                        }
-                        style={{
-                            height: 30,
-                            borderRadius: 8,
-                            border: 'none',
-                            padding: '0 14px',
-                            cursor: 'pointer',
-                            background: '#0f1e3d',
-                            color: '#fff',
-                            fontSize : 14,
-                        }}
-                    >
-                        Suivant
-                    </button>
-                ) : (
-                    <button
-                        type="button"
-                        disabled={!peutSoumettre || submitting}
-                        onClick={soumettre}
-                        style={{
-                            height: 30,
-                            borderRadius: 8,
-                            border: 'none',
-                            padding: '0 14px',
-                            cursor: 'pointer',
-                            background: '#0f1e3d',
-                            color: '#fff',
-                            fontSize : 14,
-                            opacity: !peutSoumettre || submitting ? 0.55 : 1,
-                        }}
-                    >
-                        {submitting ? 'Soumission…' : 'Soumettre'}
-                    </button>
-                )}
+                {buildRightActionButton({
+                    vCourante,
+                    questionCourante,
+                    choix,
+                    verifying,
+                    derniereQuestion,
+                    submitting,
+                    peutSoumettre,
+                    onVerifier: verifier,
+                    onSuivant: () => setIndexCourant((i) => Math.min(quiz.questions.length - 1, i + 1)),
+                    onSoumettre: soumettre,
+                })}
             </div>
         </div>
     )

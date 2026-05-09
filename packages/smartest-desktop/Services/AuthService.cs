@@ -1,9 +1,11 @@
 using System;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using Newtonsoft.Json;
+using smartest_desktop.Exceptions;
+using smartest_desktop.Helpers;
 using smartest_desktop.Models;
 
 namespace smartest_desktop.Services
@@ -15,10 +17,18 @@ namespace smartest_desktop.Services
         private readonly HttpClient _httpClient;
         private const string BaseUrl = "http://localhost:8081";
 
-        public AuthService()
+        /// <remarks>Injection optionnelle du <see cref="HttpClient"/> pour les tests.</remarks>
+        public AuthService(HttpClient? httpClientOverride = null)
         {
-            _httpClient = new HttpClient { BaseAddress = new Uri(BaseUrl) };
-            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            if (httpClientOverride != null)
+            {
+                _httpClient = httpClientOverride;
+            }
+            else
+            {
+                _httpClient = new HttpClient { BaseAddress = new Uri(BaseUrl) };
+                _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            }
         }
 
         private StringContent ToJson(object data) =>
@@ -32,13 +42,14 @@ namespace smartest_desktop.Services
         // ══════════════════════════════════════════════
         public async Task<string> RegisterAsync(
             string nom, string email,
-            string password, string confirmPassword)
+            string password, string confirmPassword,
+            CancellationToken cancellationToken = default)
         {
             try
             {
                 var body = new { nom, email, password, confirmPassword };
-                var response = await _httpClient.PostAsync("/auth/register", ToJson(body));
-                var content = await response.Content.ReadAsStringAsync();
+                var response = await _httpClient.PostAsync("/auth/register", ToJson(body), cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (response.IsSuccessStatusCode) return null!;
 
@@ -51,22 +62,28 @@ namespace smartest_desktop.Services
                     _ => $"Erreur inattendue ({(int)response.StatusCode})"
                 };
             }
-            catch (HttpRequestException)
+            catch (OperationCanceledException ex)
             {
-                return "Impossible de contacter le serveur. Vérifiez que le backend est lancé";
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (HttpRequestException ex)
+            {
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de l'inscription."); }
         }
 
         // ══════════════════════════════════════════════
         //  VERIFY EMAIL PAR CODE 6 CHIFFRES
         // ══════════════════════════════════════════════
-        public async Task<string> VerifyEmailByCodeAsync(string email, string code)
+        public async Task<string> VerifyEmailByCodeAsync(string email, string code, CancellationToken cancellationToken = default)
         {
             try
             {
                 var url = $"/auth/verify-email/code?email={Uri.EscapeDataString(email)}&code={code}";
-                var response = await _httpClient.PostAsync(url, null);
+                var response = await _httpClient.PostAsync(url, null, cancellationToken);
 
                 if (response.IsSuccessStatusCode) return null!;
 
@@ -76,49 +93,69 @@ namespace smartest_desktop.Services
                     _ => "Erreur lors de la vérification. Réessayez."
                 };
             }
-            catch (HttpRequestException)
+            catch (OperationCanceledException ex)
             {
-                return "Impossible de contacter le serveur.";
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (HttpRequestException ex)
+            {
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la verification."); }
         }
 
         // ══════════════════════════════════════════════
         //  RENVOYER LE CODE
         // ══════════════════════════════════════════════
-        public async Task<string> ResendVerificationCodeAsync(string email)
+        public async Task<string> ResendVerificationCodeAsync(string email, CancellationToken cancellationToken = default)
         {
             try
             {
                 var url = $"/auth/verify-email/resend?email={Uri.EscapeDataString(email)}";
-                var response = await _httpClient.PostAsync(url, null);
+                var response = await _httpClient.PostAsync(url, null, cancellationToken);
 
                 if (response.IsSuccessStatusCode) return null!;
 
                 return "Impossible de renvoyer le code.";
             }
-            catch (HttpRequestException)
+            catch (OperationCanceledException ex)
             {
-                return "Impossible de contacter le serveur.";
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (HttpRequestException ex)
+            {
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Impossible de renvoyer le code pour le moment."); }
         }
 
         // ══════════════════════════════════════════════
         //  LOGIN - CORRIGÉ
         // ══════════════════════════════════════════════
         public async Task<(AuthResponse? auth, string error)> LoginAsync(
-            string email, string password)
+            string email, string password, CancellationToken cancellationToken = default)
         {
             try
             {
                 var body = new { email, password };
-                var response = await _httpClient.PostAsync("/auth/login", ToJson(body));
-                var content = await response.Content.ReadAsStringAsync();
+                var response = await _httpClient.PostAsync("/auth/login", ToJson(body), cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var auth = JsonConvert.DeserializeObject<AuthResponse>(content);
+                    AuthResponse auth;
+                    try
+                    {
+                        auth = JsonConvert.DeserializeObject<AuthResponse>(content);
+                    }
+                    catch (JsonException)
+                    {
+                        return (null, "Réponse du serveur illisible après connexion.");
+                    }
 
                     if (auth?.Role != "PROFESSEUR")
                         return (null, "Ce compte n'est pas un compte professeur.");
@@ -150,56 +187,68 @@ namespace smartest_desktop.Services
 
                 return (null, error);
             }
-            catch (HttpRequestException)
+            catch (OperationCanceledException ex)
             {
-                return (null, "Impossible de contacter le serveur.");
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return (null, SmartestNetworkException.ServerUnreachable(ex).Message);
             }
-            catch (Exception ex) { return (null, $"Erreur : {ex.Message}"); }
+            catch (HttpRequestException ex)
+            {
+                return (null, SmartestNetworkException.ServerUnreachable(ex).Message);
+            }
+            catch (Exception ex) { return (null, UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la connexion.")); }
         }
 
         // ══════════════════════════════════════════════
         //  FORGOT PASSWORD
         // ══════════════════════════════════════════════
-        public async Task<string> ForgotPasswordAsync(string email)
+        public async Task<string> ForgotPasswordAsync(string email, CancellationToken cancellationToken = default)
         {
             try
             {
                 var body = new { email };
                 var response = await _httpClient.PostAsync(
-                    "/auth/forgot-password/professeur", ToJson(body));
+                    "/auth/forgot-password/professeur", ToJson(body), cancellationToken);
 
                 if (response.IsSuccessStatusCode) return null!;
 
-                var content = await response.Content.ReadAsStringAsync();
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
                 return (int)response.StatusCode switch
                 {
                     400 => "Format d'email invalide",
                     500 => "Erreur serveur lors de l'envoi de l'email. Réessayez",
-                    _ => $"Erreur ({(int)response.StatusCode}). Réessayez"
+                    _ => "La demande n'a pas pu aboutir. Réessayez."
                 };
             }
-            catch (HttpRequestException)
+            catch (OperationCanceledException ex)
             {
-                return "Impossible de contacter le serveur.";
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (HttpRequestException ex)
+            {
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la demande de reinitialisation."); }
         }
 
         // ══════════════════════════════════════════════
         //  RESET PASSWORD
         // ══════════════════════════════════════════════
         public async Task<string> ResetPasswordAsync(
-            string token, string newPassword, string confirmPassword)
+            string token, string newPassword, string confirmPassword, CancellationToken cancellationToken = default)
         {
             try
             {
                 var body = new { token, newPassword, confirmPassword };
                 var response = await _httpClient.PostAsync(
-                    "/auth/reset-password/professeur", ToJson(body));
+                    "/auth/reset-password/professeur", ToJson(body), cancellationToken);
 
                 if (response.IsSuccessStatusCode) return null!;
 
-                var content = await response.Content.ReadAsStringAsync();
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
                 string serverMsg = content?.Trim('"').ToLower() ?? "";
 
                 return (int)response.StatusCode switch
@@ -210,14 +259,20 @@ namespace smartest_desktop.Services
                         "Les mots de passe ne correspondent pas",
                     400 => "Code invalide ou expiré.",
                     500 => "Erreur serveur. Réessayez plus tard",
-                    _ => $"Erreur ({(int)response.StatusCode}). Réessayez"
+                    _ => "La demande n'a pas pu aboutir. Réessayez."
                 };
             }
-            catch (HttpRequestException)
+            catch (OperationCanceledException ex)
             {
-                return "Impossible de contacter le serveur.";
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
-            catch (Exception ex) { return $"Erreur : {ex.Message}"; }
+            catch (HttpRequestException ex)
+            {
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la reinitialisation du mot de passe."); }
         }
 
         // ══════════════════════════════════════════════

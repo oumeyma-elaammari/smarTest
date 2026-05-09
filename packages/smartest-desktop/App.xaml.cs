@@ -73,12 +73,20 @@ namespace smartest_desktop
             AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
             {
                 var ex = (Exception)ev.ExceptionObject;
-                MessageBox.Show($"{ex.Message}\n\n{ex.StackTrace}", "Erreur critique");
+                MessageBox.Show(
+                    Helpers.UserErrorMessage.FromException(ex, "Une erreur critique est survenue. Redemarrez l'application."),
+                    "Erreur critique",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             };
 
             DispatcherUnhandledException += (s, ev) =>
             {
-                MessageBox.Show($"{ev.Exception.Message}\n\n{ev.Exception.StackTrace}", "Erreur WPF");
+                MessageBox.Show(
+                    Helpers.UserErrorMessage.FromException(ev.Exception, "Une erreur inattendue est survenue."),
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 ev.Handled = true;
             };
 
@@ -118,7 +126,7 @@ namespace smartest_desktop
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Erreur au démarrage :\n\n{ex.Message}\n\n{ex.InnerException?.Message}",
+                    Helpers.UserErrorMessage.FromException(ex, "Impossible de demarrer l'application."),
                     "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
             }
@@ -228,6 +236,21 @@ namespace smartest_desktop
 
                     AddColumnIfMissing("EmailsPublicationWebJson",
                         "ALTER TABLE examen_local ADD COLUMN EmailsPublicationWebJson TEXT NULL;");
+                });
+
+                PatchTable("question_locale", existing =>
+                {
+                    void AddColumnIfMissing(string columnName, string alterSql)
+                    {
+                        if (existing.Contains(columnName)) return;
+                        using var c = conn.CreateCommand();
+                        c.CommandText = alterSql;
+                        c.ExecuteNonQuery();
+                    }
+
+                    AddColumnIfMissing(
+                        "BaremePoints",
+                        "ALTER TABLE question_locale ADD COLUMN BaremePoints REAL NOT NULL DEFAULT 0;");
                 });
             }
             finally

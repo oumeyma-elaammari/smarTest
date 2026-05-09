@@ -167,7 +167,19 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        public int TotalQuestions => NbQCM + NbCheckbox + NbRedaction;
+        private int _nbVF = 0;
+        public int NbVF
+        {
+            get => _nbVF;
+            set
+            {
+                SetProperty(ref _nbVF, Math.Max(0, value));
+                OnPropertyChanged(nameof(TotalQuestions));
+                ((RelayCommand)GenererCommand).RaiseCanExecuteChanged();
+            }
+        }
+
+        public int TotalQuestions => NbQCM + NbVF + NbCheckbox + NbRedaction;
 
         // ── État UI ───────────────────────────────────────────────────────────
 
@@ -220,6 +232,8 @@ namespace smartest_desktop.ViewModels
         public ICommand DecrQCMCommand { get; }
         public ICommand IncrCheckboxCommand { get; }
         public ICommand DecrCheckboxCommand { get; }
+        public ICommand IncrVFCommand { get; }
+        public ICommand DecrVFCommand { get; }
         public ICommand IncrRedactionCommand { get; }
         public ICommand DecrRedactionCommand { get; }
         public ICommand RetourDashboardCommand { get; }
@@ -293,6 +307,8 @@ namespace smartest_desktop.ViewModels
 
             IncrQCMCommand = new RelayCommand(_ => NbQCM++);
             DecrQCMCommand = new RelayCommand(_ => NbQCM--);
+            IncrVFCommand = new RelayCommand(_ => NbVF++);
+            DecrVFCommand = new RelayCommand(_ => NbVF--);
             IncrCheckboxCommand = new RelayCommand(_ => NbCheckbox++);
             DecrCheckboxCommand = new RelayCommand(_ => NbCheckbox--);
             IncrRedactionCommand = new RelayCommand(_ => NbRedaction++);
@@ -596,7 +612,7 @@ namespace smartest_desktop.ViewModels
                         : contenuComplet;
 
                     string prompt = GroqService.BuildPromptExamen(
-                        contenu, NbQCM, NbCheckbox, NbRedaction, Difficulte);
+                        contenu, NbQCM, NbVF, NbCheckbox, NbRedaction, Difficulte);
 
                     StatusMessage = $"🧠 Génération de {totalQuestions} questions ({Difficulte})...";
 
@@ -608,7 +624,8 @@ namespace smartest_desktop.ViewModels
                     StatusMessage = "📝 Extraction des questions...";
                     var questions = ParseQuestions(texte);
                     foreach (var q in questions) q.Difficulte = Difficulte;
-                    questions = AjusterTypesQuestions(questions, NbQCM, NbCheckbox, NbRedaction);
+                    questions = AjusterTypesQuestions(questions, NbQCM, NbVF, NbCheckbox, NbRedaction);
+                    ExamenBaremeHelper.AppliquerBaremeParDefaut(questions);
 
                     if (questions.Count == 0)
                         throw new Exception(
@@ -633,6 +650,7 @@ namespace smartest_desktop.ViewModels
                     int nbLots = (int)Math.Ceiling((double)totalQuestions / 4.0);
 
                     var lotsQCM      = DistribuerSurLots(NbQCM,      nbLots);
+                    var lotsVf       = DistribuerSurLots(NbVF,       nbLots);
                     var lotsCheckbox = DistribuerSurLots(NbCheckbox,  nbLots);
                     var lotsRedaction= DistribuerSurLots(NbRedaction, nbLots);
 
@@ -647,19 +665,20 @@ namespace smartest_desktop.ViewModels
                     for (int lotIdx = 0; lotIdx < nbLots && !ct.IsCancellationRequested; lotIdx++)
                     {
                         int qcmLot  = lotsQCM[lotIdx];
+                        int vfLot   = lotsVf[lotIdx];
                         int cbkLot  = lotsCheckbox[lotIdx];
                         int redLot  = lotsRedaction[lotIdx];
-                        int totalLot = qcmLot + cbkLot + redLot;
+                        int totalLot = qcmLot + vfLot + cbkLot + redLot;
                         if (totalLot == 0) continue;
 
                         if (lotIdx > 0)
                             await Task.Delay(GroqService.DelaiEntreLotsMs, ct);
 
                         System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                            StatusMessage = $"🧠 Lot {lotIdx + 1}/{nbLots} — {totalLot} questions ({qcmLot} QCM / {cbkLot} Checkbox / {redLot} Rédaction)...");
+                            StatusMessage = $"🧠 Lot {lotIdx + 1}/{nbLots} — {totalLot} questions ({qcmLot} QCM / {vfLot} VF / {cbkLot} Checkbox / {redLot} Rédaction)...");
 
                         string prompt = GroqService.BuildPromptExamenLot(
-                            segmentsContenu[lotIdx], qcmLot, cbkLot, redLot,
+                            segmentsContenu[lotIdx], qcmLot, vfLot, cbkLot, redLot,
                             Difficulte, toutesQuestionsExamen.Count + 1, toutesEnonces);
 
                         string texte = await _groq!.GenererAvecRetryAsync(prompt, ct, GroqService.TemperaturePourDifficulte(Difficulte));
@@ -685,7 +704,8 @@ namespace smartest_desktop.ViewModels
 
                     StatusMessage = "📝 Ajustement des types et fusion...";
 
-                    var questions = AjusterTypesQuestions(toutesQuestionsExamen, NbQCM, NbCheckbox, NbRedaction);
+                    var questions = AjusterTypesQuestions(toutesQuestionsExamen, NbQCM, NbVF, NbCheckbox, NbRedaction);
+                    ExamenBaremeHelper.AppliquerBaremeParDefaut(questions);
 
                     if (questions.Count == 0)
                         throw new Exception(
@@ -721,12 +741,12 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Net.Http.HttpRequestException ex)
             {
-                ErrorMessage = $"❌ {ex.Message}";
+                ErrorMessage = $"❌ {UserErrorMessage.FromException(ex, "Impossible de contacter le service de generation. Reessayez.")}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"❌ {ex.Message}";
+                ErrorMessage = $"❌ {UserErrorMessage.FromException(ex, "La generation de l'examen a echoue. Reessayez.")}";
                 StatusMessage = string.Empty;
             }
             finally
@@ -889,13 +909,36 @@ namespace smartest_desktop.ViewModels
         /// on coupe les excès et on ré-étiquette les manquants pour respecter les compteurs.
         /// </summary>
         private static List<QuestionExamen> AjusterTypesQuestions(
-            List<QuestionExamen> src, int wantQCM, int wantCheckbox, int wantRedaction)
+            List<QuestionExamen> src, int wantQCM, int wantVF, int wantCheckbox, int wantRedaction)
         {
             var qcms = src.Where(q => q.Type == "QCM").Take(wantQCM).ToList();
+            var vfs = src.Where(q => q.Type == "VF").Take(wantVF).ToList();
             var checks = src.Where(q => q.Type == "CHECKBOX").Take(wantCheckbox).ToList();
             var reds = src.Where(q => q.Type == "REDACTION").Take(wantRedaction).ToList();
 
-            var restants = src.Where(q => q.Type == "QCM" && !qcms.Contains(q)).ToList();
+            var restants = src.Where(q =>
+                !qcms.Contains(q) &&
+                !vfs.Contains(q) &&
+                !checks.Contains(q) &&
+                !reds.Contains(q)).ToList();
+
+            while (vfs.Count < wantVF && restants.Count > 0)
+            {
+                var q = restants[0]; restants.RemoveAt(0);
+                q.Type = "VF";
+                q.OptionA = "Vrai";
+                q.OptionB = "Faux";
+                q.OptionC = string.Empty;
+                q.OptionD = string.Empty;
+                q.ReponseCorrecte = q.ReponseCorrecte switch
+                {
+                    "A" or "B" => q.ReponseCorrecte,
+                    "VRAI" or "TRUE" => "A",
+                    "FAUX" or "FALSE" => "B",
+                    _ => "A"
+                };
+                vfs.Add(q);
+            }
 
             while (checks.Count < wantCheckbox && restants.Count > 0)
             {
@@ -922,7 +965,7 @@ namespace smartest_desktop.ViewModels
                 restants.RemoveAt(0);
             }
 
-            var result = qcms.Concat(checks).Concat(reds).ToList();
+            var result = qcms.Concat(vfs).Concat(checks).Concat(reds).ToList();
             int n = 1;
             foreach (var q in result) q.Numero = n++;
             return result;
@@ -1001,10 +1044,11 @@ namespace smartest_desktop.ViewModels
                             .Trim();
 
                         if (string.IsNullOrEmpty(type)) type = "QCM";
-                        if (type.Contains("CHECK")) type = "CHECKBOX";
+                        if (type.Contains("VRAI") || type.Contains("FAUX") || type == "VF" || type == "TRUE_FALSE") type = "VF";
+                        else if (type.Contains("CHECK")) type = "CHECKBOX";
                         else if (type.Contains("REDAC") || type.Contains("OPEN") || type.Contains("LIBRE")) type = "REDACTION";
                         else if (type.Contains("IMAGE") || type.Contains("IMG")) type = "IMAGE";
-                        else if (!type.StartsWith("QCM") && !type.StartsWith("CHECKBOX")
+                        else if (!type.StartsWith("QCM") && !type.StartsWith("VF") && !type.StartsWith("CHECKBOX")
                                  && !type.StartsWith("REDACTION") && !type.StartsWith("IMAGE"))
                             type = "QCM";
 
@@ -1024,7 +1068,24 @@ namespace smartest_desktop.ViewModels
                             Difficulte = "Moyen",
                         };
 
-                        if (type is "QCM" or "IMAGE")
+                        if (type == "VF")
+                        {
+                            q.OptionA = "Vrai";
+                            q.OptionB = "Faux";
+                            q.OptionC = string.Empty;
+                            q.OptionD = string.Empty;
+                            string repVf = StrAlt(item,
+                                "reponseCorrecte", "reponse_correcte", "reponse",
+                                "correctAnswer", "correct", "answer", "bonne_reponse")
+                                .ToUpperInvariant().Trim();
+                            q.ReponseCorrecte = repVf switch
+                            {
+                                "A" or "VRAI" or "TRUE" or "1" => "A",
+                                "B" or "FAUX" or "FALSE" or "2" => "B",
+                                _ => "A"
+                            };
+                        }
+                        else if (type is "QCM" or "IMAGE")
                         {
                             (q.OptionA, q.OptionB, q.OptionC, q.OptionD) = ExtraireOptions(item);
                             q.ReponseCorrecte = StrAlt(item,

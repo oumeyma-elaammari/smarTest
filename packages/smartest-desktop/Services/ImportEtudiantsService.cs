@@ -28,19 +28,55 @@ namespace smartest_desktop.Services
 
         public static ImportEtudiantsResult ImporterDepuisFichierDetaille(string chemin)
         {
+            ArgumentNullException.ThrowIfNull(chemin);
+
+            if (!File.Exists(chemin))
+                throw new FileNotFoundException("Fichier d’import introuvable.", chemin);
+
             string ext = Path.GetExtension(chemin).ToLowerInvariant();
-            return ext switch
+            try
             {
-                ".csv" => ImporterCsvDetaille(chemin),
-                ".xlsx" => ImporterExcelDetaille(chemin),
-                _ => throw new NotSupportedException($"Format non supporté : {ext}")
-            };
+                return ext switch
+                {
+                    ".csv" => ImporterCsvDetaille(chemin),
+                    ".xlsx" => ImporterExcelDetaille(chemin),
+                    _ => throw new NotSupportedException($"Format non supporté : {ext}")
+                };
+            }
+            catch (NotSupportedException)
+            {
+                throw;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                throw new IOException($"Accès refusé au fichier : {chemin}", ex);
+            }
+            catch (Exception ex) when (ex is OpenXmlPackageException or InvalidDataException)
+            {
+                throw new InvalidOperationException(
+                    "Le fichier Excel semble corrompu ou n’est pas un classeur .xlsx valide.", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    "Import des etudiants impossible. Verifiez le fichier puis reessayez.", ex);
+            }
         }
 
         private static ImportEtudiantsResult ImporterCsvDetaille(string chemin)
         {
             var result = new ImportEtudiantsResult();
-            var lignes = File.ReadAllLines(chemin, Encoding.UTF8);
+            string[] lignes;
+            try
+            {
+                lignes = File.ReadAllLines(chemin, Encoding.UTF8);
+            }
+            catch (DecoderFallbackException ex)
+            {
+                throw new InvalidOperationException(
+                    "Encodage du CSV illisible. Enregistrez le fichier en UTF-8.", ex);
+            }
+
             bool premiereIgnoree = false;
 
             foreach (var ligne in lignes)

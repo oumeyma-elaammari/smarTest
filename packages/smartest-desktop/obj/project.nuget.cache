@@ -1,8 +1,14 @@
 {
   "version": 2,
+<<<<<<< HEAD
   "dgSpecHash": "r3V4BPzv7bY=",
   "success": true,
   "projectFilePath": "C:\\Users\\pc\\Desktop\\smart\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
+=======
+  "dgSpecHash": "U3FZ43o+EZI=",
+  "success": true,
+  "projectFilePath": "c:\\Users\\User\\smarTest\\packages\\smartest-desktop\\smartest-desktop.csproj",
+>>>>>>> 85d27ba0220d3aa6cedb19d6366affad8d27151d
   "expectedPackageFiles": [
     "C:\\Users\\pc\\.nuget\\packages\\documentformat.openxml\\3.5.1\\documentformat.openxml.3.5.1.nupkg.sha512",
     "C:\\Users\\pc\\.nuget\\packages\\documentformat.openxml.framework\\3.5.1\\documentformat.openxml.framework.3.5.1.nupkg.sha512",

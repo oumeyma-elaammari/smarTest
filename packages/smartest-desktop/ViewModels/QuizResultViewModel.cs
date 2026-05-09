@@ -25,6 +25,8 @@ namespace smartest_desktop.ViewModels
     // ═══════════════════════════════════════════════════════════════════════════
     public class QuizResultViewModel : BaseViewModel
     {
+        private const string TitreImport = "Import";
+
         // ── Données du quiz ───────────────────────────────────────────────────
         private string _titreQuiz = string.Empty;
         public string TitreQuiz
@@ -78,10 +80,10 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        public ICommand ImporterEmailsWebCommand { get; }
-        public ICommand EffacerEmailsWebCommand { get; }
-        public ICommand AjouterEmailUnitaireWebCommand { get; }
-        public ICommand SupprimerEmailsSelectionnesWebCommand { get; }
+        public ICommand ImporterEmailsWebCommand { get; private set; }
+        public ICommand EffacerEmailsWebCommand { get; private set; }
+        public ICommand AjouterEmailUnitaireWebCommand { get; private set; }
+        public ICommand SupprimerEmailsSelectionnesWebCommand { get; private set; }
 
         /// <summary>Pan droit : aperçu liste emails au lieu du détail QCM.</summary>
         private bool _afficherListeEtudiants;
@@ -111,8 +113,9 @@ namespace smartest_desktop.ViewModels
         public ObservableCollection<PublicationWebEmailRowViewModel> EmailsListeApercu { get; } = new();
 
         public bool AucunEmailListeApercu => EmailsListeApercu.Count == 0;
+        public bool AEmailsSelectionnes => EmailsListeApercu.Any(r => r.IsSelected);
 
-        public ICommand VoirListeEtudiantsCommand { get; }
+        public ICommand VoirListeEtudiantsCommand { get; private set; }
 
         private void NotifierVuesPanneauDroit()
         {
@@ -132,12 +135,24 @@ namespace smartest_desktop.ViewModels
                 {
                     if (SupprimerEmailsSelectionnesWebCommand is RelayCommand cmd)
                         cmd.RaiseCanExecuteChanged();
-                }));
+                    OnPropertyChanged(nameof(AEmailsSelectionnes));
+                },
+                SynchroniserTexteEmailsDepuisListeApercu));
             }
 
             OnPropertyChanged(nameof(AucunEmailListeApercu));
+            OnPropertyChanged(nameof(AEmailsSelectionnes));
             if (SupprimerEmailsSelectionnesWebCommand is RelayCommand rs)
                 rs.RaiseCanExecuteChanged();
+        }
+
+        private void SynchroniserTexteEmailsDepuisListeApercu()
+        {
+            var normalises = ExtraireEmailsValides(string.Join(
+                Environment.NewLine,
+                EmailsListeApercu.Select(r => r.Email)));
+
+            TexteEmailsWeb = string.Join(Environment.NewLine, normalises);
         }
 
         // ── Question sélectionnée (panneau de droite) ─────────────────────────
@@ -171,19 +186,19 @@ namespace smartest_desktop.ViewModels
         private readonly Func<Task>? _supprimerQuizPersisteAsync;
 
         // ── Commandes ─────────────────────────────────────────────────────────
-        public ICommand SelectionnerQuestionCommand { get; }
-        public ICommand SupprimerQuestionCommand { get; }
-        public ICommand AjouterQuestionCommand { get; }
+        public ICommand SelectionnerQuestionCommand { get; private set; }
+        public ICommand SupprimerQuestionCommand { get; private set; }
+        public ICommand AjouterQuestionCommand { get; private set; }
         /// <summary>Paramètre : A, B, C ou D — définit la réponse correcte du QCM sélectionné.</summary>
-        public ICommand SetReponseCorrecteCommand { get; }
-        public ICommand ValiderQuizCommand { get; }
+        public ICommand SetReponseCorrecteCommand { get; private set; }
+        public ICommand ValiderQuizCommand { get; private set; }
 
-        private readonly RelayCommand _validerQuizCommandRelay;
-        private readonly RelayCommand _supprimerQuestionCommandRelay;
-        private readonly RelayCommand _ajouterQuestionCommandRelay;
-        private readonly RelayCommand _setReponseCorrecteCommandRelay;
-        public ICommand RegenerarCommand { get; }
-        public ICommand RetourCommand { get; }
+        private RelayCommand _validerQuizCommandRelay = null!;
+        private RelayCommand _supprimerQuestionCommandRelay = null!;
+        private RelayCommand _ajouterQuestionCommandRelay = null!;
+        private RelayCommand _setReponseCorrecteCommandRelay = null!;
+        public ICommand RegenerarCommand { get; private set; }
+        public ICommand RetourCommand { get; private set; }
 
         // ── Événements de navigation ──────────────────────────────────────────
         /// <summary>Dernier argument : JSON du tableau d'emails (publication web), ex. ["a@b.com"].</summary>
@@ -216,7 +231,12 @@ namespace smartest_desktop.ViewModels
                 q.ReponseCorrecte,
                 q.Explication
             }).ToList();
-            return JsonSerializer.Serialize(payload) + "|EMAILS:" + SerialiserEmailsPourBase(TexteEmailsWeb);
+            return JsonSerializer.Serialize(new
+            {
+                TitreQuiz = TitreQuiz?.Trim(),
+                Questions = payload,
+                Emails = SerialiserEmailsPourBase(TexteEmailsWeb)
+            });
         }
 
         private bool ADesModificationsDepuisOuverture() =>
@@ -236,20 +256,50 @@ namespace smartest_desktop.ViewModels
         public string TitreFenetre =>
             IsEditionQuizExistant ? "SmarTest — Modifier le quiz" : "SmarTest — Quiz généré";
 
-        public string LibelleBoutonValider =>
-            IsEditionQuizExistant ? "Enregistrer les modifications" : "Valider et sauvegarder";
+        public string LibelleBoutonValider
+        {
+            get
+            {
+                if (IsValidationEnCours)
+                {
+                    return IsEditionQuizExistant ? "Enregistrement en cours..." : "Validation en cours...";
+                }
 
-        public string SousTitreEtape =>
-            QuestionsVerrouilleesParPublication
-                ? "Questions en lecture seule · publication web modifiable"
-                : IsEditionQuizExistant
+                return IsEditionQuizExistant ? "Enregistrer les modifications" : "Valider et sauvegarder";
+            }
+        }
+
+        private bool _isValidationEnCours;
+        public bool IsValidationEnCours
+        {
+            get => _isValidationEnCours;
+            private set
+            {
+                if (!SetProperty(ref _isValidationEnCours, value))
+                    return;
+                OnPropertyChanged(nameof(LibelleBoutonValider));
+                _validerQuizCommandRelay.RaiseCanExecuteChanged();
+            }
+        }
+
+        public string SousTitreEtape
+        {
+            get
+            {
+                if (QuestionsVerrouilleesParPublication)
+                {
+                    return "Questions en lecture seule · publication web modifiable";
+                }
+
+                return IsEditionQuizExistant
                     ? "Modifiez puis enregistrez dans la base locale"
                     : "Vérifiez et ajustez avant validation";
+            }
+        }
 
-        public string SousTitreCompteur =>
-            IsEditionQuizExistant
-                ? $"{NombreQuestions} questions"
-                : $"{NombreQuestions} questions générées";
+        public string SousTitreCompteur => IsEditionQuizExistant
+            ? $"{NombreQuestions} questions"
+            : $"{NombreQuestions} questions générées";
 
         public string SousTitreQuestionsListe =>
             QuestionsVerrouilleesParPublication
@@ -266,28 +316,54 @@ namespace smartest_desktop.ViewModels
                 ? "Quiz publié : les questions ne sont plus modifiables. Vous pouvez encore ajuster la liste des emails autorisés sur le web."
                 : "Cliquez sur une question pour l'éditer directement ou la supprimer";
 
-
+        public sealed class QuizResultViewModelInit
+        {
+            public string Titre { get; init; } = string.Empty;
+            public string Difficulte { get; init; } = string.Empty;
+            public string CoursTitre { get; init; } = string.Empty;
+            public string Statut { get; init; } = string.Empty;
+            public int? QuizIdExistant { get; init; }
+            public Func<Task>? SupprimerQuizPersisteAsync { get; init; }
+            public string? EmailsPublicationWebJsonInit { get; init; }
+        }
 
         public QuizResultViewModel(
             List<QuestionQCM> questions,
-            string titre,
-            string difficulte,
-            string coursTitre,
-            string statut,
-            int? quizIdExistant = null,
-            Func<Task>? supprimerQuizPersisteAsync = null,
-            string? emailsPublicationWebJsonInit = null)
+            QuizResultViewModelInit init)
         {
-            QuizIdExistant = quizIdExistant;
-            _supprimerQuizPersisteAsync = supprimerQuizPersisteAsync;
+            QuizIdExistant = init.QuizIdExistant;
+            _supprimerQuizPersisteAsync = init.SupprimerQuizPersisteAsync;
             // Initialisation des propriétés
-            TitreQuiz = titre;
-            Difficulte = difficulte;
-            CoursSourceTitre = coursTitre;
-            Statut = statut;
+            TitreQuiz = init.Titre;
+            Difficulte = init.Difficulte;
+            CoursSourceTitre = init.CoursTitre;
+            Statut = init.Statut;
 
-            TexteEmailsWeb = InitialiserTexteEmailsDepuisJson(emailsPublicationWebJsonInit);
+            TexteEmailsWeb = InitialiserTexteEmailsDepuisJson(init.EmailsPublicationWebJsonInit);
 
+            InitialiserCommandesEmails();
+            VoirListeEtudiantsCommand = new RelayCommand(_ => AfficherListeEtudiants = true);
+            InitialiserQuestions(questions);
+            RafraichirQualitePedagogique();
+
+            _empreinteInitiale = CalculerEmpreinte();
+
+            InitialiserCommandesQuestionsEtValidation();
+            InitialiserCommandesNavigation();
+            Questions.CollectionChanged += (_, __) =>
+            {
+                RebrancherEvenementsQuestions();
+                RafraichirQualitePedagogique();
+                _validerQuizCommandRelay.RaiseCanExecuteChanged();
+                _supprimerQuestionCommandRelay.RaiseCanExecuteChanged();
+                _ajouterQuestionCommandRelay.RaiseCanExecuteChanged();
+                _setReponseCorrecteCommandRelay.RaiseCanExecuteChanged();
+            };
+            RebrancherEvenementsQuestions();
+        }
+
+        private void InitialiserCommandesEmails()
+        {
             ImporterEmailsWebCommand = new RelayCommand(_ => ImporterEmailsWebDepuisFichier());
             EffacerEmailsWebCommand = new RelayCommand(
                 _ => TexteEmailsWeb = string.Empty,
@@ -298,10 +374,10 @@ namespace smartest_desktop.ViewModels
             SupprimerEmailsSelectionnesWebCommand = new RelayCommand(
                 _ => SupprimerEmailsSelectionnesWeb(),
                 _ => EmailsListeApercu.Any(r => r.IsSelected));
+        }
 
-            VoirListeEtudiantsCommand = new RelayCommand(_ => AfficherListeEtudiants = true);
-
-            // Numérotation et ajout des questions
+        private void InitialiserQuestions(List<QuestionQCM> questions)
+        {
             int n = 1;
             foreach (var q in questions)
             {
@@ -311,44 +387,90 @@ namespace smartest_desktop.ViewModels
 
             if (Questions.Count > 0)
                 QuestionSelectionnee = Questions[0];
+        }
 
-            _empreinteInitiale = CalculerEmpreinte();
+        private void RebrancherEvenementsQuestions()
+        {
+            foreach (var q in Questions)
+            {
+                q.PropertyChanged -= Question_PropertyChanged;
+                q.PropertyChanged += Question_PropertyChanged;
+            }
+        }
 
-            // Commande : sélectionner une question (revient au détail QCM si la liste était affichée)
+        private void Question_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(QuestionQCM.Enonce)
+                or nameof(QuestionQCM.OptionA)
+                or nameof(QuestionQCM.OptionB)
+                or nameof(QuestionQCM.OptionC)
+                or nameof(QuestionQCM.OptionD)
+                or nameof(QuestionQCM.ReponseCorrecte)
+                or nameof(QuestionQCM.Explication))
+            {
+                RafraichirQualitePedagogique();
+            }
+        }
+
+        private void RafraichirQualitePedagogique()
+        {
+            foreach (var q in Questions)
+            {
+                _ = PedagogicalQualityEvaluator.EvaluateQuizQuestion(q);
+            }
+        }
+
+        private void InitialiserCommandesQuestionsEtValidation()
+        {
+            InitialiserSelectionQuestionCommande();
+            InitialiserSuppressionQuestionCommande();
+            InitialiserAjoutQuestionCommande();
+            InitialiserSetReponseCommande();
+            InitialiserValidationCommande();
+        }
+
+        private void InitialiserSelectionQuestionCommande()
+        {
             SelectionnerQuestionCommand = new RelayCommand(param =>
             {
                 AfficherListeEtudiants = false;
                 if (param is QuestionQCM q)
                     QuestionSelectionnee = q;
             });
+        }
 
-            // Commande : supprimer une question
+        private void InitialiserSuppressionQuestionCommande()
+        {
             _supprimerQuestionCommandRelay = new RelayCommand(
-                param =>
-                {
-                    if (QuestionsVerrouilleesParPublication) return;
-                    if (param is not QuestionQCM q) return;
-
-                    int idx = Questions.IndexOf(q);
-                    if (idx < 0) return;
-
-                    Questions.Remove(q);
-                    RenuméroterQuestions();
-                    OnPropertyChanged(nameof(NombreQuestions));
-                    OnPropertyChanged(nameof(SousTitreCompteur));
-
-                    if (Questions.Count > 0)
-                        QuestionSelectionnee = Questions[Math.Min(idx, Questions.Count - 1)];
-                    else
-                        QuestionSelectionnee = null;
-
-                    if (Questions.Count == 0 && _supprimerQuizPersisteAsync != null)
-                        _ = SupprimerQuizVideEtFermerAsync();
-                },
+                param => ExecuterSuppressionQuestion(param),
                 _ => !QuestionsVerrouilleesParPublication);
             SupprimerQuestionCommand = _supprimerQuestionCommandRelay;
+        }
 
-            // Commande : ajouter une question vide (saisie manuelle)
+        private void ExecuterSuppressionQuestion(object? param)
+        {
+            if (QuestionsVerrouilleesParPublication) return;
+            if (param is not QuestionQCM q) return;
+
+            int idx = Questions.IndexOf(q);
+            if (idx < 0) return;
+
+            Questions.Remove(q);
+            RenuméroterQuestions();
+            OnPropertyChanged(nameof(NombreQuestions));
+            OnPropertyChanged(nameof(SousTitreCompteur));
+
+            if (Questions.Count > 0)
+                QuestionSelectionnee = Questions[Math.Min(idx, Questions.Count - 1)];
+            else
+                QuestionSelectionnee = null;
+
+            if (Questions.Count == 0 && _supprimerQuizPersisteAsync != null)
+                _ = SupprimerQuizVideEtFermerAsync();
+        }
+
+        private void InitialiserAjoutQuestionCommande()
+        {
             _ajouterQuestionCommandRelay = new RelayCommand(
                 _ =>
                 {
@@ -366,7 +488,10 @@ namespace smartest_desktop.ViewModels
                 },
                 _ => !QuestionsVerrouilleesParPublication);
             AjouterQuestionCommand = _ajouterQuestionCommandRelay;
+        }
 
+        private void InitialiserSetReponseCommande()
+        {
             _setReponseCorrecteCommandRelay = new RelayCommand(
                 p =>
                 {
@@ -378,80 +503,80 @@ namespace smartest_desktop.ViewModels
                 },
                 _ => !QuestionsVerrouilleesParPublication);
             SetReponseCorrecteCommand = _setReponseCorrecteCommandRelay;
+        }
 
-            // Commande : valider le quiz
+        private void InitialiserValidationCommande()
+        {
             _validerQuizCommandRelay = new RelayCommand(
-                _ =>
-                {
-                    if (Questions.Count == 0)
-                    {
-                        MessageBox.Show(
-                            "Le quiz ne contient aucune question.",
-                            "Quiz vide",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    MessageBoxResult res;
-                    int nbEmails = CompterEmailsValides(TexteEmailsWeb);
-                    string ligneEmails =
-                        $"• Publication web : {nbEmails} email(s) autorisé(s) (max {QuizPublicationLimits.MaxAuthorizedStudentEmails})\n";
-
-                    if (IsEditionQuizExistant)
-                    {
-                        string verrou =
-                            QuestionsVerrouilleesParPublication
-                                ? "\nLes questions ne seront pas modifiées (quiz publié). Seules la liste d'emails publication web et les données associées en base seront mises à jour si vous les avez changées.\n"
-                                : string.Empty;
-                        res = MessageBox.Show(
-                            $"Enregistrer les modifications du quiz « {TitreQuiz} » ?\n\n" +
-                            $"• {Questions.Count} questions\n" +
-                            ligneEmails +
-                            $"• Difficulté : {Difficulte}\n" +
-                            $"• Statut : {Statut}\n" +
-                            verrou +
-                            "\nLes données en base seront mises à jour.",
-                            "Enregistrer les modifications",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Question);
-                    }
-                    else
-                    {
-                        res = MessageBox.Show(
-                            $"Valider et sauvegarder le quiz « {TitreQuiz} » ?\n\n" +
-                            $"• {Questions.Count} questions\n" +
-                            ligneEmails +
-                            $"• Difficulté : {Difficulte}\n" +
-                            $"• Statut : {Statut}\n\n" +
-                            "Le quiz sera enregistré localement et prêt à être publié.",
-                            "Valider et sauvegarder",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Question);
-                    }
-
-                    if (res != MessageBoxResult.Yes) return;
-
-                    QuizValide?.Invoke(
-                        Questions,
-                        TitreQuiz,
-                        Difficulte,
-                        CoursSourceTitre,
-                        Statut,
-                        SerialiserEmailsPourBase(TexteEmailsWeb));
-                },
-                _ => Questions.Count > 0);
+                _ => ExecuterValidationQuiz(),
+                _ => Questions.Count > 0 && !IsValidationEnCours);
             ValiderQuizCommand = _validerQuizCommandRelay;
+        }
 
-            Questions.CollectionChanged += (_, __) =>
+        private void ExecuterValidationQuiz()
+        {
+            if (IsValidationEnCours)
+                return;
+            if (Questions.Count == 0)
             {
-                _validerQuizCommandRelay.RaiseCanExecuteChanged();
-                _supprimerQuestionCommandRelay.RaiseCanExecuteChanged();
-                _ajouterQuestionCommandRelay.RaiseCanExecuteChanged();
-                _setReponseCorrecteCommandRelay.RaiseCanExecuteChanged();
-            };
+                MessageBox.Show(
+                    "Le quiz ne contient aucune question.",
+                    "Quiz vide",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
 
-            // Commande : regénérer (masquée en édition d’un quiz déjà enregistré)
+            MessageBoxResult res;
+            int nbEmails = CompterEmailsValides(TexteEmailsWeb);
+            string ligneEmails =
+                $"• Publication web : {nbEmails} email(s) autorisé(s) (max {QuizPublicationLimits.MaxAuthorizedStudentEmails})\n";
+
+            if (IsEditionQuizExistant)
+            {
+                string verrou = QuestionsVerrouilleesParPublication
+                    ? "\nLes questions ne seront pas modifiées (quiz publié). Seules la liste d'emails publication web et les données associées en base seront mises à jour si vous les avez changées.\n"
+                    : string.Empty;
+                res = MessageBox.Show(
+                    $"Enregistrer les modifications du quiz « {TitreQuiz} » ?\n\n" +
+                    $"• {Questions.Count} questions\n" +
+                    ligneEmails +
+                    $"• Difficulté : {Difficulte}\n" +
+                    $"• Statut : {Statut}\n" +
+                    verrou +
+                    "\nLes données en base seront mises à jour.",
+                    "Enregistrer les modifications",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+            }
+            else
+            {
+                res = MessageBox.Show(
+                    $"Valider et sauvegarder le quiz « {TitreQuiz} » ?\n\n" +
+                    $"• {Questions.Count} questions\n" +
+                    ligneEmails +
+                    $"• Difficulté : {Difficulte}\n" +
+                    $"• Statut : {Statut}\n\n" +
+                    "Le quiz sera enregistré localement et prêt à être publié.",
+                    "Valider et sauvegarder",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+            }
+
+            if (res != MessageBoxResult.Yes) return;
+
+            IsValidationEnCours = true;
+            QuizValide?.Invoke(
+                Questions,
+                TitreQuiz,
+                Difficulte,
+                CoursSourceTitre,
+                Statut,
+                SerialiserEmailsPourBase(TexteEmailsWeb));
+        }
+
+        private void InitialiserCommandesNavigation()
+        {
             RegenerarCommand = new RelayCommand(_ =>
             {
                 var res = MessageBox.Show(
@@ -511,7 +636,7 @@ namespace smartest_desktop.ViewModels
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                     MessageBox.Show(
-                        $"Impossible de supprimer le quiz vide :\n{ex.Message}",
+                        UserErrorMessage.FromException(ex, "Impossible de supprimer ce quiz pour le moment."),
                         "Erreur",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error));
@@ -574,6 +699,12 @@ namespace smartest_desktop.ViewModels
                 .Where(e => !aSupprimer.Contains(e))
                 .ToList();
             TexteEmailsWeb = string.Join(Environment.NewLine, garder);
+            OnPropertyChanged(nameof(AEmailsSelectionnes));
+        }
+
+        public void MarquerValidationTerminee()
+        {
+            IsValidationEnCours = false;
         }
 
         private void AjouterEmailUnitaireWeb()
@@ -638,7 +769,7 @@ namespace smartest_desktop.ViewModels
                 {
                     MessageBox.Show(
                         "Aucun email valide dans le fichier.",
-                        "Import",
+                        TitreImport,
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                     return;
@@ -649,7 +780,7 @@ namespace smartest_desktop.ViewModels
                 {
                     MessageBox.Show(
                         $"Le fichier contient plus de {max} emails. Seuls les {max} premiers sont conservés.",
-                        "Import",
+                        TitreImport,
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                     liste = liste.Take(max).ToList();
@@ -661,23 +792,23 @@ namespace smartest_desktop.ViewModels
             {
                 MessageBox.Show(
                     "Format non supporté. Utilisez un fichier .csv ou .xlsx.",
-                    "Import",
+                    TitreImport,
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
             }
             catch (IOException ex)
             {
                 MessageBox.Show(
-                    $"Lecture du fichier impossible : {ex.Message}",
-                    "Import",
+                    UserErrorMessage.FromException(ex, "Lecture du fichier impossible. Verifiez qu'il n'est pas deja ouvert."),
+                    TitreImport,
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Import impossible : {ex.Message}",
-                    "Import",
+                    UserErrorMessage.FromException(ex, "Import impossible. Verifiez le format du fichier puis reessayez."),
+                    TitreImport,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
