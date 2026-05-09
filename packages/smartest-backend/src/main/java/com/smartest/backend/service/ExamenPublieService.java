@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +26,17 @@ public class ExamenPublieService {
     private static final double BAREME_DEFAUT_WEB = 20.0;
 
     @Transactional(readOnly = true)
-    public List<ExamenPublieMetadataResponse> getMesExamensPublicationWeb(String emailEtudiant) {
-        if (emailEtudiant == null || emailEtudiant.isBlank()) {
+    public List<ExamenPublieMetadataResponse> getMesExamensPublicationWeb(String emailUtilisateur) {
+        if (emailUtilisateur == null || emailUtilisateur.isBlank()) {
             return List.of();
         }
-        String email = emailEtudiant.trim().toLowerCase(Locale.ROOT);
+        String email = emailUtilisateur.trim().toLowerCase(Locale.ROOT);
+        Optional<Professeur> prof = professeurRepository.findByEmail(email);
+        if (prof.isPresent()) {
+            return examenPublieRepository.findPublieWebParProfesseur(prof.get().getId()).stream()
+                    .map(this::toMetadata)
+                    .toList();
+        }
         return examenPublieRepository.findAutorisesPourEmail(email).stream()
                 .map(this::toMetadata)
                 .toList();

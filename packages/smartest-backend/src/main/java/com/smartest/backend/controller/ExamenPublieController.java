@@ -134,7 +134,8 @@ public class ExamenPublieController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername());
-        return ResponseEntity.ok(supervisionService.getQuestionCouranteEtudiant(id, etudiantId));
+        return ResponseEntity.ok(
+                supervisionService.getQuestionCouranteEtudiant(id, etudiantId, userDetails.getUsername()));
     }
 
     @PostMapping("/{id}/passage/reponse")

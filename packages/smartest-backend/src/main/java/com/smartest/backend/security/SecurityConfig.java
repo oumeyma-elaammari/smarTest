@@ -50,7 +50,8 @@ public class SecurityConfig {
                                 "/ws/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole("ETUDIANT")
-                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web")
+                                .hasAnyRole("ETUDIANT", "PROFESSEUR")
                         .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata").hasAnyRole("ETUDIANT", "PROFESSEUR")
                         .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole("ETUDIANT")
                         .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole("ETUDIANT")

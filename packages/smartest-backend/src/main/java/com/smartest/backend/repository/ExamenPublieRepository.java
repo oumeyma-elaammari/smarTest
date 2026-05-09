@@ -9,16 +9,18 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-public interface ExamenPublieRepository extends JpaRepository<ExamenPublie, Long> {
-
-    @EntityGraph(attributePaths = {"professeur", "questions", "questions.reponses"})
-    @Query("SELECT e FROM ExamenPublie e WHERE e.id = :id")
-    Optional<ExamenPublie> findWithQuestionsAndProfesseurById(@Param("id") Long id);
+public interface ExamenPublieRepository extends JpaRepository<ExamenPublie, Long>, ExamenPublieRepositoryCustom {
 
     @Query("SELECT DISTINCT e FROM ExamenPublie e JOIN e.emailsAutorisesWeb em WHERE LOWER(em) = LOWER(:email) AND e.publieSurWebLe IS NOT NULL ORDER BY e.dateDebut DESC NULLS LAST, e.id DESC")
     List<ExamenPublie> findAutorisesPourEmail(@Param("email") String email);
+
+    /**
+     * Examens dont le prof a validé une publication web (liste d’emails non vide au moment de la publication).
+     */
+    @EntityGraph(attributePaths = {"questions", "professeur"})
+    @Query("SELECT e FROM ExamenPublie e WHERE e.professeur.id = :professeurId AND e.publieSurWebLe IS NOT NULL ORDER BY e.dateDebut DESC NULLS LAST, e.id DESC")
+    List<ExamenPublie> findPublieWebParProfesseur(@Param("professeurId") Long professeurId);
 
     List<ExamenPublie> findByProfesseurId(Long professeurId);
 

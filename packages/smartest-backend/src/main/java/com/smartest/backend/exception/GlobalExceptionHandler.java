@@ -105,6 +105,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(body);
     }
 
+    /** Erreurs métier / paramètres (ex. créneau, transition d’état) — évite un 500 opaque côté client. */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Requête invalide";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", msg));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "État incompatible";
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", msg));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

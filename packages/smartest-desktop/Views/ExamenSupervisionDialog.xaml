@@ -36,9 +36,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock FontSize="11" FontWeight="600" Foreground="#8899b8" Margin="0,0,0,6">État de la session</TextBlock>
-                        <TextBlock x:Name="TxtEtat" FontSize="14" FontWeight="600" Foreground="#0f1e3d" Text="…"/>
-                        <TextBlock x:Name="TxtQuestion" FontSize="13" Foreground="#475569" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="TxtQuestion" FontSize="13" Foreground="#475569" Margin="0,0,0,0" TextWrapping="Wrap"/>
                         <TextBlock x:Name="TxtTemps" FontSize="12" Foreground="#64748b" Margin="0,6,0,0"/>
                     </StackPanel>
                     <TextBlock x:Name="TxtErreur"

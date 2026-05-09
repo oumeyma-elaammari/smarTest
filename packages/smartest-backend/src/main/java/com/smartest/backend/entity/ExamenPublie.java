@@ -30,6 +30,7 @@ public class ExamenPublie {
     private Professeur professeur;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 32)
     private StatutExamen statut;
 
     private LocalDateTime dateDebut;

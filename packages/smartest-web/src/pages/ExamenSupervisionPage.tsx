@@ -1,31 +1,33 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { Client } from '@stomp/stompjs'
+import {
+    CalendarClock,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    Loader2,
+    Pause,
+    Play,
+    Radio,
+    Settings2,
+    Square,
+    Timer,
+    Users,
+} from 'lucide-react'
 import { examenApi } from '../api/examenApi'
+import useAuth from '../hooks/useAuth'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
-const WS_BASE_URL = 'ws://localhost:8081/ws'
+const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8081/ws'
 
-const card: React.CSSProperties = {
-    background: '#fff',
-    border: '1px solid #e2e8f4',
-    borderRadius: 14,
-    padding: '1.1rem 1.2rem',
-    boxShadow: '0 1px 2px rgba(15, 30, 61, 0.04)',
-}
-
-const btn: React.CSSProperties = {
-    height: 38,
-    borderRadius: 10,
-    border: '1px solid #dbe3f1',
-    padding: '0 14px',
-    background: '#fff',
-    color: '#0f1e3d',
-    fontWeight: 600,
-    cursor: 'pointer',
+export type ExamenSupervisionPageProps = {
+    /** Aligné sur le thème web (ex. `#4f8ef7` dans `App.tsx`). */
+    accentBleu?: string
 }
 
 function formatDateTime(value?: string): string {
@@ -41,37 +43,21 @@ function formatDateTime(value?: string): string {
     })
 }
 
-function formatEtat(etat?: string): string {
-    switch ((etat || '').toUpperCase()) {
-        case 'PLANIFIE':
-            return 'Planifié'
-        case 'EN_ATTENTE':
-        case 'EN_ATTENTE_LANCEMENT':
-            return 'En attente'
-        case 'EN_COURS':
-            return 'En cours'
-        case 'EN_PAUSE':
-            return 'En pause'
-        case 'TERMINE':
-            return 'Terminé'
-        case 'ARRETE':
-            return 'Arrêté'
-        default:
-            return etat || 'Inconnu'
-    }
-}
-
-function getEtatBadge(etat?: string): { bg: string; fg: string } {
-    const key = (etat || '').toUpperCase()
-    if (key === 'EN_COURS') return { bg: '#dcfce7', fg: '#166534' }
-    if (key === 'EN_PAUSE') return { bg: '#fef3c7', fg: '#92400e' }
-    if (key === 'TERMINE' || key === 'ARRETE') return { bg: '#e2e8f0', fg: '#334155' }
-    return { bg: '#fff7ed', fg: '#b45309' }
+/** Titre affiché dans l’interface : métadonnée en priorité, puis snapshot supervision. */
+function titrePrincipal(meta: ExamenMeta | null, snap: ExamenSnapshot | null, examId: number): string {
+    const m = typeof meta?.titre === 'string' ? meta.titre.trim() : ''
+    const s = typeof snap?.titre === 'string' ? snap.titre.trim() : ''
+    if (m.length > 0) return m
+    if (s.length > 0) return s
+    return `Examen #${examId}`
 }
 
 function extractApiMessage(error: unknown, fallback: string): string {
     if (axios.isAxiosError(error)) {
         const data = error.response?.data
+        if (typeof data === 'string' && data.trim()) {
+            return data.trim()
+        }
         if (data && typeof data === 'object' && 'message' in data) {
             const message = (data as { message?: unknown }).message
             if (typeof message === 'string' && message.trim()) {
@@ -85,48 +71,137 @@ function extractApiMessage(error: unknown, fallback: string): string {
     return fallback
 }
 
-export default function ExamenSupervisionPage() {
+/** Réponse Axios (`status` + `data`), sans `axios.isAxiosResponse` (pas toujours exposé par le bundle). */
+function snapshotBodyFromMaybeAxiosResponse(raw: unknown): Partial<ExamenSnapshot> | null {
+    if (raw === null || typeof raw !== 'object') return null
+    const r = raw as { status?: unknown; data?: unknown }
+    if (typeof r.status !== 'number') return null
+    const body = r.data
+    if (body === null || typeof body !== 'object') return null
+    const etat = (body as { etat?: unknown }).etat
+    if (typeof etat !== 'string') return null
+    return body as Partial<ExamenSnapshot>
+}
+
+export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: ExamenSupervisionPageProps) {
     const { examenId } = useParams()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
+    const isProf = (useAuth((s) => s.role) ?? '').trim().toUpperCase() === 'PROFESSEUR'
     const [meta, setMeta] = useState<ExamenMeta | null>(null)
     const [snap, setSnap] = useState<ExamenSnapshot | null>(null)
     const [bareme, setBareme] = useState('20')
     const [feedback, setFeedback] = useState('')
+    const [feedbackTone, setFeedbackTone] = useState<'neutral' | 'success' | 'error'>('neutral')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [wsNotice, setWsNotice] = useState<string | null>(null)
     const [connectesLabels, setConnectesLabels] = useState<string[]>([])
+    const [pageReady, setPageReady] = useState(false)
     const id = Number(examenId)
 
-    const refresh = async () => {
+    const shellCard = useMemo(
+        (): CSSProperties => ({
+            background: '#fff',
+            border: '1px solid #e2e8f4',
+            borderRadius: 12,
+            padding: '1.1rem 1.25rem',
+            boxShadow: '0 1px 2px rgba(15, 30, 61, 0.04)',
+            position: 'relative',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+            width: '100%',
+        }),
+        [],
+    )
+
+    const btnBase = useMemo(
+        (): CSSProperties => ({
+            height: 38,
+            borderRadius: 8,
+            padding: '0 14px',
+            fontFamily: sans,
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: 'pointer',
+            transition: 'background 0.15s, border-color 0.15s, opacity 0.15s',
+        }),
+        [],
+    )
+
+    /** Fusionne un snapshot incomplet sans écraser l’état (évite faux « encore en cours » après pause si le WS perd un champ). */
+    const mergeSnapshot = useCallback((prev: ExamenSnapshot | null, incoming: Partial<ExamenSnapshot>): ExamenSnapshot => {
+        const merged = { ...(prev ?? {}), ...incoming } as ExamenSnapshot
+        const t = incoming.titre
+        const trimmed = typeof t === 'string' ? t.trim() : ''
+        if (trimmed.length === 0 && prev?.titre != null) {
+            merged.titre = prev.titre
+        }
+        return merged
+    }, [])
+
+    const refresh = useCallback(async () => {
         if (!Number.isFinite(id) || id <= 0) return
-        const [m, s, room] = await Promise.all([
+        const settled = await Promise.allSettled([
             examenApi.getMetadata(id),
             examenApi.snapshot(id),
             examenApi.getSalleAttente(id),
         ])
-        setMeta(m.data)
-        setSnap(s.data)
-        if (s.data.baremeSur20 != null) setBareme(String(s.data.baremeSur20))
-
-        const raw = room.data as {
-            connectes?: { email?: string; etudiantId?: number }[]
-            Connectes?: { email?: string; etudiantId?: number }[]
+        const [mr, sr, rr] = settled
+        if (mr.status === 'fulfilled') {
+            setMeta(mr.value.data)
         }
-        const list = raw.connectes ?? raw.Connectes ?? []
-        setConnectesLabels(
-            list.map((p) => {
-                const mail = (p.email ?? '').trim()
-                const sid = p.etudiantId != null ? String(p.etudiantId) : '?'
-                return mail ? `${mail} (id ${sid})` : `Étudiant id ${sid}`
-            }),
-        )
-    }
+        if (sr.status === 'fulfilled') {
+            const sd = sr.value.data
+            setSnap((prev) => mergeSnapshot(prev, sd))
+            if (sd.baremeSur20 != null) setBareme(String(sd.baremeSur20))
+        }
+        if (rr.status === 'fulfilled') {
+            const raw = rr.value.data as {
+                connectes?: { email?: string; etudiantId?: number }[]
+                Connectes?: { email?: string; etudiantId?: number }[]
+            }
+            const list = raw.connectes ?? raw.Connectes ?? []
+            setConnectesLabels(
+                list.map((p) => {
+                    const mail = (p.email ?? '').trim()
+                    const sid = p.etudiantId != null ? String(p.etudiantId) : '?'
+                    return mail ? `${mail} (id ${sid})` : `Étudiant id ${sid}`
+                }),
+            )
+        }
+    }, [id, mergeSnapshot])
 
     useEffect(() => {
-        refresh().catch(() => undefined)
+        if (!Number.isFinite(id) || id <= 0) {
+            setPageReady(true)
+            return
+        }
+        let cancelled = false
+        refresh()
+            .catch(() => undefined)
+            .finally(() => {
+                if (!cancelled) setPageReady(true)
+            })
         const t = window.setInterval(() => refresh().catch(() => undefined), 2500)
-        return () => window.clearInterval(t)
-    }, [id])
+        return () => {
+            cancelled = true
+            window.clearInterval(t)
+        }
+    }, [id, refresh])
+
+    const sessionDemarreeHint = searchParams.get('started')
+    useEffect(() => {
+        if (sessionDemarreeHint !== '1') return
+        setFeedbackTone('neutral')
+        setFeedback(
+            'Session lancée pour les étudiants : ils passent sur l’écran d’épreuve quand la phase est « En cours » (même flux que la question active ci-dessous).',
+        )
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        const t = window.setTimeout(() => {
+            navigate(`/supervision/examen/${id}`, { replace: true })
+        }, 6500)
+        return () => window.clearTimeout(t)
+    }, [sessionDemarreeHint, id, navigate])
 
     useEffect(() => {
         if (!Number.isFinite(id) || id <= 0) return
@@ -138,9 +213,9 @@ export default function ExamenSupervisionPage() {
             onConnect: () => {
                 client.subscribe(`/topic/examen/${id}/etat`, (message) => {
                     try {
-                        const data = JSON.parse(message.body) as ExamenSnapshot
+                        const data = JSON.parse(message.body) as Partial<ExamenSnapshot>
                         if (cancelled) return
-                        setSnap(data)
+                        setSnap((prev) => mergeSnapshot(prev, data))
                         if (data.baremeSur20 != null) setBareme(String(data.baremeSur20))
                         setWsNotice(null)
                     } catch {
@@ -164,22 +239,54 @@ export default function ExamenSupervisionPage() {
             cancelled = true
             client.deactivate()
         }
-    }, [id])
+    }, [id, mergeSnapshot])
 
     const action = async (run: () => Promise<unknown>) => {
         try {
             setIsSubmitting(true)
-            await run()
+            const raw = await run()
+            const patchBody = snapshotBodyFromMaybeAxiosResponse(raw)
+            if (patchBody != null) {
+                setSnap((prev) => mergeSnapshot(prev, patchBody))
+            }
             await refresh()
+            setFeedbackTone('success')
             setFeedback('Action appliquée avec succès.')
         } catch (error: unknown) {
+            setFeedbackTone('error')
             setFeedback(extractApiMessage(error, 'Action impossible. Vérifiez l’état actuel de l’examen.'))
         } finally {
             setIsSubmitting(false)
         }
     }
 
-    if (!Number.isFinite(id) || id <= 0) return <p>Examen invalide.</p>
+    if (!Number.isFinite(id) || id <= 0) {
+        return (
+            <p style={{ fontFamily: sans, color: '#64748b', margin: 0 }}>Examen invalide.</p>
+        )
+    }
+
+    if (!pageReady) {
+        return (
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    fontFamily: sans,
+                    color: '#64748b',
+                    width: '100%',
+                    padding: '3rem 0',
+                }}
+                role="status"
+                aria-busy="true"
+            >
+                <Loader2 size={22} className="animate-spin" aria-hidden style={{ color: accentBleu }} />
+                Chargement de la supervision…
+            </div>
+        )
+    }
 
     const totalQuestions = Math.max(0, snap?.totalQuestions ?? meta?.totalQuestions ?? 0)
     const currentIndex = Math.max(0, snap?.questionCouranteIndex ?? 0)
@@ -190,115 +297,229 @@ export default function ExamenSupervisionPage() {
     const peutPause = etat === 'EN_COURS'
     const peutReprendre = etat === 'EN_PAUSE'
     const peutTerminer = etat !== 'TERMINE' && etat !== 'ARRETE'
-    const etatBadge = getEtatBadge(etat)
     const questionPills = totalQuestions > 0 ? Array.from({ length: totalQuestions }, (_, i) => i + 1) : []
+
+    const feedbackBanner =
+        feedbackTone === 'success'
+            ? { bg: '#ecfdf5', border: '#bbf7d0', fg: '#166534' }
+            : feedbackTone === 'error'
+              ? { bg: '#fef2f2', border: '#fecaca', fg: '#b91c1c' }
+              : { bg: '#f8fafc', border: '#e2e8f0', fg: '#475569' }
+
+    const stripeLeft: CSSProperties = {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: 4,
+        background: `linear-gradient(180deg, ${accentBleu} 0%, #0f1e3d 100%)`,
+        borderRadius: '12px 0 0 12px',
+    }
+
+    const statTile = (icon: ReactNode, label: string, value: ReactNode) => (
+        <div style={{ ...shellCard, padding: 14 }}>
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 6,
+                }}
+            >
+                <span style={{ display: 'inline-flex', color: accentBleu, flexShrink: 0 }}>{icon}</span>
+                <div
+                    style={{
+                        color: '#64748b',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        lineHeight: 1.3,
+                    }}
+                >
+                    {label}
+                </div>
+            </div>
+            <div style={{ fontWeight: 700, fontSize: '0.98rem', color: '#0f1e3d', lineHeight: 1.35 }}>
+                {value}
+            </div>
+        </div>
+    )
+
+    const btnGhost = (disabled: boolean): CSSProperties => ({
+        ...btnBase,
+        border: '1px solid #dbe3f1',
+        background: disabled ? '#f1f5f9' : '#fff',
+        color: disabled ? '#94a3b8' : '#0f1e3d',
+        opacity: disabled ? 0.85 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+    })
+
+    const btnPrimary = (enabled: boolean): CSSProperties => ({
+        ...btnBase,
+        border: 'none',
+        background: enabled ? accentBleu : '#94a3b8',
+        color: '#fff',
+        opacity: enabled ? 1 : 1,
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        boxShadow: enabled ? '0 1px 4px rgba(79, 142, 247, 0.28)' : 'none',
+    })
+
+    const btnNavy = (enabled: boolean): CSSProperties => ({
+        ...btnBase,
+        border: 'none',
+        background: enabled ? '#0f1e3d' : '#94a3b8',
+        color: '#fff',
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        boxShadow: enabled ? '0 1px 4px rgba(15, 30, 61, 0.12)' : 'none',
+    })
+
+    const btnDangerOutline = (enabled: boolean): CSSProperties => ({
+        ...btnBase,
+        border: '1px solid #fecaca',
+        background: '#fff',
+        color: '#b91c1c',
+        cursor: enabled ? 'pointer' : 'not-allowed',
+        opacity: enabled ? 1 : 0.55,
+    })
+
+    const pillIdle = `${accentBleu}33`
 
     return (
         <div
             style={{
                 width: '100%',
-                maxWidth: 1100,
-                margin: '0 auto',
+                maxWidth: '100%',
+                margin: 0,
                 fontFamily: sans,
                 color: '#0f1e3d',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 14,
+                gap: 16,
             }}
         >
-            <div style={card}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 260px' }}>
+            <nav style={{ marginBottom: 2 }} aria-label="Fil d’ariane interne">
+                <button
+                    type="button"
+                    onClick={() => navigate(isProf ? '/dashboard?tab=examens' : '/dashboard')}
+                    style={{
+                        border: 'none',
+                        background: 'none',
+                        padding: 0,
+                        fontFamily: sans,
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                    }}
+                >
+                    <ChevronLeft size={18} strokeWidth={2} aria-hidden style={{ color: accentBleu }} />
+                    Mes examens / tableau de bord
+                </button>
+            </nav>
+
+            <div style={{ ...shellCard, padding: '1.25rem 1.25rem 1.2rem', paddingLeft: '1rem' }}>
+                <div aria-hidden style={stripeLeft} />
+                <div style={{ position: 'relative', paddingLeft: 8 }}>
+                    <div style={{ minWidth: 0 }}>
                         <p
                             style={{
                                 margin: 0,
                                 color: '#64748b',
-                                fontSize: 12,
-                                fontWeight: 700,
+                                fontSize: 11,
+                                fontWeight: 600,
                                 textTransform: 'uppercase',
-                                letterSpacing: '0.04em',
+                                letterSpacing: '0.06em',
                             }}
                         >
-                            Supervision examen (professeur)
+                            Pilotage web — superviseur
                         </p>
                         <h1
                             style={{
                                 margin: '6px 0 0',
                                 fontFamily: serif,
                                 fontWeight: 550,
-                                fontSize: 'clamp(1.25rem, 2.4vw, 1.6rem)',
+                                fontSize: 'clamp(1.35rem, 2.8vw, 1.85rem)',
+                                lineHeight: 1.22,
+                                color: '#0f1e3d',
                             }}
                         >
-                            {meta?.titre ?? `Examen #${id}`}
+                            {titrePrincipal(meta, snap, id)}
                         </h1>
                         {meta?.description ? (
-                            <p style={{ color: '#475569', marginTop: 8, marginBottom: 0, lineHeight: 1.5 }}>{meta.description}</p>
+                            <p style={{ color: '#475569', marginTop: 10, marginBottom: 0, lineHeight: 1.55, fontSize: 14 }}>
+                                {meta.description}
+                            </p>
                         ) : null}
                     </div>
-                    <span
-                        style={{
-                            background: etatBadge.bg,
-                            color: etatBadge.fg,
-                            borderRadius: 999,
-                            padding: '8px 14px',
-                            fontWeight: 700,
-                            fontSize: 12,
-                            height: 'fit-content',
-                        }}
-                    >
-                        {formatEtat(etat)}
-                    </span>
                 </div>
             </div>
 
             {wsNotice ? (
                 <div
                     style={{
-                        background: '#fff7ed',
-                        border: '1px solid #fed7aa',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 10,
+                        background: '#fffbeb',
+                        border: '1px solid #fde68a',
                         borderRadius: 10,
-                        color: '#9a3412',
+                        color: '#92400e',
                         fontSize: 13,
-                        padding: '10px 12px',
+                        padding: '12px 14px',
+                        boxSizing: 'border-box',
                     }}
+                    role="status"
+                    aria-live="polite"
                 >
-                    {wsNotice}
+                    <span style={{ color: '#eab308', flexShrink: 0, marginTop: 1 }}>
+                        <Radio size={18} strokeWidth={2} />
+                    </span>
+                    <span style={{ lineHeight: 1.5 }}>{wsNotice}</span>
                 </div>
             ) : null}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10 }}>
-                <div style={{ ...card, borderRadius: 12, padding: 12 }}>
-                    <div style={{ color: '#64748b', fontSize: 12 }}>État</div>
-                    <div style={{ fontWeight: 700 }}>{formatEtat(etat)}</div>
-                </div>
-                <div style={{ ...card, borderRadius: 12, padding: 12 }}>
-                    <div style={{ color: '#64748b', fontSize: 12 }}>Créneau de lancement (jour et heure saisis)</div>
-                    <div style={{ fontWeight: 700 }}>{formatDateTime(meta?.dateDebut)}</div>
-                </div>
-                <div style={{ ...card, borderRadius: 12, padding: 12 }}>
-                    <div style={{ color: '#64748b', fontSize: 12 }}>Durée</div>
-                    <div style={{ fontWeight: 700 }}>{meta?.duree ?? '-'} min</div>
-                </div>
-                <div style={{ ...card, borderRadius: 12, padding: 12 }}>
-                    <div style={{ color: '#64748b', fontSize: 12 }}>Question en cours</div>
-                    <div style={{ fontWeight: 700 }}>
-                        {totalQuestions > 0 ? `${questionNumero} / ${totalQuestions}` : '-'}
-                    </div>
-                </div>
-                <div style={{ ...card, borderRadius: 12, padding: 12 }}>
-                    <div style={{ color: '#64748b', fontSize: 12 }}>Temps restant</div>
-                    <div style={{ fontWeight: 700 }}>{snap?.tempsRestantMinutes ?? '-'} min</div>
-                </div>
-                <div style={{ ...card, borderRadius: 12, padding: 12 }}>
-                    <div style={{ color: '#64748b', fontSize: 12 }}>Étudiants en attente</div>
-                    <div style={{ fontWeight: 700 }}>{snap?.participantsEnAttente ?? 0}</div>
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))', gap: 10 }}>
+                {statTile(
+                    <CalendarClock size={18} strokeWidth={2} />,
+                    'Créneau prévu',
+                    formatDateTime(meta?.dateDebut),
+                )}
+                {statTile(<Clock size={18} strokeWidth={2} />, 'Durée annoncée', <>{meta?.duree ?? '-'} min</>)}
+                {statTile(
+                    <Play size={18} strokeWidth={2} />,
+                    'Question en cours',
+                    <>{totalQuestions > 0 ? `${questionNumero} / ${totalQuestions}` : '—'}</>,
+                )}
+                {statTile(<Timer size={18} strokeWidth={2} />, 'Temps restant', <>{snap?.tempsRestantMinutes ?? '-'} min</>)}
+                {statTile(
+                    <Users size={18} strokeWidth={2} />,
+                    'Étudiants en attente',
+                    <>{snap?.participantsEnAttente ?? 0}</>,
+                )}
             </div>
 
             {connectesLabels.length > 0 ? (
-                <div style={card}>
-                    <h3 style={{ marginTop: 0, marginBottom: 8, fontFamily: serif, fontWeight: 550 }}>Présents (salle d’attente / session)</h3>
-                    <ul style={{ margin: 0, paddingLeft: 18, color: '#334155', lineHeight: 1.6 }}>
+                <div style={shellCard}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            marginBottom: 10,
+                            borderBottom: '1px solid #f1f5f9',
+                            paddingBottom: 10,
+                        }}
+                    >
+                        <Users size={20} strokeWidth={2} style={{ color: accentBleu }} aria-hidden />
+                        <h2 style={{ margin: 0, fontFamily: serif, fontWeight: 550, fontSize: '1.08rem', color: '#0f1e3d' }}>
+                            Présents (salle d’attente / session)
+                        </h2>
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: 20, color: '#475569', lineHeight: 1.65, fontSize: 14 }}>
                         {connectesLabels.map((label, i) => (
                             <li key={`${i}-${label}`}>{label}</li>
                         ))}
@@ -306,103 +527,261 @@ export default function ExamenSupervisionPage() {
                 </div>
             ) : null}
 
-            <div style={card}>
-                <h3 style={{ marginTop: 0, marginBottom: 10, fontFamily: serif, fontWeight: 550 }}>Pilotage de session</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginBottom: 10 }}>
-                    <button style={btn} disabled={isSubmitting || !peutLancer} onClick={() => action(() => examenApi.lancer(id))}>Lancer</button>
-                    <button style={btn} disabled={isSubmitting || !peutPause} onClick={() => action(() => examenApi.pause(id))}>Pause</button>
-                    <button style={btn} disabled={isSubmitting || !peutReprendre} onClick={() => action(() => examenApi.reprendre(id))}>Reprendre</button>
+            <section style={shellCard} aria-labelledby="supervision-session-heading">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <Settings2 size={20} strokeWidth={2} style={{ color: accentBleu }} aria-hidden />
+                    <h2 id="supervision-session-heading" style={{ margin: 0, fontFamily: serif, fontWeight: 550, fontSize: '1.08rem' }}>
+                        Pilotage de session
+                    </h2>
+                </div>
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(154px, 1fr))',
+                        gap: 10,
+                        marginBottom: 12,
+                    }}
+                >
                     <button
-                        style={btn}
-                        disabled={isSubmitting || !estEnCours || questionNumero <= 1}
-                        onClick={() => action(() => examenApi.questionPrecedente(id))}
+                        type="button"
+                        style={{
+                            ...btnPrimary(!isSubmitting && peutLancer),
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                        }}
+                        disabled={isSubmitting || !peutLancer}
+                        onClick={async () => {
+                            try {
+                                setIsSubmitting(true)
+                                await examenApi.lancer(id)
+                                await refresh()
+                                setFeedbackTone('success')
+                                setFeedback(
+                                    'Session lancée. Les étudiants encore en salle passent sur l’épreuve ; le suivi reste sur cette page.',
+                                )
+                                navigate(`/supervision/examen/${id}?started=1`, { replace: true })
+                                window.scrollTo({ top: 0, behavior: 'smooth' })
+                            } catch (error: unknown) {
+                                setFeedbackTone('error')
+                                setFeedback(extractApiMessage(error, 'Lancement impossible dans l’état actuel.'))
+                            } finally {
+                                setIsSubmitting(false)
+                            }
+                        }}
                     >
-                        Question précédente
+                        <Play size={17} strokeWidth={2} aria-hidden /> Lancer
                     </button>
                     <button
-                        style={btn}
-                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0 || questionNumero >= totalQuestions}
-                        onClick={() => action(() => examenApi.questionSuivante(id))}
+                        type="button"
+                        style={{ ...btnGhost(isSubmitting || !peutPause), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                        disabled={isSubmitting || !peutPause}
+                        onClick={() => action(() => examenApi.pause(id))}
                     >
-                        Question suivante
+                        <Pause size={17} strokeWidth={2} aria-hidden /> Pause
                     </button>
                     <button
-                        style={{ ...btn, border: '1px solid #fecaca', color: '#b91c1c', background: '#fff' }}
+                        type="button"
+                        style={{ ...btnGhost(isSubmitting || !peutReprendre), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                        disabled={isSubmitting || !peutReprendre}
+                        onClick={() => action(() => examenApi.reprendre(id))}
+                    >
+                        <Play size={17} strokeWidth={2} aria-hidden /> Reprendre
+                    </button>
+                    <button
+                        type="button"
+                        style={{
+                            ...btnDangerOutline(!isSubmitting && peutTerminer),
+                            gridColumn: 'span 1',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                        }}
                         disabled={isSubmitting || !peutTerminer}
                         onClick={() => action(() => examenApi.terminer(id))}
                     >
-                        Terminer
+                        <Square size={15} strokeWidth={2} aria-hidden /> Terminer
                     </button>
                 </div>
 
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button style={btn} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, -1))}>-1 min</button>
-                    <button style={btn} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, 1))}>+1 min</button>
-                    <input value={bareme} onChange={(e) => setBareme(e.target.value)} style={{ ...btn, width: 90, cursor: 'text' }} />
-                    <button style={btn} disabled={isSubmitting} onClick={() => action(() => examenApi.definirBareme(id, Number(bareme) || 20))}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 12 }}>
+                    <button
+                        type="button"
+                        style={{
+                            ...btnNavy(!isSubmitting && estEnCours && questionNumero > 1),
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                        }}
+                        disabled={isSubmitting || !estEnCours || questionNumero <= 1}
+                        onClick={() => action(() => examenApi.questionPrecedente(id))}
+                    >
+                        <ChevronLeft size={18} strokeWidth={2} aria-hidden /> Question précédente
+                    </button>
+                    <button
+                        type="button"
+                        style={{
+                            ...btnNavy(!isSubmitting && estEnCours && totalQuestions > 0 && questionNumero < totalQuestions),
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                        }}
+                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0 || questionNumero >= totalQuestions}
+                        onClick={() => action(() => examenApi.questionSuivante(id))}
+                    >
+                        Question suivante <ChevronRight size={18} strokeWidth={2} aria-hidden />
+                    </button>
+                </div>
+
+                <div
+                    style={{
+                        borderRadius: 10,
+                        border: '1px solid #e2e8f0',
+                        background: '#f8fafc',
+                        padding: '12px 14px',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        gap: 10,
+                    }}
+                >
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b', flex: '1 1 140px' }}>Ajustements</span>
+                    <button type="button" style={btnGhost(isSubmitting)} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, -1))}>
+                        −1 min
+                    </button>
+                    <button type="button" style={btnGhost(isSubmitting)} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, 1))}>
+                        +1 min
+                    </button>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 12, color: '#64748b' }}>Barème /20</span>
+                        <input
+                            value={bareme}
+                            onChange={(e) => setBareme(e.target.value)}
+                            inputMode="decimal"
+                            style={{
+                                ...btnGhost(false),
+                                width: 76,
+                                textAlign: 'center',
+                                boxSizing: 'border-box',
+                            }}
+                            aria-label="Barème sur 20"
+                        />
+                    </label>
+                    <button
+                        type="button"
+                        style={btnGhost(isSubmitting)}
+                        disabled={isSubmitting}
+                        onClick={() => action(() => examenApi.definirBareme(id, Number(bareme) || 20))}
+                    >
                         Définir barème
                     </button>
                 </div>
 
                 {feedback ? (
-                    <p style={{ marginTop: 10, marginBottom: 0, color: '#475569', fontSize: 13 }}>{feedback}</p>
+                    <p
+                        style={{
+                            marginTop: 12,
+                            marginBottom: 0,
+                            padding: '10px 12px',
+                            borderRadius: 10,
+                            background: feedbackBanner.bg,
+                            border: `1px solid ${feedbackBanner.border}`,
+                            color: feedbackBanner.fg,
+                            fontSize: 13,
+                            lineHeight: 1.5,
+                        }}
+                    >
+                        {feedback}
+                    </p>
                 ) : null}
-            </div>
+            </section>
 
-            <div style={card}>
-                <h3 style={{ marginTop: 0, marginBottom: 8, fontFamily: serif, fontWeight: 550 }}>Supervision question par question</h3>
-                <p style={{ marginTop: 0, color: '#64748b', fontSize: 14, lineHeight: 1.5 }}>
-                    Le pilotage avance question par question comme côté étudiant. La question active ci-dessous est celle en cours de diffusion.
+            <section style={shellCard} aria-labelledby="supervision-questions-heading">
+                <h2 id="supervision-questions-heading" style={{ marginTop: 0, marginBottom: 10, fontFamily: serif, fontWeight: 550, fontSize: '1.08rem' }}>
+                    Supervision question par question
+                </h2>
+                <p style={{ marginTop: 0, color: '#64748b', fontSize: 13, lineHeight: 1.55, marginBottom: 12 }}>
+                    Le pilotage avance question par question comme côté étudiant. La carte ci-dessous reflète exactement ce que les élèves
+                    voient pour la diffusion en cours.
                 </p>
                 <div
                     style={{
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
+                        background: `#f4f7fc`,
+                        border: `1px solid ${pillIdle}`,
                         borderRadius: 10,
-                        padding: 12,
-                        marginBottom: 12,
+                        padding: 14,
+                        marginBottom: 14,
+                        boxSizing: 'border-box',
                     }}
                 >
-                    <div style={{ color: '#64748b', fontSize: 12, marginBottom: 4 }}>Question active</div>
-                    <div style={{ fontWeight: 700, marginBottom: 6 }}>
+                    <div style={{ color: accentBleu, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+                        Question active
+                    </div>
+                    <div style={{ fontWeight: 700, marginBottom: 8, fontSize: '1rem', color: '#0f1e3d' }}>
                         {totalQuestions > 0 ? `Question ${questionNumero} / ${totalQuestions}` : 'Aucune question disponible'}
                     </div>
-                    <div style={{ color: '#334155', lineHeight: 1.5 }}>
-                        {snap?.questionCourante?.enonce?.trim() || 'L’énoncé de la question active sera affiché ici.'}
+                    <div style={{ color: '#334155', lineHeight: 1.58, fontSize: 14 }}>
+                        {snap?.questionCourante?.enonce?.trim() || 'L’énoncé de la question active sera affiché ici lorsque la session est en cours.'}
                     </div>
                 </div>
                 {questionPills.length > 0 ? (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {questionPills.map((num) => (
-                            <button
-                                key={num}
-                                type="button"
-                                disabled={isSubmitting || !estEnCours || num === questionNumero}
-                                onClick={() => action(() => examenApi.allerAQuestion(id, num))}
-                                style={{
-                                    minWidth: 32,
-                                    height: 32,
-                                    borderRadius: 999,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    border: `1px solid ${num === questionNumero ? '#93c5fd' : '#dbe3f1'}`,
-                                    background: num === questionNumero ? '#dbeafe' : '#fff',
-                                    color: num === questionNumero ? '#1d4ed8' : '#475569',
-                                    fontWeight: 700,
-                                    fontSize: 12,
-                                    cursor: isSubmitting || !estEnCours || num === questionNumero ? 'default' : 'pointer',
-                                    opacity: isSubmitting || !estEnCours ? 0.7 : 1,
-                                }}
-                            >
-                                {num}
-                            </button>
-                        ))}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="toolbar" aria-label="Aller à une question">
+                        {questionPills.map((num) => {
+                            const actif = num === questionNumero
+                            const dis = isSubmitting || !estEnCours || num === questionNumero
+                            return (
+                                <button
+                                    key={num}
+                                    type="button"
+                                    disabled={dis}
+                                    onClick={() => action(() => examenApi.allerAQuestion(id, num))}
+                                    style={{
+                                        minWidth: 36,
+                                        height: 36,
+                                        borderRadius: 999,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: actif ? `2px solid ${accentBleu}` : '1px solid #dbe3f1',
+                                        background: actif ? `${accentBleu}18` : '#fff',
+                                        color: actif ? accentBleu : '#475569',
+                                        fontWeight: 700,
+                                        fontSize: 12,
+                                        cursor: dis ? 'default' : 'pointer',
+                                        opacity: isSubmitting ? 0.75 : estEnCours ? 1 : 0.6,
+                                        transition: 'border-color 0.15s, background 0.15s',
+                                    }}
+                                    aria-current={actif ? 'step' : undefined}
+                                >
+                                    {num}
+                                </button>
+                            )
+                        })}
                     </div>
                 ) : null}
-            </div>
+            </section>
 
-            <button style={{ ...btn, alignSelf: 'flex-start' }} onClick={() => navigate('/')}>Retour</button>
+            <button
+                type="button"
+                style={{
+                    ...btnGhost(false),
+                    alignSelf: 'flex-start',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    paddingLeft: 12,
+                    paddingRight: 16,
+                    borderRadius: 8,
+                }}
+                onClick={() => navigate(isProf ? '/dashboard?tab=examens' : '/dashboard')}
+            >
+                <ChevronLeft size={18} strokeWidth={2} aria-hidden />
+                Retour au tableau de bord
+            </button>
         </div>
     )
 }

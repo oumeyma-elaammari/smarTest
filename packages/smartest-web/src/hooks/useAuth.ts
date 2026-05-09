@@ -15,6 +15,8 @@ interface AuthState {
     isAuthenticated: boolean
     login: (data: AuthResponse) => void
     logout: () => void
+    /** Déconnexion sans boîte de dialogue ni rechargement (ex. passer de l’espace étudiant à une page réservée au professeur). */
+    clearSessionWithoutConfirm: () => void
 }
 
 const useAuth = create<AuthState>((set) => ({
@@ -54,6 +56,20 @@ const useAuth = create<AuthState>((set) => ({
             isAuthenticated: false,
         })
         window.location.href = '/login'
+    },
+
+    clearSessionWithoutConfirm: () => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('role')
+        localStorage.removeItem('nom')
+        localStorage.removeItem('email')
+        set({
+            token: null,
+            role: null,
+            nom: null,
+            email: null,
+            isAuthenticated: false,
+        })
     },
 }))
 

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import PrivateRoute from './components/PrivateRoute'
@@ -46,7 +46,16 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 }
 
 function Dashboard() {
-    const [onglet, setOnglet] = useState<'quiz' | 'examens'>('quiz')
+    const [searchParams] = useSearchParams()
+    const tabParam = searchParams.get('tab')
+    const [onglet, setOnglet] = useState<'quiz' | 'examens'>(() =>
+        tabParam === 'examens' ? 'examens' : 'quiz',
+    )
+
+    useEffect(() => {
+        if (tabParam === 'examens') setOnglet('examens')
+        if (tabParam === 'quiz') setOnglet('quiz')
+    }, [tabParam])
 
     /** Même style typographique que l’ancien titre « Mes quiz » : serif, pas de fond. */
     const filtreBtn = (actif: boolean): CSSProperties => ({
@@ -212,17 +221,18 @@ export default function App() {
                 } />
                 <Route path="/supervision/examen/:examenId" element={
                     <PrivateRoute allowedRoles={['PROFESSEUR']}>
-                        <div
-                            style={{
-                                minHeight: '100vh',
-                                width: '100%',
-                                background: '#f8fafc',
-                                padding: 'clamp(1rem, 3vw, 2rem)',
-                                boxSizing: 'border-box',
-                            }}
-                        >
-                            <ExamenSupervisionPage />
-                        </div>
+                        <DashboardLayout>
+                            <div
+                                style={{
+                                    width: '100%',
+                                    maxWidth: 1040,
+                                    margin: '0 auto',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                <ExamenSupervisionPage accentBleu={bleuTest} />
+                            </div>
+                        </DashboardLayout>
                     </PrivateRoute>
                 } />
             </Routes>

@@ -131,7 +131,6 @@ namespace smartest_desktop.Views
             int total = snap.Value<int?>("totalQuestions") ?? snap.Value<int?>("TotalQuestions") ?? 0;
             int temps = snap.Value<int?>("tempsRestantMinutes") ?? snap.Value<int?>("TempsRestantMinutes") ?? 0;
 
-            TxtEtat.Text = LibelleEtat(etat);
             if (total > 0)
                 TxtQuestion.Text = $"Question {Math.Min(qIdx + 1, total)} / {total}";
             else
@@ -172,19 +171,6 @@ namespace smartest_desktop.Views
             BtnTerminer.IsEnabled = !termine;
         }
 
-        private static string LibelleEtat(string etat)
-        {
-            return etat switch
-            {
-                "PLANIFIE" => "Planifié — en attente du démarrage",
-                "EN_COURS" => "En cours",
-                "EN_PAUSE" => "En pause",
-                "TERMINE" => "Terminé",
-                "ARRETE" => "Arrêté",
-                _ => string.IsNullOrEmpty(etat) ? "—" : etat,
-            };
-        }
-
         private void AfficherErreur(string message)
         {
             TxtErreur.Text = message;
@@ -219,7 +205,7 @@ namespace smartest_desktop.Views
 
         private void OpenSupervisionWebInBrowser()
         {
-            string url = $"{WebFrontendBaseUrl.TrimEnd('/')}/supervision/examen/{_examenId}";
+            string url = $"{WebFrontendBaseUrl.TrimEnd('/')}/supervision/examen/{_examenId}?started=1";
             try
             {
                 Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });

@@ -11,8 +11,8 @@ using System.Windows;
 using System.Windows.Input;
 using Newtonsoft.Json;
 using smartest_desktop.Exceptions;
-using smartest_desktop.Views;
 using WpfApp = System.Windows.Application;
+using System.Diagnostics;
 
 namespace smartest_desktop.ViewModels
 {
@@ -772,12 +772,25 @@ namespace smartest_desktop.ViewModels
                 return;
             }
 
-            string titre = string.IsNullOrWhiteSpace(row.TitreAffiche) ? examen.Titre ?? "" : row.TitreAffiche;
-            var dlg = new ExamenSupervisionDialog(examen.BackendId.Value, titre)
+            string url = $"http://localhost:5173/supervision/examen/{examen.BackendId.Value}";
+            try
             {
-                Owner = WpfApp.Current.MainWindow,
-            };
-            dlg.ShowDialog();
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Impossible d'ouvrir automatiquement la supervision web.\n\n" +
+                    $"Ouvrez manuellement cette adresse :\n{url}\n\n({ex.Message})",
+                    "Supervision",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+
             await ChargerDonneesAsync();
         }
 

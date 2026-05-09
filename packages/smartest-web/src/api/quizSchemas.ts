@@ -94,30 +94,34 @@ export const examenListeSchema = z.array(examenListeItemSchema)
 
 export type ExamenListeItem = z.infer<typeof examenListeItemSchema>
 
+/** Champs souvent null côté Jackson (chaînes) — sans .nullish() le parse Zod échoue et le WS est ignoré. */
+const questionCouranteSnapshotPart = z
+    .object({
+        id: z.number().nullish(),
+        numero: z.number().nullish(),
+        enonce: z.string().nullish(),
+        type: z.string().nullish(),
+        reponses: z
+            .array(
+                z.object({
+                    id: z.number().nullish(),
+                    contenu: z.string().nullish(),
+                }),
+            )
+            .nullish(),
+    })
+    .passthrough()
+
 export const examenSnapshotSchema = z.object({
     examenId: z.number(),
+    /** Souvent fourni avec le snapshot supervision (libellé côté serveur même si métadonnée absente). */
+    titre: z.string().nullable().optional(),
     etat: z.string(),
     enPause: z.boolean().optional(),
     questionCouranteIndex: z.number().optional(),
     totalQuestions: z.number().optional(),
-    questionCourante: z
-        .object({
-            id: z.number().optional(),
-            numero: z.number().optional(),
-            enonce: z.string().optional(),
-            type: z.string().optional(),
-            reponses: z
-                .array(
-                    z.object({
-                        id: z.number().optional(),
-                        contenu: z.string().optional(),
-                    }),
-                )
-                .optional(),
-        })
-        .nullable()
-        .optional(),
-    tempsRestantMinutes: z.number().optional(),
+    questionCourante: questionCouranteSnapshotPart.nullish(),
+    tempsRestantMinutes: z.number().nullish(),
     baremeSur20: z.number().optional(),
     participantsEnAttente: z.number().optional(),
     resultatsEnAttente: z.number().optional(),
@@ -136,8 +140,8 @@ export const examenQuestionStateSchema = z.object({
     enPause: z.boolean(),
     totalQuestions: z.number(),
     questionCouranteIndex: z.number().nullable().optional(),
-    questionCourante: examenSnapshotSchema.shape.questionCourante,
-    tempsRestantMinutes: z.number(),
+    questionCourante: questionCouranteSnapshotPart.nullish(),
+    tempsRestantMinutes: z.number().nullish(),
 })
 
 export function mapQuestionStateToSnapshot(raw: unknown): ExamenSnapshot | null {
@@ -150,7 +154,7 @@ export function mapQuestionStateToSnapshot(raw: unknown): ExamenSnapshot | null 
         enPause: q.enPause,
         questionCouranteIndex: q.questionCouranteIndex ?? undefined,
         totalQuestions: q.totalQuestions,
-        questionCourante: q.questionCourante === undefined ? undefined : q.questionCourante,
-        tempsRestantMinutes: q.tempsRestantMinutes,
+        questionCourante: q.questionCourante === undefined || q.questionCourante === null ? undefined : q.questionCourante,
+        tempsRestantMinutes: q.tempsRestantMinutes ?? undefined,
     }
 }

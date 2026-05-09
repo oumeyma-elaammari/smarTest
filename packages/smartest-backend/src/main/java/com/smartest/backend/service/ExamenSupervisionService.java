@@ -43,7 +43,7 @@ public class ExamenSupervisionService {
         this.examenPublieRepository = examenPublieRepository;
     }
 
-    /** Bloque rejoindre / contrôle tant que l'heure de début (créneau) n'est pas atteinte côté serveur. */
+    /** Bloque la salle d’attente étudiant tant que le créneau de début n’est pas atteint côté serveur. */
     private void verifierCreneauExamenAtteint(Long examenPublieId) {
         ExamenPublie exam = examenPublieRepository.findById(examenPublieId).orElse(null);
         if (exam == null || exam.getDateDebut() == null) {
@@ -123,22 +123,28 @@ public class ExamenSupervisionService {
         return new WaitingRoomResponse(examenId, state.phase, attendees, attendees.size());
     }
 
-    public ExamQuestionStateResponse getQuestionCouranteEtudiant(Long examenId, Long etudiantId) {
+    /**
+     * @param emailEtudiantConnecte email du compte (JWT), pour enregistrer implicitement la présence
+     *                                si la session est déjà démarrée et que l'étudiant n'a pas encore
+     *                                eu le temps d'appeler {@code rejoindre} (course au lancement prof).
+     */
+    public ExamQuestionStateResponse getQuestionCouranteEtudiant(Long examenId, Long etudiantId, String emailEtudiantConnecte) {
         mergeEmailsFromDatabase(examenId);
         ExamenRuntimeState state = getState(examenId);
         if (etudiantId == null || etudiantId <= 0) {
             throw new IllegalArgumentException("Étudiant invalide.");
         }
-        if (!state.waitingRoom.containsKey(etudiantId)) {
+
+        boolean inRoom = state.waitingRoom.containsKey(etudiantId);
+        if (!inRoom && ("EN_COURS".equals(state.phase) || "EN_PAUSE".equals(state.phase))) {
+            rejoindreImplicitementPourSessionEnCours(examenId, etudiantId, emailEtudiantConnecte, state);
+            inRoom = state.waitingRoom.containsKey(etudiantId);
+        }
+
+        if (!inRoom) {
             /*
-             * Avant inscription à la salle d'attente : l'étudiant autorisé peut consulter l'état
-             * (PLANIFIE, fin de session…) sans contenu de question. Dès que la session est EN_COURS
-             * ou en pause, il doit avoir rejoint la salle pour recevoir les questions.
+             * PLANIFIE / TERMINE : pas de contenu tant que pas inscrit en salle (sauf méta via total).
              */
-            if ("EN_COURS".equals(state.phase) || "EN_PAUSE".equals(state.phase)) {
-                throw new IllegalArgumentException(
-                        "Rejoignez la salle d'attente sur la page de l'examen pour participer.");
-            }
             ExamenPublie examSansRoom = chargerExamen(examenId);
             int totalSansRoom = examSansRoom.getQuestions() == null ? 0 : examSansRoom.getQuestions().size();
             return new ExamQuestionStateResponse(
@@ -173,6 +179,27 @@ public class ExamenSupervisionService {
                 questionPayload,
                 state.remainingMinutes
         );
+    }
+
+    /**
+     * Même règle d’emails que {@link #rejoindreSalleAttente} ; pas de blocage créneau ici car
+     * {@code getMetadataPourEtudiant} a déjà validé l’accès avant l’appel contrôleur.
+     */
+    private void rejoindreImplicitementPourSessionEnCours(
+            Long examenId,
+            Long etudiantId,
+            String emailBrut,
+            ExamenRuntimeState state) {
+        if (emailBrut == null || emailBrut.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Rejoignez la salle d’attente sur la page de l’examen pour participer.");
+        }
+        String normalized = normalizeEmail(emailBrut);
+        if (!state.allowedEmails.isEmpty() && (normalized.isEmpty() || !state.allowedEmails.contains(normalized))) {
+            throw new IllegalArgumentException("Vous n'êtes pas autorisé à rejoindre cet examen.");
+        }
+        state.waitingRoom.put(etudiantId, new StudentPresence(etudiantId, emailBrut.trim(), LocalDateTime.now()));
+        publish(examenId, "salle-attente", getSalleAttente(examenId));
     }
 
     public Map<String, Object> enregistrerReponseEtudiant(Long examenId, Long etudiantId, Long questionId, Long reponseId) {
@@ -274,7 +301,8 @@ public class ExamenSupervisionService {
     }
 
     public SnapshotResponse lancer(Long examenId) {
-        verifierCreneauExamenAtteint(examenId);
+        /* Pas de vérif créneau : le prof ouvre la session quand il veut ; les étudiants restent bloqués
+         * à rejoindre tant que verifierCreneauExamenAtteint n’est pas OK (rejoindreSalleAttente). */
         ExamenRuntimeState state = getState(examenId);
         ensurePhase(state, "PLANIFIE", "EN_PAUSE");
         ExamenPublie exam = chargerExamen(examenId);
@@ -472,6 +500,7 @@ public class ExamenSupervisionService {
 
         return new SnapshotResponse(
                 examenId,
+                exam.getTitre(),
                 state.phase,
                 state.paused,
                 state.currentQuestionIndex,
@@ -624,7 +653,11 @@ public class ExamenSupervisionService {
         qc.put("numero", idx + 1);
         qc.put("enonce", question.getEnonce());
         qc.put("type", question.getType() == null ? null : question.getType().name());
-        qc.put("reponses", question.getReponses()
+        List<Reponse> reponsesQuestion = question.getReponses();
+        if (reponsesQuestion == null) {
+            reponsesQuestion = List.of();
+        }
+        qc.put("reponses", reponsesQuestion
                 .stream()
                 .map(r -> {
                     Map<String, Object> rp = new LinkedHashMap<>();
@@ -679,6 +712,7 @@ public class ExamenSupervisionService {
 
     public record SnapshotResponse(
             Long examenId,
+            String titre,
             String etat,
             boolean enPause,
             int questionCouranteIndex,
