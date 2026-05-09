@@ -43,7 +43,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("✅ Charge un professeur correctement")
     void loadUserByUsername_Professeur() {
-        when(professeurRepository.findByEmail("ikram@ensa.ma"))
+        when(professeurRepository.findByEmailIgnoreCase("ikram@ensa.ma"))
             .thenReturn(Optional.of(professeur));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername("ikram@ensa.ma");
@@ -57,7 +57,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("✅ Charge un étudiant correctement")
     void loadUserByUsername_Etudiant() {
-        when(professeurRepository.findByEmail("nissrine@ump.ac.ma"))
+        when(professeurRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma"))
             .thenReturn(Optional.empty());
         when(etudiantRepository.findByEmail("nissrine@ump.ac.ma"))
             .thenReturn(Optional.of(etudiant));
@@ -73,7 +73,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("❌ Lève UsernameNotFoundException si email inconnu")
     void loadUserByUsername_UserNotFound() {
-        when(professeurRepository.findByEmail("inconnu@mail.com"))
+        when(professeurRepository.findByEmailIgnoreCase("inconnu@mail.com"))
             .thenReturn(Optional.empty());
         when(etudiantRepository.findByEmail("inconnu@mail.com"))
             .thenReturn(Optional.empty());
@@ -86,7 +86,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("✅ Professeur trouvé avant l'étudiant")
     void loadUserByUsername_ProfesseurBeforeEtudiant() {
-        when(professeurRepository.findByEmail("ikram@ensa.ma"))
+        when(professeurRepository.findByEmailIgnoreCase("ikram@ensa.ma"))
             .thenReturn(Optional.of(professeur));
 
         userDetailsService.loadUserByUsername("ikram@ensa.ma");

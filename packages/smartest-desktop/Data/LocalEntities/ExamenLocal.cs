@@ -30,7 +30,7 @@ namespace smartest_desktop.Data.LocalEntities
 
         /// <summary>
         /// ID de l'examen côté backend après publication.
-        /// Seules les MÉTADONNÉES sont envoyées — questions restent en local.
+        /// Les questions QCM (énoncé + options) sont synchronisées avec le serveur lors du « Publier sur le web ».
         /// null = pas encore publié.
         /// </summary>
         public long? BackendId { get; set; }

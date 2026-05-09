@@ -54,8 +54,8 @@ public class ExamenPublie {
     // ✅ Relation avec Question
     @ManyToMany
     @JoinTable(
-            name = "examen_question",
-            joinColumns = @JoinColumn(name = "examen_id"),
+            name = "examen_publie_question",
+            joinColumns = @JoinColumn(name = "examen_publie_id"),
             inverseJoinColumns = @JoinColumn(name = "question_id")
     )
     private List<Question> questions = new ArrayList<>();

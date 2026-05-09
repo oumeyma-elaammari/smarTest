@@ -730,12 +730,22 @@ namespace smartest_desktop.ViewModels
                         token, profId, titreEx, examen.Duree, desc, debut, fin);
                 }
 
+                var examContenu = await _examenService.GetByIdAsync(examen.Id);
+                var qs = examContenu?.Questions ?? new List<QuestionLocale>();
+                await api.SynchroniserQuestionsPublicationWebAsync(token, backendId, qs);
+
                 await api.DefinirEmailsAutorisesAsync(token, backendId, emails);
                 string json = JsonConvert.SerializeObject(emails);
                 await _examenService.MettreAJourPublicationWebLocaleAsync(examen.Id, backendId, json, "PUBLIE");
                 await ChargerDonneesAsync();
+                var syncCount = qs
+                    .Where(q => !string.IsNullOrWhiteSpace(q.Enonce)
+                        && new[] { q.OptionA, q.OptionB, q.OptionC, q.OptionD }.Count(s => !string.IsNullOrWhiteSpace(s)) >= 2)
+                    .Count();
                 MessageBox.Show(
-                    "L'examen a été publié sur le web. Les étudiants listés verront l'épreuve à partir de la date prévue.",
+                    syncCount > 0
+                        ? $"L'examen a été publié sur le web.\n\n{syncCount} question(s) avec propositions ont été enregistrées sur le serveur (supervision et passage élèves).\n\nSi la supervision web affichait « Aucune question », rouvrez-la après cette publication."
+                        : "L'examen a été publié sur le web. Les étudiants listés verront l'épreuve à partir de la date prévue.",
                     "Publication web",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);

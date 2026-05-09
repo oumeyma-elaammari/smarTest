@@ -31,4 +31,8 @@ public interface ExamenPublieRepository extends JpaRepository<ExamenPublie, Long
             LocalDateTime now1,
             LocalDateTime now2
     );
+
+    /** Compte fiable sans charger la collection (open-in-view désactivé) ; table Flyway {@code examen_publie_question}. */
+    @Query(value = "SELECT COUNT(*) FROM examen_publie_question WHERE examen_publie_id = :examId", nativeQuery = true)
+    long countLinkedQuestions(@Param("examId") Long examId);
 }

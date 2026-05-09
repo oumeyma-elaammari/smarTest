@@ -506,6 +506,7 @@ public class ExamenSupervisionService {
                 state.currentQuestionIndex,
                 totalQuestions,
                 buildQuestionPayload(exam, idx),
+                buildPlanQuestionsLight(exam),
                 state.remainingMinutes,
                 state.baremeSur20,
                 state.waitingRoom.size(),
@@ -669,6 +670,28 @@ public class ExamenSupervisionService {
         return qc;
     }
 
+    /** Plan complet pour la supervision (énoncés + type, sans les choix — ceux-ci sont sur {@link #buildQuestionPayload}). */
+    private List<Map<String, Object>> buildPlanQuestionsLight(ExamenPublie exam) {
+        if (exam.getQuestions() == null || exam.getQuestions().isEmpty()) {
+            return List.of();
+        }
+        List<Map<String, Object>> plan = new ArrayList<>();
+        int i = 0;
+        for (Question q : exam.getQuestions()) {
+            if (q == null) {
+                continue;
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", q.getId());
+            row.put("numero", i + 1);
+            row.put("enonce", q.getEnonce());
+            row.put("type", q.getType() == null ? null : q.getType().name());
+            plan.add(row);
+            i++;
+        }
+        return plan;
+    }
+
     private static final class ExamenRuntimeState {
         private String phase = "PLANIFIE";
         private boolean paused = false;
@@ -718,6 +741,7 @@ public class ExamenSupervisionService {
             int questionCouranteIndex,
             int totalQuestions,
             Map<String, Object> questionCourante,
+            List<Map<String, Object>> planQuestions,
             int tempsRestantMinutes,
             double baremeSur20,
             int participantsEnAttente,

@@ -1,7 +1,9 @@
 package com.smartest.backend.controller;
 
+import com.smartest.backend.dto.request.PublicationExamenQuestionsRequest;
 import com.smartest.backend.dto.request.ValiderResultatExamenRequest;
 import com.smartest.backend.dto.response.ExamenPublieMetadataResponse;
+import com.smartest.backend.dto.response.MessageResponse;
 import com.smartest.backend.entity.Etudiant;
 import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.entity.Professeur;
@@ -12,6 +14,7 @@ import com.smartest.backend.service.ExamenPublieService;
 import com.smartest.backend.service.ExamenSupervisionService;
 import com.smartest.backend.service.ExamenSupervisionService.NoteDraft;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -71,7 +74,7 @@ public class ExamenPublieController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
         String email = normalize(userDetails.getUsername());
-        if (professeurRepository.findByEmail(email).isPresent()) {
+        if (professeurRepository.findByEmailIgnoreCase(email).isPresent()) {
             return ResponseEntity.ok(examenPublieService.getMetadataPourProfesseur(id, email));
         }
         return ResponseEntity.ok(examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername()));
@@ -87,6 +90,18 @@ public class ExamenPublieController {
         assertProfOwnsExamenByEmail(id, userDetails.getUsername());
         Map<String, Object> body = supervisionService.definirEmailsAutorises(id, emails);
         return ResponseEntity.ok(body);
+    }
+
+    /** Synchronise le contenu QCM (comme le quiz web) : indispensable pour la supervision et le passage étudiant. */
+    @PostMapping("/{id}/publication-web/questions")
+    public ResponseEntity<MessageResponse> synchroniserQuestionsPublicationWeb(
+            @PathVariable Long id,
+            @Valid @RequestBody PublicationExamenQuestionsRequest body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        examenPublieService.synchroniserQuestionsPublicationWeb(
+                id, userDetails.getUsername(), body.getQuestions());
+        return ResponseEntity.ok(new MessageResponse("Questions de l'examen enregistrées sur le serveur.", true, 200));
     }
 
     // --- Salle d'attente & passage étudiant ---
@@ -116,7 +131,7 @@ public class ExamenPublieController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
         String email = normalize(userDetails.getUsername());
-        if (professeurRepository.findByEmail(email).isPresent()) {
+        if (professeurRepository.findByEmailIgnoreCase(email).isPresent()) {
             assertProfOwnsExamenByEmail(id, email);
         } else {
             examenPublieService.getMetadataPourEtudiant(id, email);
@@ -309,13 +324,15 @@ public class ExamenPublieController {
         ExamenPublie ex = examenPublieRepository.findById(examenId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (ex.getProfesseur() == null || !ex.getProfesseur().getId().equals(professeurId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Cet examen n'appartient pas à votre compte professeur.");
         }
     }
 
     private void assertProfOwnsExamenByEmail(Long examenId, String emailProf) {
-        Professeur prof = professeurRepository.findByEmail(normalize(emailProf))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
+        Professeur prof = professeurRepository.findByEmailIgnoreCase(normalize(emailProf))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Compte professeur introuvable ou identité incompatible avec cette session."));
         assertProfOwnsExamen(examenId, prof.getId());
     }
 }

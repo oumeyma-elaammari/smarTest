@@ -97,37 +97,50 @@ export type ExamenListeItem = z.infer<typeof examenListeItemSchema>
 /** Champs souvent null côté Jackson (chaînes) — sans .nullish() le parse Zod échoue et le WS est ignoré. */
 const questionCouranteSnapshotPart = z
     .object({
-        id: z.number().nullish(),
-        numero: z.number().nullish(),
+        id: z.coerce.number().nullish(),
+        numero: z.coerce.number().nullish(),
         enonce: z.string().nullish(),
         type: z.string().nullish(),
         reponses: z
             .array(
-                z.object({
-                    id: z.number().nullish(),
-                    contenu: z.string().nullish(),
-                }),
+                z
+                    .object({
+                        id: z.coerce.number().nullish(),
+                        contenu: z.string().nullish(),
+                    })
+                    .passthrough(),
             )
             .nullish(),
     })
     .passthrough()
 
+const planQuestionRowSchema = z
+    .object({
+        id: z.coerce.number().nullish(),
+        numero: z.coerce.number().nullish(),
+        enonce: z.string().nullish(),
+        type: z.string().nullish(),
+    })
+    .passthrough()
+
 export const examenSnapshotSchema = z.object({
-    examenId: z.number(),
+    examenId: z.coerce.number(),
     /** Souvent fourni avec le snapshot supervision (libellé côté serveur même si métadonnée absente). */
     titre: z.string().nullable().optional(),
     etat: z.string(),
-    enPause: z.boolean().optional(),
-    questionCouranteIndex: z.number().optional(),
-    totalQuestions: z.number().optional(),
+    enPause: z.boolean().optional().default(false),
+    questionCouranteIndex: z.number().nullable().optional(),
+    totalQuestions: z.coerce.number().optional(),
     questionCourante: questionCouranteSnapshotPart.nullish(),
+    /** Ordre et énoncés de toute l’épreuve (supervision prof). */
+    planQuestions: z.array(planQuestionRowSchema).optional(),
     tempsRestantMinutes: z.number().nullish(),
-    baremeSur20: z.number().optional(),
-    participantsEnAttente: z.number().optional(),
-    resultatsEnAttente: z.number().optional(),
-    resultatsValides: z.number().optional(),
+    baremeSur20: z.coerce.number().optional(),
+    participantsEnAttente: z.coerce.number().optional(),
+    resultatsEnAttente: z.coerce.number().optional(),
+    resultatsValides: z.coerce.number().optional(),
     advanceMode: z.string().optional(),
-    questionDurationSeconds: z.number().optional(),
+    questionDurationSeconds: z.coerce.number().optional(),
 })
 
 export type ExamenMeta = z.infer<typeof examenMetaSchema>
@@ -135,10 +148,11 @@ export type ExamenSnapshot = z.infer<typeof examenSnapshotSchema>
 
 /** Réponse GET `/passage/question-courante` (étudiant). */
 export const examenQuestionStateSchema = z.object({
-    examenId: z.number(),
+    examenId: z.coerce.number(),
     etat: z.string(),
-    enPause: z.boolean(),
-    totalQuestions: z.number(),
+    /** Jackson peut omettre les booléens false selon la config ; le polling étudiant ne doit pas casser. */
+    enPause: z.boolean().optional().default(false),
+    totalQuestions: z.coerce.number(),
     questionCouranteIndex: z.number().nullable().optional(),
     questionCourante: questionCouranteSnapshotPart.nullish(),
     tempsRestantMinutes: z.number().nullish(),

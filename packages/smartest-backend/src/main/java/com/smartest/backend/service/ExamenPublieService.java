@@ -1,5 +1,6 @@
 package com.smartest.backend.service;
 
+import com.smartest.backend.dto.request.PublicationWebQuestionRequest;
 import com.smartest.backend.dto.response.ExamenPublieMetadataResponse;
 import com.smartest.backend.entity.*;
 import com.smartest.backend.entity.enumeration.StatutExamen;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -22,6 +24,7 @@ public class ExamenPublieService {
 
     private final ExamenPublieRepository examenPublieRepository;
     private final ProfesseurRepository professeurRepository;
+    private final QuestionRepository questionRepository;
 
     private static final double BAREME_DEFAUT_WEB = 20.0;
 
@@ -31,7 +34,7 @@ public class ExamenPublieService {
             return List.of();
         }
         String email = emailUtilisateur.trim().toLowerCase(Locale.ROOT);
-        Optional<Professeur> prof = professeurRepository.findByEmail(email);
+        Optional<Professeur> prof = professeurRepository.findByEmailIgnoreCase(email);
         if (prof.isPresent()) {
             return examenPublieRepository.findPublieWebParProfesseur(prof.get().getId()).stream()
                     .map(this::toMetadata)
@@ -57,7 +60,7 @@ public class ExamenPublieService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email requis");
         }
         String email = emailProf.trim().toLowerCase(Locale.ROOT);
-        Professeur prof = professeurRepository.findByEmail(email)
+        Professeur prof = professeurRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès réservé aux professeurs"));
         ExamenPublie ex = examenPublieRepository.findById(examenId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Examen introuvable"));
@@ -93,6 +96,40 @@ public class ExamenPublieService {
         examenPublieRepository.save(ex);
     }
 
+    /**
+     * Envoie depuis le bureau le contenu de l'examen : crée les questions côté serveur et rattache à
+     * l'{@link ExamenPublie} (même modèle que la publication web du quiz).
+     */
+    @Transactional
+    public void synchroniserQuestionsPublicationWeb(
+            Long examenId,
+            String emailProfesseur,
+            List<PublicationWebQuestionRequest> questionsBrutes) {
+        if (questionsBrutes == null || questionsBrutes.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Au moins une question est requise pour publier le contenu de l'examen web.");
+        }
+        String email = emailProfesseur.trim().toLowerCase(Locale.ROOT);
+        Professeur prof = professeurRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Professeur introuvable"));
+        ExamenPublie ex = examenPublieRepository.findById(examenId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Examen introuvable"));
+        if (ex.getProfesseur() == null || !ex.getProfesseur().getId().equals(prof.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cet examen n'appartient pas à votre compte");
+        }
+
+        List<Question> nouvelles = new ArrayList<>();
+        for (PublicationWebQuestionRequest q : questionsBrutes) {
+            nouvelles.add(questionRepository.save(PublicationWebQuestionFactory.creerDepuisPublication(q, prof)));
+        }
+        if (ex.getQuestions() == null) {
+            ex.setQuestions(new ArrayList<>());
+        }
+        ex.getQuestions().clear();
+        ex.getQuestions().addAll(nouvelles);
+        examenPublieRepository.saveAndFlush(ex);
+    }
+
     private void verifierEmailAutorisePourExamen(ExamenPublie ex, String emailEtudiant) {
         if (emailEtudiant == null || emailEtudiant.isBlank()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email requis");
@@ -114,7 +151,8 @@ public class ExamenPublieService {
     }
 
     private ExamenPublieMetadataResponse toMetadata(ExamenPublie ex) {
-        int totalQuestions = ex.getQuestions() == null ? 0 : ex.getQuestions().size();
+        long n = examenPublieRepository.countLinkedQuestions(ex.getId());
+        int totalQuestions = n > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) n;
         String nomProf = ex.getProfesseur() != null && ex.getProfesseur().getNom() != null
                 ? ex.getProfesseur().getNom()
                 : null;

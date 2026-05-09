@@ -335,8 +335,9 @@ export default function ExamenPassageWeb() {
     const debutMsAffichage = parseDebutExamenMs(meta?.dateDebut)
     const creneauAtteint = debutMsAffichage == null || Date.now() >= debutMsAffichage
 
-    const canStart = snap?.etat === 'EN_COURS'
-    const enPause = snap?.etat === 'EN_PAUSE'
+    const phaseSession = (snap?.etat ?? '').trim().toUpperCase()
+    const canStart = phaseSession === 'EN_COURS'
+    const enPause = phaseSession === 'EN_PAUSE'
     const sessionTerminee = (snap?.etat ?? '').toUpperCase() === 'TERMINE'
     const etat = snap?.etat ?? meta?.statut ?? 'PLANIFIE'
     const etudiantId = readEtudiantId()
@@ -541,12 +542,13 @@ export default function ExamenPassageWeb() {
                 </>
             ) : canStart ? (
                 <p style={{ margin: 0, color: '#64748b', lineHeight: 1.5 }}>
-                    Le professeur n’a pas encore activé de question.
+                    En attente du contenu de la question… Si cela dure, vérifiez votre connexion. Le professeur pilote l’épreuve
+                    : une seule question à la fois s’affiche pour toute la classe, comme un quiz guidé.
                 </p>
             ) : (
                 <p style={{ margin: 0, color: '#64748b', lineHeight: 1.5 }}>
-                    Les questions apparaîtront dès que le professeur lance l’examen ; vous suivrez alors la même question
-                    que tout le monde, en temps réel.
+                    Les questions apparaîtront une par une dès que le professeur lance l’examen ; la question affichée est la même
+                    pour tout le monde, contrôlée par le professeur.
                 </p>
             )}
         </>

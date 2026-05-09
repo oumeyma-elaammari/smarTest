@@ -136,6 +136,17 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         if (trimmed.length === 0 && prev?.titre != null) {
             merged.titre = prev.titre
         }
+        const idxIn = incoming.questionCouranteIndex
+        const idxPrev = prev?.questionCouranteIndex
+        const sameQuestion =
+            idxIn === undefined ? true : idxPrev === undefined ? true : idxIn === idxPrev
+        if (
+            (incoming.questionCourante === undefined || incoming.questionCourante === null) &&
+            prev?.questionCourante != null &&
+            sameQuestion
+        ) {
+            merged.questionCourante = prev.questionCourante
+        }
         return merged
     }, [])
 
@@ -298,6 +309,12 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const peutReprendre = etat === 'EN_PAUSE'
     const peutTerminer = etat !== 'TERMINE' && etat !== 'ARRETE'
     const questionPills = totalQuestions > 0 ? Array.from({ length: totalQuestions }, (_, i) => i + 1) : []
+
+    const questionCouranteBloc = snap?.questionCourante as
+        | { id?: number; enonce?: string; reponses?: Array<{ id?: number; contenu?: string }> }
+        | undefined
+    const reponsesPilotage = Array.isArray(questionCouranteBloc?.reponses) ? questionCouranteBloc.reponses : []
+    const planListe = snap?.planQuestions ?? []
 
     const feedbackBanner =
         feedbackTone === 'success'
@@ -701,13 +718,9 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
             </section>
 
             <section style={shellCard} aria-labelledby="supervision-questions-heading">
-                <h2 id="supervision-questions-heading" style={{ marginTop: 0, marginBottom: 10, fontFamily: serif, fontWeight: 550, fontSize: '1.08rem' }}>
+                <h2 id="supervision-questions-heading" style={{ marginTop: 0, marginBottom: 12, fontFamily: serif, fontWeight: 550, fontSize: '1.08rem' }}>
                     Supervision question par question
                 </h2>
-                <p style={{ marginTop: 0, color: '#64748b', fontSize: 13, lineHeight: 1.55, marginBottom: 12 }}>
-                    Le pilotage avance question par question comme côté étudiant. La carte ci-dessous reflète exactement ce que les élèves
-                    voient pour la diffusion en cours.
-                </p>
                 <div
                     style={{
                         background: `#f4f7fc`,
@@ -719,15 +732,109 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     }}
                 >
                     <div style={{ color: accentBleu, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
-                        Question active
+                        Question active (copie écran élève)
                     </div>
                     <div style={{ fontWeight: 700, marginBottom: 8, fontSize: '1rem', color: '#0f1e3d' }}>
                         {totalQuestions > 0 ? `Question ${questionNumero} / ${totalQuestions}` : 'Aucune question disponible'}
                     </div>
-                    <div style={{ color: '#334155', lineHeight: 1.58, fontSize: 14 }}>
-                        {snap?.questionCourante?.enonce?.trim() || 'L’énoncé de la question active sera affiché ici lorsque la session est en cours.'}
+                    <div style={{ color: '#334155', lineHeight: 1.58, fontSize: 14, whiteSpace: 'pre-wrap' }}>
+                        {questionCouranteBloc?.enonce?.trim() ||
+                            (totalQuestions <= 0
+                                ? 'Aucune question liée à cet examen sur le serveur. Depuis SmarTest bureau : fermez puis rouvrez l’application si besoin, cliquez à nouveau « Publier sur le web » pour ré-envoyer les QCM (messages de confirmation avec le nombre de questions), puis actualisez cette page. Conditions : au moins 2 réponses renseignées parmi les options A–D par question. Si la situation continue, vérifiez que le backend a bien exécuté la migration Flyway (table examen_publie_question).'
+                                : estEnCours || etat === 'EN_PAUSE'
+                                  ? 'Contenu non chargé ou indisponible pour cet index.'
+                                  : 'Lancez la session (« En cours ») pour voir l’énoncé et les propositions exactement comme les étudiants.')}
                     </div>
+                    {reponsesPilotage.length > 0 ? (
+                        <div style={{ marginTop: 14 }}>
+                            <div
+                                style={{
+                                    color: '#475569',
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    letterSpacing: '0.05em',
+                                    textTransform: 'uppercase',
+                                    marginBottom: 8,
+                                }}
+                            >
+                                Propositions
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: 18, color: '#334155', lineHeight: 1.55, fontSize: 14 }}>
+                                {reponsesPilotage.map((r, idx) => (
+                                    <li key={typeof r.id === 'number' ? r.id : `p-${idx}`} style={{ marginBottom: 6 }}>
+                                        {r.contenu?.trim() || '—'}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ) : null}
                 </div>
+                {planListe.length > 0 ? (
+                    <details
+                        style={{
+                            border: '1px solid #e2e8f4',
+                            borderRadius: 10,
+                            marginBottom: 14,
+                            boxSizing: 'border-box',
+                            background: '#fff',
+                        }}
+                    >
+                        <summary
+                            style={{
+                                cursor: 'pointer',
+                                padding: '12px 14px',
+                                fontWeight: 600,
+                                fontSize: 13,
+                                color: '#475569',
+                                listStyle: 'none',
+                            }}
+                        >
+                            Vue d’ensemble du sujet ({planListe.length} question{planListe.length > 1 ? 's' : ''}) — optionnel
+                        </summary>
+                        <div
+                            style={{
+                                padding: '0 12px 12px',
+                                maxHeight: 320,
+                                overflowY: 'auto',
+                                boxSizing: 'border-box',
+                            }}
+                            aria-label="Plan de l’épreuve"
+                        >
+                            <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                {planListe.map((row, idx) => {
+                                    const num = typeof row.numero === 'number' ? row.numero : idx + 1
+                                    const actifPlan = questionNumero > 0 && num === questionNumero
+                                    return (
+                                        <li
+                                            key={typeof row.id === 'number' ? row.id : `plan-${idx}`}
+                                            style={{
+                                                listStylePosition: 'outside',
+                                                borderLeft: actifPlan ? `3px solid ${accentBleu}` : '3px solid transparent',
+                                                paddingLeft: actifPlan ? 10 : 8,
+                                                marginLeft: -4,
+                                                background: actifPlan ? `${accentBleu}0f` : 'transparent',
+                                                borderRadius: 6,
+                                                paddingTop: 4,
+                                                paddingBottom: 4,
+                                            }}
+                                        >
+                                            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                                                Question {num}
+                                                {typeof row.type === 'string' && row.type.trim() ? ` · ${row.type}` : ''}
+                                                {actifPlan ? (
+                                                    <span style={{ color: accentBleu, fontWeight: 700, marginLeft: 6 }}>· en diffusion</span>
+                                                ) : null}
+                                            </div>
+                                            <div style={{ color: '#0f1e3d', fontSize: 14, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
+                                                {typeof row.enonce === 'string' && row.enonce.trim() ? row.enonce : '—'}
+                                            </div>
+                                        </li>
+                                    )
+                                })}
+                            </ol>
+                        </div>
+                    </details>
+                ) : null}
                 {questionPills.length > 0 ? (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }} role="toolbar" aria-label="Aller à une question">
                         {questionPills.map((num) => {

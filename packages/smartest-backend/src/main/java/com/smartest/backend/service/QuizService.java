@@ -4,9 +4,7 @@ import com.smartest.backend.constants.QuizPublicationLimits;
 import com.smartest.backend.dto.request.*;
 import com.smartest.backend.dto.response.*;
 import com.smartest.backend.entity.*;
-import com.smartest.backend.entity.enumeration.Difficulte;
 import com.smartest.backend.entity.enumeration.StatutQuiz;
-import com.smartest.backend.entity.enumeration.TypeQuestion;
 import com.smartest.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -277,7 +275,7 @@ public class QuizService {
 
         Quiz quiz = chargerQuizDuProfesseur(quizId, professeurEmail);
         List<Question> nouvellesQuestions = questionsBrutes.stream()
-                .map(q -> questionRepository.save(construireQuestionDepuisPublication(q, quiz.getProfesseur())))
+                .map(q -> questionRepository.save(PublicationWebQuestionFactory.creerDepuisPublication(q, quiz.getProfesseur())))
                 .toList();
 
         quiz.getQuestions().clear();
@@ -452,43 +450,6 @@ public class QuizService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ce quiz n'appartient pas à votre compte");
         }
         return quiz;
-    }
-
-    private static Question construireQuestionDepuisPublication(PublicationWebQuestionRequest src, Professeur professeur) {
-        Question q = new Question();
-        q.setEnonce(src != null && src.getEnonce() != null ? src.getEnonce().trim() : "");
-        q.setType(TypeQuestion.QCM);
-        q.setDifficulte(parseDifficulte(src != null ? src.getDifficulte() : null));
-        q.setExplication(src != null && src.getExplication() != null ? src.getExplication().trim() : "");
-        q.setProfesseur(professeur);
-
-        String correcte = src != null && src.getReponseCorrecte() != null
-                ? src.getReponseCorrecte().trim().toUpperCase(Locale.ROOT)
-                : "";
-
-        q.getReponses().add(buildReponse(q, src != null ? src.getOptionA() : null, "A".equals(correcte)));
-        q.getReponses().add(buildReponse(q, src != null ? src.getOptionB() : null, "B".equals(correcte)));
-        q.getReponses().add(buildReponse(q, src != null ? src.getOptionC() : null, "C".equals(correcte)));
-        q.getReponses().add(buildReponse(q, src != null ? src.getOptionD() : null, "D".equals(correcte)));
-        return q;
-    }
-
-    private static Reponse buildReponse(Question q, String contenu, boolean correcte) {
-        Reponse r = new Reponse();
-        r.setQuestion(q);
-        r.setContenu(contenu == null ? "" : contenu.trim());
-        r.setCorrecte(correcte);
-        return r;
-    }
-
-    private static Difficulte parseDifficulte(String raw) {
-        if (raw == null || raw.isBlank()) return Difficulte.MOYEN;
-        String n = raw.trim().toUpperCase(Locale.ROOT);
-        return switch (n) {
-            case "FACILE" -> Difficulte.FACILE;
-            case "DIFFICILE" -> Difficulte.DIFFICILE;
-            default -> Difficulte.MOYEN;
-        };
     }
 
     private QuestionPassageWebResponse toQuestionPassageWebDto(Question question) {
