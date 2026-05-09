@@ -138,7 +138,7 @@ namespace smartest_desktop
             try
             {
                 ctx.Database.EnsureCreated();
-                ApplyQuizLocalColumnPatches(ctx);
+                ApplySqliteColumnPatches(ctx);
 
                 // Vérification rapide : on lit une ligne de chaque table critique
                 _ = ctx.SessionsLocales.Count();
@@ -170,7 +170,7 @@ namespace smartest_desktop
 
                 ctx = new LocalDbContext();
                 ctx.Database.EnsureCreated();
-                ApplyQuizLocalColumnPatches(ctx);
+                ApplySqliteColumnPatches(ctx);
             }
 
             return ctx;
@@ -179,34 +179,56 @@ namespace smartest_desktop
         /// <summary>
         /// SQLite : <see cref="DbContext.Database.EnsureCreated"/> ne migre pas les colonnes ajoutées au modèle.
         /// </summary>
-        private static void ApplyQuizLocalColumnPatches(LocalDbContext ctx)
+        private static void ApplySqliteColumnPatches(LocalDbContext ctx)
         {
             var conn = ctx.Database.GetDbConnection();
             var wasOpen = conn.State == ConnectionState.Open;
             if (!wasOpen) conn.Open();
             try
             {
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = "PRAGMA table_info(quiz_local);";
-                var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                using (var r = cmd.ExecuteReader())
+                void PatchTable(string tablePragma, Action<HashSet<string>> addColumns)
                 {
-                    while (r.Read())
-                        existing.Add(r.GetString(1));
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = $"PRAGMA table_info({tablePragma});";
+                    var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                            existing.Add(r.GetString(1));
+                    }
+
+                    addColumns(existing);
                 }
 
-                void AddColumnIfMissing(string columnName, string alterSql)
+                PatchTable("quiz_local", existing =>
                 {
-                    if (existing.Contains(columnName)) return;
-                    using var c = conn.CreateCommand();
-                    c.CommandText = alterSql;
-                    c.ExecuteNonQuery();
-                }
+                    void AddColumnIfMissing(string columnName, string alterSql)
+                    {
+                        if (existing.Contains(columnName)) return;
+                        using var c = conn.CreateCommand();
+                        c.CommandText = alterSql;
+                        c.ExecuteNonQuery();
+                    }
 
-                AddColumnIfMissing("BackendQuizId",
-                    "ALTER TABLE quiz_local ADD COLUMN BackendQuizId INTEGER NULL;");
-                AddColumnIfMissing("EmailsPublicationWebJson",
-                    "ALTER TABLE quiz_local ADD COLUMN EmailsPublicationWebJson TEXT NULL;");
+                    AddColumnIfMissing("BackendQuizId",
+                        "ALTER TABLE quiz_local ADD COLUMN BackendQuizId INTEGER NULL;");
+                    AddColumnIfMissing("EmailsPublicationWebJson",
+                        "ALTER TABLE quiz_local ADD COLUMN EmailsPublicationWebJson TEXT NULL;");
+                });
+
+                PatchTable("examen_local", existing =>
+                {
+                    void AddColumnIfMissing(string columnName, string alterSql)
+                    {
+                        if (existing.Contains(columnName)) return;
+                        using var c = conn.CreateCommand();
+                        c.CommandText = alterSql;
+                        c.ExecuteNonQuery();
+                    }
+
+                    AddColumnIfMissing("EmailsPublicationWebJson",
+                        "ALTER TABLE examen_local ADD COLUMN EmailsPublicationWebJson TEXT NULL;");
+                });
             }
             finally
             {

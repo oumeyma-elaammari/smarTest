@@ -63,5 +63,22 @@ namespace smartest_desktop.Services
                 await _db.SaveChangesAsync();
             }
         }
+
+        public async Task MettreAJourPublicationWebLocaleAsync(
+            int examenLocalId,
+            long? backendId,
+            string emailsPublicationWebJson,
+            string statut)
+        {
+            var examen = await _db.Examens.FindAsync(examenLocalId);
+            if (examen == null)
+                throw new System.InvalidOperationException("Examen introuvable ou déjà supprimé.");
+
+            if (backendId.HasValue)
+                examen.BackendId = backendId.Value;
+            examen.EmailsPublicationWebJson = emailsPublicationWebJson ?? string.Empty;
+            examen.Statut = statut;
+            await _db.SaveChangesAsync();
+        }
     }
 }

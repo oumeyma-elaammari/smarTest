@@ -49,7 +49,13 @@ namespace smartest_desktop.Services
         }
 
         /// <summary>Remplace le contenu (métadonnées + questions) d'un examen déjà enregistré.</summary>
-        public async Task MettreAJourContenuAsync(int examenId, string titre, int duree, List<QuestionExamen> questions)
+        public async Task MettreAJourContenuAsync(
+            int examenId,
+            string titre,
+            int duree,
+            List<QuestionExamen> questions,
+            string? emailsPublicationWebJson = null,
+            DateTime? datePrevue = null)
         {
             var examen = await _db.Examens
                 .Include(e => e.Questions)
@@ -59,6 +65,10 @@ namespace smartest_desktop.Services
 
             examen.Titre = titre;
             examen.Duree = duree;
+            if (emailsPublicationWebJson != null)
+                examen.EmailsPublicationWebJson = emailsPublicationWebJson;
+            if (datePrevue.HasValue)
+                examen.DatePrevue = datePrevue;
 
             var anciennes = examen.Questions.ToList();
             if (anciennes.Count > 0)
@@ -111,6 +121,23 @@ namespace smartest_desktop.Services
                    .Include(e => e.Questions)
                    .OrderByDescending(e => e.DateCreation)
                    .ToList());
+        }
+
+        public async Task MettreAJourPublicationWebLocaleAsync(
+            int examenLocalId,
+            long? backendId,
+            string emailsPublicationWebJson,
+            string statut)
+        {
+            var examen = await _db.Examens.FindAsync(examenLocalId);
+            if (examen == null)
+                throw new InvalidOperationException("Examen introuvable ou déjà supprimé.");
+
+            if (backendId.HasValue)
+                examen.BackendId = backendId.Value;
+            examen.EmailsPublicationWebJson = emailsPublicationWebJson ?? string.Empty;
+            examen.Statut = statut;
+            await _db.SaveChangesAsync();
         }
     }
 }

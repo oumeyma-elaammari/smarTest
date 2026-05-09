@@ -50,6 +50,8 @@ public class SecurityConfig {
                                 "/ws/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata").hasRole("ETUDIANT")
                         .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole("ETUDIANT")
                         .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole("ETUDIANT")
                         .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre").hasRole("ETUDIANT")
@@ -90,7 +92,7 @@ public class SecurityConfig {
 
         // ✅ Autorise React web (localhost:5173) + app desktop WPF (sans Origin header)
         config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(false); // false car desktop n'envoie pas de cookies
 

@@ -159,6 +159,8 @@ namespace smartest_desktop.Data
                 entity.HasMany(e => e.Cours)
                       .WithMany()
                       .UsingEntity(j => j.ToTable("examen_local_cours"));
+
+                entity.Property(e => e.EmailsPublicationWebJson).HasColumnType("TEXT");
             });
 
 

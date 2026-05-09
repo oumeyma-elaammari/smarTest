@@ -35,6 +35,9 @@ namespace smartest_desktop.Data.LocalEntities
         /// </summary>
         public long? BackendId { get; set; }
 
+        /// <summary>JSON : tableau d'emails autorisés pour la publication web (comme pour les quiz).</summary>
+        public string EmailsPublicationWebJson { get; set; }
+
         // ── Relation Many-to-Many avec CoursLocal ────────────────
         public List<CoursLocal> Cours { get; set; } = new();
 

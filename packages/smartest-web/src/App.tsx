@@ -11,9 +11,10 @@ import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import EmailVerification from './pages/EmailVerification'
 import MesQuizWeb from './pages/MesQuizWeb'
+import MesExamensWeb from './pages/MesExamensWeb'
 import QuizPassageWeb from './pages/QuizPassageWeb'
+import ExamenPassageWeb from './pages/ExamenPassageWeb'
 
-const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
 const bleuTest = '#4f8ef7'
 
@@ -131,19 +132,7 @@ function Dashboard() {
                     {onglet === 'quiz' ? (
                         <MesQuizWeb accentBleu={bleuTest} />
                     ) : (
-                        <p
-                            style={{
-                                fontFamily: sans,
-                                color: '#64748b',
-                                margin: 0,
-                                textAlign: 'center',
-                                lineHeight: 1.6,
-                                maxWidth: 520,
-                                alignSelf: 'center',
-                            }}
-                        >
-                            Les examens accessibles depuis le web seront listés ici dans une prochaine version.
-                        </p>
+                        <MesExamensWeb accentBleu={bleuTest} />
                     )}
                 </div>
             </div>
@@ -182,6 +171,40 @@ export default function App() {
                                 }}
                             >
                                 <QuizPassageWeb />
+                            </div>
+                        </DashboardLayout>
+                    </PrivateRoute>
+                } />
+                <Route path="/examen/:examenId" element={
+                    <PrivateRoute>
+                        <DashboardLayout>
+                            <div
+                                style={{
+                                    width: '100%',
+                                    maxWidth: 720,
+                                    margin: '0 auto',
+                                    padding: '1.5rem 1rem 2rem',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                <ExamenPassageWeb />
+                            </div>
+                        </DashboardLayout>
+                    </PrivateRoute>
+                } />
+                <Route path="/examen/:examenId/epreuve" element={
+                    <PrivateRoute>
+                        <DashboardLayout>
+                            <div
+                                style={{
+                                    width: '100%',
+                                    maxWidth: 720,
+                                    margin: '0 auto',
+                                    padding: '1.5rem 1rem 2rem',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                <ExamenPassageWeb />
                             </div>
                         </DashboardLayout>
                     </PrivateRoute>

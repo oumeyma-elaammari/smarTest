@@ -6,7 +6,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter @Setter
@@ -33,6 +35,20 @@ public class ExamenPublie {
     private LocalDateTime dateDebut;
     private LocalDateTime dateFin;
     private LocalDateTime dateCreation;
+
+    /**
+     * Renseigné lorsque le professeur a validé la publication web (liste d’emails) depuis le bureau.
+     * Tant que ce champ est nul, l’examen ne doit pas apparaître côté étudiant web.
+     */
+    private LocalDateTime publieSurWebLe;
+
+    /**
+     * Emails autorisés pour rejoindre l'examen sur le web (comme pour les quiz).
+     */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "examen_email_web_autorise", joinColumns = @JoinColumn(name = "examen_id"))
+    @Column(name = "email", nullable = false, length = 320)
+    private Set<String> emailsAutorisesWeb = new LinkedHashSet<>();
 
     // ✅ Relation avec Question
     @ManyToMany
