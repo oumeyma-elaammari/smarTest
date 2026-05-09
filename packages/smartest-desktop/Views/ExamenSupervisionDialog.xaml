@@ -52,8 +52,9 @@
 
             <Border Background="#f8fafc" CornerRadius="12" BorderBrush="#e2e8f4" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#8899b8" Margin="0,0,0,6"
-                               Text="Étudiants connectés (salle d’attente)"/>
+                    <TextBlock x:Name="TxtListeParticipantsTitre"
+                               FontSize="11" FontWeight="SemiBold" Foreground="#8899b8" Margin="0,0,0,6"
+                               Text="Salle d’attente"/>
                     <TextBlock x:Name="TxtSalleAttenteCount" FontSize="14" FontWeight="SemiBold" Foreground="#0f1e3d" Margin="0,0,0,8" Text="…"/>
                     <ListBox x:Name="ListAttente" MaxHeight="180" FontSize="12" BorderThickness="1" BorderBrush="#e2e8f4"
                              Background="White"/>

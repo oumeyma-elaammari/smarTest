@@ -16,6 +16,7 @@ import {
     getEtatSessionLabel as getEtatLabel,
     parseDebutExamenMs,
 } from '../utils/examenDisplay'
+import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
@@ -85,7 +86,6 @@ export default function ExamenPassageWeb() {
     const [selectedResponseId, setSelectedResponseId] = useState<number | null>(null)
     const [lastAnsweredQuestionId, setLastAnsweredQuestionId] = useState<number | null>(null)
     const [submittingAnswer, setSubmittingAnswer] = useState(false)
-    const [submittingFinal, setSubmittingFinal] = useState(false)
     const [wsNotice, setWsNotice] = useState<string | null>(null)
     /** Rafraîchit l’affichage pour débloquer le créneau à l’heure prévue. */
     const [creneauTick, setCreneauTick] = useState(0)
@@ -263,6 +263,19 @@ export default function ExamenPassageWeb() {
         }
     }, [snap?.etat, id, navigate, isEpreuve])
 
+    /**
+     * Si le professeur a déjà lancé (statut persisté en base), l’étudiant qui ouvre la page accède tout de suite
+     * à l’épreuve sans passer par l’affichage « salle d’attente » jusqu’au prochain poll.
+     */
+    useEffect(() => {
+        if (loading) return
+        if (isEpreuve) return
+        const s = (meta?.statut ?? '').trim().toUpperCase()
+        if (s === 'EN_COURS' || s === 'EN_PAUSE') {
+            navigate(`/examen/${id}/epreuve`, { replace: true })
+        }
+    }, [loading, isEpreuve, meta?.statut, id, navigate])
+
     /** URL /epreuve ouverte trop tôt : retour à la page attente tant que la session n’a pas commencé. */
     useEffect(() => {
         if (!isEpreuve || snap == null) return
@@ -289,14 +302,16 @@ export default function ExamenPassageWeb() {
         if (!creneauOkPourJoin) return
         if (autoJoinReussi.current) return
         const phase = (snap?.etat ?? '').toUpperCase()
+        const metaStatut = (meta?.statut ?? '').trim().toUpperCase()
         if (phase === 'TERMINE' || phase === 'ARRETE') return
+        if (metaStatut === 'TERMINE' || metaStatut === 'ANNULE') return
 
         let cancelled = false
         ;(async () => {
             try {
                 const email = localStorage.getItem('email') || 'etudiant@smartest.local'
                 const etudiantId = readEtudiantId()
-                await examenApi.rejoindreSalleAttente(id, etudiantId, email)
+                const { data } = await examenApi.rejoindreSalleAttente(id, etudiantId, email)
                 if (cancelled) return
                 autoJoinReussi.current = true
                 setJoined(true)
@@ -306,6 +321,11 @@ export default function ExamenPassageWeb() {
                     /* ignore */
                 }
                 setStatus('')
+                const etatReponse = (data as { etat?: string } | undefined)?.etat
+                const phaseJoin = typeof etatReponse === 'string' ? etatReponse.trim().toUpperCase() : ''
+                if (phaseJoin === 'EN_COURS' || phaseJoin === 'EN_PAUSE') {
+                    navigate(`/examen/${id}/epreuve`, { replace: true })
+                }
             } catch (e: unknown) {
                 if (!cancelled) {
                     setStatus(extractApiMessage(e, 'Connexion à la salle d’attente en cours…'))
@@ -315,7 +335,7 @@ export default function ExamenPassageWeb() {
         return () => {
             cancelled = true
         }
-    }, [id, meta, creneauOkPourJoin, creneauTick, snap?.etat])
+    }, [id, meta, creneauOkPourJoin, creneauTick, snap?.etat, navigate])
 
     /** Dès que le prof lance l’épreuve, considérer l’étudiant « dans l’examen » sans autre action. */
     useEffect(() => {
@@ -324,6 +344,14 @@ export default function ExamenPassageWeb() {
             setJoined(true)
         }
     }, [snap?.etat])
+
+    const enPausePourTemps =
+        Boolean(snap?.enPause) || (snap?.etat ?? '').trim().toUpperCase() === 'EN_PAUSE'
+    const tempsRestantAffiche = useExamenTempsRestantLive(
+        snap?.tempsRestantMinutes,
+        snap?.etat ?? meta?.statut ?? '',
+        enPausePourTemps,
+    )
 
     if (!Number.isFinite(id) || id <= 0) {
         return (
@@ -338,7 +366,8 @@ export default function ExamenPassageWeb() {
     const phaseSession = (snap?.etat ?? '').trim().toUpperCase()
     const canStart = phaseSession === 'EN_COURS'
     const enPause = phaseSession === 'EN_PAUSE'
-    const sessionTerminee = (snap?.etat ?? '').toUpperCase() === 'TERMINE'
+    const sessionTerminee =
+        phaseSession === 'TERMINE' || (meta?.statut ?? '').trim().toUpperCase() === 'TERMINE'
     const etat = snap?.etat ?? meta?.statut ?? 'PLANIFIE'
     const etudiantId = readEtudiantId()
     const questionCourante = snap?.questionCourante
@@ -380,20 +409,6 @@ export default function ExamenPassageWeb() {
         }
     }
 
-    const soumettreExamenFinal = async () => {
-        if (!Number.isFinite(id) || id <= 0) return
-        try {
-            setSubmittingFinal(true)
-            await examenApi.soumettreFinal(id, etudiantId)
-            setStatus('Examen soumis. Le résultat sera validé ultérieurement par votre professeur.')
-            window.setTimeout(() => navigate('/dashboard', { replace: true }), 600)
-        } catch (e: unknown) {
-            setStatus(extractApiMessage(e, 'Soumission finale impossible pour le moment.'))
-        } finally {
-            setSubmittingFinal(false)
-        }
-    }
-
     const heureLancement = formatTime(meta?.dateDebut)
     const dateExamen = formatDateTime(meta?.dateDebut)
 
@@ -425,33 +440,63 @@ export default function ExamenPassageWeb() {
         gap: 18,
     }
 
-    const blocQuestion = (
-        <>
-            {sessionTerminee ? (
-                <>
-                    <p style={{ margin: '0 0 12px', color: '#475569', lineHeight: 1.55 }}>
-                        Le professeur a terminé la session supervisée. Envoyez vos réponses une dernière fois pour les
-                        transmettre : aucune correction ni score ne s’affiche ici.
+    if (sessionTerminee) {
+        return (
+            <div style={shell}>
+                <div style={card}>
+                    <p
+                        style={{
+                            margin: 0,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#64748b',
+                            letterSpacing: '0.04em',
+                            textTransform: 'uppercase',
+                        }}
+                    >
+                        Examen terminé
+                    </p>
+                    <h1
+                        style={{
+                            margin: '8px 0 0',
+                            fontFamily: serif,
+                            fontSize: 'clamp(1.25rem, 2.2vw, 1.55rem)',
+                            fontWeight: 550,
+                            lineHeight: 1.25,
+                        }}
+                    >
+                        {meta?.titre?.trim() ? meta.titre : `Examen #${id}`}
+                    </h1>
+                    <p style={{ margin: '14px 0 0', color: '#475569', lineHeight: 1.6, fontSize: 15 }}>
+                        Cette session est close : vous ne pouvez plus ouvrir l’épreuve ni modifier vos réponses. Votre note
+                        sera communiquée ultérieurement par votre professeur (validation des résultats sur la plateforme).
                     </p>
                     <button
                         type="button"
-                        onClick={soumettreExamenFinal}
-                        disabled={submittingFinal}
+                        onClick={() => navigate('/dashboard', { replace: true })}
                         style={{
+                            marginTop: 18,
+                            padding: '10px 18px',
+                            borderRadius: 10,
+                            border: 'none',
                             background: '#0f1e3d',
                             color: '#fff',
-                            border: '1px solid #0f1e3d',
-                            borderRadius: 10,
-                            padding: '10px 14px',
-                            fontWeight: 700,
-                            cursor: submittingFinal ? 'default' : 'pointer',
-                            opacity: submittingFinal ? 0.65 : 1,
+                            fontWeight: 600,
+                            fontFamily: sans,
+                            fontSize: 14,
+                            cursor: 'pointer',
                         }}
                     >
-                        {submittingFinal ? 'Soumission...' : 'Envoyer mes réponses'}
+                        Retour au tableau de bord
                     </button>
-                </>
-            ) : enPause ? (
+                </div>
+            </div>
+        )
+    }
+
+    const blocQuestion = (
+        <>
+            {enPause ? (
                 <>
                     <p style={{ margin: '0 0 12px', color: '#92400e', lineHeight: 1.5 }}>
                         Examen en pause. Attendez la reprise par le professeur — vous ne pouvez pas modifier vos réponses
@@ -591,9 +636,13 @@ export default function ExamenPassageWeb() {
                             >
                                 {meta?.titre ?? `Examen #${id}`}
                             </h1>
-                            {typeof snap?.tempsRestantMinutes === 'number' ? (
-                                <p style={{ margin: '10px 0 0', color: '#475569', fontSize: 14 }}>
-                                    Temps restant affiché : <strong>{snap.tempsRestantMinutes} min</strong>
+                            {tempsRestantAffiche != null ? (
+                                <p
+                                    style={{ margin: '10px 0 0', color: '#475569', fontSize: 14 }}
+                                    aria-live="polite"
+                                    aria-atomic="true"
+                                >
+                                    Temps restant : <strong>{tempsRestantAffiche}</strong>
                                 </p>
                             ) : null}
                         </div>

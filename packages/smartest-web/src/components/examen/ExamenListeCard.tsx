@@ -22,6 +22,8 @@ export type ExamenListeCardProps = {
     creneauAtteint: boolean
     /** Passage étudiant : rejoindre salle / épreuve. */
     onRejoindre: () => void
+    /** Session terminée côté serveur : plus d’accès, message sur la note à venir. */
+    sessionTermineeEtudiant?: boolean
     /** Si défini : affichage superviseur avec pilotage dédié. */
     superviseurProps?: {
         onOuvrirPilotage: () => void
@@ -40,6 +42,7 @@ export function ExamenListeCard({
     layoutTwoCol,
     creneauAtteint,
     onRejoindre,
+    sessionTermineeEtudiant = false,
     superviseurProps,
 }: ExamenListeCardProps) {
     const titreBrut = (e.titre ?? '').trim() || 'Examen'
@@ -298,6 +301,19 @@ export function ExamenListeCard({
                                 Espace superviseur
                             </button>
                         </div>
+                    ) : sessionTermineeEtudiant ? (
+                        <p
+                            style={{
+                                margin: 0,
+                                maxWidth: layoutTwoCol ? 260 : undefined,
+                                fontSize: 13,
+                                lineHeight: 1.5,
+                                color: '#64748b',
+                                textAlign: layoutTwoCol ? 'right' : 'left',
+                            }}
+                        >
+                            Session terminée. Votre note sera communiquée ultérieurement par votre professeur.
+                        </p>
                     ) : (
                         <button
                             type="button"

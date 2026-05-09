@@ -1,5 +1,6 @@
 package com.smartest.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import jakarta.persistence.*;
 import lombok.*;
@@ -45,7 +46,9 @@ public class ExamenPublie {
 
     /**
      * Emails autorisés pour rejoindre l'examen sur le web (comme pour les quiz).
+     * Non sérialisé en JSON : évite LazyInitializationException sur les endpoints qui renvoient l’entité hors session.
      */
+    @JsonIgnore
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "examen_email_web_autorise", joinColumns = @JoinColumn(name = "examen_id"))
     @Column(name = "email", nullable = false, length = 320)

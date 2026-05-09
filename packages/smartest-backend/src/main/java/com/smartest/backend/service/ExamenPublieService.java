@@ -48,7 +48,7 @@ public class ExamenPublieService {
 
     @Transactional(readOnly = true)
     public ExamenPublieMetadataResponse getMetadataPourEtudiant(Long examenId, String emailEtudiant) {
-        ExamenPublie ex = examenPublieRepository.findById(examenId)
+        ExamenPublie ex = examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(examenId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Examen introuvable"));
         verifierEmailAutorisePourExamen(ex, emailEtudiant);
         return toMetadata(ex);
@@ -76,7 +76,7 @@ public class ExamenPublieService {
      */
     @Transactional
     public void definirEmailsPublicationWeb(Long examenId, Long professeurId, List<String> emailsBruts) {
-        ExamenPublie ex = examenPublieRepository.findById(examenId)
+        ExamenPublie ex = examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(examenId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Examen introuvable"));
         if (ex.getProfesseur() == null || !ex.getProfesseur().getId().equals(professeurId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cet examen n'appartient pas à votre compte");

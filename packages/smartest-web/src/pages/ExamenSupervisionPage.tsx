@@ -7,7 +7,6 @@ import {
     CalendarClock,
     ChevronLeft,
     ChevronRight,
-    Clock,
     Loader2,
     Pause,
     Play,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react'
 import { examenApi } from '../api/examenApi'
 import useAuth from '../hooks/useAuth'
+import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
 
 const sans = "'DM Sans', system-ui, sans-serif"
@@ -71,6 +71,20 @@ function extractApiMessage(error: unknown, fallback: string): string {
     return fallback
 }
 
+/** GET `/salle-attente` ou message WS `/topic/examen/:id/salle-attente` (même JSON que le backend). */
+function connectesLabelsFromSalleAttentePayload(raw: unknown): string[] {
+    if (raw === null || typeof raw !== 'object') return []
+    const r = raw as {
+        connectes?: { email?: string; etudiantId?: number }[]
+        Connectes?: { email?: string; etudiantId?: number }[]
+    }
+    const list = r.connectes ?? r.Connectes ?? []
+    return list.map((p) => {
+        const mail = (p.email ?? '').trim()
+        return mail || 'Étudiant'
+    })
+}
+
 /** Réponse Axios (`status` + `data`), sans `axios.isAxiosResponse` (pas toujours exposé par le bundle). */
 function snapshotBodyFromMaybeAxiosResponse(raw: unknown): Partial<ExamenSnapshot> | null {
     if (raw === null || typeof raw !== 'object') return null
@@ -90,7 +104,6 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const isProf = (useAuth((s) => s.role) ?? '').trim().toUpperCase() === 'PROFESSEUR'
     const [meta, setMeta] = useState<ExamenMeta | null>(null)
     const [snap, setSnap] = useState<ExamenSnapshot | null>(null)
-    const [bareme, setBareme] = useState('20')
     const [feedback, setFeedback] = useState('')
     const [feedbackTone, setFeedbackTone] = useState<'neutral' | 'success' | 'error'>('neutral')
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -164,21 +177,9 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         if (sr.status === 'fulfilled') {
             const sd = sr.value.data
             setSnap((prev) => mergeSnapshot(prev, sd))
-            if (sd.baremeSur20 != null) setBareme(String(sd.baremeSur20))
         }
         if (rr.status === 'fulfilled') {
-            const raw = rr.value.data as {
-                connectes?: { email?: string; etudiantId?: number }[]
-                Connectes?: { email?: string; etudiantId?: number }[]
-            }
-            const list = raw.connectes ?? raw.Connectes ?? []
-            setConnectesLabels(
-                list.map((p) => {
-                    const mail = (p.email ?? '').trim()
-                    const sid = p.etudiantId != null ? String(p.etudiantId) : '?'
-                    return mail ? `${mail} (id ${sid})` : `Étudiant id ${sid}`
-                }),
-            )
+            setConnectesLabels(connectesLabelsFromSalleAttentePayload(rr.value.data))
         }
     }, [id, mergeSnapshot])
 
@@ -227,10 +228,19 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         const data = JSON.parse(message.body) as Partial<ExamenSnapshot>
                         if (cancelled) return
                         setSnap((prev) => mergeSnapshot(prev, data))
-                        if (data.baremeSur20 != null) setBareme(String(data.baremeSur20))
                         setWsNotice(null)
                     } catch {
                         if (!cancelled) setWsNotice('Message temps réel invalide (supervision examen).')
+                    }
+                })
+                client.subscribe(`/topic/examen/${id}/salle-attente`, (message) => {
+                    try {
+                        const payload = JSON.parse(message.body) as unknown
+                        if (cancelled) return
+                        setConnectesLabels(connectesLabelsFromSalleAttentePayload(payload))
+                        setWsNotice(null)
+                    } catch {
+                        // ignoré : le polling GET salle-attente garde un fallback
                     }
                 })
             },
@@ -251,6 +261,14 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
             client.deactivate()
         }
     }, [id, mergeSnapshot])
+
+    const supervisionEnPause =
+        ((snap?.etat ?? meta?.statut ?? '').trim().toUpperCase() === 'EN_PAUSE') || !!snap?.enPause
+    const tempsRestantSupervision = useExamenTempsRestantLive(
+        snap?.tempsRestantMinutes,
+        snap?.etat ?? meta?.statut ?? '',
+        supervisionEnPause,
+    )
 
     const action = async (run: () => Promise<unknown>) => {
         try {
@@ -303,6 +321,9 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const currentIndex = Math.max(0, snap?.questionCouranteIndex ?? 0)
     const questionNumero = totalQuestions > 0 ? Math.min(currentIndex + 1, totalQuestions) : 0
     const etat = (snap?.etat ?? meta?.statut ?? 'PLANIFIE').toUpperCase()
+    /** Avant lancement : liste d’attente. Pendant l’épreuve : participants actifs (même API, libellés différents). */
+    const modeListeParticipants =
+        etat === 'PLANIFIE' ? 'attente' : etat === 'EN_COURS' || etat === 'EN_PAUSE' ? 'actifs' : 'terminee'
     const estEnCours = etat === 'EN_COURS'
     const peutLancer = etat === 'PLANIFIE' || etat === 'EN_PAUSE'
     const peutPause = etat === 'EN_COURS'
@@ -499,50 +520,110 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                 </div>
             ) : null}
 
+            <div style={shellCard}>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        marginBottom: connectesLabels.length > 0 ? 10 : 8,
+                        borderBottom: '1px solid #f1f5f9',
+                        paddingBottom: 10,
+                        flexWrap: 'wrap',
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        <Users size={20} strokeWidth={2} style={{ color: accentBleu, flexShrink: 0 }} aria-hidden />
+                        <div>
+                            <h2 style={{ margin: 0, fontFamily: serif, fontWeight: 550, fontSize: '1.08rem', color: '#0f1e3d' }}>
+                                {modeListeParticipants === 'attente'
+                                    ? 'Salle d’attente'
+                                    : modeListeParticipants === 'actifs'
+                                      ? 'Étudiants actifs'
+                                      : 'Participants'}
+                            </h2>
+                            {modeListeParticipants === 'attente' ? (
+                                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.5, maxWidth: 560 }}>
+                                    Liste d’attente avant le lancement : les élèves connectés (après le créneau) apparaissent ici ;
+                                    vous pouvez lancer l’épreuve quand vous le décidez (mise à jour automatique).
+                                </p>
+                            ) : modeListeParticipants === 'actifs' ? (
+                                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.5, maxWidth: 560 }}>
+                                    Étudiants qui suivent l’examen en temps réel pendant la session.
+                                </p>
+                            ) : (
+                                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.45 }}>
+                                    Session terminée ou arrêtée — la liste reflète le dernier état connu si disponible.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                    <span
+                        style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: '#0f1e3d',
+                            background: '#f1f5f9',
+                            borderRadius: 999,
+                            padding: '6px 12px',
+                            flexShrink: 0,
+                            alignSelf: 'flex-start',
+                        }}
+                        aria-live="polite"
+                    >
+                        {modeListeParticipants === 'attente'
+                            ? `${connectesLabels.length} en attente`
+                            : modeListeParticipants === 'actifs'
+                              ? `${connectesLabels.length} actif${connectesLabels.length !== 1 ? 's' : ''}`
+                              : `${connectesLabels.length} participant${connectesLabels.length !== 1 ? 's' : ''}`}
+                    </span>
+                </div>
+                {connectesLabels.length > 0 ? (
+                    <ul style={{ margin: 0, paddingLeft: 20, color: '#475569', lineHeight: 1.65, fontSize: 14 }}>
+                        {connectesLabels.map((label, i) => (
+                            <li key={`${i}-${label}`}>{label}</li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p
+                        style={{
+                            margin: 0,
+                            color: '#94a3b8',
+                            fontSize: 14,
+                            lineHeight: 1.55,
+                            fontStyle: 'italic',
+                        }}
+                    >
+                        {modeListeParticipants === 'attente'
+                            ? 'Aucun étudiant en salle d’attente pour le moment. Les élèves qui ouvrent la page de l’examen (après le créneau) s’affichent ici.'
+                            : modeListeParticipants === 'actifs'
+                              ? 'Aucun étudiant connecté à l’épreuve pour le moment.'
+                              : 'Aucun participant listé.'}
+                    </p>
+                )}
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))', gap: 10 }}>
                 {statTile(
                     <CalendarClock size={18} strokeWidth={2} />,
                     'Créneau prévu',
                     formatDateTime(meta?.dateDebut),
                 )}
-                {statTile(<Clock size={18} strokeWidth={2} />, 'Durée annoncée', <>{meta?.duree ?? '-'} min</>)}
                 {statTile(
                     <Play size={18} strokeWidth={2} />,
                     'Question en cours',
                     <>{totalQuestions > 0 ? `${questionNumero} / ${totalQuestions}` : '—'}</>,
                 )}
-                {statTile(<Timer size={18} strokeWidth={2} />, 'Temps restant', <>{snap?.tempsRestantMinutes ?? '-'} min</>)}
                 {statTile(
-                    <Users size={18} strokeWidth={2} />,
-                    'Étudiants en attente',
-                    <>{snap?.participantsEnAttente ?? 0}</>,
+                    <Timer size={18} strokeWidth={2} />,
+                    'Temps restant',
+                    <span aria-live="polite" aria-atomic="true">
+                        {tempsRestantSupervision ??
+                            (snap?.tempsRestantMinutes != null ? `${snap.tempsRestantMinutes} min` : '—')}
+                    </span>,
                 )}
             </div>
-
-            {connectesLabels.length > 0 ? (
-                <div style={shellCard}>
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 10,
-                            marginBottom: 10,
-                            borderBottom: '1px solid #f1f5f9',
-                            paddingBottom: 10,
-                        }}
-                    >
-                        <Users size={20} strokeWidth={2} style={{ color: accentBleu }} aria-hidden />
-                        <h2 style={{ margin: 0, fontFamily: serif, fontWeight: 550, fontSize: '1.08rem', color: '#0f1e3d' }}>
-                            Présents (salle d’attente / session)
-                        </h2>
-                    </div>
-                    <ul style={{ margin: 0, paddingLeft: 20, color: '#475569', lineHeight: 1.65, fontSize: 14 }}>
-                        {connectesLabels.map((label, i) => (
-                            <li key={`${i}-${label}`}>{label}</li>
-                        ))}
-                    </ul>
-                </div>
-            ) : null}
 
             <section style={shellCard} aria-labelledby="supervision-session-heading">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -672,29 +753,6 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     </button>
                     <button type="button" style={btnGhost(isSubmitting)} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, 1))}>
                         +1 min
-                    </button>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 12, color: '#64748b' }}>Barème /20</span>
-                        <input
-                            value={bareme}
-                            onChange={(e) => setBareme(e.target.value)}
-                            inputMode="decimal"
-                            style={{
-                                ...btnGhost(false),
-                                width: 76,
-                                textAlign: 'center',
-                                boxSizing: 'border-box',
-                            }}
-                            aria-label="Barème sur 20"
-                        />
-                    </label>
-                    <button
-                        type="button"
-                        style={btnGhost(isSubmitting)}
-                        disabled={isSubmitting}
-                        onClick={() => action(() => examenApi.definirBareme(id, Number(bareme) || 20))}
-                    >
-                        Définir barème
                     </button>
                 </div>
 

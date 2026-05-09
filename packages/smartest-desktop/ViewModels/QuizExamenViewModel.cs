@@ -12,9 +12,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Newtonsoft.Json;
-using smartest_desktop.Exceptions;
+using System.Windows.Threading;
 using WpfApp = System.Windows.Application;
-using System.Diagnostics;
 
 namespace smartest_desktop.ViewModels
 {
@@ -231,6 +230,9 @@ namespace smartest_desktop.ViewModels
         public ICommand ExamenPagePrecedenteCommand { get; }
         public ICommand ExamenPageSuivanteCommand { get; }
 
+        /// <summary>Réévalue périodiquement « Lancer » (supervision) pour activer le bouton à l’heure du créneau.</summary>
+        private readonly DispatcherTimer _timerMiseAJourLancerExamen;
+
         public QuizExamenViewModel()
         {
             _quizService = new LocalQuizService(App.LocalDb);
@@ -263,8 +265,8 @@ namespace smartest_desktop.ViewModels
             LancerExamenCommand = new RelayCommand(
                 p => _ = OuvrirSupervisionExamenAsync(p),
                 p => p is ExamenListeRow { Examen: var e } &&
-                     string.Equals(e.Statut, "PUBLIE", System.StringComparison.OrdinalIgnoreCase) &&
-                     e.BackendId.HasValue && e.BackendId.Value > 0);
+                     EstExamenPublieSurLeWebPourSupervision(e) &&
+                     EstCreneauLancementExamenAtteint(e));
 
             OuvrirQuizCommand = new RelayCommand(
                 p =>
@@ -303,6 +305,17 @@ namespace smartest_desktop.ViewModels
                 _ => PageExamen < PagesExamensTotal);
 
             _ = ChargerDonneesAsync();
+
+            _timerMiseAJourLancerExamen = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(15),
+            };
+            _timerMiseAJourLancerExamen.Tick += (_, _) =>
+            {
+                if (LancerExamenCommand is RelayCommand r)
+                    r.RaiseCanExecuteChanged();
+            };
+            _timerMiseAJourLancerExamen.Start();
         }
 
         private List<QuizLocal> ObtenirQuizFiltres()
@@ -488,6 +501,8 @@ namespace smartest_desktop.ViewModels
                     rpw.RaiseCanExecuteChanged();
                 if (PublierExamenSurLeWebCommand is RelayCommand rpe)
                     rpe.RaiseCanExecuteChanged();
+                if (LancerExamenCommand is RelayCommand rle)
+                    rle.RaiseCanExecuteChanged();
             }
             catch (System.Exception ex)
             {
@@ -886,6 +901,36 @@ namespace smartest_desktop.ViewModels
             return TryGetSavedPublicationEmailsExamen(e, out var list) && list.Count > 0;
         }
 
+        /// <summary>Publié sur le web : statut et identifiant serveur (session distante créée).</summary>
+        private static bool EstExamenPublieSurLeWebPourSupervision(ExamenLocal e) =>
+            string.Equals(e.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase) &&
+            e.BackendId.HasValue &&
+            e.BackendId.Value > 0;
+
+        private static DateTime NormaliserDatePrevueEnLocal(DateTime d)
+        {
+            if (d.Kind == DateTimeKind.Utc)
+                return d.ToLocalTime();
+            return d;
+        }
+
+        /// <summary>Vrai lorsque l’heure actuelle est au moins égale à la date/heure prévue (créneau).</summary>
+        private static bool EstCreneauLancementExamenAtteint(ExamenLocal e)
+        {
+            if (!e.DatePrevue.HasValue)
+                return false;
+            var debut = NormaliserDatePrevueEnLocal(e.DatePrevue.Value);
+            return DateTime.Now >= debut;
+        }
+
+        private static string FormaterDatePrevuePourMessage(ExamenLocal e)
+        {
+            if (!e.DatePrevue.HasValue)
+                return "(non définie)";
+            var d = NormaliserDatePrevueEnLocal(e.DatePrevue.Value);
+            return d.ToString("dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.GetCultureInfo("fr-FR"));
+        }
+
         private static bool TryGetSavedPublicationEmailsExamen(ExamenLocal examen, out List<string> emails)
         {
             emails = new List<string>();
@@ -1023,11 +1068,35 @@ namespace smartest_desktop.ViewModels
         {
             if (parameter is not ExamenListeRow row) return;
             var examen = row.Examen;
-            if (!examen.BackendId.HasValue || examen.BackendId.Value <= 0)
+
+            if (!EstExamenPublieSurLeWebPourSupervision(examen))
             {
                 MessageBox.Show(
-                    "Publiez d'abord cet examen sur le web pour créer la session distante, puis ouvrez la supervision.",
-                    "Supervision",
+                    "Vous devez d'abord publier cet examen sur le web (bouton « Publier » : emails autorisés + créneau). " +
+                    "Sans publication, la supervision et le lancement côté élèves ne sont pas disponibles.",
+                    "Lancement / supervision",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (!examen.DatePrevue.HasValue)
+            {
+                MessageBox.Show(
+                    "La date et l'heure de l'examen ne sont pas renseignées. Définissez le créneau dans l'écran de révision, puis republiez si nécessaire.",
+                    "Créneau",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!EstCreneauLancementExamenAtteint(examen))
+            {
+                MessageBox.Show(
+                    "Vous ne pouvez pas ouvrir la supervision pour lancer l'écran élève avant l'heure prévue du créneau.\n\n" +
+                    $"Heure prévue : {FormaterDatePrevuePourMessage(examen)}\n\n" +
+                    "Revenez à ce moment ou attendez que l'heure soit atteinte (le bouton « Lancer » s'activera automatiquement).",
+                    "Créneau non atteint",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
                 return;

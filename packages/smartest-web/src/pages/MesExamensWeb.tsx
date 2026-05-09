@@ -202,6 +202,7 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
                     const creneauAtteint = debutMs == null ? true : Date.now() >= debutMs
                     const statutDb = (m.statut ?? '').trim().toUpperCase()
                     const peutLancerListe = statutDb === 'PLANIFIE'
+                    const sessionTermineeEtudiant = !isProfesseurWeb && statutDb === 'TERMINE'
 
                     return (
                         <ExamenListeCard
@@ -210,6 +211,7 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
                             accentBleu={accentBleu}
                             layoutTwoCol={twoCol}
                             creneauAtteint={creneauAtteint}
+                            sessionTermineeEtudiant={sessionTermineeEtudiant}
                             onRejoindre={() =>
                                 navigate(isProfesseurWeb ? `/supervision/examen/${m.id}` : `/examen/${m.id}`)
                             }

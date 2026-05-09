@@ -19,6 +19,7 @@ namespace smartest_desktop.Views
         private readonly ExamenWebPublicationApiService _api = new();
         private readonly DispatcherTimer _timer;
         private string? _token;
+        private string _dernierEtatExamen = "PLANIFIE";
 
         public ExamenSupervisionDialog(long examenBackendId, string titreExamen)
         {
@@ -100,10 +101,33 @@ namespace smartest_desktop.Views
 
         private void AppliquerSalleAttente(JObject room)
         {
+            string et = (_dernierEtatExamen ?? "").Trim().ToUpperInvariant();
+            bool avantLancement = et == "PLANIFIE";
+            bool epreuveActive = et == "EN_COURS" || et == "EN_PAUSE";
+
+            TxtListeParticipantsTitre.Text = avantLancement
+                ? "Salle d’attente"
+                : epreuveActive
+                    ? "Étudiants actifs"
+                    : "Participants";
+
             int n = room.Value<int?>("nombreConnectes") ?? room.Value<int?>("NombreConnectes") ?? 0;
-            TxtSalleAttenteCount.Text = n <= 0
-                ? "Aucun étudiant connecté pour le moment."
-                : $"{n} étudiant(s) connecté(s) — en attente ou en session web.";
+            if (n <= 0)
+            {
+                TxtSalleAttenteCount.Text = avantLancement
+                    ? "Aucun étudiant en attente pour le moment."
+                    : epreuveActive
+                        ? "Aucun étudiant connecté à l’épreuve pour le moment."
+                        : "Aucun participant listé.";
+            }
+            else
+            {
+                TxtSalleAttenteCount.Text = avantLancement
+                    ? $"{n} en attente — avant lancement de l’épreuve."
+                    : epreuveActive
+                        ? $"{n} actif(s) — épreuve en cours."
+                        : $"{n} participant(s).";
+            }
 
             ListAttente.Items.Clear();
             var arr = room["connectes"] as JArray ?? room["Connectes"] as JArray;
@@ -117,9 +141,7 @@ namespace smartest_desktop.Views
             {
                 if (tok is not JObject o) continue;
                 var email = o["email"]?.ToString()?.Trim() ?? o["Email"]?.ToString()?.Trim();
-                var sid = o["etudiantId"] ?? o["EtudiantId"];
-                var idStr = sid != null ? sid.ToString() : "?";
-                var label = string.IsNullOrWhiteSpace(email) ? $"Étudiant #{idStr}" : $"{email} (id {idStr})";
+                var label = string.IsNullOrWhiteSpace(email) ? "Étudiant" : email;
                 ListAttente.Items.Add(label);
             }
         }
@@ -127,6 +149,7 @@ namespace smartest_desktop.Views
         private void AppliquerSnapshot(JObject snap)
         {
             string etat = (snap["etat"] ?? snap["Etat"])?.ToString()?.Trim().ToUpperInvariant() ?? "";
+            _dernierEtatExamen = string.IsNullOrEmpty(etat) ? "PLANIFIE" : etat;
             int qIdx = snap.Value<int?>("questionCouranteIndex") ?? snap.Value<int?>("QuestionCouranteIndex") ?? 0;
             int total = snap.Value<int?>("totalQuestions") ?? snap.Value<int?>("TotalQuestions") ?? 0;
             int temps = snap.Value<int?>("tempsRestantMinutes") ?? snap.Value<int?>("TempsRestantMinutes") ?? 0;

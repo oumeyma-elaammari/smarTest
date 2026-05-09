@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("smartest-desktop")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e431e211fa6198a8540e582d593d2843a8f0177d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+73c9911ca62271d065f0c7262c28de5dc8234ae0")]
 [assembly: System.Reflection.AssemblyProductAttribute("smartest-desktop")]
 [assembly: System.Reflection.AssemblyTitleAttribute("smartest-desktop")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

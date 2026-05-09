@@ -83,7 +83,7 @@ public class ExamenSupervisionService {
 
     @Transactional
     public Map<String, Object> definirEmailsAutorises(Long examenId, List<String> emails) {
-        ExamenPublie examEntity = examenPublieRepository.findById(examenId)
+        ExamenPublie examEntity = examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(examenId)
                 .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
         ExamenRuntimeState state = getState(examenId);
         Set<String> normalized = new LinkedHashSet<>();
@@ -519,7 +519,7 @@ public class ExamenSupervisionService {
     }
 
     private void mergeEmailsFromDatabase(Long examenId) {
-        examenPublieRepository.findById(examenId).ifPresent(ex -> {
+        examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(examenId).ifPresent(ex -> {
             if (ex.getEmailsAutorisesWeb() == null || ex.getEmailsAutorisesWeb().isEmpty()) {
                 return;
             }
