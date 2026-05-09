@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -11,6 +12,9 @@ namespace smartest_desktop.Views
 {
     public partial class ExamenSupervisionDialog : Window
     {
+        /// <summary>URL du front web (Vite en dev : http://localhost:5173).</summary>
+        private const string WebFrontendBaseUrl = "http://localhost:5173";
+
         private readonly long _examenId;
         private readonly ExamenWebPublicationApiService _api = new();
         private readonly DispatcherTimer _timer;
@@ -213,13 +217,53 @@ namespace smartest_desktop.Views
             }
         }
 
+        private void OpenSupervisionWebInBrowser()
+        {
+            string url = $"{WebFrontendBaseUrl.TrimEnd('/')}/supervision/examen/{_examenId}";
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "L'examen a démarré sur le serveur, mais l'ouverture du navigateur a échoué.\n\n" +
+                    $"Ouvrez manuellement cette adresse :\n{url}\n\n({ex.Message})",
+                    "Supervision web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+        }
+
         private async void BtnDemarrer_Click(object sender, RoutedEventArgs e)
         {
-            await ExecuterAsync(async () =>
+            try
             {
                 string tok = RequireToken();
-                return await _api.ControlerExamenAsync(tok, _examenId, "lancer");
-            });
+                var snap = await _api.ControlerExamenAsync(tok, _examenId, "lancer").ConfigureAwait(false);
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    AppliquerSnapshot(snap);
+                    TxtErreur.Visibility = Visibility.Collapsed;
+                });
+                OpenSupervisionWebInBrowser();
+            }
+            catch (SmartestApiException ex)
+            {
+                await Dispatcher.InvokeAsync(() => AfficherErreur(ex.Message));
+            }
+            catch (SmartestNetworkException ex)
+            {
+                await Dispatcher.InvokeAsync(() => AfficherErreur(ex.Message));
+            }
+            catch (InvalidOperationException)
+            {
+                /* token manquant */
+            }
+            catch (Exception ex)
+            {
+                await Dispatcher.InvokeAsync(() => AfficherErreur(ex.Message));
+            }
         }
 
         private async void BtnPause_Click(object sender, RoutedEventArgs e)

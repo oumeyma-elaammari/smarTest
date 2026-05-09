@@ -43,6 +43,23 @@ public class ExamenPublieService {
         return toMetadata(ex);
     }
 
+    /** Métadonnées pour le professeur propriétaire (supervision web, sans contrainte publication web). */
+    @Transactional(readOnly = true)
+    public ExamenPublieMetadataResponse getMetadataPourProfesseur(Long examenId, String emailProf) {
+        if (emailProf == null || emailProf.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email requis");
+        }
+        String email = emailProf.trim().toLowerCase(Locale.ROOT);
+        Professeur prof = professeurRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès réservé aux professeurs"));
+        ExamenPublie ex = examenPublieRepository.findById(examenId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Examen introuvable"));
+        if (ex.getProfesseur() == null || !ex.getProfesseur().getId().equals(prof.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cet examen n'appartient pas à votre compte");
+        }
+        return toMetadata(ex);
+    }
+
     /**
      * Met à jour les emails web ; utilisé à la publication depuis le desktop.
      */

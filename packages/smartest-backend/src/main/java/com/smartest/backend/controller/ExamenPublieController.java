@@ -70,6 +70,10 @@ public class ExamenPublieController {
     public ResponseEntity<ExamenPublieMetadataResponse> metadata(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
+        String email = normalize(userDetails.getUsername());
+        if (professeurRepository.findByEmail(email).isPresent()) {
+            return ResponseEntity.ok(examenPublieService.getMetadataPourProfesseur(id, email));
+        }
         return ResponseEntity.ok(examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername()));
     }
 

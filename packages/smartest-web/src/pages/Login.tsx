@@ -20,11 +20,16 @@ type LoginForm = z.infer<typeof loginSchema>
 
 const ERR = {
     INVALID_CREDENTIALS: 'Email ou mot de passe incorrect',
-    NOT_STUDENT:         "Ce compte n'est pas un compte étudiant",
+    NOT_ALLOWED:         'Ce type de compte ne peut pas se connecter sur cette page.',
     NETWORK_ERROR:       'Impossible de contacter le serveur',
     SERVER_ERROR:        'Erreur serveur. Réessayez plus tard',
     UNKNOWN:             'Une erreur inattendue est survenue',
 } as const
+
+function safeInternalRedirect(raw: string | null): string | null {
+    if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return null
+    return raw
+}
 
 export default function Login() {
     const navigate = useNavigate()
@@ -48,14 +53,22 @@ export default function Login() {
                 email: data.email.trim().toLowerCase(),
                 password: data.password,
             })
-            if (authData.role !== 'ETUDIANT') {
+            if (authData.role !== 'ETUDIANT' && authData.role !== 'PROFESSEUR') {
                 setIsLoading(false)
-                setLoginError(ERR.NOT_STUDENT)
+                setLoginError(ERR.NOT_ALLOWED)
                 return
             }
             setLoginError(null)
             login(authData)
-            navigate('/dashboard')
+            setIsLoading(false)
+            const dest = safeInternalRedirect(searchParams.get('redirect'))
+            if (dest) {
+                navigate(dest)
+            } else if (authData.role === 'ETUDIANT') {
+                navigate('/dashboard')
+            } else {
+                navigate('/')
+            }
         } catch (error: any) {
             setIsLoading(false)
             if (!error?.response) { setLoginError(ERR.NETWORK_ERROR); return }

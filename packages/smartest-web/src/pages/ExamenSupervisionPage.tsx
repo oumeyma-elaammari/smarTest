@@ -43,12 +43,19 @@ function formatDateTime(value?: string): string {
 
 function formatEtat(etat?: string): string {
     switch ((etat || '').toUpperCase()) {
+        case 'PLANIFIE':
+            return 'Planifié'
         case 'EN_ATTENTE':
+        case 'EN_ATTENTE_LANCEMENT':
             return 'En attente'
         case 'EN_COURS':
             return 'En cours'
+        case 'EN_PAUSE':
+            return 'En pause'
         case 'TERMINE':
             return 'Terminé'
+        case 'ARRETE':
+            return 'Arrêté'
         default:
             return etat || 'Inconnu'
     }
@@ -87,14 +94,32 @@ export default function ExamenSupervisionPage() {
     const [feedback, setFeedback] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [wsNotice, setWsNotice] = useState<string | null>(null)
+    const [connectesLabels, setConnectesLabels] = useState<string[]>([])
     const id = Number(examenId)
 
     const refresh = async () => {
         if (!Number.isFinite(id) || id <= 0) return
-        const [m, s] = await Promise.all([examenApi.getMetadata(id), examenApi.snapshot(id)])
+        const [m, s, room] = await Promise.all([
+            examenApi.getMetadata(id),
+            examenApi.snapshot(id),
+            examenApi.getSalleAttente(id),
+        ])
         setMeta(m.data)
         setSnap(s.data)
         if (s.data.baremeSur20 != null) setBareme(String(s.data.baremeSur20))
+
+        const raw = room.data as {
+            connectes?: { email?: string; etudiantId?: number }[]
+            Connectes?: { email?: string; etudiantId?: number }[]
+        }
+        const list = raw.connectes ?? raw.Connectes ?? []
+        setConnectesLabels(
+            list.map((p) => {
+                const mail = (p.email ?? '').trim()
+                const sid = p.etudiantId != null ? String(p.etudiantId) : '?'
+                return mail ? `${mail} (id ${sid})` : `Étudiant id ${sid}`
+            }),
+        )
     }
 
     useEffect(() => {
@@ -270,6 +295,17 @@ export default function ExamenSupervisionPage() {
                 </div>
             </div>
 
+            {connectesLabels.length > 0 ? (
+                <div style={card}>
+                    <h3 style={{ marginTop: 0, marginBottom: 8, fontFamily: serif, fontWeight: 550 }}>Présents (salle d’attente / session)</h3>
+                    <ul style={{ margin: 0, paddingLeft: 18, color: '#334155', lineHeight: 1.6 }}>
+                        {connectesLabels.map((label, i) => (
+                            <li key={`${i}-${label}`}>{label}</li>
+                        ))}
+                    </ul>
+                </div>
+            ) : null}
+
             <div style={card}>
                 <h3 style={{ marginTop: 0, marginBottom: 10, fontFamily: serif, fontWeight: 550 }}>Pilotage de session</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginBottom: 10 }}>
@@ -366,7 +402,7 @@ export default function ExamenSupervisionPage() {
                 ) : null}
             </div>
 
-            <button style={{ ...btn, alignSelf: 'flex-start' }} onClick={() => navigate('/dashboard')}>Retour</button>
+            <button style={{ ...btn, alignSelf: 'flex-start' }} onClick={() => navigate('/')}>Retour</button>
         </div>
     )
 }

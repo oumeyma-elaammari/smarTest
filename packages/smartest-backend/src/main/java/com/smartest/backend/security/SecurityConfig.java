@@ -51,7 +51,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole("ETUDIANT")
                         .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web").hasRole("ETUDIANT")
-                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata").hasRole("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata").hasAnyRole("ETUDIANT", "PROFESSEUR")
                         .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole("ETUDIANT")
                         .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole("ETUDIANT")
                         .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre").hasRole("ETUDIANT")

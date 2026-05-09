@@ -14,6 +14,7 @@ import MesQuizWeb from './pages/MesQuizWeb'
 import MesExamensWeb from './pages/MesExamensWeb'
 import QuizPassageWeb from './pages/QuizPassageWeb'
 import ExamenPassageWeb from './pages/ExamenPassageWeb'
+import ExamenSupervisionPage from './pages/ExamenSupervisionPage'
 
 const serif = "'DM Serif Display', Georgia, serif"
 const bleuTest = '#4f8ef7'
@@ -207,6 +208,21 @@ export default function App() {
                                 <ExamenPassageWeb />
                             </div>
                         </DashboardLayout>
+                    </PrivateRoute>
+                } />
+                <Route path="/supervision/examen/:examenId" element={
+                    <PrivateRoute allowedRoles={['PROFESSEUR']}>
+                        <div
+                            style={{
+                                minHeight: '100vh',
+                                width: '100%',
+                                background: '#f8fafc',
+                                padding: 'clamp(1rem, 3vw, 2rem)',
+                                boxSizing: 'border-box',
+                            }}
+                        >
+                            <ExamenSupervisionPage />
+                        </div>
                     </PrivateRoute>
                 } />
             </Routes>
