@@ -35,20 +35,29 @@ type UiQuestion = {
     options: { id: number; texte: string }[]
 }
 
+function buildSecureId(prefix: string): string {
+    const webCrypto = globalThis.crypto
+    if (webCrypto?.randomUUID) return `${prefix}-${webCrypto.randomUUID()}`
+    if (webCrypto?.getRandomValues) {
+        const bytes = new Uint8Array(16)
+        webCrypto.getRandomValues(bytes)
+        const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+        return `${prefix}-${hex}`
+    }
+    return `${prefix}-${Date.now()}`
+}
+
 function participantIdPourSession(sessionTok: string): string {
     const key = `qr-live-participant-${sessionTok}`
     try {
         let id = sessionStorage.getItem(key)
         if (!id) {
-            id =
-                typeof crypto !== 'undefined' && crypto.randomUUID
-                    ? crypto.randomUUID()
-                    : `p-${Date.now()}-${Math.random().toString(16).slice(2)}`
+            id = buildSecureId('p')
             sessionStorage.setItem(key, id)
         }
         return id
     } catch {
-        return `p-${Date.now()}`
+        return buildSecureId('p')
     }
 }
 
@@ -273,10 +282,7 @@ export default function QuizLiveParticiper() {
                 `${API_BASE}/api/qr-live/sessions/${encodeURIComponent(token)}/reponses`,
                 {
                     participantId,
-                    correlationId:
-                        typeof crypto !== 'undefined' && crypto.randomUUID
-                            ? crypto.randomUUID()
-                            : `c-${Date.now()}`,
+                    correlationId: buildSecureId('c'),
                     questionId: questionCourante.id,
                     reponseId: selection,
                 },
