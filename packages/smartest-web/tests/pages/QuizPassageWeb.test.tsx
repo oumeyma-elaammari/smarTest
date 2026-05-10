@@ -7,6 +7,11 @@ import QuizPassageWeb, { getQuizWebDraftStorageKey } from '../../src/pages/QuizP
 import { API_BASE } from '../msw/handlers'
 import { server } from '../msw/server'
 
+/** Ordre des questions déterministe (la page mélange via `crypto.getRandomValues`). */
+vi.mock('../../src/utils/shuffle', () => ({
+    shuffleCopy: <T,>(items: T[]) => [...items],
+}))
+
 const navigateMock = vi.fn()
 
 vi.mock('react-router-dom', async (importOriginal) => {

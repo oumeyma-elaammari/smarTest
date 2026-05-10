@@ -82,7 +82,7 @@ describe('Login page', () => {
         await user.type(screen.getByPlaceholderText(/email@exemple/i), 'u@ump.ac.ma')
         await user.type(screen.getByPlaceholderText(/• • • • • • • •/i), 'Password1!')
         await user.click(screen.getByRole('button', { name: /se connecter/i }))
-        expect(await screen.findByText(/Identifiants incorrects/i)).toBeInTheDocument()
+        expect(await screen.findByText(/Email ou mot de passe incorrect/i)).toBeInTheDocument()
     })
 
     it('redirects to email-sent on HTTP 403', async () => {

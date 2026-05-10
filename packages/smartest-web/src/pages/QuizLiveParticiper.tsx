@@ -183,7 +183,7 @@ export default function QuizLiveParticiper() {
     const participantId = useMemo(() => (token ? participantIdPourSession(token) : ''), [token])
 
     useEffect(() => {
-        const mq = window.matchMedia('(max-width: 767px)')
+        const mq = globalThis.window.matchMedia('(max-width: 767px)')
         const sync = () => setIsMobile(mq.matches)
         sync()
         mq.addEventListener('change', sync)
@@ -253,8 +253,10 @@ export default function QuizLiveParticiper() {
 
     useEffect(() => {
         if (phase !== 'waiting' && phase !== 'quiz') return
-        const id = window.setInterval(() => void chargerSnapshot(), 10000)
-        return () => window.clearInterval(id)
+        const id = globalThis.setInterval(() => {
+            Promise.resolve(chargerSnapshot()).catch(() => {})
+        }, 10000)
+        return () => globalThis.clearInterval(id)
     }, [phase, chargerSnapshot])
 
     const questionCourante = questions[idxCourant]
@@ -672,28 +674,7 @@ export default function QuizLiveParticiper() {
                         </p>
                     ) : null}
 
-                    {!feedback ? (
-                        <button
-                            type="button"
-                            disabled={selection == null || envoiEnCours}
-                            onClick={() => void soumettre()}
-                            style={{
-                                width: '100%',
-                                padding: btnPad,
-                                fontSize: btnFs,
-                                fontWeight: 500,
-                                border: 'none',
-                                borderRadius: 'var(--border-radius-md, 10px)',
-                                background:
-                                    selection == null || envoiEnCours ? '#94a3b8' : '#534AB7',
-                                color: '#EEEDFE',
-                                cursor: selection == null || envoiEnCours ? 'default' : 'pointer',
-                                marginTop: 8,
-                            }}
-                        >
-                            {envoiEnCours ? 'Envoi…' : 'Soumettre'}
-                        </button>
-                    ) : (
+                    {feedback ? (
                         <button
                             type="button"
                             onClick={questionSuivanteOuScore}
@@ -715,10 +696,33 @@ export default function QuizLiveParticiper() {
                                 boxSizing: 'border-box',
                             }}
                         >
-                            {!feedback.correct ? (
+                            {feedback.correct ? null : (
                                 <i className="ti ti-arrows-maximize" aria-hidden style={{ fontSize: btnFs }} />
-                            ) : null}
+                            )}
                             {idxCourant >= n - 1 ? 'Voir mon score' : 'Question suivante →'}
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            disabled={selection == null || envoiEnCours}
+                            onClick={() => {
+                                Promise.resolve(soumettre()).catch(() => {})
+                            }}
+                            style={{
+                                width: '100%',
+                                padding: btnPad,
+                                fontSize: btnFs,
+                                fontWeight: 500,
+                                border: 'none',
+                                borderRadius: 'var(--border-radius-md, 10px)',
+                                background:
+                                    selection == null || envoiEnCours ? '#94a3b8' : '#534AB7',
+                                color: '#EEEDFE',
+                                cursor: selection == null || envoiEnCours ? 'default' : 'pointer',
+                                marginTop: 8,
+                            }}
+                        >
+                            {envoiEnCours ? 'Envoi…' : 'Soumettre'}
                         </button>
                     )}
                 </section>

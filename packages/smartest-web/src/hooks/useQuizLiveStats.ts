@@ -10,6 +10,13 @@ import type {
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8081'
 const WS_URL = `${API_BASE.replace(/^http/, 'ws')}/ws`
 
+function stringifyEnonce(v: unknown): string {
+    if (v == null) return ''
+    if (typeof v === 'string') return v
+    if (typeof v === 'number' || typeof v === 'bigint' || typeof v === 'boolean') return String(v)
+    return ''
+}
+
 function mapStatRows(raw: unknown): QuizStatQuestion[] {
     if (!Array.isArray(raw)) return []
     return raw.map((r) => {
@@ -17,7 +24,7 @@ function mapStatRows(raw: unknown): QuizStatQuestion[] {
         return {
             questionId: Number(o.questionId ?? 0),
             numeroQuestion: Number(o.numeroQuestion ?? 0),
-            questionEnonce: String(o.questionEnonce ?? ''),
+            questionEnonce: stringifyEnonce(o.questionEnonce),
             nombreReponses: Number(o.nombreReponses ?? 0),
             nombreCorrectes: Number(o.nombreCorrectes ?? 0),
             nombreIncorrectes: Number(o.nombreIncorrectes ?? 0),
@@ -115,7 +122,7 @@ export function useQuizLiveStats(sessionToken: string, enabled: boolean) {
         return () => {
             setWsConnected(false)
             clientRef.current = null
-            void client.deactivate()
+            Promise.resolve(client.deactivate()).catch(() => {})
         }
     }, [enabled, sessionToken, sessionClosed, handleEnvelope])
 

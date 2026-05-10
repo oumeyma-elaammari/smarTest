@@ -80,25 +80,25 @@ const useAuth = create<AuthState>((set) => ({
     },
 
     logout: () => {
-        const confirmed = window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')
-        if (!confirmed) return
+        const confirmed = globalThis.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')
+        if (confirmed) {
+            if (!clearLs()) {
+                removeLsKeys([...AUTH_KEYS])
+            }
 
-        if (!clearLs()) {
-            removeLsKeys([...AUTH_KEYS])
-        }
+            set({
+                token: null,
+                role: null,
+                nom: null,
+                email: null,
+                isAuthenticated: false,
+            })
 
-        set({
-            token: null,
-            role: null,
-            nom: null,
-            email: null,
-            isAuthenticated: false,
-        })
-
-        try {
-            window.location.href = '/login'
-        } catch {
-            /* navigate fallback si location inaccessible */
+            try {
+                globalThis.location.href = '/login'
+            } catch {
+                /* navigate fallback si location inaccessible */
+            }
         }
     },
 

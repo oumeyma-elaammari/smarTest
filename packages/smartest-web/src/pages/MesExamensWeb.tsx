@@ -5,15 +5,14 @@ import { useNavigate } from 'react-router-dom'
 import api from '../api/axiosConfig'
 import { examenApi } from '../api/examenApi'
 import { ExamenListeCard } from '../components/examen/ExamenListeCard'
-import { examenListeItemSchema, type ExamenListeItem } from '../api/quizSchemas'
-import type { ExamenMeta } from '../api/quizSchemas'
+import { examenListeItemSchema, type ExamenListeItem, type ExamenMeta } from '../api/quizSchemas'
 import { parseDebutExamenMs } from '../utils/examenDisplay'
 import useAuth from '../hooks/useAuth'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 
 type MesExamensWebProps = {
-    accentBleu?: string
+    readonly accentBleu?: string
 }
 
 /** Convertit la métadonnée API en carte liste (professeur imbriqué). */
@@ -42,7 +41,18 @@ function metaToListeItem(m: ExamenMeta): ExamenListeItem {
         dateCreation: undefined,
         professeur: m.professeurNom ? { nom: m.professeurNom } : null,
     })
-    return parsed.success ? parsed.data : ({} as ExamenListeItem)
+    if (parsed.success) return parsed.data
+    return {
+        id: m.id,
+        titre: m.titre,
+        description: m.description ?? null,
+        duree: m.duree ?? null,
+        statut: m.statut,
+        dateDebut: m.dateDebut,
+        dateFin: m.dateDebut,
+        dateCreation: undefined,
+        professeur: m.professeurNom ? { nom: m.professeurNom } : null,
+    }
 }
 
 export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebProps) {
@@ -53,13 +63,15 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
     const [loading, setLoading] = useState(true)
     const [err, setErr] = useState<string | null>(null)
     const [twoCol, setTwoCol] = useState(() =>
-        typeof window !== 'undefined' ? window.matchMedia('(min-width: 700px)').matches : true,
+        typeof globalThis.window !== 'undefined'
+            ? globalThis.window.matchMedia('(min-width: 700px)').matches
+            : true,
     )
     const [lancementExamenId, setLancementExamenId] = useState<number | null>(null)
     const [actionErr, setActionErr] = useState<string | null>(null)
 
     useEffect(() => {
-        const mq = window.matchMedia('(min-width: 700px)')
+        const mq = globalThis.window.matchMedia('(min-width: 700px)')
         const apply = () => setTwoCol(mq.matches)
         apply()
         mq.addEventListener('change', apply)

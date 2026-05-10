@@ -6,9 +6,66 @@ import { QRCodeSVG } from 'qrcode.react'
 import { StatsBarre } from '../components/qr/StatsBarre'
 import { useQuizLiveStats } from '../hooks/useQuizLiveStats'
 import type { StreamEnvelope } from '../types/quizLive'
-import styles from './QuizLive.module.css'
+import styles from '../styles/QuizLive.module.css'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8081'
+
+function InvalidTokenView() {
+    return (
+        <div className={styles.page}>
+            <p>Lien invalide.</p>
+        </div>
+    )
+}
+
+function LoadErrorView({ message }: { readonly message: string }) {
+    return (
+        <div className={styles.page}>
+            <p role="alert" style={{ color: '#b91c1c', fontWeight: 600 }}>
+                {message}
+            </p>
+        </div>
+    )
+}
+
+function IntrouvableView() {
+    return (
+        <div className={styles.page}>
+            <h1 style={{ fontSize: '1.25rem', marginTop: 0 }}>Session introuvable ou terminée</h1>
+            <p style={{ color: '#64748b' }}>Cette session QR n&apos;est plus disponible.</p>
+        </div>
+    )
+}
+
+function SessionClosedSummary(props: {
+    readonly fermeeLocale: boolean
+    readonly totalSoumissions: number
+    readonly tauxReussiteGlobal: number | null
+}) {
+    return (
+        <div className={styles.sessionEndedShell}>
+            <div className={styles.sessionEndedInner}>
+                <h1>
+                    {props.fermeeLocale
+                        ? 'Session clôturée.'
+                        : 'Session terminée par le professeur.'}
+                </h1>
+                <div className={styles.endSummary}>
+                    <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: 14 }}>
+                        Réponses enregistrées (total) :{' '}
+                        <strong style={{ color: '#0f172a' }}>{props.totalSoumissions}</strong>
+                    </p>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>
+                        Score moyen (réussite sur les questions) :{' '}
+                        <strong style={{ color: '#0f172a' }}>
+                            {props.tauxReussiteGlobal != null ? `${props.tauxReussiteGlobal.toFixed(1)} %` : '—'}
+                        </strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export default function QuizLive() {
     const { sessionToken } = useParams<{ sessionToken: string }>()
@@ -22,8 +79,8 @@ export default function QuizLive() {
     const [isMobileLayout, setIsMobileLayout] = useState(false)
 
     const lienPassageQuiz = useMemo(() => {
-        if (!token || typeof window === 'undefined') return ''
-        return `${window.location.origin}/quiz-live/${encodeURIComponent(token)}/participer`
+        if (!token || typeof globalThis.window === 'undefined') return ''
+        return `${globalThis.location.origin}/quiz-live/${encodeURIComponent(token)}/participer`
     }, [token])
 
     const peutCharger = useMemo(() => token.length > 0, [token])
@@ -45,7 +102,7 @@ export default function QuizLive() {
     const [clotureEnCours, setClotureEnCours] = useState(false)
 
     useEffect(() => {
-        const mq = window.matchMedia('(max-width: 767px)')
+        const mq = globalThis.window.matchMedia('(max-width: 767px)')
         const sync = () => setIsMobileLayout(mq.matches)
         sync()
         mq.addEventListener('change', sync)
@@ -82,8 +139,9 @@ export default function QuizLive() {
     }, [token, seedFromSnapshot])
 
     useEffect(() => {
-        if (!peutCharger) return
-        void fetchSnapshot()
+        if (peutCharger) {
+            Promise.resolve(fetchSnapshot()).catch(() => {})
+        }
     }, [peutCharger, fetchSnapshot])
 
     const copierLien = async () => {
@@ -92,22 +150,25 @@ export default function QuizLive() {
         try {
             await navigator.clipboard.writeText(u)
             setCopieOk(true)
-            window.setTimeout(() => setCopieOk(false), 2000)
+            globalThis.setTimeout(() => setCopieOk(false), 2000)
         } catch {
             /* ignore */
         }
     }
 
     const handleFermerSession = async () => {
-        if (!window.confirm('Clôturer la session ? Les participants ne pourront plus répondre.')) return
-        setClotureEnCours(true)
-        try {
-            await closeSession()
-            setFermeeDepuisLaPage(true)
-        } catch {
-            window.alert('Impossible de clôturer la session. Vérifiez la connexion au serveur.')
-        } finally {
-            setClotureEnCours(false)
+        if (
+            globalThis.confirm('Clôturer la session ? Les participants ne pourront plus répondre.')
+        ) {
+            setClotureEnCours(true)
+            try {
+                await closeSession()
+                setFermeeDepuisLaPage(true)
+            } catch {
+                globalThis.alert('Impossible de clôturer la session. Vérifiez la connexion au serveur.')
+            } finally {
+                setClotureEnCours(false)
+            }
         }
     }
 
@@ -122,55 +183,24 @@ export default function QuizLive() {
     )
 
     if (!peutCharger) {
-        return (
-            <div className={styles.page}>
-                <p>Lien invalide.</p>
-            </div>
-        )
+        return <InvalidTokenView />
     }
 
     if (erreurCharge && !introuvable) {
-        return (
-            <div className={styles.page}>
-                <p role="alert" style={{ color: '#b91c1c', fontWeight: 600 }}>
-                    {erreurCharge}
-                </p>
-            </div>
-        )
+        return <LoadErrorView message={erreurCharge} />
     }
 
     if (introuvable) {
-        return (
-            <div className={styles.page}>
-                <h1 style={{ fontSize: '1.25rem', marginTop: 0 }}>Session introuvable ou terminée</h1>
-                <p style={{ color: '#64748b' }}>
-                    Cette session QR n&apos;est plus disponible.
-                </p>
-            </div>
-        )
+        return <IntrouvableView />
     }
 
     if (sessionClosed) {
         return (
-            <div className={styles.sessionEndedShell}>
-                <div className={styles.sessionEndedInner}>
-                    <h1>
-                        {fermeeDepuisLaPage ? 'Session clôturée.' : 'Session terminée par le professeur.'}
-                    </h1>
-                    <div className={styles.endSummary}>
-                        <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: 14 }}>
-                            Réponses enregistrées (total) :{' '}
-                            <strong style={{ color: '#0f172a' }}>{totalSoumissionsQuestions}</strong>
-                        </p>
-                        <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>
-                            Score moyen (réussite sur les questions) :{' '}
-                            <strong style={{ color: '#0f172a' }}>
-                                {tauxReussiteGlobal != null ? `${tauxReussiteGlobal.toFixed(1)} %` : '—'}
-                            </strong>
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <SessionClosedSummary
+                fermeeLocale={fermeeDepuisLaPage}
+                totalSoumissions={totalSoumissionsQuestions}
+                tauxReussiteGlobal={tauxReussiteGlobal}
+            />
         )
     }
 
@@ -181,7 +211,9 @@ export default function QuizLive() {
             title="Clôturer la session"
             aria-label="Clôturer la session"
             disabled={clotureEnCours}
-            onClick={() => void handleFermerSession()}
+            onClick={() => {
+                Promise.resolve(handleFermerSession()).catch(() => {})
+            }}
         >
             <Power
                 size={isMobileLayout ? 20 : 22}
@@ -226,7 +258,13 @@ export default function QuizLive() {
                         value={lienPassageQuiz}
                         aria-label="URL de passage du quiz"
                     />
-                    <button type="button" className={styles.copyBtn} onClick={() => void copierLien()}>
+                    <button
+                        type="button"
+                        className={styles.copyBtn}
+                        onClick={() => {
+                            Promise.resolve(copierLien()).catch(() => {})
+                        }}
+                    >
                         {copieOk ? 'Lien copié !' : 'Copier le lien'}
                     </button>
                 </div>
@@ -250,7 +288,7 @@ export default function QuizLive() {
                             <span className={styles.liveDot} aria-hidden />
                             <span>
                                 <strong>{participantsConnectes}</strong> participants connectés
-                                {wsConnected ? '' : ' (connexion temps réel…)'}
+                                {wsConnected ? null : ' (connexion temps réel…)'}
                             </span>
                         </div>
 
@@ -260,12 +298,7 @@ export default function QuizLive() {
 
                         <div id="quiz-live-stats">
                         
-                            {stats.length === 0 ? (
-                                <p style={{ color: '#64748b', fontSize: 14 }}>
-                                    Les statistiques s&apos;affichent lorsque le quiz est lancé et que des
-                                    réponses arrivent.
-                                </p>
-                            ) : (
+                            {stats.length > 0 ? (
                                 stats.map((s) => (
                                     <StatsBarre
                                         key={s.questionId}
@@ -273,6 +306,11 @@ export default function QuizLive() {
                                         nombreParticipants={participantsConnectes}
                                     />
                                 ))
+                            ) : (
+                                <p style={{ color: '#64748b', fontSize: 14 }}>
+                                    Les statistiques s&apos;affichent lorsque le quiz est lancé et que des
+                                    réponses arrivent.
+                                </p>
                             )}
                         </div>
                     </>

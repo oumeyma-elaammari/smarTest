@@ -32,7 +32,7 @@ export default function ForgotPassword() {
             await api.post('/auth/forgot-password/etudiant', { email: data.email.trim().toLowerCase() })
             setSuccess(true)
         } catch (err: any) {
-            setError(!err?.response ? 'Impossible de contacter le serveur' : 'Une erreur est survenue. Réessayez.')
+            setError(err?.response ? 'Une erreur est survenue. Réessayez.' : 'Impossible de contacter le serveur')
         } finally {
             setIsLoading(false)
         }
@@ -72,7 +72,7 @@ export default function ForgotPassword() {
                 )}
                 {error && <Alert type="error">{error}</Alert>}
 
-                {!success && (
+                {success ? null : (
                     <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                         <Field label="Email" error={errors.email?.message}>
                             <input {...register('email')} type="email" placeholder="email@exemple.com"
