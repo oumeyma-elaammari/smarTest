@@ -61,6 +61,7 @@ public class QuizService {
     private final StatistiqueRecalculService statistiqueRecalculService;
     private final StatistiqueService statistiqueService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final QuizQrLiveStatsService quizQrLiveStatsService;
 
     // ================= GET =================
 
@@ -147,6 +148,24 @@ public class QuizService {
                         ? convertToDTOAvecScoreEtudiant(quiz, etudiantId)
                         : convertToDTOPublicationWebSansScoresEtudiant(quiz))
                 .toList();
+    }
+
+    /**
+     * Statistiques agrégées QR live (mémoire) : réservé au professeur propriétaire du quiz.
+     */
+    public QuizQrLiveStatsResponse getQrLiveStats(Long quizId, String professeurEmail) {
+        chargerQuizDuProfesseur(quizId, professeurEmail);
+        return quizQrLiveStatsService.snapshot(quizId);
+    }
+
+    /**
+     * Remet à zéro les stats QR live pour ce quiz et diffuse le nouvel agrégat sur le topic STOMP.
+     */
+    public void clearQrLiveStats(Long quizId, String professeurEmail) {
+        chargerQuizDuProfesseur(quizId, professeurEmail);
+        quizQrLiveStatsService.clear(quizId);
+        QuizQrLiveStatsResponse refreshed = quizQrLiveStatsService.snapshot(quizId);
+        messagingTemplate.convertAndSend("/topic/quiz/" + quizId + "/qr-live", refreshed);
     }
 
     /**
