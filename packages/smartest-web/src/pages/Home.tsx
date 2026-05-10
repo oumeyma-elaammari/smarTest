@@ -141,20 +141,7 @@ export default function Home() {
                     gap: 16, width: '100%', maxWidth: 780,
                 }}>
                     {features.map((f) => (
-                        <div key={f.title} style={{
-                            background: '#fff', border: '1px solid #e2e8f4',
-                            borderRadius: 14, padding: '26px 22px', textAlign: 'center',
-                            transition: 'border-color 0.2s, box-shadow 0.2s',
-                        }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = '#b8cff5'
-                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(15,30,61,0.06)'
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = '#e2e8f4'
-                                e.currentTarget.style.boxShadow = 'none'
-                            }}
-                        >
+                        <article key={f.title} className="home-feature-card">
                             <div style={{
                                 width: 32, height: 2, background: '#4f8ef7',
                                 borderRadius: 2, margin: '0 auto 16px',
@@ -165,7 +152,7 @@ export default function Home() {
                             <p style={{ fontSize: 11.5, color: '#8899b8', lineHeight: 1.6 }}>
                                 {f.desc}
                             </p>
-                        </div>
+                        </article>
                     ))}
                 </div>
             </div>

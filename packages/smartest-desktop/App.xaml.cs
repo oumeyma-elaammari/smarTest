@@ -72,6 +72,30 @@ namespace smartest_desktop
         private static string CheminDbPourEmail(string email) =>
             Path.Combine(DossierDonneesPourEmail(email), "smartest_local.db");
 
+        /// <summary>
+        /// Ancienne variante : un seul <c>smartest_local.db</c> à la racine SmarTest. Si la base du compte n’existe pas encore,
+        /// copie ce fichier vers le dossier de l’email (migration sans perte pour qui avait la version « fichier unique »).
+        /// </summary>
+        private static void MigrerSqliteRacineVersCompteSiAbsent(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return;
+            try
+            {
+                string cible = CheminDbPourEmail(email.Trim());
+                if (File.Exists(cible))
+                    return;
+                string racine = Path.Combine(DossierApp, "smartest_local.db");
+                if (!File.Exists(racine))
+                    return;
+                File.Copy(racine, cible, overwrite: false);
+            }
+            catch
+            {
+                // Verrouillage ou autre — nouvelle tentative au prochain démarrage
+            }
+        }
+
         private static string CheminPreferenceProfilPourEmail(string email) =>
             Path.Combine(DossierDonneesPourEmail(email), "profile_prefs.json");
 
@@ -93,10 +117,11 @@ namespace smartest_desktop
         public static void InitialiserPourEmail(string email)
         {
             LocalDb?.Dispose();
+            MigrerSqliteRacineVersCompteSiAbsent(email);
             LocalDbContext.CheminBase = CheminDbPourEmail(email);
             LocalDb = InitialiserBase();
             Directory.CreateDirectory(DossierApp);
-            File.WriteAllText(FichierDernierEmail, email.Trim().ToLower(), Encoding.UTF8);
+            File.WriteAllText(FichierDernierEmail, email.Trim().ToLowerInvariant(), Encoding.UTF8);
         }
 
         /// <remarks>
@@ -227,6 +252,7 @@ namespace smartest_desktop
                 string? dernierEmail = LireDernierEmail();
                 if (!string.IsNullOrWhiteSpace(dernierEmail))
                 {
+                    MigrerSqliteRacineVersCompteSiAbsent(dernierEmail);
                     LocalDbContext.CheminBase = CheminDbPourEmail(dernierEmail);
                     LocalDb = InitialiserBase();
 

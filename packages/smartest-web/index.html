@@ -2,17 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!--
-      Integrity (SRI) non ajoutée ici :
-      - L’entrée Vite (/src/main.tsx) est servie en même origine par le bundler ou les assets buildés ;
-      - La feuille Google Fonts peut varier selon les versions côté fournisseur, ce qui casse les hashs ;
-      Risque résiduel acceptable pour ces ressources d’affichage ; durcissement possible via polices auto-hébergées + CSP stricte.
-    -->
+    <!-- Polices : @fontsource (bundlées, même origine) — voir src/styles/fonts.css -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" crossorigin="anonymous" />
     <title>SmarTest — Étudiants</title>
   </head>
   <body>

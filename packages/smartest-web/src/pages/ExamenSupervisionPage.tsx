@@ -410,7 +410,6 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         border: 'none',
         background: enabled ? accentBleu : '#94a3b8',
         color: '#fff',
-        opacity: enabled ? 1 : 1,
         cursor: enabled ? 'pointer' : 'not-allowed',
         boxShadow: enabled ? '0 1px 4px rgba(79, 142, 247, 0.28)' : 'none',
     })
