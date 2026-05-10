@@ -74,6 +74,23 @@ namespace smartest_desktop.Services
                 await _db.SaveChangesAsync(cancellationToken);
             }, "Mise à jour de l’examen");
 
+        public async Task MettreAJourPublicationWebLocaleAsync(
+            int examenLocalId,
+            long? backendId,
+            string emailsPublicationWebJson,
+            string statut)
+        {
+            var examen = await _db.Examens.FindAsync(new object[] { examenLocalId });
+            if (examen == null)
+                throw new System.InvalidOperationException("Examen introuvable ou déjà supprimé.");
+
+            if (backendId.HasValue)
+                examen.BackendId = backendId.Value;
+            examen.EmailsPublicationWebJson = emailsPublicationWebJson ?? string.Empty;
+            examen.Statut = statut;
+            await _db.SaveChangesAsync();
+        }
+
         public Task SupprimerAsync(int id, CancellationToken cancellationToken = default) =>
             InvokeDbAsync(async () =>
             {

@@ -136,7 +136,10 @@ namespace smartest_desktop.Views
                         examenComplet.Duree,
                         difficulte,
                         coursTitre,
-                        examenComplet.Id);
+                        examenComplet.Id,
+                        statutExamen: examenComplet.Statut ?? "BROUILLON",
+                        emailsPublicationWebJson: examenComplet.EmailsPublicationWebJson,
+                        datePrevue: examenComplet.DatePrevue);
 
                     resultWindow.Show();
                     App.GarderUneSeuleFenetreOuverte(resultWindow);

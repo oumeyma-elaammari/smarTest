@@ -23,7 +23,10 @@ namespace smartest_desktop.Views
             int duree,
             string difficulte,
             string coursTitre,
-            int? examenIdExistant = null)
+            int? examenIdExistant = null,
+            string statutExamen = "BROUILLON",
+            string? emailsPublicationWebJson = null,
+            DateTime? datePrevue = null)
         {
             InitializeComponent();
             Closing += ExamenResultWindow_Closing;
@@ -45,7 +48,10 @@ namespace smartest_desktop.Views
                 difficulte,
                 coursTitre,
                 examenIdExistant,
-                supprimerPersistant);
+                supprimerPersistant,
+                statutExamen,
+                emailsPublicationWebJson,
+                datePrevue);
             DataContext = vm;
 
             vm.NavigationRetourRequested += () =>
@@ -68,7 +74,14 @@ namespace smartest_desktop.Views
                 });
             };
 
-            vm.ExamenValide += async (questionsValidees, titreExamen, dureeExamen, difficulteExamen, coursTitreExamen) =>
+            vm.ExamenValide += async (
+                questionsValidees,
+                titreExamen,
+                dureeExamen,
+                difficulteExamen,
+                coursTitreExamen,
+                emailsJson,
+                datePrevuePassage) =>
             {
                 try
                 {
@@ -80,7 +93,9 @@ namespace smartest_desktop.Views
                             idExistant,
                             titreExamen,
                             dureeExamen,
-                            questionsValidees.ToList());
+                            questionsValidees.ToList(),
+                            emailsJson,
+                            datePrevuePassage);
 
                         Dispatcher.Invoke(() =>
                         {
@@ -104,7 +119,9 @@ namespace smartest_desktop.Views
                             Titre = titreExamen,
                             Duree = dureeExamen,
                             Statut = "BROUILLON",
-                            DateCreation = DateTime.Now
+                            DateCreation = DateTime.Now,
+                            EmailsPublicationWebJson = emailsJson ?? "[]",
+                            DatePrevue = datePrevuePassage
                         };
 
                         await svcPersist.SauvegarderAsync(
@@ -119,7 +136,8 @@ namespace smartest_desktop.Views
                                 $"• {questionsValidees.Count} questions\n" +
                                 $"• Difficulté : {difficulteExamen}\n" +
                                 $"• Durée : {dureeExamen} min\n" +
-                                $"• Cours : {coursTitreExamen}",
+                                $"• Cours : {coursTitreExamen}\n\n" +
+                                "Renseignez la publication web et le créneau dans l'écran de révision, puis utilisez « Publier sur le web » dans la liste des examens.",
                                 "Examen enregistré",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
@@ -168,9 +186,8 @@ namespace smartest_desktop.Views
         {
             _isClosing = true;
             if (_fermetureConfirmee)
-            {
                 return;
-            }
+
             _fermetureConfirmee = true;
             _navigationInProgress = true;
             Application.Current.Shutdown();

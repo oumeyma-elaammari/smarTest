@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Newtonsoft.Json;
+using System.Windows.Threading;
 using WpfApp = System.Windows.Application;
 
 namespace smartest_desktop.ViewModels
@@ -251,6 +252,7 @@ namespace smartest_desktop.ViewModels
         public ICommand PublierSurLeWebCommand { get; }
 
         public ICommand SupprimerExamenCommand { get; }
+        public ICommand PublierExamenSurLeWebCommand { get; }
         public ICommand LancerExamenCommand { get; }
         public ICommand OuvrirQuizCommand { get; }
         public ICommand OuvrirCodeQrQuizCommand { get; }
@@ -260,6 +262,9 @@ namespace smartest_desktop.ViewModels
         public ICommand QuizPageSuivanteCommand { get; }
         public ICommand ExamenPagePrecedenteCommand { get; }
         public ICommand ExamenPageSuivanteCommand { get; }
+
+        /// <summary>Réévalue périodiquement « Lancer » (supervision) pour activer le bouton à l’heure du créneau.</summary>
+        private readonly DispatcherTimer _timerMiseAJourLancerExamen;
 
         public QuizExamenViewModel()
         {
@@ -286,10 +291,15 @@ namespace smartest_desktop.ViewModels
                 async p => await SupprimerExamenAsync(p),
                 p => p is ExamenListeRow);
 
+            PublierExamenSurLeWebCommand = new RelayCommand(
+                async p => await PublierExamenSurLeWebAsync(p),
+                p => p is ExamenListeRow { Examen: var ex } && EstExamenPubliableSurLeWeb(ex));
+
             LancerExamenCommand = new RelayCommand(
-                p => LancerExamen(p),
+                p => _ = OuvrirSupervisionExamenAsync(p),
                 p => p is ExamenListeRow { Examen: var e } &&
-                     string.Equals(e.Statut, "PUBLIE", System.StringComparison.OrdinalIgnoreCase));
+                     EstExamenPublieSurLeWebPourSupervision(e) &&
+                     EstCreneauLancementExamenAtteint(e));
 
             OuvrirQuizCommand = new RelayCommand(
                 p =>
@@ -331,6 +341,17 @@ namespace smartest_desktop.ViewModels
                 _ => PageExamen < PagesExamensTotal);
 
             _ = ChargerDonneesAsync();
+
+            _timerMiseAJourLancerExamen = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(15),
+            };
+            _timerMiseAJourLancerExamen.Tick += (_, _) =>
+            {
+                if (LancerExamenCommand is RelayCommand r)
+                    r.RaiseCanExecuteChanged();
+            };
+            _timerMiseAJourLancerExamen.Start();
         }
 
         private List<QuizLocal> ObtenirQuizFiltres()
@@ -536,6 +557,13 @@ namespace smartest_desktop.ViewModels
 
                 RafraichirPaginationQuiz();
                 RafraichirPaginationExamens();
+
+                if (PublierSurLeWebCommand is RelayCommand rpw)
+                    rpw.RaiseCanExecuteChanged();
+                if (PublierExamenSurLeWebCommand is RelayCommand rpe)
+                    rpe.RaiseCanExecuteChanged();
+                if (LancerExamenCommand is RelayCommand rle)
+                    rle.RaiseCanExecuteChanged();
             }
             catch (System.Exception ex)
             {
@@ -1022,17 +1050,236 @@ namespace smartest_desktop.ViewModels
             if (SelectedExamen?.Id == examen.Id) SelectedExamen = null;
         }
 
-        private static void LancerExamen(object? parameter)
+        private static bool EstExamenPubliableSurLeWeb(ExamenLocal e)
+        {
+            if (!string.Equals(e.Statut?.Trim(), "BROUILLON", StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (!e.DatePrevue.HasValue)
+                return false;
+            return TryGetSavedPublicationEmailsExamen(e, out var list) && list.Count > 0;
+        }
+
+        /// <summary>Publié sur le web : statut et identifiant serveur (session distante créée).</summary>
+        private static bool EstExamenPublieSurLeWebPourSupervision(ExamenLocal e) =>
+            string.Equals(e.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase) &&
+            e.BackendId.HasValue &&
+            e.BackendId.Value > 0;
+
+        private static DateTime NormaliserDatePrevueEnLocal(DateTime d)
+        {
+            if (d.Kind == DateTimeKind.Utc)
+                return d.ToLocalTime();
+            return d;
+        }
+
+        /// <summary>Vrai lorsque l’heure actuelle est au moins égale à la date/heure prévue (créneau).</summary>
+        private static bool EstCreneauLancementExamenAtteint(ExamenLocal e)
+        {
+            if (!e.DatePrevue.HasValue)
+                return false;
+            var debut = NormaliserDatePrevueEnLocal(e.DatePrevue.Value);
+            return DateTime.Now >= debut;
+        }
+
+        private static string FormaterDatePrevuePourMessage(ExamenLocal e)
+        {
+            if (!e.DatePrevue.HasValue)
+                return "(non définie)";
+            var d = NormaliserDatePrevueEnLocal(e.DatePrevue.Value);
+            return d.ToString("dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.GetCultureInfo("fr-FR"));
+        }
+
+        private static bool TryGetSavedPublicationEmailsExamen(ExamenLocal examen, out List<string> emails)
+        {
+            emails = new List<string>();
+            if (string.IsNullOrWhiteSpace(examen.EmailsPublicationWebJson))
+                return false;
+            try
+            {
+                var list = JsonConvert.DeserializeObject<List<string>>(examen.EmailsPublicationWebJson);
+                if (list == null) return false;
+                emails.AddRange(list.Where(s => !string.IsNullOrWhiteSpace(s)));
+                return emails.Count > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task PublierExamenSurLeWebAsync(object? parameter)
+        {
+            if (parameter is not ExamenListeRow row) return;
+            var examen = row.Examen;
+            if (!EstExamenPubliableSurLeWeb(examen)) return;
+
+            var token = WpfApp.Current.Properties["Token"]?.ToString();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                MessageBox.Show(
+                    "Session invalide ou expirée. Reconnectez-vous pour publier sur le web.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!TryGetSavedPublicationEmailsExamen(examen, out var emails) || emails.Count == 0)
+            {
+                MessageBox.Show(
+                    "Cet examen n'a pas de liste d'emails pour la publication web.\n\n" +
+                    "Ouvrez l'examen depuis la liste et remplissez la section « Publication et créneau », puis validez.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (!examen.DatePrevue.HasValue)
+            {
+                MessageBox.Show(
+                    "Définissez la date et l'heure de lancement de l'examen (écran de révision, section créneau).",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (emails.Count > QuizPublicationLimits.MaxAuthorizedStudentEmails)
+            {
+                MessageBox.Show(
+                    $"La liste comporte plus de {QuizPublicationLimits.MaxAuthorizedStudentEmails} emails. " +
+                    $"Seuls les {QuizPublicationLimits.MaxAuthorizedStudentEmails} premiers seront envoyés au serveur.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                emails = emails.Take(QuizPublicationLimits.MaxAuthorizedStudentEmails).ToList();
+            }
+
+            string titreEx = string.IsNullOrWhiteSpace(examen.Titre) ? row.TitreAffiche : examen.Titre.Trim();
+            var debut = examen.DatePrevue.Value;
+            if (debut.Kind == DateTimeKind.Utc)
+                debut = debut.ToLocalTime();
+            var conf = MessageBox.Show(
+                $"Publier l'examen « {titreEx} » sur le web ?\n\n" +
+                $"{emails.Count} adresse(s) autorisée(s). " +
+                $"Début : {debut:dd/MM/yyyy HH:mm} — durée {examen.Duree} min (fin prévue côté serveur : {debut.AddMinutes(Math.Max(1, examen.Duree)):dd/MM/yyyy HH:mm}).\n\n" +
+                "Confirmer la publication ?",
+                "Publication web — examen",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            if (conf != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var api = new ExamenWebPublicationApiService();
+                long profId = await api.GetProfesseurIdAsync(token);
+                long backendId = examen.BackendId ?? 0;
+                var fin = debut.AddMinutes(Math.Max(1, examen.Duree));
+                string desc = string.IsNullOrWhiteSpace(examen.Description) ? string.Empty : examen.Description.Trim();
+
+                if (backendId <= 0)
+                {
+                    backendId = await api.CreateExamenAsync(
+                        token, profId, titreEx, examen.Duree, desc, debut, fin);
+                }
+
+                var examContenu = await _examenService.GetByIdAsync(examen.Id);
+                var qs = examContenu?.Questions ?? new List<QuestionLocale>();
+                await api.SynchroniserQuestionsPublicationWebAsync(token, backendId, qs);
+
+                await api.DefinirEmailsAutorisesAsync(token, backendId, emails);
+                string json = JsonConvert.SerializeObject(emails);
+                await _examenService.MettreAJourPublicationWebLocaleAsync(examen.Id, backendId, json, "PUBLIE");
+                await ChargerDonneesAsync();
+                var syncCount = qs
+                    .Where(q => !string.IsNullOrWhiteSpace(q.Enonce)
+                        && new[] { q.OptionA, q.OptionB, q.OptionC, q.OptionD }.Count(s => !string.IsNullOrWhiteSpace(s)) >= 2)
+                    .Count();
+                MessageBox.Show(
+                    syncCount > 0
+                        ? $"L'examen a été publié sur le web.\n\n{syncCount} question(s) avec propositions ont été enregistrées sur le serveur (supervision et passage élèves).\n\nSi la supervision web affichait « Aucune question », rouvrez-la après cette publication."
+                        : "L'examen a été publié sur le web. Les étudiants listés verront l'épreuve à partir de la date prévue.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (SmartestApiException ex)
+            {
+                MessageBox.Show(ex.Message, "Publication web", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (SmartestNetworkException ex)
+            {
+                MessageBox.Show(ex.Message, "Publication web", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erreur inattendue : {ex.Message}",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private async Task OuvrirSupervisionExamenAsync(object? parameter)
         {
             if (parameter is not ExamenListeRow row) return;
             var examen = row.Examen;
 
-            MessageBox.Show(
-                $"Lancer la session pour « {examen.Titre} » (durée {examen.Duree} min).\n\n" +
-                "La supervision temps réel sera disponible dans une prochaine version.",
-                "Lancer l'examen",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            if (!EstExamenPublieSurLeWebPourSupervision(examen))
+            {
+                MessageBox.Show(
+                    "Vous devez d'abord publier cet examen sur le web (bouton « Publier » : emails autorisés + créneau). " +
+                    "Sans publication, la supervision et le lancement côté élèves ne sont pas disponibles.",
+                    "Lancement / supervision",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (!examen.DatePrevue.HasValue)
+            {
+                MessageBox.Show(
+                    "La date et l'heure de l'examen ne sont pas renseignées. Définissez le créneau dans l'écran de révision, puis republiez si nécessaire.",
+                    "Créneau",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!EstCreneauLancementExamenAtteint(examen))
+            {
+                MessageBox.Show(
+                    "Vous ne pouvez pas ouvrir la supervision pour lancer l'écran élève avant l'heure prévue du créneau.\n\n" +
+                    $"Heure prévue : {FormaterDatePrevuePourMessage(examen)}\n\n" +
+                    "Revenez à ce moment ou attendez que l'heure soit atteinte (le bouton « Lancer » s'activera automatiquement).",
+                    "Créneau non atteint",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            string url = $"http://localhost:5173/supervision/examen/{examen.BackendId.Value}";
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Impossible d'ouvrir automatiquement la supervision web.\n\n" +
+                    $"Ouvrez manuellement cette adresse :\n{url}\n\n({ex.Message})",
+                    "Supervision",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+
+            await ChargerDonneesAsync();
         }
 
         private static void ExecuteLogout()

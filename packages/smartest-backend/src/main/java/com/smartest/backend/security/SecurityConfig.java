@@ -54,6 +54,10 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions/*/reponses").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web")
+                                .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata")
+                                .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole(ROLE_ETUDIANT)
                         .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.DELETE, "/api/qr-live/sessions/**").permitAll()
@@ -97,7 +101,7 @@ public class SecurityConfig {
 
         // ✅ Autorise React web (localhost:5173) + app desktop WPF (sans Origin header)
         config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(false); // false car desktop n'envoie pas de cookies
 

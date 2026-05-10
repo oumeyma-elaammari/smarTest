@@ -27,5 +27,4 @@ public class RegisterRequest {
 
     @NotBlank(message = "La confirmation est obligatoire")
     private String confirmPassword;
-
-    }
+}

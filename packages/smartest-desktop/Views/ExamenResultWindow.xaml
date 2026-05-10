@@ -187,10 +187,33 @@
 					<Border Grid.Row="0" Padding="20,18,20,14" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1">
 						<StackPanel>
 							<TextBlock Text="Questions de l'examen" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
-							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
-									   Text="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
+							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0">
+								<TextBlock.Style>
+									<Style TargetType="TextBlock">
+										<Setter Property="Text" Value="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
+										<Style.Triggers>
+											<DataTrigger Binding="{Binding QuestionsVerrouilleesParPublication}" Value="True">
+												<Setter Property="Text" Value="{Binding NombreQuestions, StringFormat='{}{0} questions · Lecture seule (examen publié)'}"/>
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</TextBlock.Style>
+							</TextBlock>
 							<TextBlock FontSize="11" Foreground="#475569" Margin="0,4,0,0"
 									   Text="{Binding ResumeBareme}"/>
+							<Button Margin="0,14,0,0" HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="14,9" Cursor="Hand"
+                                    Background="#eef3fd" BorderBrush="#cfe0fc" BorderThickness="1"
+                                    Command="{Binding VoirListeEtudiantsCommand}"
+                                    FocusVisualStyle="{x:Null}">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                               Foreground="#4f8ef7" Margin="0,0,8,0" VerticalAlignment="Center"/>
+									<TextBlock Text="Publication et créneau" FontSize="12" FontWeight="600" Foreground="#1a2e5a"
+                                               VerticalAlignment="Center"/>
+								</StackPanel>
+							</Button>
 							<TextBlock Text="Ajouter une question" FontSize="10" FontWeight="700"
                                        Foreground="#9CA3AF" Margin="0,14,0,8"/>
 							<StackPanel Orientation="Horizontal">
@@ -198,12 +221,34 @@
                                         Background="#f0f3f9" BorderBrush="#e2e8f4" BorderThickness="1"
                                         Command="{Binding AjouterQuestionCommand}" CommandParameter="QCM"
                                         FocusVisualStyle="{x:Null}">
+									<Button.Style>
+										<Style TargetType="Button">
+											<Setter Property="IsEnabled" Value="True"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding QuestionsVerrouilleesParPublication}" Value="True">
+													<Setter Property="IsEnabled" Value="False"/>
+													<Setter Property="Opacity" Value="0.5"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
 									<TextBlock Text="QCM" FontSize="11" FontWeight="600" Foreground="#0f1e3d"/>
 								</Button>
 								<Button Margin="0,0,6,0" Padding="10,8" Cursor="Hand"
                                         Background="#f5f3ff" BorderBrush="#ddd6fe" BorderThickness="1"
                                         Command="{Binding AjouterQuestionCommand}" CommandParameter="CHECKBOX"
                                         FocusVisualStyle="{x:Null}">
+									<Button.Style>
+										<Style TargetType="Button">
+											<Setter Property="IsEnabled" Value="True"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding QuestionsVerrouilleesParPublication}" Value="True">
+													<Setter Property="IsEnabled" Value="False"/>
+													<Setter Property="Opacity" Value="0.5"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
 									<TextBlock Text="Cases à cocher" FontSize="11" FontWeight="600" Foreground="#5b21b6"/>
 								</Button>
 								<Button Margin="0,0,6,0" Padding="10,8" Cursor="Hand"
@@ -216,6 +261,17 @@
                                         Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1"
                                         Command="{Binding AjouterQuestionCommand}" CommandParameter="REDACTION"
                                         FocusVisualStyle="{x:Null}">
+									<Button.Style>
+										<Style TargetType="Button">
+											<Setter Property="IsEnabled" Value="True"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding QuestionsVerrouilleesParPublication}" Value="True">
+													<Setter Property="IsEnabled" Value="False"/>
+													<Setter Property="Opacity" Value="0.5"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
 									<TextBlock Text="Rédaction" FontSize="11" FontWeight="600" Foreground="#b45309"/>
 								</Button>
 							</StackPanel>
@@ -340,25 +396,172 @@
 				</Grid>
 			</Border>
 
-			<!-- ══ DÉTAIL DE LA QUESTION ══ -->
-			<ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-				<Grid Margin="36,32,36,32">
+			<!-- ══ DÉTAIL / PUBLICATION ══ -->
+			<Grid Grid.Column="1" Background="#FBFBFB">
+				<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Visibility="{Binding AfficherEtatSansQuestion, Converter={StaticResource BoolToVis}}">
+					<TextBlock Text="&#xE762;" FontFamily="Segoe MDL2 Assets" FontSize="44" Foreground="#e2e8f4"
+                               HorizontalAlignment="Center"/>
+					<TextBlock Text="Sélectionnez une question"
+                               FontSize="16" Foreground="#ABABAB"
+                               HorizontalAlignment="Center" Margin="0,12,0,0"/>
+					<TextBlock Text="ou ouvrez « Publication et créneau » dans la colonne de gauche"
+                               FontSize="13" Foreground="#CACACA"
+                               HorizontalAlignment="Center" TextAlignment="Center" Margin="0,6,0,0" MaxWidth="340" TextWrapping="Wrap"/>
+				</StackPanel>
 
-					<!-- Placeholder si aucune question sélectionnée -->
-					<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                                Visibility="{Binding NoQuestion, Converter={StaticResource BoolToVis}}">
-						<TextBlock Text="&#xE762;" FontFamily="Segoe MDL2 Assets" FontSize="44" Foreground="#e2e8f4"
-                                   HorizontalAlignment="Center"/>
-						<TextBlock Text="Sélectionnez une question"
-                                   FontSize="16" Foreground="#ABABAB"
-                                   HorizontalAlignment="Center" Margin="0,12,0,0"/>
-						<TextBlock Text="pour afficher et ajuster son contenu"
-                                   FontSize="13" Foreground="#CACACA"
-                                   HorizontalAlignment="Center" Margin="0,6,0,0"/>
+				<ScrollViewer VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding AfficherListeEtudiantsDroite, Converter={StaticResource BoolToVis}}">
+					<StackPanel Margin="12,12,12,16">
+						<Border Padding="14,12" CornerRadius="10" Background="White" BorderBrush="#e2e8f4" BorderThickness="1" Margin="0,0,0,12">
+							<StackPanel>
+								<TextBlock Text="Publication web" FontSize="13" FontWeight="700" Foreground="#0f1e3d"/>
+								<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#8899b8" Margin="0,4,0,10"
+                                           Text="Étudiants autorisés : import CSV / Excel, ajout d'une adresse, sélection multiple pour retirer des lignes. Enregistré avec l'examen à la validation."/>
+								<StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+									<Border CornerRadius="8" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" Background="#0f1e3d">
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick" Command="{Binding ImporterEmailsWebCommand}"/>
+										</Border.InputBindings>
+										<Border.Style>
+											<Style TargetType="Border">
+												<Style.Triggers>
+													<Trigger Property="IsMouseOver" Value="True">
+														<Setter Property="Background" Value="#1a2e5a"/>
+													</Trigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<TextBlock Text="Importer fichier" FontSize="11" FontWeight="600" Foreground="White"/>
+									</Border>
+									<Border CornerRadius="8" Padding="12,8" Cursor="Hand"
+                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" ToolTip="Effacer la liste">
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick" Command="{Binding EffacerEmailsWebCommand}"/>
+										</Border.InputBindings>
+										<Border.Style>
+											<Style TargetType="Border">
+												<Style.Triggers>
+													<Trigger Property="IsMouseOver" Value="True">
+														<Setter Property="Background" Value="#FEE2E2"/>
+													</Trigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="#DC2626"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+									</Border>
+								</StackPanel>
+								<TextBlock Text="{Binding LibelleEmailsPublicationWeb}" FontSize="10" Foreground="#64748b" Margin="0,0,0,10"/>
+								<TextBlock Text="Ajouter un email" FontSize="10" FontWeight="600" Foreground="#64748b" Margin="0,0,0,4"/>
+								<Grid Margin="0,0,0,12">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="8"/>
+										<ColumnDefinition Width="Auto"/>
+									</Grid.ColumnDefinitions>
+									<Border Grid.Column="0" CornerRadius="8" BorderBrush="#e2e8f4" BorderThickness="1" Background="#fafbfd" Padding="8,4">
+										<TextBox Text="{Binding NouvelEmailWeb, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontSize="11" Foreground="#0f1e3d" BorderThickness="0" Background="Transparent"
+                                                 VerticalContentAlignment="Center" CaretBrush="#4f8ef7"/>
+									</Border>
+									<Border Grid.Column="2" CornerRadius="8" Padding="12,8" Cursor="Hand" Background="#0f1e3d" VerticalAlignment="Center">
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick" Command="{Binding AjouterEmailUnitaireWebCommand}"/>
+										</Border.InputBindings>
+										<Border.Style>
+											<Style TargetType="Border">
+												<Style.Triggers>
+													<Trigger Property="IsMouseOver" Value="True">
+														<Setter Property="Background" Value="#1a2e5a"/>
+													</Trigger>
+												</Style.Triggers>
+											</Style>
+										</Border.Style>
+										<TextBlock Text="Ajouter" FontSize="11" FontWeight="600" Foreground="White"/>
+									</Border>
+								</Grid>
+								<Grid Margin="0,0,0,6">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="Auto"/>
+									</Grid.ColumnDefinitions>
+									<TextBlock Grid.Column="0" Text="Liste des emails" FontSize="10" FontWeight="700" Foreground="#0f1e3d" VerticalAlignment="Center"/>
+									<Button Grid.Column="1" Command="{Binding SupprimerEmailsSelectionnesWebCommand}"
+                                            Padding="10,6" FontSize="11" FontWeight="600" Cursor="Hand"
+                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" Foreground="#B91C1C"
+                                            FocusVisualStyle="{x:Null}" ToolTip="Retire de la liste les adresses cochées">
+										<Button.Style>
+											<Style TargetType="Button">
+												<Style.Triggers>
+													<Trigger Property="IsMouseOver" Value="True">
+														<Setter Property="Background" Value="#FEE2E2"/>
+													</Trigger>
+													<Trigger Property="IsEnabled" Value="False">
+														<Setter Property="Opacity" Value="0.45"/>
+													</Trigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+										Supprimer la sélection
+									</Button>
+								</Grid>
+								<TextBlock Text="Aucun email pour l'instant."
+                                           FontSize="11" Foreground="#94a3b8" TextWrapping="Wrap"
+                                           Visibility="{Binding AucunEmailListeApercu, Converter={StaticResource BoolToVis}}"/>
+								<ItemsControl ItemsSource="{Binding EmailsListeApercu}">
+									<ItemsControl.Style>
+										<Style TargetType="ItemsControl">
+											<Setter Property="Visibility" Value="Visible"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding AucunEmailListeApercu}" Value="True">
+													<Setter Property="Visibility" Value="Collapsed"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</ItemsControl.Style>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<Border Margin="0,0,0,4" Padding="8,6" CornerRadius="6" Background="#f1f5f9" BorderBrush="#e2e8f4" BorderThickness="1">
+												<StackPanel Orientation="Horizontal">
+													<CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+													<TextBlock Text="{Binding Email}" FontSize="11" Foreground="#0f1e3d" FontFamily="Consolas" VerticalAlignment="Center"/>
+												</StackPanel>
+											</Border>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</StackPanel>
+						</Border>
+
+						<Border Padding="14,12" CornerRadius="10" Background="White" BorderBrush="#e2e8f4" BorderThickness="1">
+							<StackPanel>
+								<TextBlock Text="Date et horaire de lancement" FontSize="13" FontWeight="700" Foreground="#0f1e3d"/>
+								<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#8899b8" Margin="0,4,0,12"
+                                           Text="À partir de cette date et heure, les étudiants autorisés peuvent rejoindre l'examen sur le web (selon l'heure du serveur)."/>
+								<TextBlock Text="Jour" FontSize="11" FontWeight="600" Foreground="#8899b8" Margin="0,0,0,6"/>
+								<DatePicker SelectedDate="{Binding DateExamen, Mode=TwoWay}" FontSize="14" Padding="4,6" BorderBrush="#e2e8f4" Margin="0,0,0,12"/>
+								<StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+									<TextBlock Text="Heure" FontSize="11" FontWeight="600" Foreground="#8899b8" VerticalAlignment="Center" Margin="0,0,14,0"/>
+									<ComboBox ItemsSource="{Binding ItemsHeures}" SelectedItem="{Binding HeureSelectionnee, Mode=TwoWay}" Width="76" Height="32" Padding="8,4" BorderBrush="#e2e8f4" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
+									<TextBlock Text=":" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="600" Foreground="#0f1e3d"/>
+									<ComboBox ItemsSource="{Binding ItemsMinutes}" SelectedItem="{Binding MinuteSelectionnee, Mode=TwoWay}" Width="76" Height="32" Padding="8,4" BorderBrush="#e2e8f4" VerticalContentAlignment="Center"/>
+								</StackPanel>
+								<TextBlock Text="Durée de l'épreuve (minutes)" FontSize="11" FontWeight="600" Foreground="#8899b8" Margin="0,0,0,6"/>
+								<Border CornerRadius="8" BorderBrush="#e2e8f4" BorderThickness="1" Background="#fafbfd" Padding="8,4" Margin="0,0,0,8">
+									<TextBox Text="{Binding DureeMinutesEditable, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="13" Foreground="#0f1e3d" BorderThickness="0" Background="Transparent"/>
+								</Border>
+								<TextBlock Text="{Binding LibelleCreneauResume}" FontSize="12" FontWeight="600" Foreground="#0f1e3d" TextWrapping="Wrap"/>
+							</StackPanel>
+						</Border>
 					</StackPanel>
+				</ScrollViewer>
 
-					<!-- Contenu si question sélectionnée -->
-					<StackPanel Visibility="{Binding HasQuestion, Converter={StaticResource BoolToVis}}">
+				<ScrollViewer VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding AfficherDetailQuestion, Converter={StaticResource BoolToVis}}">
+					<Grid Margin="36,32,36,32">
+					<StackPanel>
 
 						<!-- En-tête : QUESTION n · Détails -->
 						<StackPanel Margin="0,0,0,24">
@@ -856,8 +1059,9 @@
 						</Border>
 
 					</StackPanel>
-				</Grid>
-			</ScrollViewer>
+					</Grid>
+				</ScrollViewer>
+			</Grid>
 
 		</Grid>
 
@@ -872,7 +1076,7 @@
 				<TextBlock Text="{Binding ResumeBareme}"
                            FontSize="12" Foreground="#475569" FontWeight="600"/>
 				<TextBlock Text=" · " FontSize="12" Foreground="#CACACA"/>
-				<TextBlock Text="Le total du barème doit être égal à 20 pour valider"
+				<TextBlock Text="Le total du barème doit être égal à 20 pour valider · publication web et créneau via le bouton à gauche · publier depuis la liste Examen."
                            FontSize="12" Foreground="#ABABAB"/>
 			</StackPanel>
 		</Border>

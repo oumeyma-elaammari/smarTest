@@ -16,6 +16,8 @@ interface AuthState {
     login: (data: AuthResponse) => void
     logout: () => void
     rehydrateFromStorage: () => void
+    /** Déconnexion sans boîte de dialogue ni rechargement (ex. passer de l’espace étudiant à une page réservée au professeur). */
+    clearSessionWithoutConfirm: () => void
 }
 
 function readLs(key: string): string | null {
@@ -108,6 +110,20 @@ const useAuth = create<AuthState>((set) => ({
             nom: readLs('nom'),
             email: readLs('email'),
             isAuthenticated: !!token,
+        })
+    },
+
+    clearSessionWithoutConfirm: () => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('role')
+        localStorage.removeItem('nom')
+        localStorage.removeItem('email')
+        set({
+            token: null,
+            role: null,
+            nom: null,
+            email: null,
+            isAuthenticated: false,
         })
     },
 }))

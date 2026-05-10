@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,18 +19,30 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>
 
 const ERR = {
-    INVALID_CREDENTIALS: 'Identifiants incorrects',
-    NOT_STUDENT:         "Ce compte n'est pas un compte étudiant",
+    INVALID_CREDENTIALS: 'Email ou mot de passe incorrect',
+    NOT_ALLOWED:         'Ce type de compte ne peut pas se connecter sur cette page.',
     NETWORK_ERROR:       'Impossible de contacter le serveur',
     SERVER_ERROR:        'Erreur serveur. Réessayez plus tard',
     UNKNOWN:             'Une erreur inattendue est survenue',
 } as const
 
+function safeInternalRedirect(raw: string | null): string | null {
+    if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return null
+    return raw
+}
+
 export default function Login() {
     const navigate = useNavigate()
-    const { login } = useAuth()
+    const { login, clearSessionWithoutConfirm } = useAuth()
     const [searchParams]  = useSearchParams()
     const verified        = searchParams.get('verified')
+    const profSessionGate = searchParams.get('profSession') === '1'
+
+    useEffect(() => {
+        if (!profSessionGate) return
+        const r = localStorage.getItem('role')
+        if ((r ?? '').trim() === 'ETUDIANT') clearSessionWithoutConfirm()
+    }, [profSessionGate, clearSessionWithoutConfirm])
 
     const [isLoading, setIsLoading]       = useState(false)
     const [showPassword, setShowPassword] = useState(false)
@@ -48,15 +60,22 @@ export default function Login() {
                 email: data.email.trim().toLowerCase(),
                 password: data.password,
             })
-            if (authData.role !== 'ETUDIANT') {
+            if (authData.role !== 'ETUDIANT' && authData.role !== 'PROFESSEUR') {
                 setIsLoading(false)
-                setLoginError(ERR.NOT_STUDENT)
+                setLoginError(ERR.NOT_ALLOWED)
                 return
             }
             setLoginError(null)
             login(authData)
             setIsLoading(false)
-            navigate('/dashboard')
+            const dest = safeInternalRedirect(searchParams.get('redirect'))
+            if (dest) {
+                navigate(dest)
+            } else if (authData.role === 'ETUDIANT') {
+                navigate('/dashboard')
+            } else {
+                navigate('/dashboard?tab=examens')
+            }
         } catch (error: any) {
             setIsLoading(false)
             if (!error?.response) { setLoginError(ERR.NETWORK_ERROR); return }
@@ -84,6 +103,13 @@ export default function Login() {
 
                 {verified === 'true'  && <Alert type="success">Email confirmé ! Vous pouvez maintenant vous connecter.</Alert>}
                 {verified === 'false' && <Alert type="error">Lien invalide ou expiré. Réinscrivez-vous.</Alert>}
+                {profSessionGate && (
+                    <Alert type="success">
+                        Supervision examen : connectez-vous avec votre compte professeur pour continuer. Si vous étiez
+                        connecté en tant qu’étudiant, cette session a été fermée sur cet navigateur pour éviter une
+                        redirection vers l’espace étudiant.
+                    </Alert>
+                )}
                 {loginError           && <Alert type="error">{loginError}</Alert>}
 
                 <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>

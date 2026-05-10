@@ -56,11 +56,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body("VALIDATION_ERROR", msg));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body("BAD_REQUEST", ex.getMessage()));
-    }
-
     // ── Email déjà utilisé ─────────────────────────────────────
     @ExceptionHandler(EmailAlreadyUsedException.class)
     public ResponseEntity<Map<String, String>> handleEmailAlreadyUsed(
@@ -176,6 +171,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleUnhandledRuntime(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(body(CODE_INTERNAL_ERROR, PREFIX_ERREUR_INTERNE + messageOuVide(ex)));
+    }
+
+    /** Erreurs métier / paramètres (ex. créneau, transition d’état) — évite un 500 opaque côté client. */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Requête invalide";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body("BAD_REQUEST", msg));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "État incompatible";
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", msg));
     }
 
     @ExceptionHandler(Exception.class)

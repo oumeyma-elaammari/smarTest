@@ -7,7 +7,6 @@ import { quizWebListSchema } from '../api/quizSchemas'
 import { QuizCard } from '../components/quiz/QuizCard'
 
 const sans = "'DM Sans', system-ui, sans-serif"
-const serif = "'DM Serif Display', Georgia, serif"
 
 type MesQuizWebProps = {
     /** Même bleu que « Test » dans SmarTest */
@@ -20,22 +19,6 @@ const PAGE_SIZE = 10
 
 /** Rafraîchit la liste pour refléter publications / suppressions côté serveur (désactivé en tests Vitest). */
 const MES_QUIZ_POLL_MS = import.meta.env.MODE === 'test' ? 999999999 : 10_000
-
-function filtreOngletBtn(actif: boolean): CSSProperties {
-    return {
-        border: 'none',
-        background: 'none',
-        padding: '0 10px 0 0',
-        margin: 0,
-        fontFamily: serif,
-        fontSize: '1.5rem',
-        fontWeight: actif ? 550 : 350,
-        cursor: 'pointer',
-        color: actif ? '#0f1e3d' : '#94a3b8',
-        lineHeight: 1.2,
-        transition: 'color 0.15s, font-weight 0.15s',
-    }
-}
 
 function mesPublicationsWebErrorMessage(e: unknown): string {
     const res = (e as { response?: { status?: number; data?: unknown } })?.response
@@ -68,7 +51,6 @@ function useTwoColumnGrid() {
 
 export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) {
     const navigate = useNavigate()
-    const [onglet, setOnglet] = useState<'quiz' | 'examens'>('quiz')
     const [items, setItems] = useState<QuizWebItem[]>([])
     const [loading, setLoading] = useState(true)
     const [err, setErr] = useState<string | null>(null)
@@ -128,54 +110,6 @@ export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) 
         return () => window.clearInterval(id)
     }, [fetchMesPublications])
 
-    const barreOnglets = (
-        <div
-            style={{
-                display: 'flex',
-                justifyContent: 'left',
-                alignItems: 'baseline',
-                flexWrap: 'wrap',
-                gap: '4px 0',
-                width: '100%',
-                marginBottom: 22,
-            }}
-            role="tablist"
-            aria-label="Filtrer le contenu"
-        >
-            <button
-                type="button"
-                role="tab"
-                aria-selected={onglet === 'quiz'}
-                style={filtreOngletBtn(onglet === 'quiz')}
-                onClick={() => setOnglet('quiz')}
-            >
-                Mes quiz
-            </button>
-            <span
-                style={{
-                    color: '#cbd5e1',
-                    fontFamily: serif,
-                    fontSize: '1.35rem',
-                    userSelect: 'none',
-                    padding: '0 6px',
-                    lineHeight: 1,
-                }}
-                aria-hidden
-            >
-                |
-            </span>
-            <button
-                type="button"
-                role="tab"
-                aria-selected={onglet === 'examens'}
-                style={filtreOngletBtn(onglet === 'examens')}
-                onClick={() => setOnglet('examens')}
-            >
-                Mes examens
-            </button>
-        </div>
-    )
-
     const enveloppe = (corps: ReactNode) => (
         <div
             style={{
@@ -188,7 +122,6 @@ export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) 
                 boxSizing: 'border-box',
             }}
         >
-            {barreOnglets}
             <div
                 style={{
                     width: '100%',
@@ -201,24 +134,6 @@ export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) 
             </div>
         </div>
     )
-
-    if (onglet === 'examens') {
-        return enveloppe(
-            <p
-                style={{
-                    fontFamily: sans,
-                    color: '#64748b',
-                    margin: 0,
-                    textAlign: 'center',
-                    lineHeight: 1.6,
-                    maxWidth: 520,
-                    alignSelf: 'center',
-                }}
-            >
-                Les examens accessibles depuis le web seront listés ici dans une prochaine version.
-            </p>,
-        )
-    }
 
     if (loading) {
         return enveloppe(
