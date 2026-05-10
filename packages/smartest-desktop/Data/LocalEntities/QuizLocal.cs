@@ -33,8 +33,26 @@ namespace smartest_desktop.Data.LocalEntities
         /// <summary>"Brouillon" | "Validé" | "Publié"</summary>
         public string Statut { get; set; } = "Brouillon";
 
-        /// <summary>Identifiant du quiz côté API après création / sync (publication web).</summary>
+        /// <summary>
+        /// Ancienne colonne unique : préférer <see cref="BackendQuizIdPublicationWeb"/> / <see cref="BackendQuizIdQr"/>.
+        /// Conservée pour compatibilité ; reflète typiquement l’id publication web lorsque défini.
+        /// </summary>
         public long? BackendQuizId { get; set; }
+
+        /// <summary>Quiz MySQL utilisé pour la publication web (emails étudiants, passage web).</summary>
+        public long? BackendQuizIdPublicationWeb { get; set; }
+
+        /// <summary>Quiz MySQL « miroir » réservé au flux QR (contenu synchro, suppression indépendante du publié).</summary>
+        public long? BackendQuizIdQr { get; set; }
+
+        /// <summary>Dernier token UUID de session éphémère QR-live (pour DELETE avant nouvelle session).</summary>
+        public string QrLiveSessionToken { get; set; }
+
+        /// <summary>
+        /// Indique que le quiz a probablement été créé ou utilisé sur l’API (QR, création pré-publication…),
+        /// même si <see cref="BackendQuizId"/> a été perdu localement — pour éviter suppressions locales orphelines côté MySQL.
+        /// </summary>
+        public DateTime? ServeurOuQrToucheUtc { get; set; }
 
         /// <summary>JSON : tableau d'emails (minuscules) autorisés pour la publication web.</summary>
         public string EmailsPublicationWebJson { get; set; }

@@ -361,7 +361,6 @@ C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\MainWi
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\EmailVerificationWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ForgotPasswordWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\LoginWindow.baml
-C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\QuizWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\RegisterWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ResetPasswordWindow.baml
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\Styles\AuthStyles.baml
@@ -377,7 +376,6 @@ C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\QuizExamenWindow.g.cs
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\QuizGenerationWindow.g.cs
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\QuizResultWindow.g.cs
-C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\QuizWindow.g.cs
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\RegisterWindow.g.cs
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ResetPasswordWindow.g.cs
 C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\App.g.cs
@@ -4766,3 +4764,12 @@ c:\Users\User\smarTest\packages\smartest-desktop\obj\_quizres3\runtimes\win-x64\
 c:\Users\User\smarTest\packages\smartest-desktop\obj\_quizres3\runtimes\win-x86\native\e_sqlite3.dll
 c:\Users\User\smarTest\packages\smartest-desktop\obj\_quizres3\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
 >>>>>>> 85d27ba0220d3aa6cedb19d6366affad8d27151d
+C:\Users\User\smarTest\packages\smartest-desktop\bin\Debug\net8.0-windows\appsettings.json
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ChoisirDateHeureLancementExamenDialog.baml
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ExamenSupervisionDialog.baml
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\SettingsAccountView.baml
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ChoisirDateHeureLancementExamenDialog.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\ExamenSupervisionDialog.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\MainShellWindow.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\SettingsAccountView.g.cs
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\Views\MainShellWindow.baml

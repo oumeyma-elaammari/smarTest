@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Services;
 using Xunit;
@@ -43,6 +44,73 @@ public class LocalQuizServiceTests
 
         await svc.SupprimerAsync(quiz.Id);
         Assert.Empty(db.Quiz);
+    }
+
+    [Fact]
+    public async Task SupprimerAsync_efface_questions_reponses_et_liaison_cours()
+    {
+        await using var db = TestDbFactory.CreateInMemory();
+        var cours = new CoursLocal { Titre = "C1" };
+        db.Cours.Add(cours);
+        await db.SaveChangesAsync();
+
+        var quiz = new QuizLocal { Titre = "Q1", Difficulte = "Moyen", NombreQuestions = 1, BackendQuizId = 99 };
+        quiz.Cours.Add(cours);
+        db.Quiz.Add(quiz);
+        await db.SaveChangesAsync();
+
+        var question = new QuestionLocale
+        {
+            QuizLocalId = quiz.Id,
+            Numero = 1,
+            Enonce = "Q?",
+            Type = "QCM",
+        };
+        db.Questions.Add(question);
+        await db.SaveChangesAsync();
+
+        db.Reponses.Add(new ReponseLocale { QuestionId = question.Id, Contenu = "A", EstCorrecte = true });
+        await db.SaveChangesAsync();
+
+        var svc = new LocalQuizService(db);
+        await svc.SupprimerAsync(quiz.Id);
+
+        Assert.Empty(await db.Quiz.ToListAsync());
+        Assert.Empty(await db.Questions.ToListAsync());
+        Assert.Empty(await db.Reponses.ToListAsync());
+        var coursRecharge = await db.Cours.Include(c => c.Quiz).FirstAsync();
+        Assert.Empty(coursRecharge.Quiz);
+    }
+
+    [Fact]
+    public async Task DefinirBackendQuizIdSiAbsenteAsync_remplit_si_absent()
+    {
+        await using var db = TestDbFactory.CreateInMemory();
+        var q = new QuizLocal { Titre = "T", Difficulte = "Moyen", NombreQuestions = 1 };
+        db.Quiz.Add(q);
+        await db.SaveChangesAsync();
+
+        var svc = new LocalQuizService(db);
+        await svc.DefinirBackendQuizIdSiAbsenteAsync(q.Id, 42L);
+
+        var re = await db.Quiz.FirstAsync();
+        Assert.Equal(42L, re.BackendQuizIdPublicationWeb);
+        Assert.Equal(42L, re.BackendQuizId);
+    }
+
+    [Fact]
+    public async Task DefinirBackendQuizIdQrSiAbsenteAsync_remplit_si_absent()
+    {
+        await using var db = TestDbFactory.CreateInMemory();
+        var q = new QuizLocal { Titre = "T", Difficulte = "Moyen", NombreQuestions = 1 };
+        db.Quiz.Add(q);
+        await db.SaveChangesAsync();
+
+        var svc = new LocalQuizService(db);
+        await svc.DefinirBackendQuizIdQrSiAbsenteAsync(q.Id, 77L);
+
+        var re = await db.Quiz.FirstAsync();
+        Assert.Equal(77L, re.BackendQuizIdQr);
     }
 
     [Fact]

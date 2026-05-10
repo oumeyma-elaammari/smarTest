@@ -127,112 +127,10 @@
 	</Window.Resources>
 
 	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="230"/>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-
-		<!-- ══ SIDEBAR ══ -->
-		<Border Grid.Column="0" Background="White"
-                BorderBrush="#e2e8f4" BorderThickness="0,0,1,0">
-			<Grid>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
-				<StackPanel Grid.Row="0" Margin="22,28,22,32">
-					<StackPanel Orientation="Horizontal">
-						<Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}"
-                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
-						<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold"
-						   Foreground="{StaticResource NavyBrush}" VerticalAlignment="Center">
-							Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
-						</TextBlock>
-					</StackPanel>
-					<TextBlock Text="Espace professeur" FontSize="11" Foreground="#8899b8" Margin="16,5,0,0"/>
-				</StackPanel>
-
-				<StackPanel Grid.Row="1" Margin="12,0">
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding RetourDashboardCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE80F;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Home" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-
-					<Border CornerRadius="8" Height="40" Padding="14,0" Background="#0f1e3d" Margin="0,1">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE9D5;" FontSize="13" Foreground="White"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Quiz et examens" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
-						</StackPanel>
-					</Border>
-
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE7FC;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Sessions actives" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding OuvrirStatistiquesCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE9D2;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Statistiques" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE713;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Paramètres" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-				</StackPanel>
-
-				<StackPanel Grid.Row="2" Margin="12,0,12,18">
-					<Border Background="#f0f3f9" CornerRadius="10" BorderBrush="#e2e8f4"
-                            BorderThickness="1" Padding="8,6" Margin="0,0,0,8">
-						<StackPanel>
-							<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-								<Ellipse Width="7" Height="7" Fill="#16a34a"
-                                         VerticalAlignment="Center" Margin="0,0,7,0"/>
-								<TextBlock Text="{Binding Nom}" FontSize="13" FontWeight="600" Foreground="#0f1e3d"/>
-							</StackPanel>
-							<TextBlock Text="{Binding Email}" FontSize="11" Foreground="#8899b8" Margin="14,0,0,0"/>
-						</StackPanel>
-					</Border>
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,2">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding LogoutCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xF3B1;" FontSize="13" Foreground="#dc2626"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Déconnexion" FontSize="13" Foreground="#dc2626"/>
-						</StackPanel>
-					</Border>
-				</StackPanel>
-			</Grid>
-		</Border>
-
 		<!-- ══ MAIN CONTENT ══ -->
-		<Grid Grid.Column="1">
+		<Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="*"/>
-				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
 
 			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="white">
@@ -391,10 +289,11 @@
 												<StackPanel Grid.Column="0" VerticalAlignment="Center">
 													<TextBlock Text="{Binding TitreAffiche}" FontSize="13"
                                                                FontWeight="600" Foreground="#0f1e3d"
+                                                               TextTrimming="CharacterEllipsis"
                                                                Cursor="Hand" >
 														<TextBlock.InputBindings>
 															<MouseBinding MouseAction="LeftClick"
-																		  Command="{Binding DataContext.OuvrirQuizCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+																		  Command="{Binding DataContext.OuvrirQuizCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
 																		  CommandParameter="{Binding}"/>
 														</TextBlock.InputBindings>
 													</TextBlock>
@@ -449,8 +348,9 @@
                                                             VerticalAlignment="Center">
 													<Button Background="#ecfeff" BorderBrush="#bae6fd"
                                                             Foreground="#0369a1" Margin="0,0,6,0"
+                                                            ToolTip="Ouvre une session en direct (QR + lien). Connexion professeur requise."
                                                             Command="{Binding DataContext.OuvrirCodeQrQuizCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}">
 														<Button.Style>
 															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
@@ -470,7 +370,7 @@
                                                             Foreground="#4f8ef7" Margin="0,0,6,0"
                                                             IsEnabled="{Binding PeutPublier}"
                                                             Command="{Binding DataContext.PublierSurLeWebCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}">
 														<Button.Style>
 															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
@@ -494,7 +394,7 @@
 													<Button Style="{StaticResource IconDeleteBtn}"
                                                             ToolTip="Supprimer ce quiz"
                                                             Command="{Binding DataContext.SupprimerQuizCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}">
 														<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
                                                                     Foreground="#DC2626"/>
@@ -539,8 +439,8 @@
 						</StackPanel>
 					</Border>
 
-					<!-- ══ MES EXAMENS ══ -->
-					<Border Style="{StaticResource DashCard}" Padding="24,20">
+					<!-- ══ MES EXAMENS ══ (même structure / style visuel que Mes Quiz) -->
+					<Border Style="{StaticResource DashCard}" Padding="24,20" Margin="0,0,0,20">
 						<StackPanel>
 
 							<Grid Margin="0,0,0,16">
@@ -552,7 +452,7 @@
 									<TextBlock Text="Mes Examens" FontSize="15" FontWeight="600" Foreground="#0f1e3d"/>
 									<TextBlock FontSize="12" Foreground="#8899b8" Margin="0,3,0,0" TextWrapping="Wrap">
 										<Run Text="{Binding TotalExamens, Mode=OneWay}"/>
-										<Run Text="examens enregistrés"/>
+										<Run Text=" examens enregistrés"/>
 									</TextBlock>
 								</StackPanel>
 								<StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="12,0,0,0">
@@ -575,12 +475,13 @@
 							<!-- En-têtes -->
 							<Grid Margin="0,12,0,8"
                                   Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}">
+								<!-- Colonnes 1–4 : mêmes largeurs que « Mes Quiz » pour égaler la colonne Titre (*) -->
 								<Grid.ColumnDefinitions>
 									<ColumnDefinition Width="*"/>
-									<ColumnDefinition Width="80"/>
-									<ColumnDefinition Width="120"/>
+									<ColumnDefinition Width="100"/>
 									<ColumnDefinition Width="90"/>
-									<ColumnDefinition Width="280"/>
+									<ColumnDefinition Width="80"/>
+									<ColumnDefinition Width="250"/>
 								</Grid.ColumnDefinitions>
 								<TextBlock Grid.Column="0" Text="Titre" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
 								<TextBlock Grid.Column="1" Text="Durée" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
@@ -601,22 +502,26 @@
 											<Grid>
 												<Grid.ColumnDefinitions>
 													<ColumnDefinition Width="*"/>
-													<ColumnDefinition Width="80"/>
-													<ColumnDefinition Width="120"/>
+													<ColumnDefinition Width="100"/>
 													<ColumnDefinition Width="90"/>
-													<ColumnDefinition Width="280"/>
+													<ColumnDefinition Width="80"/>
+													<ColumnDefinition Width="250"/>
 												</Grid.ColumnDefinitions>
 
-												<TextBlock Grid.Column="0" Text="{Binding TitreAffiche}"
-                                                           FontSize="13" FontWeight="600"
-                                                           Foreground="#0f1e3d" VerticalAlignment="Center"
-                                                           Cursor="Hand" >
-													<TextBlock.InputBindings>
-														<MouseBinding MouseAction="LeftClick"
-																	  Command="{Binding DataContext.OuvrirExamenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-																	  CommandParameter="{Binding}"/>
-													</TextBlock.InputBindings>
-												</TextBlock>
+												<StackPanel Grid.Column="0" VerticalAlignment="Center">
+													<TextBlock Text="{Binding TitreAffiche}" FontSize="13"
+                                                               FontWeight="600" Foreground="#0f1e3d"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Cursor="Hand">
+														<TextBlock.InputBindings>
+															<MouseBinding MouseAction="LeftClick"
+																		  Command="{Binding DataContext.OuvrirExamenCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+																		  CommandParameter="{Binding}"/>
+														</TextBlock.InputBindings>
+													</TextBlock>
+													<TextBlock Text="{Binding CoursSourceAffiche}" FontSize="11"
+                                                               Foreground="#8899b8" Margin="0,2,0,0"/>
+												</StackPanel>
 
 												<TextBlock Grid.Column="1" FontSize="12"
                                                            Foreground="#6b7a99" VerticalAlignment="Center">
@@ -626,7 +531,9 @@
 
 												<TextBlock Grid.Column="2" FontSize="12"
                                                            Foreground="#6b7a99" VerticalAlignment="Center"
-                                                           Text="{Binding Examen.DatePrevue, StringFormat='{}{0:d MMM yyyy HH:mm}', TargetNullValue='Non définie'}"/>
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Text="{Binding Examen.DatePrevue, StringFormat='{}{0:dd/MM/yy HH:mm}', TargetNullValue='Non définie'}"
+                                                           ToolTip="{Binding Examen.DatePrevue, StringFormat='{}{0:dd/MM/yy HH:mm}'}"/>
 
 												<!-- Badge statut -->
 												<Border Grid.Column="3" CornerRadius="6" Padding="8,3"
@@ -647,10 +554,9 @@
 															</Style.Triggers>
 														</Style>
 													</Border.Style>
-													<TextBlock FontSize="10" FontWeight="700">
+													<TextBlock FontSize="10" FontWeight="700" Text="{Binding StatutAffiche}">
 														<TextBlock.Style>
 															<Style TargetType="TextBlock">
-																<Setter Property="Text" Value="{Binding Examen.Statut}"/>
 																<Setter Property="Foreground" Value="#c2410c"/>
 																<Style.Triggers>
 																	<DataTrigger Binding="{Binding Examen.Statut}" Value="PUBLIE">
@@ -668,28 +574,90 @@
 													</TextBlock>
 												</Border>
 
-												<!-- Actions -->
+												<!-- Actions (aligné sur la liste quiz : ActionBtn, marges 6, pas de ProgressBar) -->
 												<StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#eef3fd" BorderBrush="#cfe0fc"
-                                                            Foreground="#1a2e5a" Margin="0,0,6,0" Padding="10,6"
+													<!-- Publier : visible seulement en brouillon non publié (ou pendant la publication) -->
+													<Button Background="#eef3fd" BorderBrush="#eef3fd"
+                                                            Foreground="#4f8ef7" Margin="0,0,6,0"
+                                                            Visibility="{Binding PublierBoutonVisible, Converter={StaticResource BoolToVis}}"
+                                                            IsEnabled="{Binding PublierBoutonActif}"
                                                             Command="{Binding DataContext.PublierExamenSurLeWebCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}">
-														<TextBlock Text="Publier"/>
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="#eef3fd"/>
+																<Setter Property="BorderBrush" Value="#eef3fd"/>
+																<Setter Property="Foreground" Value="#4f8ef7"/>
+																<Style.Triggers>
+																	<DataTrigger Binding="{Binding IsPublicationEnCours}" Value="True">
+																		<Setter Property="Background" Value="#e2e8f4"/>
+																		<Setter Property="BorderBrush" Value="#e2e8f4"/>
+																		<Setter Property="Foreground" Value="#64748b"/>
+																	</DataTrigger>
+																	<Trigger Property="IsEnabled" Value="False">
+																		<Setter Property="Opacity" Value="0.45"/>
+																	</Trigger>
+																</Style.Triggers>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="{Binding PublierBoutonTexte}"/>
 													</Button>
-													<Button Style="{StaticResource ActionBtn}"
-                                                            Background="#eaf3de" BorderBrush="#eaf3de"
-                                                            Foreground="#16a34a" Margin="0,0,6,0"
-                                                            Command="{Binding DataContext.LancerExamenCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+													<!-- Synchroniser : tons proches du bouton « Code QR » du quiz -->
+													<Button Background="#ecfeff" BorderBrush="#bae6fd"
+                                                            Foreground="#0369a1" Margin="0,0,6,0"
+                                                            Visibility="{Binding SynchroniserBoutonVisible, Converter={StaticResource BoolToVis}}"
+                                                            IsEnabled="{Binding SynchroniserBoutonActif}"
+                                                            Command="{Binding DataContext.SynchroniserExamenSurLeWebCommand,
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}">
-														<TextBlock Text="Lancer"/>
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="#ecfeff"/>
+																<Setter Property="BorderBrush" Value="#bae6fd"/>
+																<Setter Property="Foreground" Value="#0369a1"/>
+																<Style.Triggers>
+																	<DataTrigger Binding="{Binding IsSynchronisationEnCours}" Value="True">
+																		<Setter Property="Background" Value="#e2e8f4"/>
+																		<Setter Property="BorderBrush" Value="#e2e8f4"/>
+																		<Setter Property="Foreground" Value="#64748b"/>
+																	</DataTrigger>
+																	<DataTrigger Binding="{Binding AfficheSuccesSynchronisationCourt}" Value="True">
+																		<Setter Property="Background" Value="#ecfdf5"/>
+																		<Setter Property="BorderBrush" Value="#a7f3d0"/>
+																		<Setter Property="Foreground" Value="#047857"/>
+																	</DataTrigger>
+																	<Trigger Property="IsEnabled" Value="False">
+																		<Setter Property="Opacity" Value="0.45"/>
+																	</Trigger>
+																</Style.Triggers>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="{Binding SynchroniserBoutonTexte}"/>
+													</Button>
+													<Button Margin="0,0,6,0"
+                                                            IsEnabled="{Binding LancerBoutonActif}"
+                                                            Command="{Binding DataContext.LancerExamenCommand,
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}">
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="#eaf3de"/>
+																<Setter Property="BorderBrush" Value="#eaf3de"/>
+																<Setter Property="Foreground" Value="#16a34a"/>
+																<Style.Triggers>
+																	<Trigger Property="IsEnabled" Value="False">
+																		<Setter Property="Opacity" Value="0.45"/>
+																	</Trigger>
+																</Style.Triggers>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="{Binding LancerBoutonTexte}"/>
 													</Button>
 													<Button Style="{StaticResource IconDeleteBtn}"
                                                             ToolTip="Supprimer cet examen"
                                                             Command="{Binding DataContext.SupprimerExamenCommand,
-                                                                RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}">
 														<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
                                                                     Foreground="#DC2626"/>
@@ -736,13 +704,6 @@
 
 				</StackPanel>
 			</ScrollViewer>
-
-			<!-- Footer -->
-			<Border Grid.Row="1" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0" Padding="18,14">
-				<TextBlock Text="SmarTest — ENSA Oujda · Génie Informatique · 2025–2026"
-                           FontSize="11" Foreground="#aab4cc"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-			</Border>
 
 		</Grid>
 	</Grid>

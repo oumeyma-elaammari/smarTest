@@ -15,7 +15,6 @@ public class QuizResponse {
 
     private Long id;
     private String titre;
-    private Integer duree;
     private String description;
 
     private Long professeurId;

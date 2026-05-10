@@ -1,0 +1,329 @@
+.page {
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1rem clamp(0.75rem, 3vw, 1.5rem) 2rem;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f8fafc;
+    color: #0f172a;
+    width: 100%;
+    max-width: 100%;
+}
+
+.titleRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 4px;
+}
+
+.pageTitle {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: clamp(1.15rem, 3.5vw, 1.65rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #0f172a;
+}
+
+/* Bouton icône seule : fond rouge très pâle, bordure rouge clair, pictogramme rouge clair (réf. maquette) */
+.closeSessionBtn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #f87171;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: none;
+    line-height: 1;
+    transition:
+        background 0.15s,
+        color 0.15s,
+        border-color 0.15s;
+}
+
+.closeSessionBtn:hover:not(:disabled) {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fca5a5;
+}
+
+.closeSessionBtn:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.closeSessionIcon {
+    display: block;
+    flex-shrink: 0;
+}
+
+.sidebar {
+    width: 420px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 0.5rem 0 1rem;
+    overflow-y: auto;
+}
+
+.sidebarInner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+    width: 100%;
+}
+
+.urlField {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    word-break: break-all;
+}
+
+.copyBtn {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    background: #1a2e5a;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.copyBtn:hover {
+    opacity: 0.92;
+}
+
+.main {
+    flex: 1;
+    min-width: 0;
+    padding-bottom: 100px;
+}
+
+.titleSkeleton {
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.badgeParticipants {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 20px;
+    font-size: 14px;
+    color: #334155;
+}
+
+.liveDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+    animation: pulseDot 1.5s ease-out infinite;
+}
+
+@keyframes pulseDot {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+.sectionTitle {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 12px;
+}
+
+.footerCta {
+    position: sticky;
+    bottom: 0;
+    margin-top: 24px;
+    padding: 16px 0 8px;
+    background: linear-gradient(to top, #f8fafc 65%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 420px;
+}
+
+.dangerBtn {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.dangerBtn:hover:not(:disabled) {
+    background: #fee2e2;
+}
+
+.dangerBtn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ctaBtn {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: none;
+    background: #1a2e5a;
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(26, 46, 90, 0.25);
+}
+
+.ctaBtn:hover:not(:disabled) {
+    opacity: 0.94;
+}
+
+.ctaBtn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* Écran « session terminée » : bloc centré dans la fenêtre */
+.sessionEndedShell {
+    min-height: 100vh;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem clamp(1rem, 4vw, 2rem);
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.sessionEndedInner {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+    text-align: center;
+}
+
+.sessionEndedInner h1 {
+    margin: 0;
+    font-size: clamp(1.15rem, 3vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.sessionEndedInner .endSummary {
+    width: 100%;
+    max-width: none;
+    text-align: center;
+}
+
+.endSummary {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    max-width: 480px;
+}
+
+@media (max-width: 767px) {
+    .page {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.25rem;
+        padding-top: 0.75rem;
+    }
+
+    /* QR + lien : bloc du haut ; stats : bloc du bas (ordre DOM aside → main) */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        overflow: visible;
+        padding: 0 0 1rem;
+        order: 1;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .sidebarInner {
+        align-items: center;
+        max-width: 100%;
+    }
+
+    .main {
+        order: 2;
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        padding-bottom: 2rem;
+    }
+
+    .titleRow {
+        gap: 10px;
+    }
+
+    .pageTitle {
+        font-size: clamp(1.05rem, 4.5vw, 1.45rem);
+    }
+
+    .closeSessionBtn {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+    }
+}

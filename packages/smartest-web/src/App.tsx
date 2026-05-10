@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams, Navigate, useParams } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -12,8 +12,8 @@ import EmailSent from './pages/EmailSent'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import EmailVerification from './pages/EmailVerification'
-import QuizQrLivePage from './pages/QuizQrLivePage'
-import QuizPassageQr from './pages/QuizPassageQr'
+import QuizLive from './pages/QuizLive'
+import QuizLiveParticiper from './pages/QuizLiveParticiper'
 import Footer from './components/Footer'
 import MesQuizWeb from './pages/MesQuizWeb'
 import MesExamensWeb from './pages/MesExamensWeb'
@@ -162,6 +162,14 @@ function Dashboard() {
     )
 }
 
+/** Alias bureau SmarTest : /examens/:id → même écran que la supervision prof. */
+function RedirectExamenGestionDepuisBureau() {
+    const { examenId } = useParams<{ examenId: string }>()
+    const id = examenId?.trim()
+    if (!id) return <Navigate to="/dashboard?tab=examens" replace />
+    return <Navigate to={`/supervision/examen/${id}`} replace />
+}
+
 export default function App() {
     return (
         <ErrorBoundary>
@@ -228,40 +236,6 @@ export default function App() {
                         }
                     />
 
-                    {/* QR : pas de navbar ni footer (écran mobile / scan) */}
-                    <Route
-                        path="/quiz-qr/:quizId"
-                        element={
-                            <div
-                                style={{
-                                    minHeight: '100vh',
-                                    width: '100%',
-                                    boxSizing: 'border-box',
-                                    background: '#ffffff',
-                                    padding: 'clamp(1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 2rem) 2rem',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        width: '100%',
-                                        maxWidth: 720,
-                                        marginTop: 'auto',
-                                        marginBottom: 'auto',
-                                        flexShrink: 0,
-                                        boxSizing: 'border-box',
-                                    }}
-                                >
-                                    <QuizPassageQr />
-                                </div>
-                            </div>
-                        }
-                    />
-
-                    <Route path="/quiz-live/:quizId" element={<QuizQrLivePage />} />
-
                     <Route
                         path="/examen/:examenId"
                         element={
@@ -321,6 +295,18 @@ export default function App() {
                             </PrivateRoute>
                         }
                     />
+                    <Route
+                        path="/examens/:examenId"
+                        element={
+                            <PrivateRoute allowedRoles={['PROFESSEUR']}>
+                                <RedirectExamenGestionDepuisBureau />
+                            </PrivateRoute>
+                        }
+                    />
+
+                    {/* QR session éphémère : WebSocket / STOMP, sans auth */}
+                    <Route path="/quiz-live/:sessionToken/participer" element={<QuizLiveParticiper />} />
+                    <Route path="/quiz-live/:sessionToken" element={<QuizLive />} />
 
                     <Route path="*" element={<NotFound />} />
                 </Routes>

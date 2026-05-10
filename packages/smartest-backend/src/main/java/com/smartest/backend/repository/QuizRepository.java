@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -54,5 +55,23 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     /** Nombre de quiz contenant cette question (liaison {@code quiz_question}). */
     @Query("SELECT COUNT(DISTINCT q.id) FROM Quiz q JOIN q.questions qq WHERE qq.id = :questionId")
     long countQuizzesWithQuestion(@Param("questionId") Long questionId);
+
+    /** Suppression physique des lignes de liaison (FK vers {@code quiz}). */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM quiz_question WHERE quiz_id = :quizId", nativeQuery = true)
+    void deleteNativeQuizQuestionLinks(@Param("quizId") Long quizId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM quiz_email_web_autorise WHERE quiz_id = :quizId", nativeQuery = true)
+    void deleteNativeQuizEmailWebRows(@Param("quizId") Long quizId);
+
+    /**
+     * Suppression physique du quiz (après avoir vidé les dépendances FK).
+     *
+     * @return nombre de lignes supprimées (attendu : 1)
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM quiz WHERE id = :quizId", nativeQuery = true)
+    int deleteNativeById(@Param("quizId") Long quizId);
 
 }

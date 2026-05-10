@@ -1,9 +1,11 @@
 package com.smartest.backend.controller;
 
-import com.smartest.backend.dto.response.QuizPassageWebResponse;
-import com.smartest.backend.dto.response.QuizQrLiveStatsResponse;
+import com.smartest.backend.dto.qr.QrLiveStreamEnvelope;
+import com.smartest.backend.dto.qr.QrLiveStreamMessageType;
+import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.exception.GlobalExceptionHandler;
-import com.smartest.backend.service.QuizService;
+import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.service.QuizSessionManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.smartest.backend.testsupport.MockMvcAuthenticationSupport.authenticationPrincipalUserDetailsResolver;
 import static com.smartest.backend.testsupport.MockMvcAuthenticationSupport.principal;
@@ -27,25 +30,29 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class QuizControllerQrEndpointsTest {
 
-    private static final String PROF_EXAMPLE_COM = "prof@example.com";
+    private static final String PROF_MAIL = "prof@example.com";
 
     private MockMvc mockMvc;
 
     @Mock
-    private QuizService quizService;
+    private QuizSessionManager quizSessionManager;
+
+    @Mock
+    private ProfesseurRepository professeurRepository;
 
     @InjectMocks
-    private QuizController quizController;
+    private QuizQrEphemeralRestController qrEphemeralRestController;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(quizController)
+        mockMvc = MockMvcBuilders.standaloneSetup(qrEphemeralRestController)
                 .setCustomArgumentResolvers(authenticationPrincipalUserDetailsResolver())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -57,53 +64,59 @@ class QuizControllerQrEndpointsTest {
     }
 
     @Test
-    void getQuizPourPassageQrRetourne200EtCorps() throws Exception {
-        QuizPassageWebResponse body = new QuizPassageWebResponse();
-        body.setId(1L);
-        body.setTitre("Quiz QR");
-        body.setDuree(15);
-        body.setNombreQuestions(2);
-        when(quizService.getQuizPourPassageQr(1L)).thenReturn(body);
+    void createSessionRetourneJeton() throws Exception {
+        Professeur p = new Professeur();
+        p.setId(7L);
+        p.setEmail(PROF_MAIL);
+        when(professeurRepository.findByEmail(PROF_MAIL)).thenReturn(Optional.of(p));
+        when(quizSessionManager.createSession(7L, PROF_MAIL)).thenReturn("abc-token");
 
-        mockMvc.perform(get("/api/quizs/1/passage-qr").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.titre").value("Quiz QR"))
-                .andExpect(jsonPath("$.nombreQuestions").value(2));
+        UserDetails user = new User(PROF_MAIL, "pw", List.of(new SimpleGrantedAuthority("ROLE_PROFESSEUR")));
 
-        verify(quizService).getQuizPourPassageQr(1L);
-    }
-
-    @Test
-    void getQrLiveStatsUtiliseEmailDuProfesseurConnecte() throws Exception {
-        QuizQrLiveStatsResponse stats = QuizQrLiveStatsResponse.builder()
-                .quizId(5L)
-                .quizTitre("Live")
-                .nombreParticipants(4)
-                .build();
-        when(quizService.getQrLiveStats(5L, PROF_EXAMPLE_COM)).thenReturn(stats);
-
-        UserDetails user = new User(PROF_EXAMPLE_COM, "pw", List.of(new SimpleGrantedAuthority("ROLE_PROFESSEUR")));
-
-        mockMvc.perform(get("/api/quizs/5/stats-qr-live")
+        mockMvc.perform(post("/api/qr-live/sessions")
                         .with(principal(user))
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.quizId").value(5))
-                .andExpect(jsonPath("$.nombreParticipants").value(4));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.sessionToken").value("abc-token"));
 
-        verify(quizService).getQrLiveStats(5L, PROF_EXAMPLE_COM);
+        verify(quizSessionManager).createSession(7L, PROF_MAIL);
     }
 
     @Test
-    void clearQrLiveStatsAppelleLeService() throws Exception {
-        UserDetails user = new User("p@example.com", "pw", List.of(new SimpleGrantedAuthority("ROLE_PROFESSEUR")));
+    void snapshotPublicRetourne404SiInconnu() throws Exception {
+        when(quizSessionManager.snapshotEnvelope("x")).thenReturn(Optional.empty());
 
-        mockMvc.perform(delete("/api/quizs/9/stats-qr-live").with(principal(user)))
+        mockMvc.perform(get("/api/qr-live/public/x/snapshot").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void snapshotPublicRetourneEnvelope() throws Exception {
+        QrLiveStreamEnvelope env = QrLiveStreamEnvelope.builder()
+                .type(QrLiveStreamMessageType.STATS)
+                .build();
+        when(quizSessionManager.snapshotEnvelope("tok")).thenReturn(Optional.of(env));
+
+        mockMvc.perform(get("/api/qr-live/public/tok/snapshot").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Statistiques QR live clôturées"))
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$.type").value("STATS"));
+    }
 
-        verify(quizService).clearQrLiveStats(9L, "p@example.com");
+    @Test
+    void deleteSessionNoContentSansJwt() throws Exception {
+        when(quizSessionManager.forceCloseSession("t1")).thenReturn(true);
+
+        mockMvc.perform(delete("/api/qr-live/sessions/t1"))
+                .andExpect(status().isNoContent());
+
+        verify(quizSessionManager).forceCloseSession("t1");
+    }
+
+    @Test
+    void deleteSession404SiJetonInconnu() throws Exception {
+        when(quizSessionManager.forceCloseSession("missing")).thenReturn(false);
+
+        mockMvc.perform(delete("/api/qr-live/sessions/missing"))
+                .andExpect(status().isNotFound());
     }
 }

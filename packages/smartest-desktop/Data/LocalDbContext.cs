@@ -152,6 +152,10 @@ namespace smartest_desktop.Data
                       .UsingEntity(j => j.ToTable("quiz_local_cours"));
 
                 entity.Property(q => q.BackendQuizId);
+                entity.Property(q => q.BackendQuizIdPublicationWeb);
+                entity.Property(q => q.BackendQuizIdQr);
+                entity.Property(q => q.QrLiveSessionToken).HasColumnType("TEXT");
+                entity.Property(q => q.ServeurOuQrToucheUtc);
                 entity.Property(q => q.EmailsPublicationWebJson).HasColumnType("TEXT");
             });
 

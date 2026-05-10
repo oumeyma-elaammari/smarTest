@@ -2,6 +2,7 @@ package com.smartest.backend.repository;
 
 import com.smartest.backend.entity.ReponseEtudiant;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -175,6 +176,10 @@ public interface ReponseEtudiantRepository extends JpaRepository<ReponseEtudiant
     List<Object[]> getRepartitionReponsesByQuestion(@Param("questionId") Long questionId);
 
     // ==================== SUPPRESSIONS ====================
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM ReponseEtudiant re WHERE re.resultat.quizId = :quizId")
+    void deleteByResultatQuizId(@Param("quizId") Long quizId);
 
     /**
      * Supprimer toutes les réponses d'un étudiant

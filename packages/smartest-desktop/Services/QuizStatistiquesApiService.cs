@@ -13,16 +13,16 @@ namespace smartest_desktop.Services
     /// <summary>GET /api/statistiques/quiz/{id} — visible uniquement par le prof propriétaire (JWT).</summary>
     public sealed class QuizStatistiquesApiService
     {
-        private const string DefaultBaseUrl = "http://localhost:8081";
-
         private readonly Func<string, HttpClient>? _createClientOverride;
         private readonly string _baseUrl;
 
         /// <remarks>Injection optionnelle pour les tests (<paramref name="createClient"/> retourne un client déjà configuré).</remarks>
-        public QuizStatistiquesApiService(Func<string, HttpClient>? createClient = null, string baseUrl = DefaultBaseUrl)
+        public QuizStatistiquesApiService(Func<string, HttpClient>? createClient = null, string? baseUrl = null)
         {
             _createClientOverride = createClient;
-            _baseUrl = string.IsNullOrWhiteSpace(baseUrl) ? DefaultBaseUrl : baseUrl.TrimEnd('/');
+            _baseUrl = string.IsNullOrWhiteSpace(baseUrl)
+                ? SmartestBackendBaseUrl.Resolve()
+                : baseUrl.TrimEnd('/');
         }
 
         private HttpClient CreateHttp(string bearerToken)

@@ -1,9 +1,11 @@
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using smartest_desktop.Exceptions;
 using smartest_desktop.Helpers;
 using smartest_desktop.Models;
@@ -15,7 +17,6 @@ namespace smartest_desktop.Services
         public const string EmailNotVerifiedCode = "__EMAIL_NOT_VERIFIED__";
 
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "http://localhost:8081";
 
         /// <remarks>Injection optionnelle du <see cref="HttpClient"/> pour les tests.</remarks>
         public AuthService(HttpClient? httpClientOverride = null)
@@ -26,7 +27,7 @@ namespace smartest_desktop.Services
             }
             else
             {
-                _httpClient = new HttpClient { BaseAddress = new Uri(BaseUrl) };
+                _httpClient = new HttpClient { BaseAddress = new Uri(SmartestBackendBaseUrl.Resolve()) };
                 _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             }
         }
@@ -273,6 +274,156 @@ namespace smartest_desktop.Services
                 return SmartestNetworkException.ServerUnreachable(ex).Message;
             }
             catch (Exception ex) { return UserErrorMessage.FromException(ex, "Une erreur est survenue lors de la reinitialisation du mot de passe."); }
+        }
+
+        // ══════════════════════════════════════════════
+        //  UPDATE PROFIL PROFESSEUR
+        // ══════════════════════════════════════════════
+        public async Task<(string? nom, string? error)> UpdateProfesseurProfilNomAsync(
+            string bearerToken, string nom, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Put, "/api/professeur/profil")
+                {
+                    Content = ToJson(new { nom })
+                };
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        var json = JObject.Parse(content);
+                        var nomUpdated = json["nom"]?.ToString()?.Trim();
+                        return (string.IsNullOrWhiteSpace(nomUpdated) ? nom : nomUpdated, null);
+                    }
+                    catch (JsonException)
+                    {
+                        return (nom, null);
+                    }
+                }
+
+                string error = (int)response.StatusCode switch
+                {
+                    400 => ParseValidationError(content),
+                    401 => "Session invalide ou expirée. Veuillez vous reconnecter.",
+                    403 => "Accès refusé pour la mise à jour du profil.",
+                    500 => "Erreur serveur. Réessayez plus tard.",
+                    _ => $"Erreur inattendue ({(int)response.StatusCode})"
+                };
+
+                return (null, error);
+            }
+            catch (OperationCanceledException ex)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return (null, SmartestNetworkException.ServerUnreachable(ex).Message);
+            }
+            catch (HttpRequestException ex)
+            {
+                return (null, SmartestNetworkException.ServerUnreachable(ex).Message);
+            }
+            catch (Exception ex)
+            {
+                return (null, UserErrorMessage.FromException(ex, "Impossible de mettre à jour le profil."));
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  CHANGE PASSWORD PROFESSEUR
+        // ══════════════════════════════════════════════
+        public async Task<string?> ChangeProfesseurPasswordAsync(
+            string bearerToken,
+            string oldPassword,
+            string newPassword,
+            string confirmPassword,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Put, "/api/professeur/change-password")
+                {
+                    Content = ToJson(new { oldPassword, newPassword, confirmPassword })
+                };
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                    return null;
+
+                return (int)response.StatusCode switch
+                {
+                    400 => ParseValidationError(content),
+                    401 => "Ancien mot de passe incorrect ou session expirée.",
+                    403 => "Accès refusé pour la modification du mot de passe.",
+                    500 => "Erreur serveur. Réessayez plus tard.",
+                    _ => $"Erreur inattendue ({(int)response.StatusCode})"
+                };
+            }
+            catch (OperationCanceledException ex)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (HttpRequestException ex)
+            {
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (Exception ex)
+            {
+                return UserErrorMessage.FromException(ex, "Impossible de changer le mot de passe.");
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        //  SUPPRIMER COMPTE PROFESSEUR
+        // ══════════════════════════════════════════════
+        public async Task<string?> DeleteProfesseurCompteAsync(
+            string bearerToken,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Delete, "/api/professeur/compte");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                    return null;
+
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                return (int)response.StatusCode switch
+                {
+                    401 => "Session invalide ou expirée. Veuillez vous reconnecter.",
+                    403 => "Accès refusé pour la suppression du compte.",
+                    500 => "Erreur serveur. Réessayez plus tard.",
+                    _ => string.IsNullOrWhiteSpace(content) ? $"Erreur ({(int)response.StatusCode})" : content.Trim('"')
+                };
+            }
+            catch (OperationCanceledException ex)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (HttpRequestException ex)
+            {
+                return SmartestNetworkException.ServerUnreachable(ex).Message;
+            }
+            catch (Exception ex)
+            {
+                return UserErrorMessage.FromException(ex, "Impossible de supprimer le compte.");
+            }
         }
 
         // ══════════════════════════════════════════════

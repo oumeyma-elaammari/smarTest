@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +26,19 @@ public interface StatistiqueQuestionRepository extends JpaRepository<Statistique
     @Query("SELECT s FROM StatistiqueQuestion s WHERE s.pourcentageEchec > 70")
     List<StatistiqueQuestion> findQuestionsAlerteEchec();
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM StatistiqueQuestion s WHERE s.quiz.id = :quizId")
     void deleteAllByQuizId(@Param("quizId") Long quizId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM StatistiqueQuestion s WHERE s.examenPublie.id = :examenId")
+    void deleteAllByExamenPublieId(@Param("examenId") Long examenId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM StatistiqueQuestion s WHERE s.sessionExamen.id = :sessionId")
+    void deleteAllBySessionExamenId(@Param("sessionId") Long sessionId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM StatistiqueQuestion s WHERE s.question.id IN :ids")
+    void deleteAllByQuestionIdIn(@Param("ids") Collection<Long> ids);
 }

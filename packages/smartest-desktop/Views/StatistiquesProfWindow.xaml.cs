@@ -5,28 +5,28 @@ namespace smartest_desktop.Views
 {
     public partial class StatistiquesProfWindow : Window
     {
+        private readonly StatistiquesQuizProfViewModel _statsDashboardVm;
+
         public StatistiquesProfWindow(long? preferBackendQuizId = null, long? preferBackendExamenId = null)
         {
             InitializeComponent();
 
-            Dashboard.DataContext = new StatistiquesQuizProfViewModel(preferBackendQuizId, preferBackendExamenId);
+            _statsDashboardVm = new StatistiquesQuizProfViewModel(preferBackendQuizId, preferBackendExamenId);
+            Dashboard.DataContext = _statsDashboardVm;
+            Closed += (_, _) => _statsDashboardVm.StopPeriodicRefresh();
 
             var shell = new StatistiquesProfViewModel();
             DataContext = shell;
 
             shell.NavigateToDashboard += () =>
             {
-                var w = new DashboardWindow();
-                w.Show();
-                Application.Current.MainWindow = w;
+                App.OuvrirShell(MainShellSection.Home);
                 Close();
             };
 
             shell.NavigateToQuizExamen += () =>
             {
-                var w = new QuizExamenWindow();
-                w.Show();
-                Application.Current.MainWindow = w;
+                App.OuvrirShell(MainShellSection.QuizExamens);
                 Close();
             };
         }

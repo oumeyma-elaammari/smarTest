@@ -21,7 +21,6 @@ function quizPayload(count: number, titrePrefix = 'Quiz') {
     return Array.from({ length: count }, (_, i) => ({
         id: i + 1,
         titre: `${titrePrefix} ${i + 1}`,
-        duree: 15,
         professeurNom: 'Prof',
         nombreQuestions: 3,
         premiereTentative: true,
@@ -90,7 +89,7 @@ describe('MesQuizWeb page', () => {
             http.get(`${API_BASE}/api/quizs/mes-publications-web`, () =>
                 HttpResponse.json([
                     ...quizPayload(1, 'Algèbre'),
-                    ...[{ id: 2, titre: 'Bio 2', duree: 10, premiereTentative: true, meilleurScore: null }],
+                    ...[{ id: 2, titre: 'Bio 2', premiereTentative: true, meilleurScore: null }],
                 ]),
             ),
         )

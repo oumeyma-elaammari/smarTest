@@ -2,6 +2,9 @@ package com.smartest.backend.repository;
 
 import com.smartest.backend.entity.Reponse;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -23,5 +26,8 @@ public interface ReponseRepository extends JpaRepository<Reponse, Long> {
 
     void deleteByQuestionId(Long questionId);
 
-    
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM Reponse r WHERE r.sessionExamen.id = :sessionId")
+    void deleteBySessionExamenId(@Param("sessionId") Long sessionId);
+
 }

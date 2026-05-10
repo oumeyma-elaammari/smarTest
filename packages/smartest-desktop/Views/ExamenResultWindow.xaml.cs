@@ -58,7 +58,11 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    NaviguerEtFermer(() => new QuizExamenWindow());
+                    _fermetureConfirmee = true;
+                    _navigationInProgress = true;
+                    App.OuvrirShell(MainShellSection.QuizExamens);
+                    if (!_isClosing)
+                        Close();
                 });
             };
 
@@ -156,7 +160,11 @@ namespace smartest_desktop.Views
 
         private void OuvrirHubEtFermer()
         {
-            NaviguerEtFermer(() => new QuizExamenWindow());
+            _fermetureConfirmee = true;
+            _navigationInProgress = true;
+            App.OuvrirShell(MainShellSection.QuizExamens);
+            if (!_isClosing)
+                Close();
         }
 
         private void NaviguerEtFermer(Func<Window> nextWindowFactory)

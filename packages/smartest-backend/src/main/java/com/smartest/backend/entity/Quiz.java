@@ -22,7 +22,6 @@ public class Quiz {
     private Long id;
 
     private String titre;
-    private Integer duree;
 
     // NOUVEAU
     @Enumerated(EnumType.STRING)
