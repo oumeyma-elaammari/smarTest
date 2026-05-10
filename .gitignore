@@ -1,27 +1,42 @@
+# Dependencies
 node_modules/
+
+# Environment
+.env
+
+# Build / Output
 dist/
 build/
-.env
-*.log
-.DS_Store
-**/.vs/
-**/.idea/
-.idea/
-packages/smartest-backend/.idea/
-# Secrets / config machine locale (copie de application-local.example.yaml)
-packages/smartest-backend/src/main/resources/application-local.yaml
+out/
 bin/
 obj/
-# Sorties dotnet build -o (compilations vers dossier personnalisé)
+build-out-desktop/
 **/_build_out*/
+
+# Backend secrets (local overrides)
+packages/smartest-backend/src/main/resources/application-local.yaml
+
+# Executables / binaries
 *.exe
 *.dll
 
+# Databases
 *.db
 *.sqlite
 *.sqlite3
-# SQLite fichiers auxiliaires (toujours locaux)
 *.db-shm
 *.db-wal
-# Base locale app desktop  ne pas versionner
 **/smartest_local.db*
+
+# Logs
+*.log
+
+# IDE / Editors
+.idea/
+.cursor/
+.vscode/
+**/.vs/
+
+# OS files
+.DS_Store
+Thumbs.db

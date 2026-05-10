@@ -9,9 +9,9 @@ function formatScorePourcent(v: number): string {
 }
 
 type QuizCardProps = {
-    item: QuizWebItem
-    accentBleu: string
-    onStart: (id: number) => void
+    readonly item: QuizWebItem
+    readonly accentBleu: string
+    readonly onStart: (id: number) => void
 }
 
 function meilleurScoreBloc(premiere: boolean, accentBleu: string, meilleurScore: number | null | undefined): ReactNode {
@@ -36,7 +36,7 @@ function meilleurScoreBloc(premiere: boolean, accentBleu: string, meilleurScore:
 }
 
 export function QuizCard({ item: q, accentBleu, onStart }: QuizCardProps) {
-    const premiere = q.premiereTentative !== false
+    const premiere = q.premiereTentative === undefined || q.premiereTentative === true
     const titreBrut = (q.titre ?? '').trim() || 'Quiz'
     const titreAffiche = titreBrut.toLowerCase().startsWith('quiz') ? titreBrut : `Quiz — ${titreBrut}`
     return (

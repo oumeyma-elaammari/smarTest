@@ -5,7 +5,6 @@ import com.smartest.backend.dto.request.SoumissionQuizRequest;
 import com.smartest.backend.dto.request.SoumissionQuizWebRequest;
 import com.smartest.backend.dto.request.VerificationQuestionWebRequest;
 import com.smartest.backend.dto.response.QuizPassageWebResponse;
-import com.smartest.backend.dto.response.QuizQrLiveStatsResponse;
 import com.smartest.backend.dto.response.QuizResponse;
 import com.smartest.backend.dto.response.ResultatQuizResponse;
 import com.smartest.backend.dto.response.ResultatQuizWebResponse;
@@ -37,6 +36,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.smartest.backend.exception.QuizNotFoundException;
 import com.smartest.backend.exception.UnauthorizedAccessException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -46,6 +46,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -82,8 +83,6 @@ class QuizServiceWebFlowsTest {
     private StatistiqueRecalculService statistiqueRecalculService;
     @Mock
     private StatistiqueService statistiqueService;
-    @Mock
-    private QuizQrLiveStatsService quizQrLiveStatsService;
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
@@ -128,7 +127,6 @@ class QuizServiceWebFlowsTest {
         quizPublieWeb = new Quiz();
         quizPublieWeb.setId(10L);
         quizPublieWeb.setTitre("Math");
-        quizPublieWeb.setDuree(20);
         quizPublieWeb.setStatut(StatutQuiz.PUBLIE);
         quizPublieWeb.setProfesseur(professeur);
         quizPublieWeb.setQuestions(new ArrayList<>(List.of(question)));
@@ -182,11 +180,16 @@ class QuizServiceWebFlowsTest {
     }
 
     @Test
-    void getMesQuizsPublicationWebListeVideSiEtudiantInconnu() {
+    void getMesQuizsPublicationWebRetourneQuizSansScoresSiEtudiantInconnuEnBase() {
         when(etudiantRepository.findByEmail("x@y.com")).thenReturn(Optional.empty());
+        when(quizRepository.findPubliesAutorisesPourEmail("x@y.com")).thenReturn(List.of(quizPublieWeb));
 
-        assertThat(quizService.getMesQuizsPublicationWeb("x@y.com")).isEmpty();
-        verify(quizRepository, never()).findPubliesAutorisesPourEmail(any());
+        List<QuizResponse> list = quizService.getMesQuizsPublicationWeb("x@y.com");
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).getPremiereTentative()).isTrue();
+        assertThat(list.get(0).getMeilleurScore()).isNull();
+        verify(quizRepository).findPubliesAutorisesPourEmail("x@y.com");
     }
 
     @Test
@@ -199,6 +202,27 @@ class QuizServiceWebFlowsTest {
 
         assertThat(list).hasSize(1);
         assertThat(list.get(0).getPremiereTentative()).isTrue();
+    }
+
+    @Test
+    void getMesQuizsPublicationWebExcludeQuizSansQuestions() {
+        Quiz sansQuestions = new Quiz();
+        sansQuestions.setId(88L);
+        sansQuestions.setTitre("Quiz — vide");
+        sansQuestions.setStatut(StatutQuiz.PUBLIE);
+        sansQuestions.setProfesseur(professeur);
+        sansQuestions.setQuestions(new ArrayList<>());
+        sansQuestions.setEmailsAutorisesWeb(new LinkedHashSet<>(Set.of(EMAIL_STUDENT_SCHOOL)));
+
+        when(etudiantRepository.findByEmail(EMAIL_STUDENT_SCHOOL)).thenReturn(Optional.of(etudiant));
+        when(quizRepository.findPubliesAutorisesPourEmail(EMAIL_STUDENT_SCHOOL))
+                .thenReturn(List.of(sansQuestions, quizPublieWeb));
+        when(resultatRepository.existsByEtudiantIdAndQuizId(50L, 10L)).thenReturn(false);
+
+        List<QuizResponse> list = quizService.getMesQuizsPublicationWeb(EMAIL_STUDENT_SCHOOL);
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).getId()).isEqualTo(10L);
     }
 
     @Test
@@ -220,21 +244,6 @@ class QuizServiceWebFlowsTest {
         assertThat(dto.getNombreQuestions()).isEqualTo(1);
         assertThat(dto.getQuestions()).hasSize(1);
         assertThat(dto.getQuestions().get(0).getReponses()).hasSize(2);
-    }
-
-    @Test
-    void getQuizPourPassageQrAutoriseBrouillon() {
-        Quiz b = new Quiz();
-        b.setId(11L);
-        b.setTitre("Quiz brouillon QR");
-        b.setDuree(15);
-        b.setStatut(StatutQuiz.BROUILLON);
-        b.setQuestions(new ArrayList<>(quizPublieWeb.getQuestions()));
-        when(quizRepository.findById(11L)).thenReturn(Optional.of(b));
-
-        QuizPassageWebResponse dto = quizService.getQuizPourPassageQr(11L);
-        assertThat(dto.getId()).isEqualTo(11L);
-        assertThat(dto.getNombreQuestions()).isEqualTo(1);
     }
 
     @Test
@@ -292,27 +301,10 @@ class QuizServiceWebFlowsTest {
 
     @Test
     void verifierQuestionPassageWebRequeteIncompleteBadRequest() {
-        assertThatThrownBy(() -> quizService.verifierQuestionPassageWeb(10L, EMAIL_STUDENT_SCHOOL, null, null))
+        assertThatThrownBy(() -> quizService.verifierQuestionPassageWeb(10L, EMAIL_STUDENT_SCHOOL, null))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    void verifierQuestionPassageWebEnregistreStatsSiModeQr() {
-        when(quizRepository.findById(10L)).thenReturn(Optional.of(quizPublieWeb));
-        QuizQrLiveStatsResponse snap = QuizQrLiveStatsResponse.builder().quizId(10L).quizTitre("Math").build();
-        when(quizQrLiveStatsService.snapshot(10L)).thenReturn(snap);
-
-        VerificationQuestionWebRequest req = new VerificationQuestionWebRequest();
-        req.setQuestionId(100L);
-        req.setReponseId(200L);
-
-        quizService.verifierQuestionPassageWeb(10L, EMAIL_STUDENT_SCHOOL, req, "qr");
-
-        verify(quizQrLiveStatsService).recordVerification(
-                10L, "Math", EMAIL_STUDENT_SCHOOL, 100L, "2+2 ?", true);
-        verify(messagingTemplate).convertAndSend(eq("/topic/quiz/10/qr-live"), eq(snap));
     }
 
     @Test
@@ -330,31 +322,12 @@ class QuizServiceWebFlowsTest {
         req.setReponses(List.of(dto));
 
         ResultatQuizWebResponse res = quizService.soumettreQuizWeb(
-                10L, EMAIL_STUDENT_SCHOOL, req, null);
+                10L, EMAIL_STUDENT_SCHOOL, req);
 
         assertThat(res.getBonnesReponses()).isEqualTo(1);
         assertThat(res.isEstPremiereTentative()).isTrue();
         verify(resultatRepository).save(any());
         verify(statistiqueRecalculService).planifierApresDelai(10L);
-    }
-
-    @Test
-    void soumettreQuizQrNePersistePasResultatEtScoreCoherent() {
-        when(quizRepository.findById(10L)).thenReturn(Optional.of(quizPublieWeb));
-
-        ReponseQuizDTO dto = new ReponseQuizDTO();
-        dto.setQuestionId(100L);
-        dto.setReponseId(201L);
-
-        SoumissionQuizWebRequest req = new SoumissionQuizWebRequest();
-        req.setReponses(List.of(dto));
-
-        ResultatQuizWebResponse res = quizService.soumettreQuizQr(10L, req);
-
-        assertThat(res.getBonnesReponses()).isEqualTo(0);
-        assertThat(res.isEstPremiereTentative()).isTrue();
-        assertThat(res.getScore()).isZero();
-        verify(resultatRepository, never()).save(any());
     }
 
     @Test
@@ -366,5 +339,45 @@ class QuizServiceWebFlowsTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void publierSurLeWebPremierePublicationEnvoieEmailsEtDatePublication() {
+        Quiz brouillon = new Quiz();
+        brouillon.setId(99L);
+        brouillon.setTitre("Chimie");
+        brouillon.setStatut(StatutQuiz.BROUILLON);
+        brouillon.setProfesseur(professeur);
+        brouillon.setEmailsAutorisesWeb(new LinkedHashSet<>());
+
+        when(professeurRepository.findByEmail(EMAIL_PROF_SCHOOL)).thenReturn(Optional.of(professeur));
+        when(quizRepository.findById(99L)).thenReturn(Optional.of(brouillon));
+        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        quizService.publierSurLeWeb(99L, EMAIL_PROF_SCHOOL, List.of(EMAIL_STUDENT_SCHOOL));
+
+        verify(emailService).sendQuizWebPublishedEmail(eq(EMAIL_STUDENT_SCHOOL), anyString(), eq("Chimie"));
+
+        ArgumentCaptor<Quiz> captor = ArgumentCaptor.forClass(Quiz.class);
+        verify(quizRepository).save(captor.capture());
+        assertThat(captor.getValue().getDatePublication()).isNotNull();
+    }
+
+    @Test
+    void publierSurLeWebDejaPublieNeRenvoitPasEmailsEtConserveDatePublication() {
+        LocalDateTime fixee = LocalDateTime.of(2026, 3, 1, 10, 0);
+        quizPublieWeb.setDatePublication(fixee);
+        when(professeurRepository.findByEmail(EMAIL_PROF_SCHOOL)).thenReturn(Optional.of(professeur));
+        when(quizRepository.findById(10L)).thenReturn(Optional.of(quizPublieWeb));
+        when(quizRepository.save(any(Quiz.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        quizService.publierSurLeWeb(10L, EMAIL_PROF_SCHOOL, List.of("nouveau@school.com"));
+
+        verify(emailService, never()).sendQuizWebPublishedEmail(anyString(), anyString(), anyString());
+
+        ArgumentCaptor<Quiz> captor = ArgumentCaptor.forClass(Quiz.class);
+        verify(quizRepository).save(captor.capture());
+        assertThat(captor.getValue().getDatePublication()).isEqualTo(fixee);
+        assertThat(captor.getValue().getEmailsAutorisesWeb()).containsExactly("nouveau@school.com");
     }
 }

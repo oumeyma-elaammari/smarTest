@@ -15,7 +15,6 @@ const questionWebSchema = z.object({
 export const quizPassageWebSchema = z.object({
     id: z.number(),
     titre: z.string(),
-    duree: z.number().optional(),
     nombreQuestions: z.number(),
     questions: z.array(questionWebSchema),
 })
@@ -23,7 +22,6 @@ export const quizPassageWebSchema = z.object({
 export const quizWebItemSchema = z.object({
     id: z.number(),
     titre: z.string(),
-    duree: z.number(),
     statut: z.string().optional(),
     datePublication: z.string().optional(),
     professeurNom: z.string().optional(),
@@ -70,58 +68,50 @@ export const examenMetaSchema = z.object({
 export const examenMetaListSchema = z.array(examenMetaSchema)
 
 /** Élément liste examens (carte dashboard). */
-export const examenListeItemSchema = z
-    .object({
-        id: z.number(),
-        titre: z.string(),
-        description: z.string().optional().nullable(),
-        duree: z.number().optional().nullable(),
-        statut: z.string().optional(),
-        dateDebut: dateTimeLike,
-        dateFin: dateTimeLike,
-        dateCreation: dateTimeLike,
-        professeur: z
-            .object({
-                nom: z.string().optional(),
-                email: z.string().optional(),
-            })
-            .optional()
-            .nullable(),
-    })
-    .passthrough()
+export const examenListeItemSchema = z.looseObject({
+    id: z.number(),
+    titre: z.string(),
+    description: z.string().optional().nullable(),
+    duree: z.number().optional().nullable(),
+    statut: z.string().optional(),
+    dateDebut: dateTimeLike,
+    dateFin: dateTimeLike,
+    dateCreation: dateTimeLike,
+    professeur: z
+        .object({
+            nom: z.string().optional(),
+            email: z.string().optional(),
+        })
+        .optional()
+        .nullable(),
+})
 
 export const examenListeSchema = z.array(examenListeItemSchema)
 
 export type ExamenListeItem = z.infer<typeof examenListeItemSchema>
 
 /** Champs souvent null côté Jackson (chaînes) — sans .nullish() le parse Zod échoue et le WS est ignoré. */
-const questionCouranteSnapshotPart = z
-    .object({
-        id: z.coerce.number().nullish(),
-        numero: z.coerce.number().nullish(),
-        enonce: z.string().nullish(),
-        type: z.string().nullish(),
-        reponses: z
-            .array(
-                z
-                    .object({
-                        id: z.coerce.number().nullish(),
-                        contenu: z.string().nullish(),
-                    })
-                    .passthrough(),
-            )
-            .nullish(),
-    })
-    .passthrough()
+const questionCouranteSnapshotPart = z.looseObject({
+    id: z.coerce.number().nullish(),
+    numero: z.coerce.number().nullish(),
+    enonce: z.string().nullish(),
+    type: z.string().nullish(),
+    reponses: z
+        .array(
+            z.looseObject({
+                id: z.coerce.number().nullish(),
+                contenu: z.string().nullish(),
+            }),
+        )
+        .nullish(),
+})
 
-const planQuestionRowSchema = z
-    .object({
-        id: z.coerce.number().nullish(),
-        numero: z.coerce.number().nullish(),
-        enonce: z.string().nullish(),
-        type: z.string().nullish(),
-    })
-    .passthrough()
+const planQuestionRowSchema = z.looseObject({
+    id: z.coerce.number().nullish(),
+    numero: z.coerce.number().nullish(),
+    enonce: z.string().nullish(),
+    type: z.string().nullish(),
+})
 
 export const examenSnapshotSchema = z.object({
     examenId: z.coerce.number(),
@@ -132,7 +122,7 @@ export const examenSnapshotSchema = z.object({
     questionCouranteIndex: z.number().nullable().optional(),
     totalQuestions: z.coerce.number().optional(),
     questionCourante: questionCouranteSnapshotPart.nullish(),
-    /** Ordre et énoncés de toute l’épreuve (supervision prof). */
+    /** Ordre et énoncés de toute l'épreuve (supervision prof). */
     planQuestions: z.array(planQuestionRowSchema).optional(),
     tempsRestantMinutes: z.number().nullish(),
     /** Minuteur de la question courante (secondes), synchronisé serveur. */
@@ -175,7 +165,7 @@ export function mapQuestionStateToSnapshot(raw: unknown): ExamenSnapshot | null 
         enPause: q.enPause,
         questionCouranteIndex: q.questionCouranteIndex ?? undefined,
         totalQuestions: q.totalQuestions,
-        questionCourante: q.questionCourante === undefined || q.questionCourante === null ? undefined : q.questionCourante,
+        questionCourante: q.questionCourante ?? undefined,
         tempsRestantMinutes: q.tempsRestantMinutes ?? undefined,
         tempsQuestionRestantSeconds: q.tempsQuestionRestantSeconds ?? undefined,
         questionDurationSeconds: q.questionDurationSeconds ?? undefined,

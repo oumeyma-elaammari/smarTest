@@ -1,4 +1,4 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 import toast from 'react-hot-toast'
 import { getUserErrorMessage } from '../utils/userErrorMessage'
 
@@ -22,7 +22,7 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 api.interceptors.response.use(
     (response) => response,
-    (error: AxiosError | unknown) => {
+    (error: unknown) => {
         const ax = axios.isAxiosError(error) ? error : null
         const status = ax?.response?.status
         const url = ax?.config?.url ?? ''
@@ -44,7 +44,7 @@ api.interceptors.response.use(
             } catch {
                 /* quota / navigation privée */
             }
-            window.location.href = '/login'
+            globalThis.location.href = '/login'
         }
 
         return Promise.reject(error)

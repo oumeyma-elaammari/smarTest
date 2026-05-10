@@ -26,15 +26,23 @@ public interface StatistiqueQuestionRepository extends JpaRepository<Statistique
     @Query("SELECT s FROM StatistiqueQuestion s WHERE s.pourcentageEchec > 70")
     List<StatistiqueQuestion> findQuestionsAlerteEchec();
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM StatistiqueQuestion s WHERE s.quiz.id = :quizId")
     void deleteAllByQuizId(@Param("quizId") Long quizId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM StatistiqueQuestion s WHERE s.examenPublie.id = :examenId")
     void deleteAllByExamenPublieId(@Param("examenId") Long examenId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM StatistiqueQuestion s WHERE s.sessionExamen.id IN :sessionIds")
     void deleteAllBySessionExamenIdIn(@Param("sessionIds") Collection<Long> sessionIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM StatistiqueQuestion s WHERE s.sessionExamen.id = :sessionId")
+    void deleteAllBySessionExamenId(@Param("sessionId") Long sessionId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM StatistiqueQuestion s WHERE s.question.id IN :ids")
+    void deleteAllByQuestionIdIn(@Param("ids") Collection<Long> ids);
 }

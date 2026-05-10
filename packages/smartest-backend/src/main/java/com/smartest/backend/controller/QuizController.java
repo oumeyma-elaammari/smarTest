@@ -9,14 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartest.backend.dto.request.PublicationWebRequest;
-import com.smartest.backend.dto.request.QrQuestionsSyncRequest;
 import com.smartest.backend.dto.request.QuizRequest;
+import com.smartest.backend.dto.request.SyncQuestionsProfRequest;
 import com.smartest.backend.dto.response.MessageResponse;
 import com.smartest.backend.dto.response.QuizResponse;
 import com.smartest.backend.dto.response.ResultatQuizResponse;
 import com.smartest.backend.dto.response.QuizPassageWebResponse;
 import com.smartest.backend.dto.response.ResultatQuizWebResponse;
-import com.smartest.backend.dto.response.QuizQrLiveStatsResponse;
 import com.smartest.backend.dto.response.VerificationQuestionWebResponse;
 import com.smartest.backend.dto.request.VerificationQuestionWebRequest;
 import com.smartest.backend.service.QuizService;
@@ -126,13 +125,16 @@ public class QuizController {
         return ResponseEntity.ok(new MessageResponse("Quiz publié sur le web", true, 200));
     }
 
-    @PostMapping("/{id}/qr-sync-questions")
-    public ResponseEntity<MessageResponse> synchroniserQuestionsPourQr(
+    /**
+     * Synchronise les questions seules (ex. quiz miroir réservé au QR), sans toucher aux emails ni au statut web.
+     */
+    @PostMapping("/{id}/sync-questions-prof")
+    public ResponseEntity<MessageResponse> synchroniserQuestionsProf(
             @PathVariable Long id,
-            @Valid @RequestBody QrQuestionsSyncRequest request,
+            @Valid @RequestBody SyncQuestionsProfRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         quizService.synchroniserQuestionsPublicationWeb(id, userDetails.getUsername(), request.getQuestions());
-        return ResponseEntity.ok(new MessageResponse("Questions QR synchronisées", true, 200));
+        return ResponseEntity.ok(new MessageResponse("Questions synchronisées", true, 200));
     }
 
     // ================= QUIZ LOGIC =================
@@ -155,11 +157,6 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getQuizPourPassageWeb(id, userDetails.getUsername()));
     }
 
-    @GetMapping("/{id}/passage-qr")
-    public ResponseEntity<QuizPassageWebResponse> getQuizPourPassageQr(@PathVariable Long id) {
-        return ResponseEntity.ok(quizService.getQuizPourPassageQr(id));
-    }
-
     /**
      * Vérifie une réponse au passage (feedback immédiat, sans enregistrer la tentative).
      */
@@ -167,17 +164,8 @@ public class QuizController {
     public ResponseEntity<VerificationQuestionWebResponse> verifierQuestionWeb(
             @PathVariable Long id,
             @Valid @RequestBody VerificationQuestionWebRequest request,
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestHeader(value = "X-Quiz-Access-Mode", required = false) String accessMode) {
-        return ResponseEntity.ok(quizService.verifierQuestionPassageWeb(id, userDetails.getUsername(), request, accessMode));
-    }
-
-    @PostMapping("/{id}/verifier-question-qr")
-    public ResponseEntity<VerificationQuestionWebResponse> verifierQuestionQr(
-            @PathVariable Long id,
-            @Valid @RequestBody VerificationQuestionWebRequest request,
-            @RequestHeader(value = "X-QR-Participant", required = false) String participantKey) {
-        return ResponseEntity.ok(quizService.verifierQuestionPassageQr(id, request, participantKey));
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(quizService.verifierQuestionPassageWeb(id, userDetails.getUsername(), request));
     }
 
     /**
@@ -187,31 +175,8 @@ public class QuizController {
     public ResponseEntity<ResultatQuizWebResponse> soumettreQuizWeb(
             @PathVariable Long id,
             @RequestBody SoumissionQuizWebRequest request,
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestHeader(value = "X-Quiz-Access-Mode", required = false) String accessMode) {
-        return ResponseEntity.ok(quizService.soumettreQuizWeb(id, userDetails.getUsername(), request, accessMode));
-    }
-
-    @PostMapping("/{id}/soumettre-qr")
-    public ResponseEntity<ResultatQuizWebResponse> soumettreQuizQr(
-            @PathVariable Long id,
-            @RequestBody SoumissionQuizWebRequest request) {
-        return ResponseEntity.ok(quizService.soumettreQuizQr(id, request));
-    }
-
-    @GetMapping("/{id}/stats-qr-live")
-    public ResponseEntity<QuizQrLiveStatsResponse> getQrLiveStats(
-            @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(quizService.getQrLiveStats(id, userDetails.getUsername()));
-    }
-
-    @DeleteMapping("/{id}/stats-qr-live")
-    public ResponseEntity<MessageResponse> clearQrLiveStats(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        quizService.clearQrLiveStats(id, userDetails.getUsername());
-        return ResponseEntity.ok(new MessageResponse("Statistiques QR live clôturées", true, 200));
+        return ResponseEntity.ok(quizService.soumettreQuizWeb(id, userDetails.getUsername(), request));
     }
 
     @GetMapping("/{id}/premiere-tentative/{etudiantId}")

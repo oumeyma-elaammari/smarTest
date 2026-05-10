@@ -495,29 +495,31 @@
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
 									<TextBlock Grid.Column="0" Text="Liste des emails" FontSize="10" FontWeight="700" Foreground="#0f1e3d" VerticalAlignment="Center"/>
-									<Button Grid.Column="1" Command="{Binding SupprimerEmailsSelectionnesWebCommand}"
-                                            Padding="10,6" FontSize="11" FontWeight="600" Cursor="Hand"
-                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" Foreground="#B91C1C"
-                                            FocusVisualStyle="{x:Null}" ToolTip="Retire de la liste les adresses cochées">
-										<Button.Style>
-											<Style TargetType="Button">
+									<Border Grid.Column="1" Width="28" Height="28" CornerRadius="7" Cursor="Hand"
+                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1"
+                                            ToolTip="Supprimer les emails sélectionnés"
+                                            Visibility="{Binding AEmailsSelectionnes, Converter={StaticResource BoolToVis}}">
+										<Border.InputBindings>
+											<MouseBinding MouseAction="LeftClick" Command="{Binding SupprimerEmailsSelectionnesWebCommand}"/>
+										</Border.InputBindings>
+										<Border.Style>
+											<Style TargetType="Border">
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
 														<Setter Property="Background" Value="#FEE2E2"/>
 													</Trigger>
-													<Trigger Property="IsEnabled" Value="False">
-														<Setter Property="Opacity" Value="0.45"/>
-													</Trigger>
 												</Style.Triggers>
 											</Style>
-										</Button.Style>
-										Supprimer la sélection
-									</Button>
+										</Border.Style>
+										<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                                   Foreground="#DC2626"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+									</Border>
 								</Grid>
-								<TextBlock Text="Aucun email pour l'instant."
+								<TextBlock Text="Aucun email pour l'instant. Importez un fichier ou ajoutez une adresse ci-dessus."
                                            FontSize="11" Foreground="#94a3b8" TextWrapping="Wrap"
                                            Visibility="{Binding AucunEmailListeApercu, Converter={StaticResource BoolToVis}}"/>
-								<ItemsControl ItemsSource="{Binding EmailsListeApercu}">
+								<ItemsControl ItemsSource="{Binding EmailsListeApercu}" Margin="0,0,0,0">
 									<ItemsControl.Style>
 										<Style TargetType="ItemsControl">
 											<Setter Property="Visibility" Value="Visible"/>
@@ -533,7 +535,9 @@
 											<Border Margin="0,0,0,4" Padding="8,6" CornerRadius="6" Background="#f1f5f9" BorderBrush="#e2e8f4" BorderThickness="1">
 												<StackPanel Orientation="Horizontal">
 													<CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-													<TextBlock Text="{Binding Email}" FontSize="11" Foreground="#0f1e3d" FontFamily="Consolas" VerticalAlignment="Center"/>
+													<TextBox Text="{Binding Email, Mode=TwoWay}" FontSize="11" Foreground="#0f1e3d" FontFamily="Consolas" VerticalAlignment="Center"
+                                                             BorderThickness="0" Background="Transparent" MinWidth="220"
+                                                             ToolTip="Email modifiable"/>
 												</StackPanel>
 											</Border>
 										</DataTemplate>

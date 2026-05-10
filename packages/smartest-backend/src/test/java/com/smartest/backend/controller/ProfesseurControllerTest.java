@@ -3,6 +3,7 @@ package com.smartest.backend.controller;
 import com.smartest.backend.dto.request.ChangePasswordRequest;
 import com.smartest.backend.dto.request.UpdateProfesseurRequest;
 import com.smartest.backend.dto.response.ProfesseurResponse;
+import com.smartest.backend.dto.response.QuizProfesseurListeResponse;
 import com.smartest.backend.exception.AccountNotFoundException;
 import com.smartest.backend.exception.InvalidPasswordException;
 import com.smartest.backend.exception.PasswordMismatchException;
@@ -16,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -71,6 +74,27 @@ class ProfesseurControllerTest {
             assertThatThrownBy(() ->
                     professeurController.getProfil(professeurConnecte))
                     .isInstanceOf(AccountNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/professeur/mes-quiz")
+    class MesQuizTests {
+
+        @Test
+        @DisplayName("✅ 200 — Liste des quiz du professeur")
+        void mesQuiz_Returns200() {
+            List<QuizProfesseurListeResponse> expected = List.of(
+                    new QuizProfesseurListeResponse(5L, "Quiz A", 3));
+            when(professeurService.listMesQuiz("ikram@ensa.ma")).thenReturn(expected);
+
+            ResponseEntity<List<QuizProfesseurListeResponse>> response =
+                    professeurController.mesQuiz(professeurConnecte);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).hasSize(1);
+            assertThat(response.getBody().get(0).getId()).isEqualTo(5L);
+            assertThat(response.getBody().get(0).getNombreQuestions()).isEqualTo(3);
         }
     }
 

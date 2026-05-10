@@ -19,8 +19,7 @@ namespace smartest_desktop.Data
         private static string _cheminBase = "smartest_local.db";
 
         /// <summary>
-        /// Chemin vers la base SQLite. Doit être défini via App.InitialiserPourEmail()
-        /// avant de créer une instance de LocalDbContext.
+        /// Chemin vers la base SQLite. Défini par <see cref="App.InitialiserPourEmail"/> : un fichier par compte sous SmarTest/&lt;email normalisé&gt;/smartest_local.db.
         /// </summary>
         public static string CheminBase
         {
@@ -153,6 +152,10 @@ namespace smartest_desktop.Data
                       .UsingEntity(j => j.ToTable("quiz_local_cours"));
 
                 entity.Property(q => q.BackendQuizId);
+                entity.Property(q => q.BackendQuizIdPublicationWeb);
+                entity.Property(q => q.BackendQuizIdQr);
+                entity.Property(q => q.QrLiveSessionToken).HasColumnType("TEXT");
+                entity.Property(q => q.ServeurOuQrToucheUtc);
                 entity.Property(q => q.EmailsPublicationWebJson).HasColumnType("TEXT");
             });
 

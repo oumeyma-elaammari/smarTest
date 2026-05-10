@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 function formatMmSs(totalSeconds: number): string {
     const s = Math.max(0, Math.floor(totalSeconds))
@@ -20,17 +20,17 @@ export function useExamenTempsRestantLive(
     const [tick, setTick] = useState(0)
     /** Date limite du décompte (timestamps absolus). */
     const deadlineMsRef = useRef<number | null>(null)
-    /** Temps restant figé en ms quand l’examen est en pause (affiche mm:ss stable). */
+    /** Temps restant figé en ms quand l'examen est en pause (affiche mm:ss stable). */
     const frozenRemainingMsRef = useRef<number | null>(null)
     const lastServerMinRef = useRef<number | undefined>(undefined)
-    /** Ignore un sync serveur juste après reprise (évite d’écraser avec la durée pleine). */
+    /** Ignore un sync serveur juste après reprise (évite d'écraser avec la durée pleine). */
     const skipNextServerDeadlineSyncRef = useRef(false)
     const prevActifRef = useRef(false)
 
     const phase = (etatPhase ?? '').trim().toUpperCase()
     const actif = phase === 'EN_COURS' && !enPause
 
-    /** Pause → fige le restant réel ; reprise → réinjecte dans l’échéance locale (avant sync serveur). */
+    /** Pause → fige le restant réel ; reprise → réinjecte dans l'échéance locale (avant sync serveur). */
     useEffect(() => {
         const wasActive = prevActifRef.current
         prevActifRef.current = actif
@@ -88,11 +88,14 @@ export function useExamenTempsRestantLive(
 
     useEffect(() => {
         if (!actif || deadlineMsRef.current == null) return
-        const id = window.setInterval(() => setTick((n) => n + 1), 1000)
-        return () => window.clearInterval(id)
+        const id = globalThis.setInterval(() => setTick((n) => n + 1), 1000)
+        return () => globalThis.clearInterval(id)
     }, [actif, tempsRestantMinutes])
 
-    void tick
+    const remainingSecPourActif = useMemo(() => {
+        if (!actif || deadlineMsRef.current == null) return null
+        return Math.max(0, (deadlineMsRef.current - Date.now()) / 1000)
+    }, [tick, actif, tempsRestantMinutes])
 
     if (typeof tempsRestantMinutes !== 'number' || !Number.isFinite(tempsRestantMinutes)) {
         return null
@@ -104,14 +107,13 @@ export function useExamenTempsRestantLive(
         return formatMmSs(frozenRemainingMsRef.current / 1000)
     }
 
-    if (!actif) {
-        return `${tempsRestantMinutes} min`
+    if (actif) {
+        if (deadlineMsRef.current == null) {
+            return `${tempsRestantMinutes} min`
+        }
+        const sec = remainingSecPourActif ?? 0
+        return formatMmSs(sec)
     }
 
-    if (deadlineMsRef.current == null) {
-        return `${tempsRestantMinutes} min`
-    }
-
-    const remainingSec = Math.max(0, (deadlineMsRef.current - Date.now()) / 1000)
-    return formatMmSs(remainingSec)
+    return `${tempsRestantMinutes} min`
 }

@@ -169,6 +169,8 @@ namespace smartest_desktop.ViewModels
 
         public bool AucunEmailListeApercu => EmailsListeApercu.Count == 0;
 
+        public bool AEmailsSelectionnes => EmailsListeApercu.Any(r => r.IsSelected);
+
         // ── Créneau ─────────────────────────────────────────────────────────────
 
         public IReadOnlyList<string> ItemsHeures { get; }
@@ -638,12 +640,24 @@ namespace smartest_desktop.ViewModels
                 {
                     if (SupprimerEmailsSelectionnesWebCommand is RelayCommand cmd)
                         cmd.RaiseCanExecuteChanged();
-                }));
+                    OnPropertyChanged(nameof(AEmailsSelectionnes));
+                },
+                SynchroniserTexteEmailsDepuisListeApercu));
             }
 
             OnPropertyChanged(nameof(AucunEmailListeApercu));
+            OnPropertyChanged(nameof(AEmailsSelectionnes));
             if (SupprimerEmailsSelectionnesWebCommand is RelayCommand rs)
                 rs.RaiseCanExecuteChanged();
+        }
+
+        private void SynchroniserTexteEmailsDepuisListeApercu()
+        {
+            var normalises = ExtraireEmailsValides(string.Join(
+                Environment.NewLine,
+                EmailsListeApercu.Select(r => r.Email)));
+
+            TexteEmailsWeb = string.Join(Environment.NewLine, normalises);
         }
 
         private DateTime? ObtenirDatePassageLocal()

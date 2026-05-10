@@ -8,7 +8,6 @@ import java.util.List;
 public class QuizPassageWebResponse {
     private Long id;
     private String titre;
-    private Integer duree;
     private Integer nombreQuestions;
     private List<QuestionPassageWebResponse> questions;
 }

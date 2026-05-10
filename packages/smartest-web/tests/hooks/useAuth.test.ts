@@ -45,11 +45,11 @@ describe('useAuth', () => {
     })
 
     it('logout clears the store and localStorage and redirects to login', () => {
-        vi.spyOn(window, 'confirm').mockReturnValue(true)
+        vi.spyOn(globalThis, 'confirm').mockReturnValue(true)
         const assignHref = vi.fn((v: string) => {
             memoryLocationHref = v
         })
-        Object.defineProperty(window, 'location', {
+        Object.defineProperty(globalThis.window, 'location', {
             configurable: true,
             value: {
                 get href() {

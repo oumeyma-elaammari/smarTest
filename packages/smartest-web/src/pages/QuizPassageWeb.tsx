@@ -10,7 +10,6 @@ type QuestionWeb = { id: number; enonce: string; reponses: ReponseWeb[] }
 type QuizPassageWeb = {
     id: number
     titre: string
-    duree?: number
     nombreQuestions: number
     questions: QuestionWeb[]
 }
@@ -50,6 +49,48 @@ type StoredDraft = {
     choix?: Record<number, number>
     indexCourant?: number
     verification?: Record<string, VerificationFeedback>
+    /** Ordre d’affichage des questions (ids), pour garder le même mélange après F5. */
+    questionOrder?: number[]
+}
+
+function sameQuestionIdSet(order: number[], questions: QuestionWeb[]): boolean {
+    if (order.length !== questions.length) return false
+    const want = new Set(order)
+    const have = new Set(questions.map((q) => q.id))
+    if (want.size !== have.size) return false
+    for (const id of want) {
+        if (!have.has(id)) return false
+    }
+    return true
+}
+
+function orderQuestionsByIds(questions: QuestionWeb[], order: number[]): QuestionWeb[] {
+    const byId = new Map(questions.map((q) => [q.id, q]))
+    return order.map((id) => byId.get(id)).filter((q): q is QuestionWeb => q != null)
+}
+
+function draftHasProgress(d: StoredDraft | null | undefined): boolean {
+    if (!d) return false
+    if (typeof d.indexCourant === 'number' && d.indexCourant > 0) return true
+    if (d.choix && typeof d.choix === 'object' && Object.keys(d.choix).length > 0) return true
+    if (d.verification && typeof d.verification === 'object' && Object.keys(d.verification).length > 0)
+        return true
+    return false
+}
+
+/** Nouvelle session : mélange ; reprise : ordre figé depuis le brouillon ou ordre API si ancien brouillon sans questionOrder. */
+function resolvePresentationQuestionOrder(
+    baseQuestions: QuestionWeb[],
+    parsedDraft: StoredDraft | null,
+): QuestionWeb[] {
+    const oo = parsedDraft?.questionOrder
+    if (oo && sameQuestionIdSet(oo, baseQuestions)) {
+        return orderQuestionsByIds(baseQuestions, oo)
+    }
+    if (draftHasProgress(parsedDraft)) {
+        return baseQuestions
+    }
+    return shuffleCopy(baseQuestions)
 }
 
 function getLoadQuizErrorMessage(e: unknown): string {
@@ -290,10 +331,19 @@ export default function QuizPassageWeb() {
                     throw new Error('Réponse du serveur invalide pour ce quiz.')
                 }
                 if (!cancelled) {
-                    setQuiz(parsed.data)
+                    const rawDraft = sessionStorage.getItem(getQuizWebDraftStorageKey(id))
+                    let parsedDraft: StoredDraft | null = null
+                    try {
+                        if (rawDraft) parsedDraft = JSON.parse(rawDraft) as StoredDraft
+                    } catch {
+                        parsedDraft = null
+                    }
+                    const questionsOrdered = resolvePresentationQuestionOrder(parsed.data.questions, parsedDraft)
+                    const quizAffiche: QuizPassageWeb = { ...parsed.data, questions: questionsOrdered }
+                    setQuiz(quizAffiche)
                     restoreDraftState(
-                        parsed.data,
-                        sessionStorage.getItem(getQuizWebDraftStorageKey(id)),
+                        quizAffiche,
+                        rawDraft,
                         setChoix,
                         setIndexCourant,
                         setVerification,
@@ -334,6 +384,7 @@ export default function QuizPassageWeb() {
                     choix,
                     indexCourant,
                     verification: verificationForStorage,
+                    questionOrder: quiz.questions.map((q) => q.id),
                 }),
             )
         } catch {
@@ -528,6 +579,9 @@ export default function QuizPassageWeb() {
                             } catch {
                                 /* ignore */
                             }
+                            setQuiz((prev) =>
+                                prev ? { ...prev, questions: shuffleCopy(prev.questions) } : prev,
+                            )
                         }}
                         style={{
                             height: 30,

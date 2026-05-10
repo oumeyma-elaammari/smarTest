@@ -108,7 +108,7 @@ export default function Home() {
                     display: 'flex', gap: 12, marginBottom: 48,
                     flexWrap: 'wrap', justifyContent: 'center',
                 }}>
-                    <button onClick={() => navigate('/login')} style={{
+                    <button type="button" onClick={() => navigate('/login')} style={{
                         height: 46, padding: '0 36px',
                         background: '#0f1e3d', color: '#fff',
                         border: 'none', borderRadius: 10,
@@ -120,7 +120,7 @@ export default function Home() {
                     >
                         Se connecter
                     </button>
-                    <button onClick={() => navigate('/register')} style={{
+                    <button type="button" onClick={() => navigate('/register')} style={{
                         height: 46, padding: '0 36px',
                         background: '#fff', color: '#1a2e5a',
                         border: '1.5px solid #d4dce8', borderRadius: 10,
@@ -140,21 +140,8 @@ export default function Home() {
                     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                     gap: 16, width: '100%', maxWidth: 780,
                 }}>
-                    {features.map((f, i) => (
-                        <div key={i} style={{
-                            background: '#fff', border: '1px solid #e2e8f4',
-                            borderRadius: 14, padding: '26px 22px', textAlign: 'center',
-                            transition: 'border-color 0.2s, box-shadow 0.2s',
-                        }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = '#b8cff5'
-                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(15,30,61,0.06)'
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = '#e2e8f4'
-                                e.currentTarget.style.boxShadow = 'none'
-                            }}
-                        >
+                    {features.map((f) => (
+                        <article key={f.title} className="home-feature-card">
                             <div style={{
                                 width: 32, height: 2, background: '#4f8ef7',
                                 borderRadius: 2, margin: '0 auto 16px',
@@ -165,7 +152,7 @@ export default function Home() {
                             <p style={{ fontSize: 11.5, color: '#8899b8', lineHeight: 1.6 }}>
                                 {f.desc}
                             </p>
-                        </div>
+                        </article>
                     ))}
                 </div>
             </div>

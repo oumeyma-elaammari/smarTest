@@ -31,6 +31,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -64,8 +65,6 @@ class QuizServiceTest {
     @Mock
     private StatistiqueService statistiqueService;
     @Mock
-    private QuizQrLiveStatsService quizQrLiveStatsService;
-    @Mock
     private SimpMessagingTemplate messagingTemplate;
 
     @InjectMocks
@@ -90,14 +89,12 @@ class QuizServiceTest {
         quiz = new Quiz();
         quiz.setId(1L);
         quiz.setTitre(QUIZ_TEST_TITLE);
-        quiz.setDuree(30);
         quiz.setProfesseur(professeur);
         quiz.setStatut(StatutQuiz.BROUILLON);
         quiz.setQuestions(new ArrayList<>());
 
         quizRequest = new QuizRequest();
         quizRequest.setTitre(QUIZ_TEST_TITLE);
-        quizRequest.setDuree(30);
         quizRequest.setProfesseurId(1L);
     }
 
@@ -164,12 +161,17 @@ class QuizServiceTest {
     void deleteQuizRemovesQuizWhenOwner() {
         when(professeurRepository.findByEmail(PROF_TEST_EMAIL)).thenReturn(Optional.of(professeur));
         when(quizRepository.findByIdWithQuestions(1L)).thenReturn(Optional.of(quiz));
+        when(quizRepository.deleteNativeById(1L)).thenReturn(1);
 
         quizService.deleteQuiz(1L, PROF_TEST_EMAIL);
 
+        verify(reponseEtudiantRepository).deleteByResultatQuizId(1L);
         verify(statistiqueQuestionRepository).deleteAllByQuizId(1L);
         verify(resultatRepository).deleteByQuizId(1L);
-        verify(quizRepository).delete(quiz);
+        verify(quizRepository).deleteNativeQuizQuestionLinks(1L);
+        verify(quizRepository).deleteNativeQuizEmailWebRows(1L);
+        verify(quizRepository).deleteNativeById(1L);
+        verify(quizRepository, never()).delete(any());
     }
 
     @Test
@@ -184,6 +186,7 @@ class QuizServiceTest {
         assertThatThrownBy(() -> quizService.deleteQuiz(1L, PROF_TEST_EMAIL))
                 .isInstanceOf(UnauthorizedAccessException.class);
         verify(quizRepository, never()).delete(any());
+        verify(quizRepository, never()).deleteNativeById(anyLong());
     }
 
     @Test

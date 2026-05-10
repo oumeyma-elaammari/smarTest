@@ -5,11 +5,14 @@ using System.Windows;
 using System.Text.Json;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace smartest_desktop.Views
 {
     public partial class QuizExamenWindow : Window
     {
+        private int _navigationDetailVerrouillee;
+
         public QuizExamenWindow()
         {
             InitializeComponent();
@@ -18,35 +21,31 @@ namespace smartest_desktop.Views
             {
                 vm.NavigateToQuizGeneration += () =>
                 {
-                    var quizGen = new QuizGenerationWindow();
-                    quizGen.Show();
-                    this.Hide();
+                    App.OuvrirShell(MainShellSection.QuizGeneration);
                 };
 
                 vm.NavigateToExamenGeneration += () =>
                 {
-                    var examenGen = new ExamenGenerationWindow();
-                    examenGen.Show();
-                    this.Close();
+                    App.OuvrirShell(MainShellSection.ExamenGeneration);
                 };
 
                 vm.NavigateToDashboard += () =>
                 {
-                    var dashboard = new DashboardWindow();
-                    dashboard.Show();
-                    this.Close();
+                    App.OuvrirShell(MainShellSection.Home);
                 };
 
                 vm.OuvrirStatistiques += () =>
                 {
-                    var win = new StatistiquesProfWindow();
-                    win.Show();
-                    Application.Current.MainWindow = win;
-                    Close();
+                    App.OuvrirShell(MainShellSection.Statistiques);
                 };
 
                 vm.NavigateToQuizDetails += async quiz =>
                 {
+                    if (Interlocked.CompareExchange(ref _navigationDetailVerrouillee, 1, 0) != 0)
+                        return;
+
+                    try
+                    {
                     var quizService = new LocalQuizService(App.LocalDb);
                     var quizComplet = await quizService.GetByIdAsync(quiz.Id);
                     if (quizComplet == null)
@@ -89,11 +88,23 @@ namespace smartest_desktop.Views
                         emailsPublicationWebJson: quizComplet.EmailsPublicationWebJson);
 
                     resultWindow.Show();
-                    this.Close();
+                    App.GarderUneSeuleFenetreOuverte(resultWindow);
+                    if (IsVisible)
+                        Close();
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _navigationDetailVerrouillee, 0);
+                    }
                 };
 
                 vm.NavigateToExamenDetails += async examen =>
                 {
+                    if (Interlocked.CompareExchange(ref _navigationDetailVerrouillee, 1, 0) != 0)
+                        return;
+
+                    try
+                    {
                     var examenService = new LocalExamenService(App.LocalDb);
                     var examenComplet = await examenService.GetByIdAsync(examen.Id);
                     if (examenComplet == null)
@@ -131,7 +142,14 @@ namespace smartest_desktop.Views
                         datePrevue: examenComplet.DatePrevue);
 
                     resultWindow.Show();
-                    this.Close();
+                    App.GarderUneSeuleFenetreOuverte(resultWindow);
+                    if (IsVisible)
+                        Close();
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _navigationDetailVerrouillee, 0);
+                    }
                 };
             }
         }

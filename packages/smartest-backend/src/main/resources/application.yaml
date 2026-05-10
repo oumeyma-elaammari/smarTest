@@ -15,7 +15,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     open-in-view: false
     properties:
       hibernate:
@@ -26,8 +26,7 @@ spring:
 
   flyway:
     enabled: true
-    baseline-on-migrate: true
-    baseline-version: 1
+    baseline-on-migrate: false
     locations: classpath:db/migration
 
   mail:
@@ -56,3 +55,8 @@ app:
   web:
     # Lien affiché dans l’email « nouveau quiz publié » (espace étudiant web)
     dashboard-url: http://localhost:5173/dashboard
+
+  flyway:
+    # true = appelle flyway.repair() avant migrate (réaligne les checksums si un script
+    # déjà appliqué a changé, ex. V7). Remettre à false après un démarrage réussi en dev.
+    repair-before-migrate: true

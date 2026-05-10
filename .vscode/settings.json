@@ -1,8 +1,0 @@
-{
-  "sonarlint.analyzeOpenFilesOnly": false,
-  "sonarlint.output.showVerboseLogs": true,
-  "sonarlint.connectedMode.project": {
-    "connectionId": "smartest-local",
-    "projectKey": "smartest-web"
-  }
-}

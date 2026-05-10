@@ -82,14 +82,13 @@ namespace smartest_desktop.Tests
         [Fact]
         public void SmartestApiException_remplit_ValidationErrors_si_json_validation()
         {
-            const string json = """{"titre":"Le titre est obligatoire","duree":"minimum 1"}""";
+            const string json = """{"titre":"Le titre est obligatoire","professeurId":"obligatoire"}""";
 
             var ex = SmartestApiException.FromHttpFailure(HttpStatusCode.BadRequest, json);
 
             Assert.Equal(2, ex.ValidationErrors.Count);
             Assert.Equal("Le titre est obligatoire", ex.ValidationErrors["titre"]);
             Assert.Contains("obligatoire", ex.Message);
-            Assert.Contains("minimum", ex.Message);
         }
 
         [Fact]

@@ -1,4 +1,5 @@
 import { CalendarClock, Clock, User } from 'lucide-react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { ExamenListeItem } from '../../api/quizSchemas'
 import { formatDateTimeUnknown, formatStatutExamen } from '../../utils/examenDisplay'
 
@@ -16,24 +17,228 @@ function statutPillStyle(statut?: string | null): { background: string; color: s
 }
 
 export type ExamenListeCardProps = {
-    examen: ExamenListeItem
-    accentBleu: string
+    readonly examen: ExamenListeItem
+    readonly accentBleu: string
+    readonly layoutTwoCol: boolean
+    readonly creneauAtteint: boolean
+    /** Passage étudiant : rejoindre salle / épreuve. */
+    readonly onRejoindre: () => void
+    /** Session terminée côté serveur : plus d'accès, message sur la note à venir. */
+    readonly sessionTermineeEtudiant?: boolean
+    /** Si défini : affichage superviseur avec pilotage dédié. */
+    readonly superviseurProps?: {
+        readonly onOuvrirPilotage: () => void
+        /** Lancer la session sur le serveur puis redirection (ex. vers /supervision/...). */
+        readonly onLancerSession?: () => void | Promise<void>
+        /** Désactive le bouton lancer pendant l'appel API. */
+        readonly lancementEnCours?: boolean
+        /** Affiche « Lancer » seulement tant que la session n'a pas été démarrée côté serveur (métadonnée). */
+        readonly peutLancerSession: boolean
+    }
+}
+
+function fireSessionLaunch(handler: (() => void | Promise<void>) | undefined): void {
+    const h = handler
+    if (h) Promise.resolve(h()).catch(() => {})
+}
+
+type CreneauHintProps = { readonly creneauAtteint: boolean }
+
+function CreneauHint({ creneauAtteint }: CreneauHintProps) {
+    if (creneauAtteint) return null
+    return (
+        <p
+            title="L'examen doit être accessible lorsque l'heure prévue du créneau est atteinte."
+            style={{
+                margin: '8px 0 0',
+                padding: 0,
+                fontSize: 10,
+                color: '#64748b',
+                fontWeight: 400,
+                lineHeight: 1.2,
+                maxWidth: '100%',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+            }}
+        >
+            L'examen doit être accessible lorsque l'heure prévue du créneau est atteinte.
+        </p>
+    )
+}
+
+type SuperviseurBlockProps = {
+    readonly superviseurProps: NonNullable<ExamenListeCardProps['superviseurProps']>
+    readonly layoutTwoCol: boolean
+    readonly creneauAtteint: boolean
+    readonly accentBleu: string
+}
+
+function SuperviseurBlock({
+    superviseurProps,
+    layoutTwoCol,
+    creneauAtteint,
+    accentBleu,
+}: SuperviseurBlockProps) {
+    const titreLancer = creneauAtteint
+        ? 'Démarre la session pour les étudiants et ouvre votre espace de pilotage'
+        : 'Disponible à partir du créneau affiché'
+    const lancerEnabledVisuel = creneauAtteint && !superviseurProps.lancementEnCours
+    const styleLancerBtn: CSSProperties = {
+        padding: '8px 18px',
+        borderRadius: 8,
+        border: 'none',
+        background: lancerEnabledVisuel ? accentBleu : '#94a3b8',
+        color: '#fff',
+        fontWeight: 600,
+        fontFamily: sans,
+        fontSize: 13,
+        cursor: lancerEnabledVisuel ? 'pointer' : 'not-allowed',
+        width: '100%',
+        transition: 'background 0.15s, opacity 0.15s',
+    }
+
+    return (
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                width: layoutTwoCol ? 'auto' : '100%',
+                minWidth: layoutTwoCol ? 150 : undefined,
+            }}
+        >
+            {superviseurProps.peutLancerSession && superviseurProps.onLancerSession ? (
+                <button
+                    type="button"
+                    disabled={!creneauAtteint || superviseurProps.lancementEnCours}
+                    title={titreLancer}
+                    onClick={() => {
+                        if (!creneauAtteint || superviseurProps.lancementEnCours) return
+                        fireSessionLaunch(superviseurProps.onLancerSession)
+                    }}
+                    style={styleLancerBtn}
+                >
+                    {superviseurProps.lancementEnCours ? 'Lancement…' : 'Lancer et piloter'}
+                </button>
+            ) : null}
+            <button
+                type="button"
+                disabled={!creneauAtteint}
+                title={
+                    creneauAtteint
+                        ? 'Contrôles en temps réel (questions, pause, fin) — même vue que les étudiants'
+                        : "Disponible uniquement à partir de l'heure prévue du créneau"
+                }
+                onClick={() => {
+                    if (creneauAtteint) superviseurProps.onOuvrirPilotage()
+                }}
+                style={{
+                    padding: '8px 18px',
+                    borderRadius: 8,
+                    border: '1px solid #dbe3f1',
+                    background: creneauAtteint ? '#0f1e3d' : '#94a3b8',
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontFamily: sans,
+                    fontSize: 13,
+                    cursor: creneauAtteint ? 'pointer' : 'not-allowed',
+                    opacity: creneauAtteint ? 1 : 0.88,
+                    width: '100%',
+                    transition: 'background 0.15s, opacity 0.15s',
+                }}
+            >
+                Espace superviseur
+            </button>
+        </div>
+    )
+}
+
+type EtudiantActionsProps = {
+    readonly layoutTwoCol: boolean
+    readonly creneauAtteint: boolean
+    readonly onRejoindre: () => void
+}
+
+function EtudiantRejoindreButton({ layoutTwoCol, creneauAtteint, onRejoindre }: EtudiantActionsProps) {
+    return (
+        <button
+            type="button"
+            disabled={!creneauAtteint}
+            title={
+                creneauAtteint
+                    ? "Rejoindre la session web (salle d'attente ou épreuve)"
+                    : "Disponible uniquement à partir de l'heure prévue du créneau"
+            }
+            onClick={() => {
+                if (creneauAtteint) onRejoindre()
+            }}
+            style={{
+                padding: '8px 18px',
+                borderRadius: 8,
+                border: 'none',
+                background: creneauAtteint ? '#0f1e3d' : '#94a3b8',
+                color: '#fff',
+                fontWeight: 600,
+                fontFamily: sans,
+                fontSize: 13,
+                cursor: creneauAtteint ? 'pointer' : 'not-allowed',
+                opacity: creneauAtteint ? 1 : 0.88,
+                width: layoutTwoCol ? 'auto' : '100%',
+                minWidth: layoutTwoCol ? 120 : undefined,
+                transition: 'background 0.15s, opacity 0.15s',
+            }}
+        >
+            Rejoindre
+        </button>
+    )
+}
+
+function TermineeMessageEtudiant({ layoutTwoCol }: Pick<EtudiantActionsProps, 'layoutTwoCol'>) {
+    return (
+        <p
+            style={{
+                margin: 0,
+                maxWidth: layoutTwoCol ? 260 : undefined,
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: '#64748b',
+                textAlign: layoutTwoCol ? 'right' : 'left',
+            }}
+        >
+            Session terminée. Votre note sera communiquée ultérieurement par votre professeur.
+        </p>
+    )
+}
+
+function renderColonDroiteActions(opts: {
+    superviseurProps: ExamenListeCardProps['superviseurProps']
+    sessionTermineeEtudiant: boolean
     layoutTwoCol: boolean
     creneauAtteint: boolean
-    /** Passage étudiant : rejoindre salle / épreuve. */
+    accentBleu: string
     onRejoindre: () => void
-    /** Session terminée côté serveur : plus d’accès, message sur la note à venir. */
-    sessionTermineeEtudiant?: boolean
-    /** Si défini : affichage superviseur avec pilotage dédié. */
-    superviseurProps?: {
-        onOuvrirPilotage: () => void
-        /** Lancer la session sur le serveur puis redirection (ex. vers /supervision/...). */
-        onLancerSession?: () => void | Promise<void>
-        /** Désactive le bouton lancer pendant l’appel API. */
-        lancementEnCours?: boolean
-        /** Affiche « Lancer » seulement tant que la session n’a pas été démarrée côté serveur (métadonnée). */
-        peutLancerSession: boolean
+}): ReactNode {
+    if (opts.superviseurProps) {
+        return (
+            <SuperviseurBlock
+                superviseurProps={opts.superviseurProps}
+                layoutTwoCol={opts.layoutTwoCol}
+                creneauAtteint={opts.creneauAtteint}
+                accentBleu={opts.accentBleu}
+            />
+        )
     }
+    if (opts.sessionTermineeEtudiant) {
+        return <TermineeMessageEtudiant layoutTwoCol={opts.layoutTwoCol} />
+    }
+    return (
+        <EtudiantRejoindreButton
+            layoutTwoCol={opts.layoutTwoCol}
+            creneauAtteint={opts.creneauAtteint}
+            onRejoindre={opts.onRejoindre}
+        />
+    )
 }
 
 export function ExamenListeCard({
@@ -49,10 +254,20 @@ export function ExamenListeCard({
     const titreAffiche =
         titreBrut.toLowerCase().startsWith('examen') ? titreBrut : `Examen — ${titreBrut}`
     const profNom = e.professeur?.nom?.trim() || null
+    const afficheDuree = typeof e.duree === 'number'
     const dateLigne = formatDateTimeUnknown(e.dateDebut)
     const pill = statutPillStyle(e.statut)
     const statutCode = (e.statut ?? '').trim().toUpperCase()
     const statutAffichable = statutCode !== '' && statutCode !== 'PLANIFIE'
+
+    const colonActions = renderColonDroiteActions({
+        superviseurProps,
+        sessionTermineeEtudiant,
+        layoutTwoCol,
+        creneauAtteint,
+        accentBleu,
+        onRejoindre,
+    })
 
     return (
         <li
@@ -139,12 +354,12 @@ export function ExamenListeCard({
                                 </span>
                             </span>
                         ) : null}
-                        {profNom && e.duree != null ? (
+                        {profNom && afficheDuree ? (
                             <span style={{ color: '#cbd5e1', userSelect: 'none' }} aria-hidden>
                                 ·
                             </span>
                         ) : null}
-                        {e.duree != null ? (
+                        {afficheDuree ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                                 <Clock size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
                                 <span>{e.duree} min</span>
@@ -181,25 +396,7 @@ export function ExamenListeCard({
                         </div>
                     </div>
 
-                    {!creneauAtteint ? (
-                        <p
-                            title="L’examen doit être accessible lorsque l’heure prévue du créneau est atteinte."
-                            style={{
-                                margin: '8px 0 0',
-                                padding: 0,
-                                fontSize: 10,
-                                color: '#64748b',
-                                fontWeight: 400,
-                                lineHeight: 1.2,
-                                maxWidth: '100%',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                            }}
-                        >
-                            L’examen doit être accessible lorsque l’heure prévue du créneau est atteinte.
-                        </p>
-                    ) : null}
+                    <CreneauHint creneauAtteint={creneauAtteint} />
                 </div>
 
                 <div
@@ -225,127 +422,7 @@ export function ExamenListeCard({
                             {formatStatutExamen(e.statut)}
                         </span>
                     ) : null}
-                    {superviseurProps ? (
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 8,
-                                width: layoutTwoCol ? 'auto' : '100%',
-                                minWidth: layoutTwoCol ? 150 : undefined,
-                            }}
-                        >
-                            {superviseurProps.peutLancerSession && superviseurProps.onLancerSession ? (
-                                <button
-                                    type="button"
-                                    disabled={!creneauAtteint || superviseurProps.lancementEnCours}
-                                    title={
-                                        creneauAtteint
-                                            ? 'Démarre la session pour les étudiants et ouvre votre espace de pilotage'
-                                            : 'Disponible à partir du créneau affiché'
-                                    }
-                                    onClick={() => {
-                                        if (!creneauAtteint || superviseurProps.lancementEnCours) return
-                                        void superviseurProps.onLancerSession?.()
-                                    }}
-                                    style={{
-                                        padding: '8px 18px',
-                                        borderRadius: 8,
-                                        border: 'none',
-                                        background:
-                                            creneauAtteint && !superviseurProps.lancementEnCours
-                                                ? accentBleu
-                                                : '#94a3b8',
-                                        color: '#fff',
-                                        fontWeight: 600,
-                                        fontFamily: sans,
-                                        fontSize: 13,
-                                        cursor:
-                                            creneauAtteint && !superviseurProps.lancementEnCours
-                                                ? 'pointer'
-                                                : 'not-allowed',
-                                        width: '100%',
-                                        transition: 'background 0.15s, opacity 0.15s',
-                                    }}
-                                >
-                                    {superviseurProps.lancementEnCours ? 'Lancement…' : 'Lancer et piloter'}
-                                </button>
-                            ) : null}
-                            <button
-                                type="button"
-                                disabled={!creneauAtteint}
-                                title={
-                                    creneauAtteint
-                                        ? 'Contrôles en temps réel (questions, pause, fin) — même vue que les étudiants'
-                                        : 'Disponible uniquement à partir de l’heure prévue du créneau'
-                                }
-                                onClick={() => {
-                                    if (!creneauAtteint) return
-                                    superviseurProps.onOuvrirPilotage()
-                                }}
-                                style={{
-                                    padding: '8px 18px',
-                                    borderRadius: 8,
-                                    border: '1px solid #dbe3f1',
-                                    background: creneauAtteint ? '#0f1e3d' : '#94a3b8',
-                                    color: '#fff',
-                                    fontWeight: 600,
-                                    fontFamily: sans,
-                                    fontSize: 13,
-                                    cursor: creneauAtteint ? 'pointer' : 'not-allowed',
-                                    opacity: creneauAtteint ? 1 : 0.88,
-                                    width: '100%',
-                                    transition: 'background 0.15s, opacity 0.15s',
-                                }}
-                            >
-                                Espace superviseur
-                            </button>
-                        </div>
-                    ) : sessionTermineeEtudiant ? (
-                        <p
-                            style={{
-                                margin: 0,
-                                maxWidth: layoutTwoCol ? 260 : undefined,
-                                fontSize: 13,
-                                lineHeight: 1.5,
-                                color: '#64748b',
-                                textAlign: layoutTwoCol ? 'right' : 'left',
-                            }}
-                        >
-                            Session terminée. Votre note sera communiquée ultérieurement par votre professeur.
-                        </p>
-                    ) : (
-                        <button
-                            type="button"
-                            disabled={!creneauAtteint}
-                            title={
-                                creneauAtteint
-                                    ? 'Rejoindre la session web (salle d’attente ou épreuve)'
-                                    : 'Disponible uniquement à partir de l’heure prévue du créneau'
-                            }
-                            onClick={() => {
-                                if (!creneauAtteint) return
-                                onRejoindre()
-                            }}
-                            style={{
-                                padding: '8px 18px',
-                                borderRadius: 8,
-                                border: 'none',
-                                background: creneauAtteint ? '#0f1e3d' : '#94a3b8',
-                                color: '#fff',
-                                fontWeight: 600,
-                                fontFamily: sans,
-                                fontSize: 13,
-                                cursor: creneauAtteint ? 'pointer' : 'not-allowed',
-                                opacity: creneauAtteint ? 1 : 0.88,
-                                width: layoutTwoCol ? 'auto' : '100%',
-                                minWidth: layoutTwoCol ? 120 : undefined,
-                                transition: 'background 0.15s, opacity 0.15s',
-                            }}
-                        >
-                            Rejoindre
-                        </button>
-                    )}
+                    {colonActions}
                 </div>
             </div>
         </li>

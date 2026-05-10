@@ -8,7 +8,6 @@ function baseItem(over: Partial<QuizWebItem> = {}): QuizWebItem {
     return {
         id: 7,
         titre: 'Chapitre 3',
-        duree: 20,
         professeurNom: 'Martin',
         nombreQuestions: 5,
         premiereTentative: false,

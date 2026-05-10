@@ -59,8 +59,8 @@ public class QuizService {
 
     private final StatistiqueRecalculService statistiqueRecalculService;
     private final StatistiqueService statistiqueService;
-    private final QuizQrLiveStatsService quizQrLiveStatsService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final QuizQrLiveStatsService quizQrLiveStatsService;
 
     // ================= GET =================
 
@@ -95,7 +95,6 @@ public class QuizService {
 
         Quiz quiz = new Quiz();
         quiz.setTitre(request.getTitre());
-        quiz.setDuree(request.getDuree());
         quiz.setProfesseur(professeur);
 
         // statut par défaut
@@ -130,7 +129,9 @@ public class QuizService {
     }
 
     /**
-     * Quiz publiés sur le web dont l'email de l'étudiant figure dans la liste autorisée.
+     * Quiz publiés sur le web (statut {@link StatutQuiz#PUBLIE}) dont l'email de l'étudiant figure
+     * dans la liste autorisée. Les quiz sans aucune question (coquilles vides) sont exclus pour éviter les cartes
+     * inexploitables après une synchro locale incomplète.
      */
     @Transactional(readOnly = true)
     public List<QuizResponse> getMesQuizsPublicationWeb(String emailEtudiant) {
@@ -138,15 +139,42 @@ public class QuizService {
             return List.of();
         }
         String email = emailEtudiant.trim().toLowerCase(Locale.ROOT);
-        Etudiant etudiant = etudiantRepository.findByEmail(email).orElse(null);
-        if (etudiant == null) {
-            return List.of();
-        }
-        Long etudiantId = etudiant.getId();
+        Long etudiantId = etudiantRepository.findByEmail(email).map(Etudiant::getId).orElse(null);
         return quizRepository.findPubliesAutorisesPourEmail(email)
                 .stream()
-                .map(quiz -> convertToDTOAvecScoreEtudiant(quiz, etudiantId))
+                .filter(quiz -> quiz.getQuestions() != null && !quiz.getQuestions().isEmpty())
+                .map(quiz -> etudiantId != null
+                        ? convertToDTOAvecScoreEtudiant(quiz, etudiantId)
+                        : convertToDTOPublicationWebSansScoresEtudiant(quiz))
                 .toList();
+    }
+
+    /**
+     * Statistiques agrégées QR live (mémoire) : réservé au professeur propriétaire du quiz.
+     */
+    public QuizQrLiveStatsResponse getQrLiveStats(Long quizId, String professeurEmail) {
+        chargerQuizDuProfesseur(quizId, professeurEmail);
+        return quizQrLiveStatsService.snapshot(quizId);
+    }
+
+    /**
+     * Remet à zéro les stats QR live pour ce quiz et diffuse le nouvel agrégat sur le topic STOMP.
+     */
+    public void clearQrLiveStats(Long quizId, String professeurEmail) {
+        chargerQuizDuProfesseur(quizId, professeurEmail);
+        quizQrLiveStatsService.clear(quizId);
+        QuizQrLiveStatsResponse refreshed = quizQrLiveStatsService.snapshot(quizId);
+        messagingTemplate.convertAndSend("/topic/quiz/" + quizId + "/qr-live", refreshed);
+    }
+
+    /**
+     * JWT étudiant avec email autorisé mais fiche {@link Etudiant} absente (sync rare) : liste le quiz sans scores.
+     */
+    private QuizResponse convertToDTOPublicationWebSansScoresEtudiant(Quiz quiz) {
+        QuizResponse dto = convertToDTO(quiz);
+        dto.setPremiereTentative(true);
+        dto.setMeilleurScore(null);
+        return dto;
     }
 
     private QuizResponse convertToDTOAvecScoreEtudiant(Quiz quiz, Long etudiantId) {
@@ -191,20 +219,6 @@ public class QuizService {
         QuizPassageWebResponse dto = new QuizPassageWebResponse();
         dto.setId(quiz.getId());
         dto.setTitre(quiz.getTitre());
-        dto.setDuree(quiz.getDuree());
-        dto.setNombreQuestions(quiz.getQuestions().size());
-        dto.setQuestions(quiz.getQuestions().stream().map(this::toQuestionPassageWebDto).toList());
-        return dto;
-    }
-
-    @Transactional(readOnly = true)
-    public QuizPassageWebResponse getQuizPourPassageQr(Long quizId) {
-        Quiz quiz = chargerQuizPourQr(quizId);
-
-        QuizPassageWebResponse dto = new QuizPassageWebResponse();
-        dto.setId(quiz.getId());
-        dto.setTitre(quiz.getTitre());
-        dto.setDuree(quiz.getDuree());
         dto.setNombreQuestions(quiz.getQuestions().size());
         dto.setQuestions(quiz.getQuestions().stream().map(this::toQuestionPassageWebDto).toList());
         return dto;
@@ -217,8 +231,7 @@ public class QuizService {
     public VerificationQuestionWebResponse verifierQuestionPassageWeb(
             Long quizId,
             String emailEtudiant,
-            VerificationQuestionWebRequest request,
-            String accessMode) {
+            VerificationQuestionWebRequest request) {
         if (request == null || request.getQuestionId() == null || request.getReponseId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requête incomplète");
         }
@@ -239,59 +252,6 @@ public class QuizService {
                 .orElse(null);
 
         boolean estCorrecte = Boolean.TRUE.equals(choisie.getCorrecte());
-        if (isQrAccessMode(accessMode)) {
-            quizQrLiveStatsService.recordVerification(
-                    quizId,
-                    quiz.getTitre(),
-                    emailEtudiant,
-                    question.getId(),
-                    question.getEnonce(),
-                    estCorrecte
-            );
-            publierStatsQrLive(quizId);
-        }
-        return VerificationQuestionWebResponse.builder()
-                .correcte(estCorrecte)
-                .reponseCorrecteId(bonne != null ? bonne.getId() : null)
-                .reponseCorrecteContenu(bonne != null ? bonne.getContenu() : null)
-                .build();
-    }
-
-    @Transactional(readOnly = true)
-    public VerificationQuestionWebResponse verifierQuestionPassageQr(
-            Long quizId,
-            VerificationQuestionWebRequest request,
-            String participantKey) {
-        if (request == null || request.getQuestionId() == null || request.getReponseId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requête incomplète");
-        }
-        Quiz quiz = chargerQuizPourQr(quizId);
-        Question question = quiz.getQuestions().stream()
-                .filter(q -> q.getId().equals(request.getQuestionId()))
-                .findFirst()
-                .orElseThrow(() -> new QuestionNotFoundException("Question introuvable pour ce quiz"));
-
-        Reponse choisie = question.getReponses().stream()
-                .filter(r -> r.getId().equals(request.getReponseId()))
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Réponse invalide pour cette question"));
-
-        Reponse bonne = question.getReponses().stream()
-                .filter(r -> Boolean.TRUE.equals(r.getCorrecte()))
-                .findFirst()
-                .orElse(null);
-
-        boolean estCorrecte = Boolean.TRUE.equals(choisie.getCorrecte());
-        quizQrLiveStatsService.recordVerification(
-                quizId,
-                quiz.getTitre(),
-                participantKey,
-                question.getId(),
-                question.getEnonce(),
-                estCorrecte
-        );
-        publierStatsQrLive(quizId);
-
         return VerificationQuestionWebResponse.builder()
                 .correcte(estCorrecte)
                 .reponseCorrecteId(bonne != null ? bonne.getId() : null)
@@ -300,11 +260,16 @@ public class QuizService {
     }
 
     /**
-     * Enregistre la liste d'emails autorisés sur le serveur et passe le quiz en {@link StatutQuiz#PUBLIE}.
+     * Première mise en ligne web : enregistre les emails autorisés, passe le quiz en {@link StatutQuiz#PUBLIE},
+     * fixe {@code datePublication} et envoie les mails « nouveau quiz ».
+     * <p>
+     * Si le quiz était déjà {@link StatutQuiz#PUBLIE}, met seulement à jour la liste d'emails (synchronisation) :
+     * pas de nouvelle date de publication et pas de renvoi massif des notifications.
      */
     @Transactional
     public void publierSurLeWeb(Long quizId, String professeurEmail, List<String> emailsBruts) {
         Quiz quiz = chargerQuizDuProfesseur(quizId, professeurEmail);
+        boolean dejaWebPublie = quiz.getStatut() == StatutQuiz.PUBLIE;
 
         Set<String> normalises = normaliserEmailsPublication(emailsBruts);
         if (normalises.isEmpty()) {
@@ -317,8 +282,14 @@ public class QuizService {
         quiz.getEmailsAutorisesWeb().clear();
         quiz.getEmailsAutorisesWeb().addAll(normalises);
         quiz.setStatut(StatutQuiz.PUBLIE);
-        quiz.setDatePublication(LocalDateTime.now());
+        if (!dejaWebPublie) {
+            quiz.setDatePublication(LocalDateTime.now());
+        }
         quizRepository.save(quiz);
+
+        if (dejaWebPublie) {
+            return;
+        }
 
         String nomProf = quiz.getProfesseur() != null && quiz.getProfesseur().getNom() != null
                 ? quiz.getProfesseur().getNom().trim()
@@ -472,12 +443,10 @@ public class QuizService {
     public ResultatQuizWebResponse soumettreQuizWeb(
             Long quizId,
             String emailEtudiant,
-            SoumissionQuizWebRequest request,
-            String accessMode) {
+            SoumissionQuizWebRequest request) {
         Quiz quiz = chargerQuizPublieAutorise(quizId, emailEtudiant);
         Etudiant etudiant = etudiantRepository.findByEmail(emailEtudiant.trim().toLowerCase(Locale.ROOT))
                 .orElseThrow(() -> new UnauthorizedAccessException("Etudiant introuvable."));
-        boolean modeQr = isQrAccessMode(accessMode);
 
         boolean premiere = isPremiereTentative(quizId, etudiant.getId());
         Map<Long, Long> reponsesParQuestion = new HashMap<>();
@@ -497,7 +466,7 @@ public class QuizService {
                         etudiant,
                         quizId,
                         premiere,
-                        !modeQr))
+                        true))
                 .toList();
         bonnes = (int) corrections.stream().filter(QuestionCorrectionWebResponse::isCorrecte).count();
 
@@ -508,62 +477,10 @@ public class QuizService {
         response.setScore(totalQuestions == 0 ? 0.0 : ((double) bonnes / totalQuestions) * 100.0);
         response.setCorrections(corrections);
 
-        if (!modeQr) {
-            planifierRecalculStatistiquesApresCommit(quizId);
-            planifierPublicationStatistiquesTempsReelApresCommit(quizId);
-        } else {
-            publierStatsQrLive(quizId);
-        }
+        planifierRecalculStatistiquesApresCommit(quizId);
+        planifierPublicationStatistiquesTempsReelApresCommit(quizId);
 
         return response;
-    }
-
-    @Transactional(readOnly = true)
-    public ResultatQuizWebResponse soumettreQuizQr(
-            Long quizId,
-            SoumissionQuizWebRequest request) {
-        Quiz quiz = chargerQuizPourQr(quizId);
-
-        Map<Long, Long> reponsesParQuestion = new HashMap<>();
-        if (request != null && request.getReponses() != null) {
-            for (ReponseQuizDTO dto : request.getReponses()) {
-                if (dto == null || dto.getQuestionId() == null || dto.getReponseId() == null) continue;
-                reponsesParQuestion.put(dto.getQuestionId(), dto.getReponseId());
-            }
-        }
-
-        int totalQuestions = quiz.getQuestions().size();
-        List<QuestionCorrectionWebResponse> corrections = quiz.getQuestions().stream()
-                .map(question -> corrigerQuestion(
-                        question,
-                        reponsesParQuestion.get(question.getId()),
-                        null,
-                        quizId,
-                        false,
-                        false))
-                .toList();
-        int bonnes = (int) corrections.stream().filter(QuestionCorrectionWebResponse::isCorrecte).count();
-
-        ResultatQuizWebResponse response = new ResultatQuizWebResponse();
-        response.setBonnesReponses(bonnes);
-        response.setTotalQuestions(totalQuestions);
-        response.setEstPremiereTentative(true);
-        response.setScore(totalQuestions == 0 ? 0.0 : ((double) bonnes / totalQuestions) * 100.0);
-        response.setCorrections(corrections);
-        return response;
-    }
-
-    @Transactional(readOnly = true)
-    public QuizQrLiveStatsResponse getQrLiveStats(Long quizId, String professeurEmail) {
-        chargerQuizDuProfesseur(quizId, professeurEmail);
-        return quizQrLiveStatsService.snapshot(quizId);
-    }
-
-    @Transactional
-    public void clearQrLiveStats(Long quizId, String professeurEmail) {
-        chargerQuizDuProfesseur(quizId, professeurEmail);
-        quizQrLiveStatsService.clear(quizId);
-        publierStatsQrLive(quizId);
     }
 
     private void planifierRecalculStatistiquesApresCommit(Long quizId) {
@@ -607,15 +524,6 @@ public class QuizService {
         }
     }
 
-    private void publierStatsQrLive(Long quizId) {
-        QuizQrLiveStatsResponse stats = quizQrLiveStatsService.snapshot(quizId);
-        messagingTemplate.convertAndSend("/topic/quiz/" + quizId + "/qr-live", stats);
-    }
-
-    private static boolean isQrAccessMode(String accessMode) {
-        return accessMode != null && "QR".equalsIgnoreCase(accessMode.trim());
-    }
-
     // ================= DTO =================
 
     private QuizResponse convertToDTO(Quiz quiz) {
@@ -624,7 +532,6 @@ public class QuizService {
 
         dto.setId(quiz.getId());
         dto.setTitre(quiz.getTitre());
-        dto.setDuree(quiz.getDuree());
 
         if (quiz.getProfesseur() != null) {
             dto.setProfesseurId(quiz.getProfesseur().getId());
@@ -655,12 +562,6 @@ public class QuizService {
                 .noneMatch(email::equals)) {
             throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à passer ce quiz.");
         }
-        return quiz;
-    }
-
-    private Quiz chargerQuizPourQr(Long quizId) {
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new QuizNotFoundException(QUIZ_INTROUVABLE));
         return quiz;
     }
 
@@ -753,20 +654,33 @@ public class QuizService {
             reponseEtudiantRepository.deleteByQuestionId(q.getId());
         }
 
+        // Réponses liées aux résultats de passage (quiz web / tentative) avant de supprimer les Resultat.
+        reponseEtudiantRepository.deleteByResultatQuizId(quizId);
+
         statistiqueQuestionRepository.deleteAllByQuizId(quizId);
         resultatRepository.deleteByQuizId(quizId);
 
         quiz.getQuestions().clear();
         quizRepository.saveAndFlush(quiz);
 
-        quizRepository.delete(quiz);
-        quizRepository.flush();
+        /* Liaisons et ligne quiz en SQL natif : garantit la suppression MySQL même si l’état
+         * persistence / collections ManyToMany laisse des lignes résiduelles dans quiz_question
+         * ou quiz_email_web_autorise. */
+        quizRepository.deleteNativeQuizQuestionLinks(quizId);
+        quizRepository.deleteNativeQuizEmailWebRows(quizId);
+        int quizRows = quizRepository.deleteNativeById(quizId);
+        if (quizRows != 1) {
+            log.warn("Suppression quiz id={} : DELETE a affecté {} ligne(s) (attendu 1)", quizId, quizRows);
+        }
 
         for (Question q : questionsLiees) {
             if (quizRepository.countQuizzesWithQuestion(q.getId()) == 0) {
                 questionRepository.deleteById(q.getId());
             }
         }
+
+        log.info("Quiz supprimé côté serveur (quizId={}, professeurEmail={})", quizId,
+                professeurEmail.trim().toLowerCase(Locale.ROOT));
     }
 
     @Transactional

@@ -1,10 +1,13 @@
 using smartest_desktop.Data;
+using smartest_desktop.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using smartest_desktop.Services;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +17,8 @@ namespace smartest_desktop
 {
     public partial class App : Application
     {
+        public static event Action<string, string>? ProfilMisAJour;
+
         /// <summary>
         /// PDFsharp 6 (build Core) : résolution des polices système Windows (Arial, etc.).
         /// À exécuter avant toute création de <see cref="PdfSharp.Drawing.XFont"/>.
@@ -34,15 +39,65 @@ namespace smartest_desktop
         private static string FichierDernierEmail =>
             Path.Combine(DossierApp, "last_user.txt");
 
-        private static string CheminDbPourEmail(string email)
+        /// <summary>Réglages de profil (nom affiché) par compte. Anciennement un seul fichier global : source du bug au changement d'email.</summary>
+        private static string FichierPreferencesProfilLegacy =>
+            Path.Combine(DossierApp, "profile_prefs.json");
+
+        private sealed class LocalProfilePreferences
         {
-            string dossier = Path.Combine(DossierApp,
+            public string Nom { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+        }
+
+        private static string DossierDonneesPourEmail(string email)
+        {
+            string dossier = CheminDossierDonneesPourEmail(email);
+            Directory.CreateDirectory(dossier);
+            return dossier;
+        }
+
+        /// <summary>
+        /// Racine du dossier SQLite + préférences pour cet email (sans le créer).
+        /// </summary>
+        private static string CheminDossierDonneesPourEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return string.Empty;
+            return Path.Combine(DossierApp,
                 email.Trim().ToLowerInvariant()
                      .Replace("@", "_at_")
                      .Replace(" ", "_"));
-            Directory.CreateDirectory(dossier);
-            return Path.Combine(dossier, "smartest_local.db");
         }
+
+        private static string CheminDbPourEmail(string email) =>
+            Path.Combine(DossierDonneesPourEmail(email), "smartest_local.db");
+
+        /// <summary>
+        /// Ancienne variante : un seul <c>smartest_local.db</c> à la racine SmarTest. Si la base du compte n’existe pas encore,
+        /// copie ce fichier vers le dossier de l’email (migration sans perte pour qui avait la version « fichier unique »).
+        /// </summary>
+        private static void MigrerSqliteRacineVersCompteSiAbsent(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return;
+            try
+            {
+                string cible = CheminDbPourEmail(email.Trim());
+                if (File.Exists(cible))
+                    return;
+                string racine = Path.Combine(DossierApp, "smartest_local.db");
+                if (!File.Exists(racine))
+                    return;
+                File.Copy(racine, cible, overwrite: false);
+            }
+            catch
+            {
+                // Verrouillage ou autre — nouvelle tentative au prochain démarrage
+            }
+        }
+
+        private static string CheminPreferenceProfilPourEmail(string email) =>
+            Path.Combine(DossierDonneesPourEmail(email), "profile_prefs.json");
 
         private static string? LireDernierEmail()
         {
@@ -62,10 +117,109 @@ namespace smartest_desktop
         public static void InitialiserPourEmail(string email)
         {
             LocalDb?.Dispose();
+            MigrerSqliteRacineVersCompteSiAbsent(email);
             LocalDbContext.CheminBase = CheminDbPourEmail(email);
             LocalDb = InitialiserBase();
             Directory.CreateDirectory(DossierApp);
-            File.WriteAllText(FichierDernierEmail, email.Trim().ToLower(), Encoding.UTF8);
+            File.WriteAllText(FichierDernierEmail, email.Trim().ToLowerInvariant(), Encoding.UTF8);
+        }
+
+        /// <remarks>
+        /// Préférences stockées sous le dossier utilisateur (même emplacement que la DB locale pour cet email).
+        /// L'email retourné est toujours <paramref name="emailDefaut"/> tant que la connexion/serveur fait foi.
+        /// </remarks>
+        public static (string Nom, string Email) ChargerPreferencesProfilLocal(string nomDefaut, string emailDefaut)
+        {
+            if (string.IsNullOrWhiteSpace(emailDefaut))
+                return (nomDefaut, emailDefaut);
+
+            string emailSession = emailDefaut.Trim();
+
+            LocalProfilePreferences? ChargerDepuisChemin(string path)
+            {
+                try
+                {
+                    if (!File.Exists(path)) return null;
+                    var json = File.ReadAllText(path, Encoding.UTF8);
+                    if (string.IsNullOrWhiteSpace(json)) return null;
+                    return JsonSerializer.Deserialize<LocalProfilePreferences>(json);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            try
+            {
+                var fichierCompte = CheminPreferenceProfilPourEmail(emailSession);
+                var prefs = ChargerDepuisChemin(fichierCompte);
+
+                if (prefs == null && File.Exists(FichierPreferencesProfilLegacy))
+                {
+                    var legacyPrefs = ChargerDepuisChemin(FichierPreferencesProfilLegacy);
+                    if (legacyPrefs != null &&
+                        string.Equals((legacyPrefs.Email ?? string.Empty).Trim(), emailSession,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        prefs = legacyPrefs;
+                        try
+                        {
+                            File.Copy(FichierPreferencesProfilLegacy, fichierCompte, overwrite: false);
+                        }
+                        catch { }
+                    }
+                }
+
+                if (prefs == null)
+                    return (nomDefaut, emailSession);
+
+                var nom = string.IsNullOrWhiteSpace(prefs.Nom) ? nomDefaut : prefs.Nom.Trim();
+                return (nom, emailSession);
+            }
+            catch
+            {
+                return (nomDefaut, emailSession);
+            }
+        }
+
+        public static bool EnregistrerPreferencesProfilLocal(string nom, string email, out string erreur)
+        {
+            erreur = string.Empty;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    erreur = "Email requis.";
+                    return false;
+                }
+
+                var payload = new LocalProfilePreferences
+                {
+                    Nom = nom.Trim(),
+                    Email = email.Trim()
+                };
+                var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+                Directory.CreateDirectory(DossierApp);
+                var fichier = CheminPreferenceProfilPourEmail(email);
+                File.WriteAllText(fichier, json, Encoding.UTF8);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                erreur = ex.Message;
+                return false;
+            }
+        }
+
+        public static void AppliquerProfilCourant(string nom, string email)
+        {
+            Current.Properties["Nom"] = nom;
+            Current.Properties["Email"] = email;
+            ProfilMisAJour?.Invoke(nom, email);
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -98,6 +252,7 @@ namespace smartest_desktop
                 string? dernierEmail = LireDernierEmail();
                 if (!string.IsNullOrWhiteSpace(dernierEmail))
                 {
+                    MigrerSqliteRacineVersCompteSiAbsent(dernierEmail);
                     LocalDbContext.CheminBase = CheminDbPourEmail(dernierEmail);
                     LocalDb = InitialiserBase();
 
@@ -109,9 +264,37 @@ namespace smartest_desktop
                         Current.Properties["Nom"]   = session.Nom;
                         Current.Properties["Email"] = session.Email;
 
-                        var dashboard = new Views.DashboardWindow();
-                        MainWindow = dashboard;
-                        dashboard.Show();
+                        var shell = new Views.MainShellWindow(ViewModels.MainShellSection.Home);
+                        MainWindow = shell;
+                        shell.Show();
+
+                        if (string.Equals(session.Role, "PROFESSEUR", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string t = session.TokenChiffre;
+                            string n = session.Nom;
+                            string em = session.Email;
+                            string r = session.Role;
+                            _ = Dispatcher.InvokeAsync(async () =>
+                            {
+                                try
+                                {
+                                    var auth = new AuthResponse
+                                    {
+                                        Token = t,
+                                        Nom = n,
+                                        Email = em,
+                                        Role = r
+                                    };
+                                    await LocalProfesseurIdentityService.ApresConnexionProfesseurAsync(auth);
+                                    new SessionService(LocalDb).SauvegarderSession(auth);
+                                }
+                                catch
+                                {
+                                    // Réseau : ne pas empêcher l’usage de l’app.
+                                }
+                            });
+                        }
+
                         base.OnStartup(e);
                         return;
                     }
@@ -222,6 +405,24 @@ namespace smartest_desktop
                         "ALTER TABLE quiz_local ADD COLUMN BackendQuizId INTEGER NULL;");
                     AddColumnIfMissing("EmailsPublicationWebJson",
                         "ALTER TABLE quiz_local ADD COLUMN EmailsPublicationWebJson TEXT NULL;");
+                    AddColumnIfMissing("ServeurOuQrToucheUtc",
+                        "ALTER TABLE quiz_local ADD COLUMN ServeurOuQrToucheUtc TEXT NULL;");
+                    AddColumnIfMissing("BackendQuizIdPublicationWeb",
+                        "ALTER TABLE quiz_local ADD COLUMN BackendQuizIdPublicationWeb INTEGER NULL;");
+                    AddColumnIfMissing("BackendQuizIdQr",
+                        "ALTER TABLE quiz_local ADD COLUMN BackendQuizIdQr INTEGER NULL;");
+                    AddColumnIfMissing("QrLiveSessionToken",
+                        "ALTER TABLE quiz_local ADD COLUMN QrLiveSessionToken TEXT NULL;");
+
+                    using (var mig = conn.CreateCommand())
+                    {
+                        // Une seule colonne historique : on la rattache à la publication web. La copie QR serveur
+                        // restera vide jusqu'à la première ouverture « Code QR » (nouvelle ligne MySQL dédiée).
+                        mig.CommandText =
+                            "UPDATE quiz_local SET BackendQuizIdPublicationWeb = COALESCE(BackendQuizIdPublicationWeb, BackendQuizId) " +
+                            "WHERE BackendQuizId IS NOT NULL AND BackendQuizId > 0;";
+                        mig.ExecuteNonQuery();
+                    }
                 });
 
                 PatchTable("examen_local", existing =>
@@ -264,6 +465,118 @@ namespace smartest_desktop
         }
 
         /// <summary>
+        /// Recrée un fichier SQLite vide au chemin <see cref="LocalDbContext.CheminBase"/> actuel
+        /// (même dossier utilisateur). Utilisé lorsque le compte serveur ne correspond plus aux données locales.
+        /// </summary>
+        public static void RecréerBaseSqliteAuCheminActuel()
+        {
+            string dbPath = LocalDbContext.CheminBase;
+            try { LocalDb?.Dispose(); }
+            catch { }
+
+            try
+            {
+                foreach (var f in new[] { dbPath, dbPath + "-shm", dbPath + "-wal" })
+                {
+                    try
+                    {
+                        if (File.Exists(f))
+                            File.Delete(f);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            LocalDbContext.CheminBase = dbPath;
+            LocalDb = InitialiserBase();
+        }
+
+        /// <summary>
+        /// Supprime la base SQLite locale, la session, les préférences de profil et la clé Groq
+        /// stockées pour cet email (dossier sous LocalApplicationData/SmarTest).
+        /// À utiliser lorsque le compte est supprimé côté serveur, avant <see cref="Deconnecter"/>.
+        /// </summary>
+        public static void SupprimerDonneesLocalesPourEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return;
+
+            string emailNorm = email.Trim().ToLowerInvariant();
+            try { LocalDb?.Dispose(); }
+            catch { /* libérer le fichier SQLite */ }
+
+            string dossierCompte = CheminDossierDonneesPourEmail(emailNorm);
+            try
+            {
+                string fichiersDb = Path.Combine(dossierCompte, "smartest_local.db");
+                if (File.Exists(fichiersDb))
+                {
+                    try
+                    {
+                        LocalDbContext.CheminBase = fichiersDb;
+                        using (var ctx = new LocalDbContext())
+                        {
+                            ctx.Database.EnsureDeleted();
+                        }
+                    }
+                    catch { }
+                    foreach (var suf in new[] { string.Empty, "-shm", "-wal" })
+                    {
+                        try
+                        {
+                            var p = fichiersDb + suf;
+                            if (File.Exists(p))
+                                File.Delete(p);
+                        }
+                        catch { }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(dossierCompte) && Directory.Exists(dossierCompte))
+                    Directory.Delete(dossierCompte, recursive: true);
+            }
+            catch { /* dossier verrouillé ou autre — la déconnexion reste prioritaire */ }
+
+            try
+            {
+                if (File.Exists(FichierDernierEmail))
+                {
+                    string dernier = File.ReadAllText(FichierDernierEmail, Encoding.UTF8).Trim().ToLowerInvariant();
+                    if (dernier == emailNorm)
+                        File.Delete(FichierDernierEmail);
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (File.Exists(FichierPreferencesProfilLegacy))
+                {
+                    var json = File.ReadAllText(FichierPreferencesProfilLegacy, Encoding.UTF8);
+                    if (!string.IsNullOrWhiteSpace(json))
+                    {
+                        var prefs = JsonSerializer.Deserialize<LocalProfilePreferences>(json);
+                        if (prefs != null &&
+                            string.Equals((prefs.Email ?? string.Empty).Trim(), emailNorm, StringComparison.OrdinalIgnoreCase))
+                        {
+                            File.Delete(FichierPreferencesProfilLegacy);
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            string placeholderDir = Path.Combine(DossierApp, "_placeholder");
+            Directory.CreateDirectory(placeholderDir);
+            LocalDbContext.CheminBase = Path.Combine(placeholderDir, "disconnected.db");
+            LocalDb = InitialiserBase();
+        }
+
+        /// <summary>
         /// Déconnecte l'utilisateur depuis n'importe quelle fenêtre :
         /// supprime la session persistante, efface les Properties, ouvre LoginWindow
         /// et ferme toutes les autres fenêtres.
@@ -282,6 +595,37 @@ namespace smartest_desktop
             foreach (Window w in Current.Windows.Cast<Window>().ToList())
             {
                 if (w is not Views.LoginWindow)
+                    w.Close();
+            }
+        }
+
+        public static void OuvrirShell(ViewModels.MainShellSection section = ViewModels.MainShellSection.Home)
+        {
+            var shell = new Views.MainShellWindow(section);
+            shell.Show();
+            Current.MainWindow = shell;
+
+            foreach (Window w in Current.Windows.Cast<Window>().ToList())
+            {
+                if (!ReferenceEquals(w, shell))
+                    w.Close();
+            }
+        }
+
+        /// <summary>
+        /// Définit <paramref name="fenetre"/> comme fenêtre principale et ferme toutes les autres.
+        /// Utilisé quand Quiz / Examen résultat doit remplacer le shell au lieu de s'afficher en parallèle.
+        /// </summary>
+        public static void GarderUneSeuleFenetreOuverte(Window fenetre)
+        {
+            if (fenetre == null)
+                return;
+
+            Current.MainWindow = fenetre;
+
+            foreach (Window w in Current.Windows.Cast<Window>().ToList())
+            {
+                if (!ReferenceEquals(w, fenetre))
                     w.Close();
             }
         }

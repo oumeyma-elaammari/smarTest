@@ -1,10 +1,13 @@
 using smartest_desktop.ViewModels;
+using System.Threading;
 using System.Windows;
 
 namespace smartest_desktop.Views
 {
     public partial class ExamenGenerationWindow : Window
     {
+        private int _resultExamenOuverte;
+
         public ExamenGenerationWindow()
         {
             InitializeComponent();
@@ -16,19 +19,22 @@ namespace smartest_desktop.Views
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
+                    if (Interlocked.CompareExchange(ref _resultExamenOuverte, 1, 0) != 0)
+                        return;
+
                     var resultWindow = new ExamenResultWindow(
                         questions, titre, duree, difficulte, coursTitre);
                     resultWindow.Show();
+                    App.GarderUneSeuleFenetreOuverte(resultWindow);
 
-                    if (this.IsVisible)
-                        this.Close();
+                    if (IsVisible)
+                        Close();
                 });
             };
 
             vm.NavigationAnnulee += () =>
             {
-                var hub = new QuizExamenWindow();
-                hub.Show();
+                App.OuvrirShell(MainShellSection.QuizExamens);
                 this.Close();
             };
 
@@ -36,8 +42,7 @@ namespace smartest_desktop.Views
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var dashboard = new DashboardWindow();
-                    dashboard.Show();
+                    App.OuvrirShell(MainShellSection.Home);
                     Close();
                 });
             };

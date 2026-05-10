@@ -114,7 +114,7 @@ public class QuizWebPublicationApiServiceTests
             });
         var svc = new QuizWebPublicationApiService(createClientOverride: _ => ClientFromMock(handler));
 
-        var id = await svc.CreateQuizAsync("tok", "Titre", 30, 7L);
+        var id = await svc.CreateQuizAsync("tok", "Titre", 7L);
 
         Assert.Equal(42L, id);
     }
@@ -152,6 +152,22 @@ public class QuizWebPublicationApiServiceTests
     }
 
     [Fact]
+    public async Task DeleteQuizAsync_404_deja_supprime_ne_leve_pas()
+    {
+        var handler = MockHandler((_, _) =>
+            new HttpResponseMessage(HttpStatusCode.NotFound) { Content = new StringContent("{}") });
+        var svc = new QuizWebPublicationApiService(createClientOverride: _ => ClientFromMock(handler));
+
+        await svc.DeleteQuizAsync("tok", 99L);
+
+        handler.Protected().Verify(
+            "SendAsync",
+            Times.Once(),
+            ItExpr.Is<HttpRequestMessage>(m => m.Method == HttpMethod.Delete),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
     public async Task PostPublicationWebAsync_serialise_questions()
     {
         HttpRequestMessage? captured = null;
@@ -180,5 +196,23 @@ public class QuizWebPublicationApiServiceTests
         var json = await captured!.Content!.ReadAsStringAsync();
         Assert.Contains("E?", json);
         Assert.Contains("s@test.fr", json);
+    }
+
+    [Fact]
+    public async Task SyncQuestionsProfAsync_poste_sync_questions_prof()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = MockHandler((req, _) =>
+        {
+            captured = req;
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") };
+        });
+        var svc = new QuizWebPublicationApiService(createClientOverride: _ => ClientFromMock(handler));
+
+        await svc.SyncQuestionsProfAsync("tok", 3L, Array.Empty<QuestionLocale>());
+
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Post, captured!.Method);
+        Assert.Contains("/api/quizs/3/sync-questions-prof", captured.RequestUri!.ToString());
     }
 }
