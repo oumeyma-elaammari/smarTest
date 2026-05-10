@@ -89,7 +89,7 @@ describe('MesQuizWeb page', () => {
             http.get(`${API_BASE}/api/quizs/mes-publications-web`, () =>
                 HttpResponse.json([
                     ...quizPayload(1, 'Algèbre'),
-                    ...[{ id: 2, titre: 'Bio 2', premiereTentative: true, meilleurScore: null }],
+                    { id: 2, titre: 'Bio 2', premiereTentative: true, meilleurScore: null },
                 ]),
             ),
         )

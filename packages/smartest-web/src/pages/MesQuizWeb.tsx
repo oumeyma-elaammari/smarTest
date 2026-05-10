@@ -10,7 +10,7 @@ const sans = "'DM Sans', system-ui, sans-serif"
 
 type MesQuizWebProps = {
     /** Même bleu que « Test » dans SmarTest */
-    accentBleu?: string
+    readonly accentBleu?: string
 }
 
 export type { QuizWebItem }
@@ -37,10 +37,12 @@ function mesPublicationsWebErrorMessage(e: unknown): string {
 
 function useTwoColumnGrid() {
     const [twoCol, setTwoCol] = useState(() =>
-        typeof window !== 'undefined' ? window.matchMedia('(min-width: 700px)').matches : true,
+        typeof globalThis.window !== 'undefined'
+            ? globalThis.window.matchMedia('(min-width: 700px)').matches
+            : true,
     )
     useEffect(() => {
-        const mq = window.matchMedia('(min-width: 700px)')
+        const mq = globalThis.window.matchMedia('(min-width: 700px)')
         const apply = () => setTwoCol(mq.matches)
         apply()
         mq.addEventListener('change', apply)
@@ -101,13 +103,15 @@ export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) 
 
     useEffect(() => {
         const controller = new AbortController()
-        void fetchMesPublications({ silent: false, signal: controller.signal })
+        Promise.resolve(fetchMesPublications({ silent: false, signal: controller.signal })).catch(() => {})
         return () => controller.abort()
     }, [fetchMesPublications])
 
     useEffect(() => {
-        const id = window.setInterval(() => void fetchMesPublications({ silent: true }), MES_QUIZ_POLL_MS)
-        return () => window.clearInterval(id)
+        const id = globalThis.setInterval(() => {
+            Promise.resolve(fetchMesPublications({ silent: true })).catch(() => {})
+        }, MES_QUIZ_POLL_MS)
+        return () => globalThis.clearInterval(id)
     }, [fetchMesPublications])
 
     const enveloppe = (corps: ReactNode) => (

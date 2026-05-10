@@ -1,5 +1,5 @@
 import axios from 'axios'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Client } from '@stomp/stompjs'
 import { examenApi } from '../api/examenApi'
@@ -40,7 +40,9 @@ function readEtudiantId(): number {
         if (token) {
             const payload = token.split('.')[1]
             if (payload) {
-                const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as { userId?: unknown; id?: unknown; sub?: unknown }
+                const decoded = JSON.parse(
+                    atob(payload.replaceAll('-', '+').replaceAll('_', '/')),
+                ) as { userId?: unknown; id?: unknown; sub?: unknown }
                 const candidate = Number(decoded.userId ?? decoded.id ?? decoded.sub)
                 if (Number.isFinite(candidate) && candidate > 0) return candidate
             }
@@ -93,8 +95,8 @@ export default function ExamenPassageWeb() {
     const autoJoinReussi = useRef(false)
 
     useEffect(() => {
-        const timer = window.setInterval(() => setCreneauTick((n) => n + 1), 4000)
-        return () => window.clearInterval(timer)
+        const timer = globalThis.setInterval(() => setCreneauTick((n) => n + 1), 4000)
+        return () => globalThis.clearInterval(timer)
     }, [])
 
     useEffect(() => {
@@ -185,8 +187,8 @@ export default function ExamenPassageWeb() {
         }
 
         runPolling()
-        const t = window.setInterval(runPolling, 2500)
-        return () => window.clearInterval(t)
+        const t = globalThis.setInterval(runPolling, 2500)
+        return () => globalThis.clearInterval(t)
     }, [id, meta])
 
     useEffect(() => {
@@ -289,8 +291,8 @@ export default function ExamenPassageWeb() {
     useEffect(() => {
         const et = (snap?.etat ?? '').toUpperCase()
         if (et !== 'ARRETE') return
-        const t = window.setTimeout(() => navigate('/dashboard', { replace: true }), 700)
-        return () => window.clearTimeout(t)
+        const t = globalThis.setTimeout(() => navigate('/dashboard', { replace: true }), 700)
+        return () => globalThis.clearTimeout(t)
     }, [snap?.etat, navigate])
 
     /** Inscription automatique en salle d’attente dès le créneau (pas de bouton manuel). */
@@ -353,15 +355,11 @@ export default function ExamenPassageWeb() {
         enPausePourTemps,
     )
 
-    if (!Number.isFinite(id) || id <= 0) {
-        return (
-            <p style={{ fontFamily: sans, color: '#64748b' }}>Examen invalide.</p>
-        )
-    }
-
-    void creneauTick // dépendance logique pour réévaluer Date.now() après quelques secondes
     const debutMsAffichage = parseDebutExamenMs(meta?.dateDebut)
-    const creneauAtteint = debutMsAffichage == null || Date.now() >= debutMsAffichage
+    const creneauAtteint = useMemo(
+        () => debutMsAffichage == null || Date.now() >= debutMsAffichage,
+        [debutMsAffichage, creneauTick],
+    )
 
     const phaseSession = (snap?.etat ?? '').trim().toUpperCase()
     const canStart = phaseSession === 'EN_COURS'
@@ -388,6 +386,12 @@ export default function ExamenPassageWeb() {
             setSelectedResponseId(null)
         }
     }, [questionId, lastAnsweredQuestionId])
+
+    if (!Number.isFinite(id) || id <= 0) {
+        return (
+            <p style={{ fontFamily: sans, color: '#64748b' }}>Examen invalide.</p>
+        )
+    }
 
     const soumettreReponseCourante = async () => {
         if (!Number.isFinite(id) || id <= 0) return

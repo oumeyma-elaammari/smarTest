@@ -53,5 +53,6 @@ app:
     dashboard-url: http://localhost:5173/dashboard
 
   flyway:
-    # Dev : true une fois après un échec de migration (repair), puis false.
-    repair-before-migrate: false
+    # true = appelle flyway.repair() avant migrate (réaligne les checksums si un script
+    # déjà appliqué a changé, ex. V7). Remettre à false après un démarrage réussi en dev.
+    repair-before-migrate: true

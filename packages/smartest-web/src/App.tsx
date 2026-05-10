@@ -24,13 +24,15 @@ import ExamenSupervisionPage from './pages/ExamenSupervisionPage'
 const serif = "'DM Serif Display', Georgia, serif"
 const bleuTest = '#4f8ef7'
 
+type DashboardLayoutProps = {
+    readonly children: React.ReactNode
+    readonly showFooter?: boolean
+}
+
 export function DashboardLayout({
     children,
     showFooter = true,
-}: {
-    children: React.ReactNode
-    showFooter?: boolean
-}) {
+}: DashboardLayoutProps) {
     return (
         <>
             <Navbar />

@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Configuration;
 public class FlywayRepairConfig {
 
     /**
-     * Si une migration a échoué une fois (ex. V7), Flyway bloque le démarrage tant que
-     * {@code flyway_schema_history} garde success=0. {@code repair()} retire ces entrées
-     * et réaligne les checksums. À activer ponctuellement en dev via
-     * {@code app.flyway.repair-before-migrate=true}, puis repasser à false.
+     * Si une migration a échoué ({@code success=0}) ou si un script déjà appliqué a été
+     * modifié (erreur « checksum mismatch »), {@code flyway.repair()} met à jour l’historique
+     * et les checksums. Activer via {@code app.flyway.repair-before-migrate=true} le temps
+     * d’un démarrage réussi, puis repasser à {@code false}.
      */
     @Bean
     public FlywayMigrationStrategy flywayMigrationStrategy(

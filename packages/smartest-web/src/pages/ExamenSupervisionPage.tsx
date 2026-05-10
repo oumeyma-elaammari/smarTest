@@ -27,7 +27,25 @@ const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8081/ws'
 
 export type ExamenSupervisionPageProps = {
     /** Aligné sur le thème web (ex. `#4f8ef7` dans `App.tsx`). */
-    accentBleu?: string
+    readonly accentBleu?: string
+}
+
+function supervisionFeedbackBannerStyles(
+    tone: 'neutral' | 'success' | 'error',
+): { bg: string; border: string; fg: string } {
+    if (tone === 'success') {
+        return { bg: '#ecfdf5', border: '#bbf7d0', fg: '#166534' }
+    }
+    if (tone === 'error') {
+        return { bg: '#fef2f2', border: '#fecaca', fg: '#b91c1c' }
+    }
+    return { bg: '#f8fafc', border: '#e2e8f0', fg: '#475569' }
+}
+
+function modeListeParticipantsFromEtat(etat: string): 'attente' | 'actifs' | 'terminee' {
+    if (etat === 'PLANIFIE') return 'attente'
+    if (etat === 'EN_COURS' || etat === 'EN_PAUSE') return 'actifs'
+    return 'terminee'
 }
 
 function formatDateTime(value?: string): string {
@@ -194,10 +212,10 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
             .finally(() => {
                 if (!cancelled) setPageReady(true)
             })
-        const t = window.setInterval(() => refresh().catch(() => undefined), 2500)
+        const t = globalThis.setInterval(() => refresh().catch(() => undefined), 2500)
         return () => {
             cancelled = true
-            window.clearInterval(t)
+            globalThis.clearInterval(t)
         }
     }, [id, refresh])
 
@@ -208,11 +226,11 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         setFeedback(
             'Session lancée pour les étudiants : ils passent sur l’écran d’épreuve quand la phase est « En cours » (même flux que la question active ci-dessous).',
         )
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-        const t = window.setTimeout(() => {
+        globalThis.scrollTo({ top: 0, behavior: 'smooth' })
+        const t = globalThis.setTimeout(() => {
             navigate(`/supervision/examen/${id}`, { replace: true })
         }, 6500)
-        return () => window.clearTimeout(t)
+        return () => globalThis.clearTimeout(t)
     }, [sessionDemarreeHint, id, navigate])
 
     useEffect(() => {
@@ -297,7 +315,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
 
     if (!pageReady) {
         return (
-            <div
+            <output
                 style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -308,12 +326,12 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     width: '100%',
                     padding: '3rem 0',
                 }}
-                role="status"
                 aria-busy="true"
+                aria-live="polite"
             >
                 <Loader2 size={22} className="animate-spin" aria-hidden style={{ color: accentBleu }} />
                 Chargement de la supervision…
-            </div>
+            </output>
         )
     }
 
@@ -322,8 +340,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const questionNumero = totalQuestions > 0 ? Math.min(currentIndex + 1, totalQuestions) : 0
     const etat = (snap?.etat ?? meta?.statut ?? 'PLANIFIE').toUpperCase()
     /** Avant lancement : liste d’attente. Pendant l’épreuve : participants actifs (même API, libellés différents). */
-    const modeListeParticipants =
-        etat === 'PLANIFIE' ? 'attente' : etat === 'EN_COURS' || etat === 'EN_PAUSE' ? 'actifs' : 'terminee'
+    const modeListeParticipants = modeListeParticipantsFromEtat(etat)
     const estEnCours = etat === 'EN_COURS'
     const peutLancer = etat === 'PLANIFIE' || etat === 'EN_PAUSE'
     const peutPause = etat === 'EN_COURS'
@@ -337,12 +354,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const reponsesPilotage = Array.isArray(questionCouranteBloc?.reponses) ? questionCouranteBloc.reponses : []
     const planListe = snap?.planQuestions ?? []
 
-    const feedbackBanner =
-        feedbackTone === 'success'
-            ? { bg: '#ecfdf5', border: '#bbf7d0', fg: '#166534' }
-            : feedbackTone === 'error'
-              ? { bg: '#fef2f2', border: '#fecaca', fg: '#b91c1c' }
-              : { bg: '#f8fafc', border: '#e2e8f0', fg: '#475569' }
+    const feedbackBanner = supervisionFeedbackBannerStyles(feedbackTone)
 
     const stripeLeft: CSSProperties = {
         position: 'absolute',
@@ -497,7 +509,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
             </div>
 
             {wsNotice ? (
-                <div
+                <output
                     style={{
                         display: 'flex',
                         alignItems: 'flex-start',
@@ -510,14 +522,13 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         padding: '12px 14px',
                         boxSizing: 'border-box',
                     }}
-                    role="status"
                     aria-live="polite"
                 >
                     <span style={{ color: '#eab308', flexShrink: 0, marginTop: 1 }}>
                         <Radio size={18} strokeWidth={2} />
                     </span>
                     <span style={{ lineHeight: 1.5 }}>{wsNotice}</span>
-                </div>
+                </output>
             ) : null}
 
             <div style={shellCard}>
@@ -660,7 +671,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                                     'Session lancée. Les étudiants encore en salle passent sur l’épreuve ; le suivi reste sur cette page.',
                                 )
                                 navigate(`/supervision/examen/${id}?started=1`, { replace: true })
-                                window.scrollTo({ top: 0, behavior: 'smooth' })
+                                globalThis.scrollTo({ top: 0, behavior: 'smooth' })
                             } catch (error: unknown) {
                                 setFeedbackTone('error')
                                 setFeedback(extractApiMessage(error, 'Lancement impossible dans l’état actuel.'))

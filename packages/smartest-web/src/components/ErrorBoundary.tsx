@@ -2,7 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { getUserErrorMessage } from '../utils/userErrorMessage'
 
 type ErrorBoundaryProps = {
-    children: ReactNode
+    readonly children: ReactNode
 }
 
 type ErrorBoundaryState = {
@@ -49,7 +49,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
                     </p>
                     <button
                         type="button"
-                        onClick={() => window.location.reload()}
+                        onClick={() => globalThis.location.reload()}
                         style={{
                             marginTop: 8,
                             padding: '8px 16px',

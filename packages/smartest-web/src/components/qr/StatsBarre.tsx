@@ -1,9 +1,9 @@
 import type { QuizStatQuestion } from '../../types/quizLive'
 
 type StatsBarreProps = {
-    stat: QuizStatQuestion
+    readonly stat: QuizStatQuestion
     /** Nombre de participants distincts (plafond indicatif pour X/Y réponses). */
-    nombreParticipants: number
+    readonly nombreParticipants: number
 }
 
 /**
@@ -74,7 +74,7 @@ export function StatsBarre({ stat, nombreParticipants }: StatsBarreProps) {
 
           
 
-            {!vide ? (
+            {vide ? null : (
                 <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: '#15803d', width: 72 }}>
@@ -130,7 +130,7 @@ export function StatsBarre({ stat, nombreParticipants }: StatsBarreProps) {
                         </span>
                     </div>
                 </>
-            ) : null}
+            )}
         </section>
     )
 }
