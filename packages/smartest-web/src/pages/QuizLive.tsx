@@ -6,9 +6,10 @@ import { QRCodeSVG } from 'qrcode.react'
 import { StatsBarre } from '../components/qr/StatsBarre'
 import { useQuizLiveStats } from '../hooks/useQuizLiveStats'
 import type { StreamEnvelope } from '../types/quizLive'
+import { resolveHttpApiBase } from '../config/runtimeBackend'
 import styles from '../styles/QuizLive.module.css'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8081'
+const API_BASE = resolveHttpApiBase()
 
 function InvalidTokenView() {
     return (

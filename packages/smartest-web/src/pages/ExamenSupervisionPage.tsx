@@ -21,10 +21,10 @@ import useAuth from '../hooks/useAuth'
 import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
 import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
+import { stompBrokerUrl } from '../config/runtimeBackend'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
-const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8081/ws'
 
 export type ExamenSupervisionPageProps = {
     /** Aligné sur le thème web (ex. `#4f8ef7` dans `App.tsx`). */
@@ -121,6 +121,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const isProf = (useAuth((s) => s.role) ?? '').trim().toUpperCase() === 'PROFESSEUR'
+    const authToken = useAuth((s) => s.token)
     const [meta, setMeta] = useState<ExamenMeta | null>(null)
     const [snap, setSnap] = useState<ExamenSnapshot | null>(null)
     const [feedback, setFeedback] = useState('')
@@ -265,8 +266,9 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
 
         let cancelled = false
         const client = new Client({
-            brokerURL: WS_BASE_URL,
+            brokerURL: stompBrokerUrl(),
             reconnectDelay: 3000,
+            connectHeaders: authToken ? { Authorization: `Bearer ${authToken}` } : {},
             onConnect: () => {
                 client.subscribe(`/topic/examen/${id}/etat`, (message) => {
                     try {
@@ -305,7 +307,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
             cancelled = true
             client.deactivate()
         }
-    }, [id, mergeSnapshot])
+    }, [id, mergeSnapshot, authToken])
 
     const supervisionEnPause =
         ((snap?.etat ?? meta?.statut ?? '').trim().toUpperCase() === 'EN_PAUSE') || !!snap?.enPause

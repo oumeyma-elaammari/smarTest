@@ -52,6 +52,8 @@ public class SecurityConfig {
                                 "/ws/**",
                                 "/api/qr-live/public/**"
                         ).permitAll()
+                        // Preflight navigateur (Axios PATCH depuis un autre port ex. :5173 → :8081) : sans JWT.
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions/*/reponses").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole(ROLE_ETUDIANT)
                         .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web")
@@ -71,6 +73,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/quizs/*/publier").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.GET, "/api/statistiques/**").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.DELETE, "/api/examens-publies/*").hasRole(ROLE_PROFESSEUR)
+                        /* Même motif qu’ailleurs (* segment) : évite tout décalage PathPattern / variables {id}. */
+                        .requestMatchers("/api/examens-publies/*/supervision/**").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.PATCH, "/api/examens-publies/*/controle/**")
+                                .hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.PATCH, "/api/examens-publies/*/bareme").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.POST, "/api/examens-publies/*/publication-web/**")
+                                .hasRole(ROLE_PROFESSEUR)
                         .requestMatchers("/api/examens-publies/**").authenticated()
                         .requestMatchers("/api/professeur/**").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers("/api/etudiant/**").hasRole(ROLE_ETUDIANT)
