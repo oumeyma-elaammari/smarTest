@@ -251,6 +251,9 @@ namespace smartest_desktop
                     AddColumnIfMissing(
                         "BaremePoints",
                         "ALTER TABLE question_locale ADD COLUMN BaremePoints REAL NOT NULL DEFAULT 0;");
+                    AddColumnIfMissing(
+                        "DureeSecondesIndicative",
+                        "ALTER TABLE question_locale ADD COLUMN DureeSecondesIndicative INTEGER NOT NULL DEFAULT 60;");
                 });
             }
             finally

@@ -75,6 +75,15 @@ public class ExamenPublieController {
         return ResponseEntity.ok(examenPublieService.getMesExamensPublicationWeb(userDetails.getUsername()));
     }
 
+    /** Suppression par le professeur propriétaire (ex. depuis le bureau) : retire l'examen du web. */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<MessageResponse> supprimerExamenPublie(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        examenPublieService.deleteExamenPublie(id, userDetails.getUsername());
+        return ResponseEntity.ok(new MessageResponse("Examen supprimé avec succès", true, 200));
+    }
+
     @GetMapping("/{id}/metadata")
     public ResponseEntity<ExamenPublieMetadataResponse> metadata(
             @PathVariable Long id,
@@ -255,6 +264,15 @@ public class ExamenPublieController {
             @AuthenticationPrincipal UserDetails userDetails) {
         assertProfOwnsExamenByEmail(id, userDetails.getUsername());
         return ResponseEntity.ok(supervisionService.ajusterTemps(id, deltaMinutes));
+    }
+
+    @PatchMapping("/{id}/controle/minuteur-question")
+    public ResponseEntity<ExamenSupervisionService.SnapshotResponse> ajusterMinuteurQuestion(
+            @PathVariable Long id,
+            @RequestParam Integer deltaSeconds,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        return ResponseEntity.ok(supervisionService.ajusterMinuteurQuestion(id, deltaSeconds));
     }
 
     @PatchMapping("/{id}/controle/mode-passage")

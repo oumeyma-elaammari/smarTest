@@ -372,21 +372,29 @@
                                                        Margin="0,6,0,0"
                                                        TextTrimming="CharacterEllipsis"/>
 
-											<!-- Ligne 3 : nom fichier image si présent -->
-											<TextBlock Grid.Row="2"
-                                                       Text="{Binding ImageNom}"
-                                                       FontSize="10" Foreground="#059669"
-                                                       FontStyle="Italic"
-                                                       Margin="0,4,0,0"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Visibility="{Binding HasImage,
-                                                                    Converter={StaticResource BoolToVis}}"/>
-											<TextBlock Grid.Row="2"
-                                                       Text="{Binding BaremePoints, StringFormat='{}{0:0.##} pt'}"
-                                                       FontSize="10" Foreground="#1D4ED8"
-                                                       FontWeight="600"
-                                                       HorizontalAlignment="Right"
-                                                       Margin="0,4,0,0"/>
+											<!-- Ligne 3 : image / durée / barème -->
+											<Grid Grid.Row="2" Margin="0,4,0,0">
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition Width="*"/>
+													<ColumnDefinition Width="Auto"/>
+												</Grid.ColumnDefinitions>
+												<TextBlock Grid.Column="0"
+                                                           Text="{Binding ImageNom}"
+                                                           FontSize="10" Foreground="#059669"
+                                                           FontStyle="Italic"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding HasImage,
+                                                                        Converter={StaticResource BoolToVis}}"/>
+												<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+													<TextBlock Text="{Binding DureeSecondesIndicative, StringFormat={}{0} s}"
+                                                               FontSize="10" Foreground="#64748b" VerticalAlignment="Center"/>
+													<TextBlock Text=" · " FontSize="10" Foreground="#cbd5e1" VerticalAlignment="Center" Margin="2,0,2,0"/>
+													<TextBlock Text="{Binding BaremePoints, StringFormat='{}{0:0.##} pt'}"
+                                                               FontSize="10" Foreground="#1D4ED8"
+                                                               FontWeight="600" VerticalAlignment="Center"/>
+												</StackPanel>
+											</Grid>
 										</Grid>
 									</Border>
 								</DataTemplate>
@@ -601,6 +609,28 @@
                                           VerticalAlignment="Center"/>
 						
 							</Grid>
+						</Border>
+
+						<TextBlock Text="TEMPS INDICATIF (PASSAGE WEB)" FontSize="10" FontWeight="700"
+                                   Foreground="#9CA3AF" Margin="0,0,0,8"/>
+						<Border Background="White" CornerRadius="10"
+                                BorderBrush="#e2e8f4" BorderThickness="1"
+                                Padding="16,10" Margin="0,0,0,16">
+							<StackPanel>
+								<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#8899b8" Margin="0,0,0,10"
+                                           Text="Durée de référence pour cette question lors du passage sur le web (décompte côté élève). Réglable avant publication."/>
+								<ComboBox ItemsSource="{Binding ValeursDureeSecondesIndicative}"
+                                          SelectedItem="{Binding QuestionSelectionnee.DureeSecondesIndicative, Mode=TwoWay}"
+                                          FontSize="13"
+                                          HorizontalAlignment="Left"
+                                          MinWidth="140">
+									<ComboBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding StringFormat={}{0} s}" FontSize="13"/>
+										</DataTemplate>
+									</ComboBox.ItemTemplate>
+								</ComboBox>
+							</StackPanel>
 						</Border>
 
 						<!-- Import d’image sous l’énoncé (toutes les questions, optionnel) -->

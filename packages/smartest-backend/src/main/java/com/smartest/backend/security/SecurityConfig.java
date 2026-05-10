@@ -70,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/quizs/*").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.PATCH, "/api/quizs/*/publier").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.GET, "/api/statistiques/**").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.DELETE, "/api/examens-publies/*").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers("/api/examens-publies/**").authenticated()
                         .requestMatchers("/api/professeur/**").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers("/api/etudiant/**").hasRole(ROLE_ETUDIANT)

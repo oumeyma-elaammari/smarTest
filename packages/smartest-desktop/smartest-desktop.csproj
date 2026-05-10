@@ -8,7 +8,8 @@
 	  <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <!-- Projet de tests dans un sous-dossier : sinon les *.cs sous obj/ du test sont compilés avec l'app → CS0579 (wpftmp). -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);smartest-desktop.Tests/**</DefaultItemExcludes>
+    <!-- Sortie intermédiaire alternative (ex. /p:BaseIntermediateOutputPath=obj-build-out) : sinon les *.g.cs sont doublonnés avec obj/. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);smartest-desktop.Tests/**;obj-build-out/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

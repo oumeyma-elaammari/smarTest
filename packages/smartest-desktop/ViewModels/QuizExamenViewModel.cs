@@ -881,15 +881,97 @@ namespace smartest_desktop.ViewModels
             var examen = row.Examen;
 
             var result = MessageBox.Show(
-                $"Supprimer l'examen « {row.TitreAffiche} » ?",
-                "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                $"Supprimer l'examen « {row.TitreAffiche} » ?\n\n" +
+                "L'examen sera retiré de la plateforme pour tous les étudiants concernés " +
+                "(ils ne pourront plus y accéder sur le web). " +
+                "S'il a été synchronisé avec le serveur, la suppression côté serveur " +
+                "doit réussir avant la suppression locale.\n\n" +
+                "Cette action est définitive.",
+                "Confirmation de suppression",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
+
+            var titrePourCorrespondance = string.IsNullOrWhiteSpace(examen.Titre)
+                ? row.TitreAffiche
+                : examen.Titre;
+
+            var aBackendId = examen.BackendId is long bk && bk > 0;
+            var estLieAuServeurWeb = EstExamenLiePublicationOuServeur(examen);
+
+            if (estLieAuServeurWeb && string.IsNullOrWhiteSpace(WpfApp.Current.Properties["Token"]?.ToString()))
+            {
+                MessageBox.Show(
+                    "Cet examen est lié au serveur (publication web). Connectez-vous pour le supprimer aussi sur la plateforme.",
+                    "Suppression impossible",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var token = WpfApp.Current.Properties["Token"]?.ToString();
+            var idsServeur = new HashSet<long>();
+            if (aBackendId)
+                idsServeur.Add(examen.BackendId!.Value);
+
+            var api = new ExamenWebPublicationApiService();
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    /* Dès que l'examen est synchronisé ou à un état web : retirer toutes les entrées serveur au même titre
+                       (doublons / republications), pas seulement BackendId — sinon des copies restent visibles côté élèves. */
+                    if (estLieAuServeurWeb)
+                    {
+                        var liste = await api.GetMesPublicationsWebAsync(token);
+                        foreach (var m in liste)
+                        {
+                            if (ExamenWebPublicationApiService.TitresExamenCorrespondentPourSuppression(titrePourCorrespondance, m.Titre))
+                                idsServeur.Add(m.Id);
+                        }
+                    }
+
+                    foreach (var id in idsServeur.OrderBy(x => x))
+                        await api.DeleteExamenPublieAsync(token, id);
+                }
+            }
+            catch (SmartestApiException ex)
+            {
+                MessageBox.Show(
+                    "La suppression sur le serveur a échoué. L'examen n'a pas été supprimé localement non plus.\n\n" +
+                    UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
+                    "Synchronisation serveur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+            catch (SmartestNetworkException ex)
+            {
+                MessageBox.Show(
+                    "La suppression sur le serveur a échoué. L'examen n'a pas été supprimé localement non plus.\n\n" +
+                    UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
+                    "Synchronisation serveur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
 
             await _examenService.SupprimerAsync(examen.Id);
             _examensTous.RemoveAll(e => e.Id == examen.Id);
             RafraichirPaginationExamens();
             if (SelectedExamen?.Id == examen.Id) SelectedExamen = null;
+        }
+
+        /// <summary>Examen présent ou ayant été présent sur la plateforme : suppression desktop doit suivre le serveur.</summary>
+        private static bool EstExamenLiePublicationOuServeur(ExamenLocal examen)
+        {
+            if (examen.BackendId is long bk && bk > 0)
+                return true;
+            var s = examen.Statut?.Trim() ?? "";
+            return string.Equals(s, "PUBLIE", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(s, "EN_COURS", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(s, "TERMINE", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool EstExamenPubliableSurLeWeb(ExamenLocal e)

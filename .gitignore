@@ -8,6 +8,8 @@ build/
 **/.idea/
 .idea/
 packages/smartest-backend/.idea/
+# Secrets / config machine locale (copie de application-local.example.yaml)
+packages/smartest-backend/src/main/resources/application-local.yaml
 bin/
 obj/
 # Sorties dotnet build -o (compilations vers dossier personnalisé)

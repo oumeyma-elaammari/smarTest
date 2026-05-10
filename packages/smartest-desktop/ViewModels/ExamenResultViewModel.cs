@@ -235,6 +235,21 @@ namespace smartest_desktop.ViewModels
         public IReadOnlyList<double> ValeursBareme { get; } =
             Enumerable.Range(0, 81).Select(i => i * ExamenBaremeHelper.Pas).ToList();
 
+        private static readonly int[] PresetsDureeSecondesIndicative =
+        {
+            30, 45, 60, 90, 120, 180, 240, 300, 360, 420, 480, 540, 600,
+        };
+
+        public IReadOnlyList<int> ValeursDureeSecondesIndicative { get; } =
+            PresetsDureeSecondesIndicative;
+
+        /// <summary>Reprend la valeur la plus proche des choix proposés (liste déroulante).</summary>
+        public static int SnapDureeVersPreset(int secondes)
+        {
+            int v = secondes <= 0 ? 60 : secondes;
+            return PresetsDureeSecondesIndicative.OrderBy(p => Math.Abs(p - v)).First();
+        }
+
         public double TotalBareme => Math.Round(Questions.Sum(q => q.BaremePoints), 2);
         public double EcartBareme => Math.Round(ExamenBaremeHelper.TotalCible - TotalBareme, 2);
         public bool BaremeValide => Math.Abs(EcartBareme) < 1e-9 && Questions.All(q => ExamenBaremeHelper.EstAuPas(q.BaremePoints));
@@ -838,6 +853,7 @@ namespace smartest_desktop.ViewModels
                 q.OptionDCorrecte,
                 q.ReponseModele,
                 q.BaremePoints,
+                q.DureeSecondesIndicative,
                 q.Explication,
                 ImgLen = q.ImageBase64?.Length ?? 0,
                 q.ImageNom,

@@ -3,6 +3,7 @@ package com.smartest.backend.service;
 import com.smartest.backend.dto.request.PublicationWebQuestionRequest;
 import com.smartest.backend.dto.response.ExamenPublieMetadataResponse;
 import com.smartest.backend.exception.InvalidSessionStateException;
+import com.smartest.backend.exception.UnauthorizedAccessException;
 import com.smartest.backend.entity.*;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import com.smartest.backend.repository.*;
@@ -26,8 +27,16 @@ public class ExamenPublieService {
     private final ExamenPublieRepository examenPublieRepository;
     private final ProfesseurRepository professeurRepository;
     private final QuestionRepository questionRepository;
+    private final QuizRepository quizRepository;
+    private final SessionExamenRepository sessionExamenRepository;
+    private final ReponseEtudiantRepository reponseEtudiantRepository;
+    private final StatistiqueQuestionRepository statistiqueQuestionRepository;
+    private final ExamenSupervisionService examenSupervisionService;
 
     private static final double BAREME_DEFAUT_WEB = 20.0;
+    private static final String PROFESSEUR_INTROUVABLE = "Professeur introuvable";
+    private static final String EXAMEN_INTROUVABLE = "Examen introuvable";
+    private static final String EXAMEN_HORS_PROPRIETE = "Cet examen n'appartient pas à votre compte";
 
     @Transactional(readOnly = true)
     public List<ExamenPublieMetadataResponse> getMesExamensPublicationWeb(String emailUtilisateur) {
@@ -224,5 +233,62 @@ public class ExamenPublieService {
 
         exam.setStatut(StatutExamen.TERMINE);
         return examenPublieRepository.save(exam);
+    }
+
+    /**
+     * Supprime l'examen publié côté serveur : réservé au professeur propriétaire (aligné sur {@link QuizService#deleteQuiz}).
+     */
+    @Transactional
+    public void deleteExamenPublie(Long examenId, String professeurEmail) {
+        Professeur prof = professeurRepository.findByEmail(professeurEmail.trim().toLowerCase(Locale.ROOT))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, PROFESSEUR_INTROUVABLE));
+
+        ExamenPublie exam = examenPublieRepository.findWithQuestionsAndProfesseurById(examenId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, EXAMEN_INTROUVABLE));
+
+        if (exam.getProfesseur() == null || !exam.getProfesseur().getId().equals(prof.getId())) {
+            throw new UnauthorizedAccessException(EXAMEN_HORS_PROPRIETE);
+        }
+
+        examenSupervisionService.evictRuntimeState(examenId);
+
+        List<Question> questionsLiees = exam.getQuestions() != null
+                ? new ArrayList<>(exam.getQuestions())
+                : new ArrayList<>();
+
+        for (Question q : questionsLiees) {
+            reponseEtudiantRepository.deleteByQuestionId(q.getId());
+        }
+
+        List<SessionExamen> sessions = sessionExamenRepository.findByExamenPublieId(examenId);
+        List<Long> sessionIds = sessions.stream()
+                .map(SessionExamen::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (!sessionIds.isEmpty()) {
+            statistiqueQuestionRepository.deleteAllBySessionExamenIdIn(sessionIds);
+        }
+        statistiqueQuestionRepository.deleteAllByExamenPublieId(examenId);
+
+        for (SessionExamen s : sessions) {
+            reponseEtudiantRepository.deleteBySessionExamenId(s.getId());
+        }
+        sessionExamenRepository.deleteAll(sessions);
+
+        if (exam.getQuestions() != null) {
+            exam.getQuestions().clear();
+        }
+        examenPublieRepository.saveAndFlush(exam);
+
+        examenPublieRepository.delete(exam);
+        examenPublieRepository.flush();
+
+        for (Question q : questionsLiees) {
+            if (quizRepository.countQuizzesWithQuestion(q.getId()) == 0
+                    && questionRepository.countExamensWithQuestion(q.getId()) == 0) {
+                questionRepository.deleteById(q.getId());
+            }
+        }
     }
 }

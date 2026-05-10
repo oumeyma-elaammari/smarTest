@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { examenApi } from '../api/examenApi'
 import useAuth from '../hooks/useAuth'
+import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
 import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
 
@@ -160,6 +161,11 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         ) {
             merged.questionCourante = prev.questionCourante
         }
+        const rawRep = (incoming as { reponsesPourQuestionCourante?: unknown }).reponsesPourQuestionCourante
+        if (rawRep !== undefined && rawRep !== null) {
+            const n = Number(rawRep)
+            if (!Number.isNaN(n)) merged.reponsesPourQuestionCourante = n
+        }
         return merged
     }, [])
 
@@ -215,6 +221,27 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         return () => window.clearTimeout(t)
     }, [sessionDemarreeHint, id, navigate])
 
+    /** Même navigateur (prof + élève) : rafraîchir le snapshot dès qu’une réponse est enregistrée côté élève. */
+    useEffect(() => {
+        if (!Number.isFinite(id) || id <= 0) return
+        let bc: BroadcastChannel | null = null
+        try {
+            bc = new BroadcastChannel(`smartest.examen.${id}`)
+            bc.onmessage = () => {
+                void refresh()
+            }
+        } catch {
+            /* BroadcastChannel indisponible */
+        }
+        return () => {
+            try {
+                bc?.close()
+            } catch {
+                /* ignore */
+            }
+        }
+    }, [id, refresh])
+
     useEffect(() => {
         if (!Number.isFinite(id) || id <= 0) return
 
@@ -269,7 +296,11 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         snap?.etat ?? meta?.statut ?? '',
         supervisionEnPause,
     )
-
+    const minuteurQuestionLive = useExamenMinuteurQuestionLive(
+        snap?.tempsQuestionRestantSeconds,
+        snap?.etat ?? meta?.statut ?? '',
+        supervisionEnPause,
+    )
     const action = async (run: () => Promise<unknown>) => {
         try {
             setIsSubmitting(true)
@@ -334,8 +365,16 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const questionCouranteBloc = snap?.questionCourante as
         | { id?: number; enonce?: string; reponses?: Array<{ id?: number; contenu?: string }> }
         | undefined
-    const reponsesPilotage = Array.isArray(questionCouranteBloc?.reponses) ? questionCouranteBloc.reponses : []
     const planListe = snap?.planQuestions ?? []
+    /** Fallbacks : anciens snapshots / fusion WS partielle — évite de masquer le compteur. */
+    const reponsesPourQuestionCouranteAffiche = (() => {
+        const v = snap?.reponsesPourQuestionCourante
+        if (typeof v === 'number' && !Number.isNaN(v)) return v
+        const n = Number(v)
+        return Number.isNaN(n) ? 0 : n
+    })()
+    const participantsActifsAffiche =
+        typeof snap?.participantsEnAttente === 'number' ? snap.participantsEnAttente : connectesLabels.length
 
     const feedbackBanner =
         feedbackTone === 'success'
@@ -617,7 +656,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                 )}
                 {statTile(
                     <Timer size={18} strokeWidth={2} />,
-                    'Temps restant',
+                    'Temps examen',
                     <span aria-live="polite" aria-atomic="true">
                         {tempsRestantSupervision ??
                             (snap?.tempsRestantMinutes != null ? `${snap.tempsRestantMinutes} min` : '—')}
@@ -704,6 +743,11 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     </button>
                 </div>
 
+                <p style={{ margin: '0 0 12px', fontSize: 13, color: '#64748b', lineHeight: 1.55, maxWidth: 720 }}>
+                    Pour changer de question affichée aux étudiants, utilisez <strong>Question précédente</strong> /{' '}
+                    <strong>Question suivante</strong> ou les pastilles numérotées (pas de saut automatique).
+                </p>
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 12 }}>
                     <button
                         type="button"
@@ -747,7 +791,9 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         gap: 10,
                     }}
                 >
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b', flex: '1 1 140px' }}>Ajustements</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b', flex: '1 1 100%' }}>
+                        Ajustements — temps examen (global)
+                    </span>
                     <button type="button" style={btnGhost(isSubmitting)} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, -1))}>
                         −1 min
                     </button>
@@ -792,8 +838,44 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     <div style={{ color: accentBleu, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
                         Question active (copie écran élève)
                     </div>
-                    <div style={{ fontWeight: 700, marginBottom: 8, fontSize: '1rem', color: '#0f1e3d' }}>
-                        {totalQuestions > 0 ? `Question ${questionNumero} / ${totalQuestions}` : 'Aucune question disponible'}
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'baseline',
+                            gap: '6px 18px',
+                            fontWeight: 700,
+                            marginBottom: 8,
+                            fontSize: '1rem',
+                            color: '#0f1e3d',
+                        }}
+                    >
+                        <span>
+                            {totalQuestions > 0 ? `Question ${questionNumero} / ${totalQuestions}` : 'Aucune question disponible'}
+                        </span>
+                        {totalQuestions > 0 && minuteurQuestionLive.formatted != null ? (
+                            <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#475569' }} aria-live="polite">
+                                Décompte (indication) :{' '}
+                                <strong style={{ color: '#0f1e3d' }}>{minuteurQuestionLive.formatted}</strong>
+                                {snap?.tempsQuestionRestantSeconds === 0 && estEnCours ? (
+                                    <span style={{ color: '#92400e', fontWeight: 600 }}>
+                                        {' '}
+                                        — temps indicatif écoulé ; passez à la suivante si besoin.
+                                    </span>
+                                ) : null}
+                            </span>
+                        ) : null}
+                        {totalQuestions > 0 && (estEnCours || etat === 'EN_PAUSE') ? (
+                            <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#475569' }} aria-live="polite">
+                                Réponses (temps réel) :{' '}
+                                <strong style={{ color: '#0f1e3d' }}>{reponsesPourQuestionCouranteAffiche}</strong>
+                                <span style={{ color: '#94a3b8', margin: '0 5px' }}>/</span>
+                                <strong style={{ color: '#0f1e3d' }}>{participantsActifsAffiche}</strong>
+                                <span style={{ fontWeight: 600, color: '#64748b', marginLeft: 6 }}>
+                                    étudiants actifs
+                                </span>
+                            </span>
+                        ) : null}
                     </div>
                     <div style={{ color: '#334155', lineHeight: 1.58, fontSize: 14, whiteSpace: 'pre-wrap' }}>
                         {questionCouranteBloc?.enonce?.trim() ||
@@ -801,31 +883,8 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                                 ? 'Aucune question liée à cet examen sur le serveur. Depuis SmarTest bureau : fermez puis rouvrez l’application si besoin, cliquez à nouveau « Publier sur le web » pour ré-envoyer les QCM (messages de confirmation avec le nombre de questions), puis actualisez cette page. Conditions : au moins 2 réponses renseignées parmi les options A–D par question. Si la situation continue, vérifiez que le backend a bien exécuté la migration Flyway (table examen_publie_question).'
                                 : estEnCours || etat === 'EN_PAUSE'
                                   ? 'Contenu non chargé ou indisponible pour cet index.'
-                                  : 'Lancez la session (« En cours ») pour voir l’énoncé et les propositions exactement comme les étudiants.')}
+                                  : 'Lancez la session (« En cours ») pour voir l’énoncé comme les étudiants.')}
                     </div>
-                    {reponsesPilotage.length > 0 ? (
-                        <div style={{ marginTop: 14 }}>
-                            <div
-                                style={{
-                                    color: '#475569',
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    letterSpacing: '0.05em',
-                                    textTransform: 'uppercase',
-                                    marginBottom: 8,
-                                }}
-                            >
-                                Propositions
-                            </div>
-                            <ul style={{ margin: 0, paddingLeft: 18, color: '#334155', lineHeight: 1.55, fontSize: 14 }}>
-                                {reponsesPilotage.map((r, idx) => (
-                                    <li key={typeof r.id === 'number' ? r.id : `p-${idx}`} style={{ marginBottom: 6 }}>
-                                        {r.contenu?.trim() || '—'}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ) : null}
                 </div>
                 {planListe.length > 0 ? (
                     <details

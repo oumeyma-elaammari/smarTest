@@ -12,10 +12,21 @@ using smartest_desktop.Exceptions;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using smartest_desktop.Data.LocalEntities;
 
 namespace smartest_desktop.Services
 {
+    /// <summary>Métadonnée minimale pour la liste « mes publications web » (prof ou élève).</summary>
+    public sealed class ExamenMesPublicationItem
+    {
+        [JsonProperty("id")]
+        public long Id { get; set; }
+
+        [JsonProperty("titre")]
+        public string Titre { get; set; } = "";
+    }
+
     public sealed class ExamenWebPublicationApiService
     {
         private const string DefaultBaseUrl = "http://localhost:8081";
@@ -102,6 +113,79 @@ namespace smartest_desktop.Services
             }
         }
 
+        /// <summary>
+        /// Retire le suffixe « (2) », « (3) » ajouté localement quand plusieurs examens ont le même titre,
+        /// pour comparer avec le titre stocké sur le serveur.
+        /// </summary>
+        public static string NormaliserTitreExamenPourCorrespondance(string? titre)
+        {
+            if (string.IsNullOrWhiteSpace(titre)) return "";
+            var t = titre.Trim();
+            return Regex.Replace(t, @"\s*\(\d+\)\s*$", "", RegexOptions.None).Trim();
+        }
+
+        /// <summary>Indique si le titre local et le titre côté API désignent le même examen affiché.</summary>
+        public static bool TitresExamenCorrespondentPourSuppression(string? titreLocalOuAffiche, string? titreServeur)
+        {
+            var a = NormaliserTitreExamenPourCorrespondance(titreLocalOuAffiche);
+            var b = NormaliserTitreExamenPourCorrespondance(titreServeur);
+            return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Liste des examens publiés sur le web pour l’utilisateur connecté (prof : ses examens ;
+        /// élève : ceux autorisés par email).
+        /// </summary>
+        public async Task<IReadOnlyList<ExamenMesPublicationItem>> GetMesPublicationsWebAsync(
+            string bearerToken,
+            CancellationToken cancellationToken = default)
+        {
+            using var http = CreateHttp(bearerToken);
+            try
+            {
+                var response = await http.GetAsync("/api/examens-publies/mes-publications-web", cancellationToken);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                    throw SmartestApiException.FromHttpFailure(response.StatusCode, body, "Liste examens web");
+
+                var list = JsonConvert.DeserializeObject<List<ExamenMesPublicationItem>>(body);
+                return list ?? new List<ExamenMesPublicationItem>();
+            }
+            catch (SmartestApiException) { throw; }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+        }
+
+        /// <summary>Supprime l'examen publié sur le backend (professeur propriétaire uniquement).</summary>
+        public async Task DeleteExamenPublieAsync(string bearerToken, long backendExamenId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var http = CreateHttp(bearerToken);
+                var response = await http.DeleteAsync($"/api/examens-publies/{backendExamenId}", cancellationToken);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                    return;
+                if (!response.IsSuccessStatusCode)
+                    throw SmartestApiException.FromHttpFailure(response.StatusCode, body, "Suppression serveur examen");
+            }
+            catch (SmartestApiException) { throw; }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+        }
+
         /// <summary>Envoie les questions QCM au serveur (obligationaire pour supervision / élèves). Même schéma que la publication quiz web.</summary>
         public async Task SynchroniserQuestionsPublicationWebAsync(
             string bearerToken,
@@ -126,7 +210,7 @@ namespace smartest_desktop.Services
 
             var payload = new
             {
-                questions = ordered.Select(q => new
+                questions = ordered                .Select(q => new
                 {
                     enonce = q.Enonce ?? string.Empty,
                     optionA = q.OptionA ?? string.Empty,
@@ -135,7 +219,8 @@ namespace smartest_desktop.Services
                     optionD = q.OptionD ?? string.Empty,
                     reponseCorrecte = q.ReponseCorrecte ?? string.Empty,
                     explication = q.Explication ?? string.Empty,
-                    difficulte = q.Difficulte ?? string.Empty
+                    difficulte = q.Difficulte ?? string.Empty,
+                    dureeSecondesIndicative = Math.Clamp(q.DureeSecondesIndicative <= 0 ? 60 : q.DureeSecondesIndicative, 5, 7200),
                 }).ToList()
             };
 

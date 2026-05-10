@@ -1,11 +1,15 @@
 spring:
+  config:
+    import: optional:classpath:application-local.yaml
+
   application:
     name: smarTest-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/smartest_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: 
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/smartest_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    # Mot de passe : variable SPRING_DATASOURCE_PASSWORD ou fichier application-local.yaml (voir application-local.example.yaml)
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -39,7 +43,7 @@ spring:
             enable: true
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 app:
   jwt:

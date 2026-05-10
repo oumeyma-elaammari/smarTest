@@ -6,6 +6,11 @@ import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import com.smartest.backend.repository.ExamenPublieRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.repository.QuestionRepository;
+import com.smartest.backend.repository.QuizRepository;
+import com.smartest.backend.repository.ReponseEtudiantRepository;
+import com.smartest.backend.repository.SessionExamenRepository;
+import com.smartest.backend.repository.StatistiqueQuestionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +36,24 @@ class ExamenPublieServiceTest {
     private ExamenPublieRepository examenPublieRepository;
     @Mock
     private ProfesseurRepository professeurRepository;
+
+    @Mock
+    private QuestionRepository questionRepository;
+
+    @Mock
+    private QuizRepository quizRepository;
+
+    @Mock
+    private SessionExamenRepository sessionExamenRepository;
+
+    @Mock
+    private ReponseEtudiantRepository reponseEtudiantRepository;
+
+    @Mock
+    private StatistiqueQuestionRepository statistiqueQuestionRepository;
+
+    @Mock
+    private ExamenSupervisionService examenSupervisionService;
 
     @InjectMocks
     private ExamenPublieService examenPublieService;

@@ -16,6 +16,7 @@ import {
     getEtatSessionLabel as getEtatLabel,
     parseDebutExamenMs,
 } from '../utils/examenDisplay'
+import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
 import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 
 const sans = "'DM Sans', system-ui, sans-serif"
@@ -352,6 +353,11 @@ export default function ExamenPassageWeb() {
         snap?.etat ?? meta?.statut ?? '',
         enPausePourTemps,
     )
+    const minuteurQuestion = useExamenMinuteurQuestionLive(
+        snap?.tempsQuestionRestantSeconds,
+        snap?.etat ?? meta?.statut ?? '',
+        enPausePourTemps,
+    )
 
     if (!Number.isFinite(id) || id <= 0) {
         return (
@@ -392,6 +398,12 @@ export default function ExamenPassageWeb() {
     const soumettreReponseCourante = async () => {
         if (!Number.isFinite(id) || id <= 0) return
         if (!canStart || enPause) return
+        if (minuteurQuestion.isExpired) {
+            setStatus(
+                'Le temps pour cette question est écoulé. Vous ne pouvez plus enregistrer de réponse tant que le professeur n’a pas ajouté du temps au minuteur.',
+            )
+            return
+        }
         if (questionId == null || selectedResponseId == null) {
             setStatus('Sélectionnez une réponse avant de valider.')
             return
@@ -402,6 +414,13 @@ export default function ExamenPassageWeb() {
             await examenApi.repondreQuestionCourante(id, etudiantId, questionId, selectedResponseId)
             setLastAnsweredQuestionId(questionId)
             setStatus('Réponse enregistrée. Aucune correction immédiate n’est affichée pendant l’examen.')
+            try {
+                const bc = new BroadcastChannel(`smartest.examen.${id}`)
+                bc.postMessage({ type: 'reponse-enregistree', examenId: id })
+                bc.close()
+            } catch {
+                /* BroadcastChannel indisponible */
+            }
         } catch (e: unknown) {
             setStatus(extractApiMessage(e, 'Impossible d’enregistrer la réponse pour la question active.'))
         } finally {
@@ -534,6 +553,7 @@ export default function ExamenPassageWeb() {
                         {reponses.map((r) => {
                             const rid = typeof r.id === 'number' ? r.id : -1
                             const checked = rid > 0 && selectedResponseId === rid
+                            const verrouilleTemps = minuteurQuestion.isExpired
                             return (
                                 <label
                                     key={rid}
@@ -545,14 +565,18 @@ export default function ExamenPassageWeb() {
                                         borderRadius: 10,
                                         background: checked ? '#eff6ff' : '#fff',
                                         padding: '10px 12px',
-                                        cursor: 'pointer',
+                                        cursor: verrouilleTemps ? 'not-allowed' : 'pointer',
+                                        opacity: verrouilleTemps ? 0.65 : 1,
                                     }}
                                 >
                                     <input
                                         type="radio"
                                         name={`question-${questionId ?? 'x'}`}
                                         checked={checked}
-                                        onChange={() => setSelectedResponseId(rid > 0 ? rid : null)}
+                                        disabled={verrouilleTemps}
+                                        onChange={() => {
+                                            if (!verrouilleTemps) setSelectedResponseId(rid > 0 ? rid : null)
+                                        }}
                                     />
                                     <span style={{ lineHeight: 1.5, color: '#0f1e3d' }}>{r.contenu || 'Réponse'}</span>
                                 </label>
@@ -560,11 +584,22 @@ export default function ExamenPassageWeb() {
                         })}
                     </div>
 
+                    {minuteurQuestion.isExpired ? (
+                        <p style={{ margin: '12px 0 0', color: '#92400e', fontSize: 14, lineHeight: 1.5 }}>
+                            Temps écoulé pour cette question : vous ne pouvez plus modifier votre réponse. Si le professeur
+                            ajoute du temps au minuteur question, vous pourrez à nouveau sélectionner et valider.
+                        </p>
+                    ) : null}
+
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
                         <button
                             type="button"
                             onClick={soumettreReponseCourante}
-                            disabled={submittingAnswer || selectedResponseId == null}
+                            disabled={
+                                submittingAnswer ||
+                                selectedResponseId == null ||
+                                minuteurQuestion.isExpired
+                            }
                             style={{
                                 background: '#0f1e3d',
                                 color: '#fff',
@@ -572,8 +607,14 @@ export default function ExamenPassageWeb() {
                                 borderRadius: 10,
                                 padding: '10px 14px',
                                 fontWeight: 700,
-                                cursor: submittingAnswer || selectedResponseId == null ? 'default' : 'pointer',
-                                opacity: submittingAnswer || selectedResponseId == null ? 0.65 : 1,
+                                cursor:
+                                    submittingAnswer || selectedResponseId == null || minuteurQuestion.isExpired
+                                        ? 'default'
+                                        : 'pointer',
+                                opacity:
+                                    submittingAnswer || selectedResponseId == null || minuteurQuestion.isExpired
+                                        ? 0.65
+                                        : 1,
                             }}
                         >
                             {submittingAnswer ? 'Validation...' : 'Valider ma réponse'}
@@ -638,11 +679,11 @@ export default function ExamenPassageWeb() {
                             </h1>
                             {tempsRestantAffiche != null ? (
                                 <p
-                                    style={{ margin: '10px 0 0', color: '#475569', fontSize: 14 }}
+                                    style={{ margin: '8px 0 0', color: '#475569', fontSize: 14 }}
                                     aria-live="polite"
                                     aria-atomic="true"
                                 >
-                                    Temps restant : <strong>{tempsRestantAffiche}</strong>
+                                    Temps restant sur l’examen : <strong>{tempsRestantAffiche}</strong>
                                 </p>
                             ) : null}
                         </div>
@@ -679,8 +720,21 @@ export default function ExamenPassageWeb() {
                             fontWeight: 550,
                         }}
                     >
-                        Question en cours
+                        {snap?.questionCourante?.numero != null && typeof snap.questionCourante.numero === 'number'
+                            ? `Question ${snap.questionCourante.numero}`
+                            : 'Question en cours'}
                     </h2>
+                    {minuteurQuestion.formatted != null ? (
+                        <p style={{ margin: '0 0 14px', color: '#64748b', fontSize: 13 }} aria-live="polite">
+                            Décompte (indication) : <strong>{minuteurQuestion.formatted}</strong>
+                            {minuteurQuestion.isExpired ? (
+                                <span style={{ color: '#92400e', fontWeight: 600 }}>
+                                    {' '}
+                                    — temps écoulé ; vos réponses sont verrouillées jusqu’à ajout de temps par le professeur.
+                                </span>
+                            ) : null}
+                        </p>
+                    ) : null}
                     {blocQuestion}
                 </div>
             </div>

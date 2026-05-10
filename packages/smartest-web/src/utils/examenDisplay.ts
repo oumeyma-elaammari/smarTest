@@ -1,5 +1,16 @@
 /** Affichage cohérent examen (pages web étudiant). */
 
+/** Durée indicative par question (secondes) → libellé lisible (« 1 min », « 1 min 30 s »). */
+export function formatDureeIndicativePourQuestion(seconds: number): string {
+    const s = Math.max(0, Math.floor(seconds))
+    if (!Number.isFinite(s) || s <= 0) return '—'
+    if (s < 60) return `${s} s`
+    if (s % 60 === 0) return `${s / 60} min`
+    const whole = Math.floor(s / 60)
+    const rest = s % 60
+    return `${whole} min ${rest} s`
+}
+
 /**
  * Instant du créneau de lancement (metadata / liste examens).
  * Retourne null si inconnu ou non parsable.
