@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +9,9 @@ using smartest_desktop.Models;
 namespace smartest_desktop.Services
 {
     /// <summary>
-    /// Après réinscription avec le même email, le fichier SQLite local peut encore contenir d’anciennes données.
-    /// On mémorise l’identifiant professeur côté serveur et on recrée la base locale si le compte ne correspond plus.
+    /// Enregistre l’identifiant professeur côté serveur dans SQLite (diagnostic / cohérence).
+    /// Ne doit plus déclencher de suppression ou recréation de la base : un changement de mot de passe
+    /// ou une variation d’API ne doit pas faire disparaître les données locales pour l’interface.
     /// </summary>
     public static class LocalProfesseurIdentityService
     {
@@ -19,7 +19,7 @@ namespace smartest_desktop.Services
 
         /// <summary>
         /// À appeler après connexion professeur (ou restauration de session) une fois <see cref="App.LocalDb"/> prêt.
-        /// Recrée la base au même chemin si l’id prof serveur ne correspond plus aux données locales.
+        /// Met à jour <see cref="CleProfesseurIdServeur"/> à partir du profil serveur sans toucher aux tables métier.
         /// </summary>
         public static async Task ApresConnexionProfesseurAsync(
             AuthResponse auth,
@@ -34,50 +34,6 @@ namespace smartest_desktop.Services
             long serverId = await api.GetProfesseurIdAsync(auth.Token, cancellationToken);
 
             var db = App.LocalDb;
-            var row = await db.AppSettings
-                .FirstOrDefaultAsync(s => s.Cle == CleProfesseurIdServeur, cancellationToken);
-
-            long? stored = null;
-            if (row != null && long.TryParse(row.Valeur, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed))
-                stored = parsed;
-
-            bool doitRecréer = false;
-            if (stored.HasValue && stored.Value != serverId)
-                doitRecréer = true;
-
-            if (!doitRecréer && !stored.HasValue)
-            {
-                var triples = await db.Quiz
-                    .OrderBy(q => q.Id)
-                    .Select(q => new { q.BackendQuizIdPublicationWeb, q.BackendQuizIdQr, q.BackendQuizId })
-                    .Take(64)
-                    .ToListAsync(cancellationToken);
-
-                var idsQuizServeur = triples
-                    .SelectMany(t => new long?[] { t.BackendQuizIdPublicationWeb, t.BackendQuizIdQr, t.BackendQuizId })
-                    .Where(id => id is long x && x > 0)
-                    .Cast<long>()
-                    .Distinct()
-                    .Take(8)
-                    .ToList();
-
-                foreach (var bid in idsQuizServeur)
-                {
-                    var (found, auteurPid) = await api.TryGetQuizAuteurAsync(bid, auth.Token, cancellationToken);
-                    if (!found)
-                        continue;
-                    if (auteurPid != serverId)
-                    {
-                        doitRecréer = true;
-                        break;
-                    }
-                }
-            }
-
-            if (doitRecréer)
-                App.RecréerBaseSqliteAuCheminActuel();
-
-            db = App.LocalDb;
             var setting = await db.AppSettings
                 .FirstOrDefaultAsync(s => s.Cle == CleProfesseurIdServeur, cancellationToken);
             var valeur = serverId.ToString(CultureInfo.InvariantCulture);
