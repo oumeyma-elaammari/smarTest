@@ -51,3 +51,7 @@ app:
   web:
     # Lien affiché dans l’email « nouveau quiz publié » (espace étudiant web)
     dashboard-url: http://localhost:5173/dashboard
+
+  flyway:
+    # Dev : true une fois après un échec de migration (repair), puis false.
+    repair-before-migrate: false

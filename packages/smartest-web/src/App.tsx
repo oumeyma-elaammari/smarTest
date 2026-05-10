@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams, Navigate, useParams } from 'react-router-dom'
 import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -162,6 +162,14 @@ function Dashboard() {
     )
 }
 
+/** Alias bureau SmarTest : /examens/:id → même écran que la supervision prof. */
+function RedirectExamenGestionDepuisBureau() {
+    const { examenId } = useParams<{ examenId: string }>()
+    const id = examenId?.trim()
+    if (!id) return <Navigate to="/dashboard?tab=examens" replace />
+    return <Navigate to={`/supervision/examen/${id}`} replace />
+}
+
 export default function App() {
     return (
         <ErrorBoundary>
@@ -284,6 +292,14 @@ export default function App() {
                                         <ExamenSupervisionPage accentBleu={bleuTest} />
                                     </div>
                                 </DashboardLayout>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/examens/:examenId"
+                        element={
+                            <PrivateRoute allowedRoles={['PROFESSEUR']}>
+                                <RedirectExamenGestionDepuisBureau />
                             </PrivateRoute>
                         }
                     />

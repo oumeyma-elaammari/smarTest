@@ -23,3 +23,20 @@ obj/
 *.db-wal
 # Base locale app desktop  ne pas versionner
 **/smartest_local.db*
+# IDE
+.idea/
+.cursor/
+.vscode/
+
+# Build
+build/
+dist/
+out/
+build-out-desktop/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

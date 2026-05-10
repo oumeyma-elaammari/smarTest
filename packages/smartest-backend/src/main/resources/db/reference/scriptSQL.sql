@@ -1,5 +1,5 @@
--- Usage manuel / référence (Workbench) uniquement — Flyway charge uniquement les fichiers
--- V*__*.sql depuis classpath:db/migration (voir application.yaml).
+-- Usage manuel / référence (Workbench) uniquement — ce fichier est hors classpath:db/migration.
+-- Flyway ne charge que les V*__*.sql sous src/main/resources/db/migration/.
 -- =====================================================
 -- DATABASE : smartest_db
 -- =====================================================
