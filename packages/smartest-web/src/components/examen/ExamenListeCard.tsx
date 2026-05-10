@@ -254,6 +254,7 @@ export function ExamenListeCard({
     const titreAffiche =
         titreBrut.toLowerCase().startsWith('examen') ? titreBrut : `Examen — ${titreBrut}`
     const profNom = e.professeur?.nom?.trim() || null
+    const afficheDuree = typeof e.duree === 'number'
     const dateLigne = formatDateTimeUnknown(e.dateDebut)
     const pill = statutPillStyle(e.statut)
     const statutCode = (e.statut ?? '').trim().toUpperCase()
@@ -353,12 +354,12 @@ export function ExamenListeCard({
                                 </span>
                             </span>
                         ) : null}
-                        {profNom && e.duree != null ? (
+                        {profNom && afficheDuree ? (
                             <span style={{ color: '#cbd5e1', userSelect: 'none' }} aria-hidden>
                                 ·
                             </span>
                         ) : null}
-                        {e.duree != null ? (
+                        {afficheDuree ? (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                                 <Clock size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
                                 <span>{e.duree} min</span>

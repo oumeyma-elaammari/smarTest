@@ -12,6 +12,8 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/dm-serif-display": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@stomp/stompjs": "^7.3.0",
     "@tailwindcss/vite": "^4.2.2",

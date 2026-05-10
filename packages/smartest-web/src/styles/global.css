@@ -73,3 +73,20 @@
     color: var(--muted-foreground);
     font-size: 0.875rem;
 }
+
+/* Home — cartes « fonctionnalités » : survol en CSS (pas de handlers sur un div non interactif). */
+.home-feature-card {
+    background: #fff;
+    border: 1px solid #e2e8f4;
+    border-radius: 14px;
+    padding: 26px 22px;
+    text-align: center;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.home-feature-card:hover {
+    border-color: #b8cff5;
+    box-shadow: 0 4px 20px rgba(15, 30, 61, 0.06);
+}
