@@ -1,9 +1,9 @@
-using smartest_desktop.Constants;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Exceptions;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,7 +11,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Newtonsoft.Json;
 
 namespace smartest_desktop.Views
 {
@@ -69,7 +68,11 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    NaviguerEtFermer(() => new QuizExamenWindow());
+                    _fermetureConfirmee = true;
+                    _navigationInProgress = true;
+                    App.OuvrirShell(MainShellSection.QuizExamens);
+                    if (!_isClosing)
+                        Close();
                 });
             };
 
@@ -169,34 +172,88 @@ namespace smartest_desktop.Views
                 context.QuestionsDb,
                 context.EmailsJson);
 
-            var token = Application.Current.Properties["Token"]?.ToString();
-            var errSync = await SyncPublicationWebApresEnregistrementAsync(
-                svc, idExistant, token, context.EmailsJson);
+            var quizRechargé = await svc.GetByIdAsync(idExistant);
+            if (quizRechargé != null)
+                await SynchroniserVersServeurSiBesoinAsync(quizRechargé, context).ConfigureAwait(false);
 
             await Dispatcher.InvokeAsync(() =>
             {
                 var corps =
                     $"Les modifications du quiz « {context.TitreQuiz} » ont été enregistrées.\n\n" +
                     $"• {context.QuestionsValidees.Count} questions\n" +
-                    $"• Publication web : emails enregistrés localement\n" +
+                    $"• Liste d’emails (publication web) : enregistrée en local uniquement — " +
+                    $"la mise en ligne sur le serveur se fait avec « Publier » dans Mes évaluations.\n" +
                     $"• Difficulté : {context.DifficulteQuiz}\n" +
                     $"• Cours : {context.CoursTitreQuiz}\n" +
                     $"• Statut : {context.StatutQuiz}";
-                if (!string.IsNullOrWhiteSpace(errSync))
-                    corps += "\n\n— Serveur publication web —\n" + errSync;
 
                 MessageBox.Show(
                     corps,
-                    string.IsNullOrWhiteSpace(errSync)
-                        ? "Modifications enregistrées"
-                        : "Modifications enregistrées (avertissement serveur)",
+                    "Modifications enregistrées",
                     MessageBoxButton.OK,
-                    string.IsNullOrWhiteSpace(errSync)
-                        ? MessageBoxImage.Information
-                        : MessageBoxImage.Warning);
+                    MessageBoxImage.Information);
 
                 OuvrirHubEtFermer();
             });
+        }
+
+        /// <summary>
+        /// Si le quiz est lié au serveur (publication web et/ou copie QR), pousse les questions — et pour le publié web,
+        /// la liste d’emails — pour garder deux lignes MySQL alignées lorsque les deux ids existent.
+        /// </summary>
+        private static async Task SynchroniserVersServeurSiBesoinAsync(QuizLocal quiz, QuizSaveContext context)
+        {
+            var token = Application.Current.Properties["Token"]?.ToString();
+            if (string.IsNullOrWhiteSpace(token))
+                return;
+
+            var api = new QuizWebPublicationApiService();
+            var questions = quiz.Questions ?? new List<QuestionLocale>();
+
+            bool publié = string.Equals(quiz.Statut?.Trim(), "Publié", StringComparison.OrdinalIgnoreCase);
+            long? idPublication = quiz.BackendQuizIdPublicationWeb ?? quiz.BackendQuizId;
+
+            if (publié && idPublication is long ip && ip > 0)
+            {
+                List<string> emails = new();
+                try
+                {
+                    emails = JsonConvert.DeserializeObject<List<string>>(context.EmailsJson ?? "[]") ?? new List<string>();
+                    emails = emails
+                        .Where(e => !string.IsNullOrWhiteSpace(e))
+                        .Select(e => e.Trim().ToLowerInvariant())
+                        .Distinct()
+                        .ToList();
+                }
+                catch
+                {
+                    return;
+                }
+
+                if (emails.Count == 0)
+                    return;
+
+                try
+                {
+                    await api.PostPublicationWebAsync(token.Trim(), ip, emails, questions).ConfigureAwait(false);
+                }
+                catch
+                {
+                    /* hors flux critique de l’enregistrement local */
+                }
+            }
+
+            if (quiz.BackendQuizIdQr is long iqr && iqr > 0)
+            {
+                try
+                {
+                    await api.SyncQuestionsProfAsync(token.Trim(), iqr, questions).ConfigureAwait(false);
+                }
+                catch
+                {
+                    /* idem */
+                }
+            }
         }
 
         private async Task CreerNouveauQuizAsync(QuizSaveContext context)
@@ -222,7 +279,7 @@ namespace smartest_desktop.Views
                 MessageBox.Show(
                     $"Le quiz « {context.TitreQuiz} » a été validé et sauvegardé.\n\n" +
                     $"• {context.QuestionsValidees.Count} questions\n" +
-                    $"• Publication web : liste d'emails enregistrée\n" +
+                    $"• Liste d’emails (publication web) : enregistrée en local — la publication sur le serveur se fait avec « Publier » dans Mes évaluations.\n" +
                     $"• Difficulté : {context.DifficulteQuiz}\n" +
                     $"• Cours : {context.CoursTitreQuiz}\n" +
                     $"• Statut : {context.StatutQuiz}",
@@ -236,7 +293,12 @@ namespace smartest_desktop.Views
 
         private void OuvrirHubEtFermer()
         {
-            NaviguerEtFermer(() => new QuizExamenWindow());
+            // Avant OuvrirShell : sinon Closing verra _fermetureConfirmee == false et appellera Shutdown().
+            _fermetureConfirmee = true;
+            _navigationInProgress = true;
+            App.OuvrirShell(MainShellSection.QuizExamens);
+            if (!_isClosing)
+                Close();
         }
 
         private void NaviguerEtFermer(Func<Window> nextWindowFactory)
@@ -276,69 +338,27 @@ namespace smartest_desktop.Views
             return async () =>
             {
                 var svc = new LocalQuizService(App.LocalDb);
-                await svc.SupprimerAsync(idQuiz);
+                var token = Application.Current.Properties["Token"]?.ToString();
+                try
+                {
+                    await svc.SupprimerLocalesEtServeurAsync(idQuiz, token);
+                }
+                catch (QuizDeleteLocalOnlyConfirmationRequiredException ex)
+                {
+                    var r = MessageBox.Show(
+                        ex.Message + Environment.NewLine + Environment.NewLine +
+                        "Souhaitez-vous supprimer uniquement les données sur cet ordinateur ?",
+                        "Aucune copie correspondante sur le serveur",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+                    if (r == MessageBoxResult.Yes)
+                        await svc.SupprimerLocalesEtServeurAsync(
+                            idQuiz,
+                            token,
+                            forceLocalDeleteIfNoServerMatch: true);
+                }
             };
         }
 
-        /// <summary>Si le quiz a un ID serveur et des emails valides, renvoie la liste sur le backend (même route que « Publier »).</summary>
-        private static async Task<string?> SyncPublicationWebApresEnregistrementAsync(
-            LocalQuizService svc,
-            int quizLocalId,
-            string? token,
-            string? emailsJson)
-        {
-            if (string.IsNullOrWhiteSpace(token))
-                return null;
-
-            var quiz = await svc.GetByIdAsync(quizLocalId);
-            if (quiz?.BackendQuizId is not long bid || bid <= 0)
-                return null;
-
-            var emails = ParseEmailsPublicationJson(emailsJson);
-            if (emails.Count == 0)
-                return null;
-
-            try
-            {
-                var api = new QuizWebPublicationApiService();
-                await api.PostPublicationWebAsync(token, bid, emails);
-                return null;
-            }
-            catch (SmartestApiException ex)
-            {
-                return UserErrorMessage.FromText(ex.Message, "La synchronisation avec le serveur a echoue.");
-            }
-            catch (SmartestNetworkException ex)
-            {
-                return UserErrorMessage.FromText(ex.Message, "Connexion impossible pendant la synchronisation serveur.");
-            }
-        }
-
-        private static List<string> ParseEmailsPublicationJson(string? json)
-        {
-            var liste = new List<string>();
-            if (string.IsNullOrWhiteSpace(json))
-                return liste;
-            try
-            {
-                var raw = JsonConvert.DeserializeObject<List<string>>(json.Trim()) ?? new List<string>();
-                var vu = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                foreach (var e in raw.Where(x => !string.IsNullOrWhiteSpace(x)))
-                {
-                    var t = e.Trim().ToLowerInvariant();
-                    if (!ImportEtudiantsService.EstEmail(t) || !vu.Add(t))
-                        continue;
-                    liste.Add(t);
-                    if (liste.Count >= QuizPublicationLimits.MaxAuthorizedStudentEmails)
-                        break;
-                }
-            }
-            catch
-            {
-                // ignoré
-            }
-
-            return liste;
-        }
     }
 }

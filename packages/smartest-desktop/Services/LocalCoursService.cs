@@ -92,7 +92,6 @@ namespace smartest_desktop.Services
 
         /// <summary>
         /// Retourne les cours qui ont au moins 1 question QCM ou VF.
-        /// Utilisé dans QuizWindow pour sélectionner les cours disponibles.
         /// (Quiz = QCM/VF uniquement — pas de rédaction)
         /// </summary>
         public List<CoursLocal> GetCoursDisponiblesPourQuiz() =>

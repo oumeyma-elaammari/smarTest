@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-c:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\
+C:\Users\User\smarTest\packages\smartest-desktop\obj\Debug\net8.0-windows\
 smartest_desktop
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-c:\Users\User\smarTest\packages\smartest-desktop\App.xaml
-20-102529599
+C:\Users\User\smarTest\packages\smartest-desktop\App.xaml
+212025161865
 
-80-1195452139
+90452625448
 235612561728
-MainWindow.xaml;Views\CoursWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ExamenGenerationWindow.xaml;Views\ExamenResultWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\GroqKeySetupWindow.xaml;Views\LoginWindow.xaml;Views\QuizExamenWindow.xaml;Views\QuizGenerationWindow.xaml;Views\QuizResultWindow.xaml;Views\QuizWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;Views\StatistiquesDashboardView.xaml;Views\StatistiquesProfWindow.xaml;Views\Styles\AuthStyles.xaml;Views\Styles\GenerationSharedStyles.xaml;Views\Styles\Stylesglobal.xaml;
+MainWindow.xaml;Views\CoursWindow.xaml;Views\DashboardWindow.xaml;Views\EmailVerificationWindow.xaml;Views\ExamenGenerationWindow.xaml;Views\ExamenResultWindow.xaml;Views\ForgotPasswordWindow.xaml;Views\GroqKeySetupWindow.xaml;Views\LoginWindow.xaml;Views\MainShellWindow.xaml;Views\QuizExamenWindow.xaml;Views\QuizGenerationWindow.xaml;Views\QuizResultWindow.xaml;Views\RegisterWindow.xaml;Views\ResetPasswordWindow.xaml;Views\SettingsAccountView.xaml;Views\StatistiquesDashboardView.xaml;Views\StatistiquesProfWindow.xaml;Views\Styles\AuthStyles.xaml;Views\Styles\GenerationSharedStyles.xaml;Views\Styles\Stylesglobal.xaml;
 
 False
 

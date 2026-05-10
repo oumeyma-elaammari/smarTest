@@ -15,7 +15,6 @@ const questionWebSchema = z.object({
 export const quizPassageWebSchema = z.object({
     id: z.number(),
     titre: z.string(),
-    duree: z.number().optional(),
     nombreQuestions: z.number(),
     questions: z.array(questionWebSchema),
 })
@@ -23,7 +22,6 @@ export const quizPassageWebSchema = z.object({
 export const quizWebItemSchema = z.object({
     id: z.number(),
     titre: z.string(),
-    duree: z.number(),
     statut: z.string().optional(),
     datePublication: z.string().optional(),
     professeurNom: z.string().optional(),

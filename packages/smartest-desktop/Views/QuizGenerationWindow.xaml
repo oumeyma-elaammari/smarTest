@@ -27,7 +27,6 @@
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="*"/>
-				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
 
 		<!-- ══ HEADER ══ -->
@@ -453,10 +452,5 @@
 			</Grid>
 		</Grid>
 
-			<Border Grid.Row="2" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0" Padding="18,14">
-				<TextBlock Text="SmarTest — ENSA Oujda · Génie Informatique · 2025–2026"
-						   FontSize="11" Foreground="#aab4cc"
-						   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-			</Border>
 	</Grid>
 </Window>

@@ -34,6 +34,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+        if (path.startsWith("/api/qr-live/public/")) {
+            return true;
+        }
         return path.equals("/auth/register")
                 || path.equals("/auth/register/etudiant")
                 || path.equals("/auth/login")

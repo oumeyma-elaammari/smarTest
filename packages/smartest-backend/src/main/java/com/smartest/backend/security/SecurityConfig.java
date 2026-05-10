@@ -49,15 +49,15 @@ public class SecurityConfig {
                                 "/auth/forgot-password/professeur",
                                 "/auth/reset-password/etudiant",
                                 "/auth/reset-password/professeur",
-                                "/api/quizs/*/passage-qr",
-                                "/api/quizs/*/verifier-question-qr",
-                                "/api/quizs/*/soumettre-qr",
-                                "/ws/**"
+                                "/ws/**",
+                                "/api/qr-live/public/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions/*/reponses").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole(ROLE_ETUDIANT)
                         .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole(ROLE_ETUDIANT)
-                        .requestMatchers(HttpMethod.GET, "/api/quizs/*/stats-qr-live").hasRole(ROLE_PROFESSEUR)
-                        .requestMatchers(HttpMethod.DELETE, "/api/quizs/*/stats-qr-live").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.DELETE, "/api/qr-live/sessions/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/sync-questions-prof").hasRole(ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole(ROLE_ETUDIANT)
                         .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre").hasRole(ROLE_ETUDIANT)
                         .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre-web").hasRole(ROLE_ETUDIANT)

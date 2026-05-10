@@ -6,8 +6,8 @@ using smartest_desktop.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -36,29 +36,48 @@ namespace smartest_desktop.ViewModels
             }
         }
 
+        /// <summary>Fenêtre d’affichage du libellé « … en cours » ; le bouton reste désactivé tant que <see cref="IsPublicationEnCours"/>.</summary>
+        private bool _afficheLibelleCourtePublicationEnCours;
+        public bool AfficheLibelleCourtePublicationEnCours
+        {
+            get => _afficheLibelleCourtePublicationEnCours;
+            set
+            {
+                if (!SetProperty(ref _afficheLibelleCourtePublicationEnCours, value))
+                    return;
+                OnPropertyChanged(nameof(LibelleBoutonPublication));
+            }
+        }
+
+        private static bool EstDejaPublieSurLeWeb(QuizLocal? q) =>
+            string.Equals(q?.Statut?.Trim(), "Publié", StringComparison.OrdinalIgnoreCase);
+
         public string LibelleBoutonPublication
         {
             get
             {
-                if (IsPublicationEnCours)
-                {
-                    return "Publication en cours...";
-                }
+                if (IsPublicationEnCours && AfficheLibelleCourtePublicationEnCours)
+                    return EstDejaPublieSurLeWeb(Quiz)
+                        ? "Synchronisation en cours..."
+                        : "Publication en cours...";
 
-                return string.Equals(Quiz?.Statut?.Trim(), "Publié", StringComparison.OrdinalIgnoreCase)
-                    ? "Publié"
-                    : "Publier";
+                return EstDejaPublieSurLeWeb(Quiz) ? "Synchroniser" : "Publier";
             }
         }
 
         public bool PeutPublier =>
             !IsPublicationEnCours &&
-            string.Equals(Quiz?.Statut?.Trim(), "Validé", StringComparison.OrdinalIgnoreCase);
+            QuizExamenViewModel.EstQuizEligibleBoutonPublicationWeb(Quiz);
 
+        /// <summary>
+        /// Le passage sur la plateforme web (liste étudiants) n'est actif qu'après « Publier sur le web » (statut Publié).
+        /// Le QR temps réel est une session éphémère uniquement en mémoire serveur (<c>/api/qr-live</c> + STOMP) :
+        /// aucune écriture MySQL (<c>quiz</c>) lors du clic « Code QR ».
+        /// </summary>
         public bool PeutOuvrirCodeQr =>
             !IsPublicationEnCours &&
-            string.Equals(Quiz?.Statut?.Trim(), "Publié", StringComparison.OrdinalIgnoreCase) &&
-            Quiz?.BackendQuizId is long id && id > 0;
+            Quiz != null &&
+            Quiz.NombreQuestions > 0;
     }
 
     /// <summary>Ligne liste examen : examen + titre affiché (suffixe (2), (3) si même titre).</summary>
@@ -70,7 +89,19 @@ namespace smartest_desktop.ViewModels
 
     public class QuizExamenViewModel : BaseViewModel
     {
+        /// <summary>Première publication (Validé) ou synchro emails après publication (Publié).</summary>
+        internal static bool EstQuizEligibleBoutonPublicationWeb(QuizLocal? q)
+        {
+            if (q == null)
+                return false;
+            var s = q.Statut?.Trim();
+            return string.Equals(s, "Validé", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(s, "Publié", StringComparison.OrdinalIgnoreCase);
+        }
+
         private const int TaillePage = 5;
+        /// <summary>Durée d’affichage du texte « Publication / Synchronisation en cours » (le traitement peut être plus long).</summary>
+        private const int DureeAffichageLibellePublicationMs = 6000;
         private const string LibelleCodeQr = "Code QR";
         private const string LibellePublicationWeb = "Publication web";
         private const string DefaultWebHost = "localhost";
@@ -82,6 +113,8 @@ namespace smartest_desktop.ViewModels
         private readonly List<QuizLocal> _quizTous = new();
         private readonly List<ExamenLocal> _examensTous = new();
         private readonly HashSet<int> _quizPublicationEnCoursIds = new();
+        /// <summary>Fin d’affichage du libellé court « en cours » par quiz (UTC).</summary>
+        private readonly Dictionary<int, DateTime> _quizPublicationLibelleCourExpireUtc = new();
 
         /// <summary>Éléments affichés sur la page courante (quiz).</summary>
         public ObservableCollection<QuizListeRow> QuizPage { get; } = new();
@@ -247,7 +280,7 @@ namespace smartest_desktop.ViewModels
                 async p => await PublierSurLeWebAsync(p),
                 p => p is QuizListeRow row &&
                      !_quizPublicationEnCoursIds.Contains(row.Quiz.Id) &&
-                     EstQuizPublisableSurLeWeb(row.Quiz));
+                     EstQuizEligibleBoutonPublicationWeb(row.Quiz));
 
             SupprimerExamenCommand = new RelayCommand(
                 async p => await SupprimerExamenAsync(p),
@@ -266,6 +299,9 @@ namespace smartest_desktop.ViewModels
                 },
                 p => p is QuizListeRow);
 
+            // Ne pas restreindre CanExecute à PeutOuvrirCodeQr : cette propriété calculée ne notifie pas
+            // toujours WPF, et le bouton reste alors grisé sans explication. La logique et les messages
+            // d’erreur sont gérés dans OuvrirCodeQrQuizAsync.
             OuvrirCodeQrQuizCommand = new RelayCommand(
                 async p => await OuvrirCodeQrQuizAsync(p),
                 p => p is QuizListeRow);
@@ -398,12 +434,12 @@ namespace smartest_desktop.ViewModels
                 foreach (var q in filtered.Skip(skip).Take(TaillePage))
                 {
                     var libelle = titres.TryGetValue(q.Id, out var t) ? t : (q.Titre ?? "");
-                    QuizPage.Add(new QuizListeRow
-                    {
-                        Quiz = q,
-                        TitreAffiche = libelle,
-                        IsPublicationEnCours = _quizPublicationEnCoursIds.Contains(q.Id),
-                    });
+                    bool pubEnCours = _quizPublicationEnCoursIds.Contains(q.Id);
+                    var ligne = new QuizListeRow { Quiz = q, TitreAffiche = libelle };
+                    ligne.IsPublicationEnCours = pubEnCours;
+                    ligne.AfficheLibelleCourtePublicationEnCours =
+                        pubEnCours && PublicationLibelleCourteEncoreVisible(q.Id);
+                    QuizPage.Add(ligne);
                 }
             }
 
@@ -416,6 +452,30 @@ namespace smartest_desktop.ViewModels
 
             if (QuizPagePrecedenteCommand is RelayCommand rp) rp.RaiseCanExecuteChanged();
             if (QuizPageSuivanteCommand is RelayCommand rs) rs.RaiseCanExecuteChanged();
+
+            RafraichirCanExecutePublicationEtQr();
+        }
+
+        private bool PublicationLibelleCourteEncoreVisible(int quizId)
+        {
+            return _quizPublicationLibelleCourExpireUtc.TryGetValue(quizId, out var jusquA)
+                && DateTime.UtcNow < jusquA;
+        }
+
+        private void PlanifierFinAffichageLibelleCourtePublication(int quizId)
+        {
+            _ = Task.Delay(DureeAffichageLibellePublicationMs).ContinueWith(
+                _ =>
+                {
+                    WpfApp.Current?.Dispatcher.BeginInvoke(
+                        new Action(() =>
+                        {
+                            if (!_quizPublicationEnCoursIds.Contains(quizId))
+                                return;
+                            RafraichirPaginationQuiz();
+                        }));
+                },
+                TaskScheduler.Default);
         }
 
         private void RafraichirPaginationExamens()
@@ -455,7 +515,8 @@ namespace smartest_desktop.ViewModels
             if (ExamenPageSuivanteCommand is RelayCommand es) es.RaiseCanExecuteChanged();
         }
 
-        private async Task ChargerDonneesAsync()
+        /// <summary>Rafraîchit les listes depuis SQLite (utilisable après navigation shell).</summary>
+        public async Task ChargerDonneesAsync()
         {
             try
             {
@@ -475,9 +536,6 @@ namespace smartest_desktop.ViewModels
 
                 RafraichirPaginationQuiz();
                 RafraichirPaginationExamens();
-
-                if (PublierSurLeWebCommand is RelayCommand rpw)
-                    rpw.RaiseCanExecuteChanged();
             }
             catch (System.Exception ex)
             {
@@ -492,10 +550,10 @@ namespace smartest_desktop.ViewModels
 
             var result = MessageBox.Show(
                 $"Supprimer le quiz « {row.TitreAffiche} » ?\n\n" +
-                "Le quiz sera retiré de la plateforme pour tous les étudiants concernés " +
-                "(ils ne pourront plus y accéder sur le web). " +
-                "S'il a été synchronisé avec le serveur, la suppression côté serveur (résultats, statistiques, questions) " +
-                "doit réussir avant la suppression locale.\n\n" +
+                "Si ce quiz existe sur la plateforme (publication web ou code QR), il sera d’abord supprimé côté serveur " +
+                "avec les résultats, statistiques et données associées. La copie locale n’est effacée qu’ensuite.\n\n" +
+                "Si vous êtes connecté et qu’aucun quiz correspondant n’est trouvé sur le serveur, vous pourrez choisir " +
+                "de supprimer uniquement les données sur cet ordinateur.\n\n" +
                 "Cette action est définitive.",
                 "Confirmation de suppression",
                 MessageBoxButton.YesNo,
@@ -504,46 +562,41 @@ namespace smartest_desktop.ViewModels
             if (result != MessageBoxResult.Yes) return;
 
             var token = WpfApp.Current.Properties["Token"]?.ToString();
-            if (quiz.BackendQuizId is long bid && bid > 0)
+
+            try
             {
-                if (string.IsNullOrWhiteSpace(token))
-                {
-                    MessageBox.Show(
-                        "Ce quiz est lié au serveur (publication web). Connectez-vous pour le supprimer aussi sur la plateforme.",
-                        "Suppression impossible",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                if (!await SupprimerLocalesEtServeurAvecConfirmationLocaleAsync(quiz.Id, token))
                     return;
-                }
-
-                var api = new QuizWebPublicationApiService();
-                try
-                {
-                    await api.DeleteQuizAsync(token, bid);
-                }
-                catch (SmartestApiException ex)
-                {
-                    MessageBox.Show(
-                        "La suppression sur le serveur a échoué. Le quiz n'a pas été supprimé localement non plus.\n\n" +
-                        UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
-                        "Synchronisation serveur",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-                catch (SmartestNetworkException ex)
-                {
-                    MessageBox.Show(
-                        "La suppression sur le serveur a échoué. Le quiz n'a pas été supprimé localement non plus.\n\n" +
-                        UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
-                        "Synchronisation serveur",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
             }
-
-            await _quizService.SupprimerAsync(quiz.Id);
+            catch (InvalidOperationException iex)
+            {
+                MessageBox.Show(
+                    iex.Message,
+                    "Suppression impossible",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+            catch (SmartestApiException ex)
+            {
+                MessageBox.Show(
+                    "La suppression sur le serveur a échoué. Le quiz n'a pas été supprimé localement non plus.\n\n" +
+                    UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
+                    "Synchronisation serveur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+            catch (SmartestNetworkException ex)
+            {
+                MessageBox.Show(
+                    "La suppression sur le serveur a échoué. Le quiz n'a pas été supprimé localement non plus.\n\n" +
+                    UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
+                    "Synchronisation serveur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
             _quizTous.RemoveAll(q => q.Id == quiz.Id);
             RafraichirPaginationQuiz();
             if (SelectedQuiz?.Id == quiz.Id) SelectedQuiz = null;
@@ -553,16 +606,48 @@ namespace smartest_desktop.ViewModels
                 rqr.RaiseCanExecuteChanged();
         }
 
-        private static bool EstQuizPublisableSurLeWeb(QuizLocal q)
+        private async Task<bool> SupprimerLocalesEtServeurAvecConfirmationLocaleAsync(int quizLocalId, string? token)
         {
-            var s = q.Statut?.Trim();
-            return string.Equals(s, "Validé", StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                await _quizService.SupprimerLocalesEtServeurAsync(quizLocalId, token);
+                return true;
+            }
+            catch (QuizDeleteLocalOnlyConfirmationRequiredException ex)
+            {
+                var confirmation = MessageBox.Show(
+                    ex.Message + Environment.NewLine + Environment.NewLine +
+                    "Souhaitez-vous supprimer uniquement les données sur cet ordinateur ?",
+                    "Aucune copie correspondante sur le serveur",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (confirmation != MessageBoxResult.Yes)
+                    return false;
+
+                await _quizService.SupprimerLocalesEtServeurAsync(
+                    quizLocalId,
+                    token,
+                    forceLocalDeleteIfNoServerMatch: true);
+                return true;
+            }
         }
 
         private async Task OuvrirCodeQrQuizAsync(object? parameter)
         {
             if (parameter is not QuizListeRow row) return;
             var quiz = row.Quiz;
+
+            if (row.IsPublicationEnCours)
+            {
+                MessageBox.Show(
+                    "Une publication ou une synchronisation web est en cours pour ce quiz. " +
+                    "Attendez la fin de l’opération avant d’ouvrir le code QR.",
+                    LibelleCodeQr,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
 
             var token = WpfApp.Current.Properties["Token"]?.ToString();
             if (string.IsNullOrWhiteSpace(token))
@@ -573,42 +658,6 @@ namespace smartest_desktop.ViewModels
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;
-            }
-
-            long backendId = quiz.BackendQuizId ?? 0;
-            var apiCreate = new QuizWebPublicationApiService();
-            if (backendId <= 0)
-            {
-                try
-                {
-                    var profId = await apiCreate.GetProfesseurIdAsync(token);
-
-                    int duree = Math.Max(1, Math.Min(120, Math.Max(quiz.NombreQuestions * 2, 15)));
-                    var id = await apiCreate.CreateQuizAsync(
-                        token,
-                        string.IsNullOrWhiteSpace(quiz.Titre) ? "Quiz" : quiz.Titre.Trim(),
-                        duree,
-                        profId);
-                    backendId = id;
-                }
-                catch (SmartestApiException ex)
-                {
-                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Impossible d'activer le mode QR pour le moment."), LibelleCodeQr, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                catch (SmartestNetworkException ex)
-                {
-                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Impossible d'activer le mode QR pour le moment."), LibelleCodeQr, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                var quizPersist = await _quizService.GetByIdAsync(quiz.Id);
-                if (quizPersist != null)
-                {
-                    quizPersist.BackendQuizId = backendId;
-                    await _quizService.ModifierAsync(quizPersist);
-                }
-                quiz.BackendQuizId = backendId;
             }
 
             var quizCompletLocal = await _quizService.GetByIdAsync(quiz.Id);
@@ -623,14 +672,24 @@ namespace smartest_desktop.ViewModels
                 return;
             }
 
+            var ancienJetonQr = quizCompletLocal?.QrLiveSessionToken?.Trim();
+            if (!string.IsNullOrEmpty(ancienJetonQr))
+                await QuizQrService.SupprimerSessionQrAsync(token.Trim(), ancienJetonQr).ConfigureAwait(true);
+
+            // Pas de CreateQuiz / sync MySQL ici : le flux « Code QR » ne touche que la mémoire serveur
+            // (POST /api/qr-live/sessions + STOMP /app/quiz-qr/prof/init). La table quiz n’est écrite que par « Publier ».
+
+            string sessionJeton;
             try
             {
-                await apiCreate.SyncQrQuestionsAsync(token, backendId, questionsQr);
+                sessionJeton = await QuizQrService
+                    .InitialiserSessionQrSansUiAsync(token.Trim(), quizCompletLocal ?? quiz, questionsQr)
+                    .ConfigureAwait(true);
             }
             catch (SmartestApiException ex)
             {
                 MessageBox.Show(
-                    UserErrorMessage.FromText(ex.Message, "Impossible de synchroniser les questions du quiz pour le mode QR."),
+                    UserErrorMessage.FromText(ex.Message, "Session QR impossible (serveur)."),
                     LibelleCodeQr,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -639,27 +698,64 @@ namespace smartest_desktop.ViewModels
             catch (SmartestNetworkException ex)
             {
                 MessageBox.Show(
-                    UserErrorMessage.FromText(ex.Message, "Connexion impossible pendant la synchronisation du mode QR."),
+                    UserErrorMessage.FromText(ex.Message, "Connexion impossible pour ouvrir le mode QR."),
+                    LibelleCodeQr,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(
+                    UserErrorMessage.FromText(ex.Message, "Impossible d’ouvrir le code QR."),
+                    LibelleCodeQr,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    UserErrorMessage.FromException(ex, "Une erreur inattendue s’est produite lors de l’ouverture du code QR."),
                     LibelleCodeQr,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 return;
             }
 
-            var url = $"{GetBaseWebUrl()}/quiz-live/{backendId}?token={Uri.EscapeDataString(token)}";
+            await _quizService.DefinirQrLiveSessionTokenAsync(quiz.Id, sessionJeton).ConfigureAwait(true);
+
+            string baseWeb = FrontendPublicUrl.Resolve().TrimEnd('/');
+            string urlLive = $"{baseWeb}/quiz-live/{Uri.EscapeDataString(sessionJeton)}";
 
             try
             {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                Process.Start(new ProcessStartInfo { FileName = urlLive, UseShellExecute = true });
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    UserErrorMessage.FromException(ex, "Impossible d'ouvrir la page du mode QR pour le moment."),
+                    UserErrorMessage.FromException(ex, "Le navigateur n’a pas pu être ouvert. Le lien a été copié dans le presse-papiers."),
                     LibelleCodeQr,
                     MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    MessageBoxImage.Warning);
             }
+
+            try
+            {
+                Clipboard.SetText(urlLive);
+            }
+            catch
+            {
+                /* ignore */
+            }
+
+            MessageBox.Show(
+                "Le lien du quiz en direct a été ouvert dans votre navigateur (si possible) et copié dans le presse-papiers :\n\n"
+                + urlLive,
+                LibelleCodeQr,
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         private static bool TryGetSavedPublicationEmails(QuizLocal quiz, out List<string> emails)
@@ -700,7 +796,7 @@ namespace smartest_desktop.ViewModels
             }
 
             MessageBox.Show(
-                "Session invalide ou expirée. Reconnectez-vous pour publier sur le web.",
+                "Session invalide ou expirée. Reconnectez-vous pour publier ou synchroniser sur le web.",
                 LibellePublicationWeb,
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -736,17 +832,35 @@ namespace smartest_desktop.ViewModels
             return true;
         }
 
-        private static bool ConfirmerPublication(QuizListeRow row, QuizLocal quiz, IReadOnlyCollection<string> emails)
+        private static bool ConfirmerPublication(
+            QuizListeRow row,
+            QuizLocal quiz,
+            IReadOnlyCollection<string> emails,
+            bool estSynchronisationEmails)
         {
             var titreQuiz = string.IsNullOrWhiteSpace(quiz.Titre) ? row.TitreAffiche : quiz.Titre.Trim();
-            var confPub = MessageBox.Show(
-                $"Publier le quiz « {titreQuiz} » sur le web ?\n\n" +
-                $"{emails.Count} adresse(s) autorisée(s) : ces étudiants pourront voir et passer le quiz sur la plateforme. " +
-                "Vous pourrez modifier la liste d'emails plus tard en réouvrant le quiz et en validant les changements.\n\n" +
-                "Confirmer la publication ?",
-                $"{LibellePublicationWeb} — confirmation",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+            string corps;
+            string titreBoite;
+            if (estSynchronisationEmails)
+            {
+                titreBoite = $"{LibellePublicationWeb} — synchronisation";
+                corps =
+                    $"Synchroniser le quiz « {titreQuiz} » sur le web ?\n\n" +
+                    $"La liste d’emails autorisés sera mise à jour sur le serveur ({emails.Count} adresse(s)). " +
+                    "Les quiz déjà disponibles pour les étudiants restent inchangés hors liste d’accès.\n\n" +
+                    "Confirmer la synchronisation ?";
+            }
+            else
+            {
+                titreBoite = $"{LibellePublicationWeb} — confirmation";
+                corps =
+                    $"Publier le quiz « {titreQuiz} » sur le web ?\n\n" +
+                    $"{emails.Count} adresse(s) autorisée(s) : ces étudiants pourront voir et passer le quiz sur la plateforme. " +
+                    "Après publication, utilisez « Synchroniser » pour mettre à jour la liste d’emails.\n\n" +
+                    "Confirmer la publication ?";
+            }
+
+            var confPub = MessageBox.Show(corps, titreBoite, MessageBoxButton.YesNo, MessageBoxImage.Question);
             return confPub == MessageBoxResult.Yes;
         }
 
@@ -758,7 +872,8 @@ namespace smartest_desktop.ViewModels
                 qrCmd.RaiseCanExecuteChanged();
         }
 
-        private static async Task<long?> TryEnsureBackendQuizIdAsync(
+        /// <summary>Crée ou réutilise le quiz serveur réservé à la publication web (jamais l’id miroir QR).</summary>
+        private static async Task<long?> TryEnsureBackendQuizIdPublicationWebAsync(
             QuizWebPublicationApiService api,
             QuizLocal quiz,
             string token)
@@ -767,17 +882,15 @@ namespace smartest_desktop.ViewModels
             {
                 var profId = await api.GetProfesseurIdAsync(token);
 
-                var backendId = quiz.BackendQuizId ?? 0;
+                long backendId = quiz.BackendQuizIdPublicationWeb ?? 0;
+                if (backendId <= 0 && quiz.BackendQuizId is long leg && leg > 0)
+                    backendId = leg;
                 if (backendId > 0)
-                {
                     return backendId;
-                }
 
-                int duree = Math.Max(1, Math.Min(120, Math.Max(quiz.NombreQuestions * 2, 15)));
                 return await api.CreateQuizAsync(
                     token,
                     string.IsNullOrWhiteSpace(quiz.Titre) ? "Quiz" : quiz.Titre.Trim(),
-                    duree,
                     profId);
             }
             catch (SmartestApiException ex)
@@ -796,58 +909,100 @@ namespace smartest_desktop.ViewModels
         {
             if (parameter is not QuizListeRow row) return;
             var quiz = row.Quiz;
-            if (!EstQuizPublisableSurLeWeb(quiz)) return;
+            if (!EstQuizEligibleBoutonPublicationWeb(quiz)) return;
             if (_quizPublicationEnCoursIds.Contains(quiz.Id)) return;
+
+            bool estSynchronisationEmails = string.Equals(
+                quiz.Statut?.Trim(),
+                "Publié",
+                StringComparison.OrdinalIgnoreCase);
 
             if (!TryGetTokenForPublication(out var token)) return;
             if (!TryPrepareEmailsForPublication(quiz, out var emails)) return;
-            if (!ConfirmerPublication(row, quiz, emails)) return;
+            if (!ConfirmerPublication(row, quiz, emails, estSynchronisationEmails)) return;
 
+            var publicationFeedbackDemarreUtc = DateTime.UtcNow;
+            _quizPublicationLibelleCourExpireUtc[quiz.Id] =
+                publicationFeedbackDemarreUtc.AddMilliseconds(DureeAffichageLibellePublicationMs);
             _quizPublicationEnCoursIds.Add(quiz.Id);
             row.IsPublicationEnCours = true;
+            row.AfficheLibelleCourtePublicationEnCours = true;
+            PlanifierFinAffichageLibelleCourtePublication(quiz.Id);
             RafraichirCanExecutePublicationEtQr();
+
+            // Si la requête réussit vite, le nettoyage ne doit pas arriver avant ce délai (sinon le libellé « en cours » disparaît aussitôt).
+            var attendreDelaiMinimumFeedback = false;
+
+            var api = new QuizWebPublicationApiService();
+            var backendId = await TryEnsureBackendQuizIdPublicationWebAsync(api, quiz, token);
+            if (!backendId.HasValue)
+                goto PublicationEpilogue;
+
+            // Enregistrer l’ID serveur tout de suite : si POST publication-web échoue après création POST /api/quizs,
+            // la suppression desktop pourra quand même appeler DELETE /api/quizs/{id}.
+            var lienAvantPublication = await _quizService.GetByIdAsync(quiz.Id);
+            if (lienAvantPublication != null
+                && (lienAvantPublication.BackendQuizIdPublicationWeb == null || lienAvantPublication.BackendQuizIdPublicationWeb <= 0))
+            {
+                await _quizService.DefinirBackendQuizIdPublicationWebSiAbsenteAsync(quiz.Id, backendId.Value);
+                await _quizService.MarquerServeurOuQrPotentiellementCreeAsync(quiz.Id);
+                quiz.BackendQuizIdPublicationWeb = backendId.Value;
+                quiz.BackendQuizId = backendId.Value;
+            }
+
+            var quizComplet = await _quizService.GetByIdAsync(quiz.Id);
+            var questionsPublication = quizComplet?.Questions ?? new List<QuestionLocale>();
 
             try
             {
-                var api = new QuizWebPublicationApiService();
-                var backendId = await TryEnsureBackendQuizIdAsync(api, quiz, token);
-                if (!backendId.HasValue) return;
-
-                var quizComplet = await _quizService.GetByIdAsync(quiz.Id);
-                var questionsPublication = quizComplet?.Questions ?? new List<QuestionLocale>();
-
-                try
-                {
-                    await api.PostPublicationWebAsync(token, backendId.Value, emails, questionsPublication);
-                }
-                catch (SmartestApiException ex)
-                {
-                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "La publication web a echoue. Reessayez."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                catch (SmartestNetworkException ex)
-                {
-                    MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Connexion impossible pour publier sur le web."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                string json = JsonConvert.SerializeObject(emails);
-                await _quizService.MettreAJourPublicationWebLocaleAsync(quiz.Id, backendId.Value, json, "Publié");
-
-                // Applique immédiatement l'état publié sur la ligne courante pour éviter
-                // que "Publication en cours..." reste affiché jusqu'à un refresh d'écran.
-                quiz.Statut = "Publié";
-                row.IsPublicationEnCours = false;
-                RafraichirCanExecutePublicationEtQr();
-
-                await ChargerDonneesAsync();
+                await api.PostPublicationWebAsync(token, backendId.Value, emails, questionsPublication);
             }
-            finally
+            catch (SmartestApiException ex)
             {
-                _quizPublicationEnCoursIds.Remove(quiz.Id);
-                row.IsPublicationEnCours = false;
-                RafraichirCanExecutePublicationEtQr();
+                MessageBox.Show(UserErrorMessage.FromText(ex.Message, "La publication web a echoue. Reessayez."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
+                goto PublicationEpilogue;
             }
+            catch (SmartestNetworkException ex)
+            {
+                MessageBox.Show(UserErrorMessage.FromText(ex.Message, "Connexion impossible pour publier sur le web."), LibellePublicationWeb, MessageBoxButton.OK, MessageBoxImage.Error);
+                goto PublicationEpilogue;
+            }
+
+            string json = JsonConvert.SerializeObject(emails);
+            await _quizService.MettreAJourPublicationWebLocaleAsync(quiz.Id, backendId.Value, json, "Publié");
+
+            // Applique immédiatement l'état publié sur la ligne courante pour éviter
+            // que "Publication en cours..." reste affiché jusqu'à un refresh d'écran.
+            quiz.Statut = "Publié";
+            row.IsPublicationEnCours = false;
+            RafraichirCanExecutePublicationEtQr();
+
+            await ChargerDonneesAsync();
+            attendreDelaiMinimumFeedback = true;
+
+        PublicationEpilogue:
+            if (attendreDelaiMinimumFeedback)
+                await AttendreDelaiMinimumFeedbackPublicationAsync(
+                    publicationFeedbackDemarreUtc,
+                    DureeAffichageLibellePublicationMs);
+
+            _quizPublicationEnCoursIds.Remove(quiz.Id);
+            _quizPublicationLibelleCourExpireUtc.Remove(quiz.Id);
+            row.IsPublicationEnCours = false;
+            row.AfficheLibelleCourtePublicationEnCours = false;
+            RafraichirCanExecutePublicationEtQr();
+            RafraichirPaginationQuiz();
+        }
+
+        /// <summary>Garantit que le feedback « … en cours » reste visible au moins <paramref name="dureeMinimumMs"/> après le clic si le travail réseau s’est terminé plus tôt.</summary>
+        private static async Task AttendreDelaiMinimumFeedbackPublicationAsync(
+            DateTime publicationFeedbackDemarreUtc,
+            int dureeMinimumMs)
+        {
+            var ecouleMs = (DateTime.UtcNow - publicationFeedbackDemarreUtc).TotalMilliseconds;
+            var restantMs = dureeMinimumMs - ecouleMs;
+            if (restantMs > 0)
+                await Task.Delay((int)Math.Ceiling(restantMs));
         }
 
         private async Task SupprimerExamenAsync(object? parameter)

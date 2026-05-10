@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.smartest.backend.testsupport.MockMvcAuthenticationSupport.authenticationPrincipalUserDetailsResolver;
 import static com.smartest.backend.testsupport.MockMvcAuthenticationSupport.principal;
@@ -56,7 +57,6 @@ class QuizControllerExtendedEndpointsTest {
     private static final String EMAIL_PROF_SCHOOL = "prof@school.com";
     private static final String EMAIL_STUDENT_SCHOOL = "student@school.com";
     private static final String JSON_PATH_SCORE = "$.score";
-    private static final String QR_PARTICIPANT_KEY = "k-123";
 
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -214,39 +214,17 @@ class QuizControllerExtendedEndpointsTest {
         VerificationQuestionWebResponse resp = VerificationQuestionWebResponse.builder()
                 .correcte(true)
                 .build();
-        when(quizService.verifierQuestionPassageWeb(eq(40L), eq(EMAIL_STUDENT_SCHOOL), any(), eq("QR")))
+        when(quizService.verifierQuestionPassageWeb(eq(40L), eq(EMAIL_STUDENT_SCHOOL), any()))
                 .thenReturn(resp);
 
         mockMvc.perform(post("/api/quizs/40/verifier-question-web")
                         .with(principal(studentUser))
-                        .header("X-Quiz-Access-Mode", "QR")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.correcte").value(true));
 
-        verify(quizService).verifierQuestionPassageWeb(eq(40L), eq(EMAIL_STUDENT_SCHOOL), any(), eq("QR"));
-    }
-
-    @Test
-    void verifierQuestionQrPassesParticipantHeader() throws Exception {
-        VerificationQuestionWebRequest req = new VerificationQuestionWebRequest();
-        req.setQuestionId(1L);
-        req.setReponseId(2L);
-
-        VerificationQuestionWebResponse resp = VerificationQuestionWebResponse.builder()
-                .correcte(false)
-                .build();
-        when(quizService.verifierQuestionPassageQr(eq(40L), any(), eq(QR_PARTICIPANT_KEY))).thenReturn(resp);
-
-        mockMvc.perform(post("/api/quizs/40/verifier-question-qr")
-                        .header("X-QR-Participant", QR_PARTICIPANT_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.correcte").value(false));
-
-        verify(quizService).verifierQuestionPassageQr(eq(40L), any(), eq(QR_PARTICIPANT_KEY));
+        verify(quizService).verifierQuestionPassageWeb(eq(40L), eq(EMAIL_STUDENT_SCHOOL), any());
     }
 
     @Test
@@ -256,36 +234,17 @@ class QuizControllerExtendedEndpointsTest {
 
         ResultatQuizWebResponse out = new ResultatQuizWebResponse();
         out.setScore(100.0);
-        when(quizService.soumettreQuizWeb(eq(12L), eq(EMAIL_STUDENT_SCHOOL), any(), eq("QR")))
+        when(quizService.soumettreQuizWeb(eq(12L), eq(EMAIL_STUDENT_SCHOOL), any()))
                 .thenReturn(out);
 
         mockMvc.perform(post("/api/quizs/12/soumettre-web")
                         .with(principal(studentUser))
-                        .header("X-Quiz-Access-Mode", "QR")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(JSON_PATH_SCORE).value(100.0));
 
-        verify(quizService).soumettreQuizWeb(eq(12L), eq(EMAIL_STUDENT_SCHOOL), any(SoumissionQuizWebRequest.class), eq("QR"));
-    }
-
-    @Test
-    void soumettreQuizQrReturns200() throws Exception {
-        SoumissionQuizWebRequest req = new SoumissionQuizWebRequest();
-        req.setReponses(List.of());
-
-        ResultatQuizWebResponse out = new ResultatQuizWebResponse();
-        out.setScore(50.0);
-        when(quizService.soumettreQuizQr(9L, req)).thenReturn(out);
-
-        mockMvc.perform(post("/api/quizs/9/soumettre-qr")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath(JSON_PATH_SCORE).value(50.0));
-
-        verify(quizService).soumettreQuizQr(eq(9L), any(SoumissionQuizWebRequest.class));
+        verify(quizService).soumettreQuizWeb(eq(12L), eq(EMAIL_STUDENT_SCHOOL), any(SoumissionQuizWebRequest.class));
     }
 
     @Test
@@ -295,5 +254,19 @@ class QuizControllerExtendedEndpointsTest {
         mockMvc.perform(get("/api/quizs/30/premiere-tentative/7"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("true"));
+    }
+
+    @Test
+    void syncQuestionsProfCallsService() throws Exception {
+        doNothing().when(quizService).synchroniserQuestionsPublicationWeb(eq(7L), eq(EMAIL_PROF_SCHOOL), any());
+
+        var body = Map.of("questions", List.of());
+        mockMvc.perform(post("/api/quizs/7/sync-questions-prof")
+                        .with(principal(profUser))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk());
+
+        verify(quizService).synchroniserQuestionsPublicationWeb(eq(7L), eq(EMAIL_PROF_SCHOOL), any());
     }
 }

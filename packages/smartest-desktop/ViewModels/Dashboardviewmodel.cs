@@ -94,7 +94,14 @@ namespace smartest_desktop.ViewModels
             OpenStatistiquesCommand = new RelayCommand(_ => ExecuteOpenStatistiques());
             OpenQuizCommand = new RelayCommand(_ => ExecuteOpenQuiz());
 
+            App.ProfilMisAJour += OnProfilMisAJour;
             _ = ChargerDonnees();
+        }
+
+        private void OnProfilMisAJour(string nom, string email)
+        {
+            Nom = nom;
+            Email = email;
         }
 
         private void ExecuteOpenCours()
@@ -233,18 +240,7 @@ namespace smartest_desktop.ViewModels
         {
             try
             {
-                var hub = new Views.QuizExamenWindow();
-                hub.Show();
-                Application.Current.MainWindow = hub;
-
-                foreach (Window w in WpfApp.Current.Windows)
-                {
-                    if (w is Views.DashboardWindow)
-                    {
-                        w.Close();
-                        break;
-                    }
-                }
+                App.OuvrirShell(MainShellSection.QuizExamens);
             }
             catch (System.Exception ex)
             {
@@ -256,18 +252,7 @@ namespace smartest_desktop.ViewModels
         {
             try
             {
-                var win = new Views.StatistiquesProfWindow();
-                win.Show();
-                Application.Current.MainWindow = win;
-
-                foreach (Window w in WpfApp.Current.Windows)
-                {
-                    if (w is Views.DashboardWindow)
-                    {
-                        w.Close();
-                        break;
-                    }
-                }
+                App.OuvrirShell(MainShellSection.Statistiques);
             }
             catch (System.Exception ex)
             {

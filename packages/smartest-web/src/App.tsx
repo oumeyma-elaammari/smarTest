@@ -10,8 +10,8 @@ import EmailSent from './pages/EmailSent'
 import ResetPassword from './pages/ResetPassword'
 import ForgotPassword from './pages/ForgotPassword'
 import EmailVerification from './pages/EmailVerification'
-import QuizQrLivePage from './pages/QuizQrLivePage'
-import QuizPassageQr from './pages/QuizPassageQr'
+import QuizLive from './pages/QuizLive'
+import QuizLiveParticiper from './pages/QuizLiveParticiper'
 import Footer from './components/Footer'
 import MesQuizWeb from './pages/MesQuizWeb'
 import QuizPassageWeb from './pages/QuizPassageWeb'
@@ -146,38 +146,9 @@ export default function App() {
                     }
                 />
 
-                {/* QR : pas de navbar ni footer (écran mobile / scan) */}
-                <Route
-                    path="/quiz-qr/:quizId"
-                    element={
-                        <div
-                            style={{
-                                minHeight: '100vh',
-                                width: '100%',
-                                boxSizing: 'border-box',
-                                background: '#ffffff',
-                                padding: 'clamp(1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 2rem) 2rem',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: '100%',
-                                    maxWidth: 720,
-                                    marginTop: 'auto',
-                                    marginBottom: 'auto',
-                                    flexShrink: 0,
-                                    boxSizing: 'border-box',
-                                }}
-                            >
-                                <QuizPassageQr />
-                            </div>
-                        </div>
-                    }
-                />
-                <Route path="/quiz-live/:quizId" element={<QuizQrLivePage />} />
+                {/* QR session éphémère : aucune auth */}
+                <Route path="/quiz-live/:sessionToken/participer" element={<QuizLiveParticiper />} />
+                <Route path="/quiz-live/:sessionToken" element={<QuizLive />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </BrowserRouter>

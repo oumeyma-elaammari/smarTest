@@ -20,7 +20,8 @@ namespace smartest_desktop.ViewModels
     // PROCESSUS (étape 3) :
     //   - Affiche toutes les questions générées par Ollama
     //   - Le prof peut : sélectionner, modifier, supprimer chaque QCM
-    //   - Valider = sauvegarder en base locale (statut "Validé", prêt à publier)
+    //   - Valider = sauvegarder en base locale (statut "Validé") ; la publication sur le serveur
+    //     n’a lieu qu’après « Publier » dans Mes évaluations (pas à l’enregistrement ici).
     //   - Regénérer = retourner à la configuration
     // ═══════════════════════════════════════════════════════════════════════════
     public class QuizResultViewModel : BaseViewModel

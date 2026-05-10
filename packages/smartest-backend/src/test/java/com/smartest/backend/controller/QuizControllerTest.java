@@ -77,14 +77,12 @@ class QuizControllerTest {
         quizResponse = new QuizResponse();
         quizResponse.setId(1L);
         quizResponse.setTitre(TITRE_QUIZ_GEO);
-        quizResponse.setDuree(30);
         quizResponse.setProfesseurId(1L);
         quizResponse.setProfesseurNom("Dupont");
         quizResponse.setStatut(StatutQuiz.BROUILLON);
 
         quizRequest = new QuizRequest();
         quizRequest.setTitre(TITRE_QUIZ_GEO);
-        quizRequest.setDuree(30);
         quizRequest.setProfesseurId(1L);
     }
 
@@ -102,7 +100,6 @@ class QuizControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].titre").value(TITRE_QUIZ_GEO))
-                .andExpect(jsonPath("$[0].duree").value(30))
                 .andExpect(jsonPath("$[0].professeurNom").value("Dupont"));
     }
 
@@ -122,8 +119,7 @@ class QuizControllerTest {
         mockMvc.perform(get(API_QUIZ_1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath(JSON_TITRE).value(TITRE_QUIZ_GEO))
-                .andExpect(jsonPath("$.duree").value(30));
+                .andExpect(jsonPath(JSON_TITRE).value(TITRE_QUIZ_GEO));
     }
 
     @Test
@@ -168,21 +164,18 @@ class QuizControllerTest {
         QuizResponse updated = QuizResponse.builder()
                 .id(1L)
                 .titre(TITRE_MODIFIE)
-                .duree(60)
                 .professeurId(1L)
                 .build();
 
         when(quizService.createQuiz(any(QuizRequest.class))).thenReturn(updated);
 
         quizRequest.setTitre(TITRE_MODIFIE);
-        quizRequest.setDuree(60);
 
         mockMvc.perform(put(API_QUIZ_1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(quizRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath(JSON_TITRE).value(TITRE_MODIFIE))
-                .andExpect(jsonPath("$.duree").value(60));
+                .andExpect(jsonPath(JSON_TITRE).value(TITRE_MODIFIE));
     }
 
     @Test

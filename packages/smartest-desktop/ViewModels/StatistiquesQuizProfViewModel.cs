@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using PdfSharp;
 using PdfSharp.Drawing;
@@ -185,10 +186,56 @@ namespace smartest_desktop.ViewModels
             }
         }
 
+        /// <summary>Arrête le rafraîchissement automatique (à appeler à la fermeture de la fenêtre).</summary>
+        public void StopPeriodicRefresh()
+        {
+            if (_statsAutoRefreshTimer == null)
+                return;
+            _statsAutoRefreshTimer.Stop();
+            _statsAutoRefreshTimer.Tick -= StatsAutoRefreshTimer_Tick;
+            _statsAutoRefreshTimer = null;
+        }
+
+        private void EnsureStatsAutoRefreshStarted()
+        {
+            if (_statsAutoRefreshTimer != null)
+                return;
+            var app = WpfApp.Current;
+            if (app?.Dispatcher == null)
+                return;
+            _statsAutoRefreshTimer = new DispatcherTimer(DispatcherPriority.Background, app.Dispatcher)
+            {
+                Interval = TimeSpan.FromSeconds(8),
+            };
+            _statsAutoRefreshTimer.Tick += StatsAutoRefreshTimer_Tick;
+            _statsAutoRefreshTimer.Start();
+        }
+
+        private async void StatsAutoRefreshTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_refreshTickRunning || Chargement)
+                return;
+            var sel = _evaluationChoisi;
+            if (sel?.Type != TypeEvalStat.Quiz)
+                return;
+            _refreshTickRunning = true;
+            try
+            {
+                await ChargerDonneesAsync(sel, silentRefresh: true);
+            }
+            finally
+            {
+                _refreshTickRunning = false;
+            }
+        }
+
         public ICommand ExporterCsvCommand { get; }
         public ICommand ExporterPdfCommand { get; }
 
         private StatistiquesQuizResponseDto? _dtoPourExport;
+
+        private DispatcherTimer? _statsAutoRefreshTimer;
+        private bool _refreshTickRunning;
 
         /// <summary>Dernières stats chargées — utilisées pour les exports.</summary>
         public bool PeutExporter => DonneesChargees && _dtoPourExport != null;
@@ -449,6 +496,10 @@ namespace smartest_desktop.ViewModels
         private static bool EstQuizPublie(string? statut) =>
             string.Equals(statut?.Trim(), "Publié", StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>Id serveur pour stats publication web (colonne dédiée ou ancienne colonne unique).</summary>
+        private static long? IdPublicationWebPourStat(QuizLocal q) =>
+            q.BackendQuizIdPublicationWeb ?? q.BackendQuizId;
+
         private static bool EstExamenPublie(string? statut) =>
             string.Equals(statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase);
 
@@ -460,8 +511,8 @@ namespace smartest_desktop.ViewModels
             {
                 var quizzes = await _quizLocal.GetAllAsync();
                 var qRows = quizzes
-                    .Where(q => EstQuizPublie(q.Statut) && q.BackendQuizId is long id && id > 0)
-                    .Select(q => new StatistiqueEvalItem(TypeEvalStat.Quiz, q.BackendQuizId!.Value, q.Titre));
+                    .Where(q => EstQuizPublie(q.Statut) && IdPublicationWebPourStat(q) is long id && id > 0)
+                    .Select(q => new StatistiqueEvalItem(TypeEvalStat.Quiz, IdPublicationWebPourStat(q)!.Value, q.Titre));
 
                 var examens = await _examenLocal.GetAllAsync();
                 var eRows = examens
@@ -501,7 +552,7 @@ namespace smartest_desktop.ViewModels
             }
         }
 
-        private async Task ChargerDonneesAsync(StatistiqueEvalItem item)
+        private async Task ChargerDonneesAsync(StatistiqueEvalItem item, bool silentRefresh = false)
         {
             var app = WpfApp.Current;
             if (app == null)
@@ -533,34 +584,45 @@ namespace smartest_desktop.ViewModels
                 return;
             }
 
-            Chargement = true;
-            Erreur = null;
-            DonneesChargees = false;
+            if (!silentRefresh)
+            {
+                Chargement = true;
+                Erreur = null;
+                DonneesChargees = false;
+            }
 
             var api = new QuizStatistiquesApiService();
             var (data, err) = await api.GetStatistiquesQuizAsync(token, item.BackendId);
 
             await app.Dispatcher.InvokeAsync(() =>
             {
-                Chargement = false;
+                if (!silentRefresh)
+                    Chargement = false;
                 if (err != null)
                 {
-                    Erreur = err;
-                    ViderTableauBord(item.Titre);
-                    DonneesChargees = false;
+                    if (!silentRefresh)
+                    {
+                        Erreur = err;
+                        ViderTableauBord(item.Titre);
+                        DonneesChargees = false;
+                    }
                     return;
                 }
 
                 if (data == null)
                 {
-                    Erreur = "Réponse vide.";
-                    ViderTableauBord(item.Titre);
-                    DonneesChargees = false;
+                    if (!silentRefresh)
+                    {
+                        Erreur = "Réponse vide.";
+                        ViderTableauBord(item.Titre);
+                        DonneesChargees = false;
+                    }
                     return;
                 }
 
                 AppliquerDto(data);
                 DonneesChargees = true;
+                EnsureStatsAutoRefreshStarted();
             });
         }
 

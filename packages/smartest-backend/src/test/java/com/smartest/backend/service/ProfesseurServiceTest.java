@@ -7,7 +7,15 @@ import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.exception.AccountNotFoundException;
 import com.smartest.backend.exception.InvalidPasswordException;
 import com.smartest.backend.exception.PasswordMismatchException;
+import com.smartest.backend.repository.ExamenPublieRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.repository.QuestionRepository;
+import com.smartest.backend.repository.QuizRepository;
+import com.smartest.backend.repository.ReponseEtudiantRepository;
+import com.smartest.backend.repository.ReponseRepository;
+import com.smartest.backend.repository.ResultatRepository;
+import com.smartest.backend.repository.SessionExamenRepository;
+import com.smartest.backend.repository.StatistiqueQuestionRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -27,6 +36,14 @@ class ProfesseurServiceTest {
 
     @Mock private ProfesseurRepository professeurRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private QuizRepository quizRepository;
+    @Mock private ExamenPublieRepository examenPublieRepository;
+    @Mock private SessionExamenRepository sessionExamenRepository;
+    @Mock private StatistiqueQuestionRepository statistiqueQuestionRepository;
+    @Mock private ResultatRepository resultatRepository;
+    @Mock private ReponseEtudiantRepository reponseEtudiantRepository;
+    @Mock private ReponseRepository reponseRepository;
+    @Mock private QuestionRepository questionRepository;
     @InjectMocks private ProfesseurService professeurService;
 
     private Professeur professeur;
@@ -188,11 +205,13 @@ class ProfesseurServiceTest {
         void deleteAccount_Success() {
             when(professeurRepository.findByEmail("ikram@ensa.ma"))
                     .thenReturn(Optional.of(professeur));
-            doNothing().when(professeurRepository).delete(professeur);
+            when(quizRepository.findByProfesseurId(1L)).thenReturn(List.of());
+            when(examenPublieRepository.findByProfesseurId(1L)).thenReturn(List.of());
+            when(questionRepository.findByProfesseurId(1L)).thenReturn(List.of());
 
             professeurService.deleteAccount("ikram@ensa.ma");
 
-            verify(professeurRepository).delete(professeur);
+            verify(professeurRepository).deleteById(1L);
         }
 
         @Test

@@ -13,17 +13,13 @@ namespace smartest_desktop.Views
             {
                 vm.NavigateToDashboardRequested += () =>
                 {
-                    var dashboard = new DashboardWindow();
-                    dashboard.Show();
-                    Application.Current.MainWindow = dashboard;
+                    App.OuvrirShell(MainShellSection.Home);
                     this.Close();
                 };
 
                 vm.NavigateToStatistiquesRequested += () =>
                 {
-                    var stats = new StatistiquesProfWindow();
-                    stats.Show();
-                    Application.Current.MainWindow = stats;
+                    App.OuvrirShell(MainShellSection.Statistiques);
                     this.Close();
                 };
             }

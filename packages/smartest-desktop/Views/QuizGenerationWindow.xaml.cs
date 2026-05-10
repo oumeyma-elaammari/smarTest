@@ -1,10 +1,13 @@
 using smartest_desktop.ViewModels;
+using System.Threading;
 using System.Windows;
 
 namespace smartest_desktop.Views
 {
     public partial class QuizGenerationWindow : Window
     {
+        private int _resultQuizOuverte;
+
         public QuizGenerationWindow()
         {
             InitializeComponent();
@@ -12,11 +15,14 @@ namespace smartest_desktop.Views
             // DataContext instancié dans le XAML — on le récupère directement
             var vm = (QuizGenerationViewModel)DataContext;
 
-            // Quiz généré → ouvrir QuizResultWindow
+            // Quiz généré → ouvrir QuizResultWindow (évite double ouverture si l'événement est invoqué 2 fois)
             vm.QuizGenereAvecSucces += (questions, titre, difficulte, nbQuestions, coursTitre, emailsPublicationWebJson) =>
             {
                 Dispatcher.Invoke(() =>
                 {
+                    if (Interlocked.CompareExchange(ref _resultQuizOuverte, 1, 0) != 0)
+                        return;
+
                     var resultWindow = new QuizResultWindow(
                         questions,
                         titre,
@@ -26,7 +32,9 @@ namespace smartest_desktop.Views
                         quizIdExistant: null,
                         emailsPublicationWebJson: emailsPublicationWebJson);
                     resultWindow.Show();
-                    if (IsVisible) Close();
+                    App.GarderUneSeuleFenetreOuverte(resultWindow);
+                    if (IsVisible)
+                        Close();
                 });
             };
 
@@ -35,8 +43,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var hub = new QuizExamenWindow();
-                    hub.Show();
+                    App.OuvrirShell(MainShellSection.QuizExamens);
                     Close();
                 });
             };
@@ -45,8 +52,7 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var dashboard = new DashboardWindow();
-                    dashboard.Show();
+                    App.OuvrirShell(MainShellSection.Home);
                     Close();
                 });
             };

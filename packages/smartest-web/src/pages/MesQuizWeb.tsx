@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { quizApi, type QuizWebItem } from '../api/quizApi'
@@ -17,6 +17,9 @@ type MesQuizWebProps = {
 export type { QuizWebItem }
 
 const PAGE_SIZE = 10
+
+/** Rafraîchit la liste pour refléter publications / suppressions côté serveur (désactivé en tests Vitest). */
+const MES_QUIZ_POLL_MS = import.meta.env.MODE === 'test' ? 999999999 : 10_000
 
 function filtreOngletBtn(actif: boolean): CSSProperties {
     return {
@@ -94,32 +97,36 @@ export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) 
         [filteredItems, page],
     )
 
-    useEffect(() => {
-        let cancelled = false
-        const controller = new AbortController()
-        ;(async () => {
-            try {
-                const { data } = await quizApi.getMesPublicationsWeb(controller.signal)
-                if (cancelled) return
-                const parsed = quizWebListSchema.safeParse(data)
-                if (!parsed.success) {
-                    setErr('Format de réponse inattendu du serveur.')
-                    return
-                }
-                setItems(parsed.data)
-            } catch (e: unknown) {
-                if (cancelled) return
-                if (axios.isCancel(e)) return
-                setErr(mesPublicationsWebErrorMessage(e))
-            } finally {
-                if (!cancelled) setLoading(false)
+    const fetchMesPublications = useCallback(async (opts?: { silent?: boolean; signal?: AbortSignal }) => {
+        const silent = opts?.silent ?? false
+        if (!silent) setLoading(true)
+        try {
+            const { data } = await quizApi.getMesPublicationsWeb(opts?.signal)
+            const parsed = quizWebListSchema.safeParse(data)
+            if (!parsed.success) {
+                if (!silent) setErr('Format de réponse inattendu du serveur.')
+                return
             }
-        })()
-        return () => {
-            cancelled = true
-            controller.abort()
+            setItems(parsed.data)
+            setErr(null)
+        } catch (e: unknown) {
+            if (axios.isCancel(e)) return
+            if (!silent) setErr(mesPublicationsWebErrorMessage(e))
+        } finally {
+            if (!silent) setLoading(false)
         }
     }, [])
+
+    useEffect(() => {
+        const controller = new AbortController()
+        void fetchMesPublications({ silent: false, signal: controller.signal })
+        return () => controller.abort()
+    }, [fetchMesPublications])
+
+    useEffect(() => {
+        const id = window.setInterval(() => void fetchMesPublications({ silent: true }), MES_QUIZ_POLL_MS)
+        return () => window.clearInterval(id)
+    }, [fetchMesPublications])
 
     const barreOnglets = (
         <div
@@ -266,8 +273,7 @@ export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) 
                     alignSelf: 'center',
                 }}
             >
-                Aucun quiz ne vous est proposé pour le moment. Lorsqu’un professeur vous aura ajouté à la liste
-                d’emails autorisés, il apparaîtra ici.
+                Aucun quiz ne vous est proposé pour le moment. Lorsqu’un professeur vous aura ajouté a un quiz, il vous sera proposé.
             </p>,
         )
     }
