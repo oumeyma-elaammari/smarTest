@@ -152,7 +152,7 @@ class AuthControllerTest {
         @DisplayName("✅ 200 — Login réussi étudiant")
         void login_Returns200_Etudiant() {
             AuthResponse authResponse = new AuthResponse(
-                    "jwt-token", "ETUDIANT", "Nissrine", "nissrine@ump.ac.ma");
+                    "jwt-token", "ETUDIANT", "Nissrine", "nissrine@ump.ac.ma", 1L);
             when(authService.login(any())).thenReturn(authResponse);
 
             LoginRequest req = new LoginRequest();
@@ -172,7 +172,7 @@ class AuthControllerTest {
         @DisplayName("✅ 200 — Login réussi professeur")
         void login_Returns200_Professeur() {
             AuthResponse authResponse = new AuthResponse(
-                    "jwt-token-prof", "PROFESSEUR", "Ikram", "ikram@ensa.ma");
+                    "jwt-token-prof", "PROFESSEUR", "Ikram", "ikram@ensa.ma", 2L);
             when(authService.login(any())).thenReturn(authResponse);
 
             LoginRequest req = new LoginRequest();

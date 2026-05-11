@@ -36,6 +36,7 @@ public class ExamenSupervisionService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ExamenPublieRepository examenPublieRepository;
     private final ObjectMapper objectMapper;
+    private final EmailService emailService;
     private final Map<Long, ExamenRuntimeState> states = new ConcurrentHashMap<>();
     /** Décompte 1 s pour le minuteur de la question courante (pas de passage auto à la suivante). */
     private final Map<Long, ScheduledFuture<?>> questionTickerTasks = new ConcurrentHashMap<>();
@@ -43,10 +44,12 @@ public class ExamenSupervisionService {
 
     public ExamenSupervisionService(SimpMessagingTemplate messagingTemplate,
                                     ExamenPublieRepository examenPublieRepository,
-                                    ObjectMapper objectMapper) {
+                                    ObjectMapper objectMapper,
+                                    EmailService emailService) {
         this.messagingTemplate = messagingTemplate;
         this.examenPublieRepository = examenPublieRepository;
         this.objectMapper = objectMapper;
+        this.emailService = emailService;
     }
 
     /** Bloque la salle d’attente étudiant tant que le créneau de début n’est pas atteint côté serveur. */
@@ -84,6 +87,8 @@ public class ExamenSupervisionService {
                 state.phase
         );
         publish(examenId, "salle-attente", getSalleAttente(examenId));
+        /* Supervision et minuteurs prof : aligner participants / compteurs sur /topic/.../etat */
+        publishAndSnapshot(examenId);
         return response;
     }
 
@@ -211,6 +216,7 @@ public class ExamenSupervisionService {
         }
         state.waitingRoom.put(etudiantId, new StudentPresence(etudiantId, emailBrut.trim(), LocalDateTime.now()));
         publish(examenId, "salle-attente", getSalleAttente(examenId));
+        publishAndSnapshot(examenId);
     }
 
     public Map<String, Object> enregistrerReponseEtudiant(Long examenId, Long etudiantId, Long questionId, Long reponseId) {
@@ -260,6 +266,12 @@ public class ExamenSupervisionService {
                 .put(questionId, choix.getId());
 
         /* Actualise la supervision prof en temps réel (compteur réponses / étudiants actifs). */
+        int repCount = compterReponsesPourQuestionCourante(state, ordered, currentIdx);
+        Map<String, Object> compteurs = new LinkedHashMap<>();
+        compteurs.put("reponsesPourQuestionCourante", repCount);
+        compteurs.put("participantsEnAttente", state.waitingRoom.size());
+        compteurs.put("questionCouranteIndex", currentIdx);
+        publish(examenId, "compteurs-supervision", compteurs);
         publishAndSnapshot(examenId);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -337,8 +349,27 @@ public class ExamenSupervisionService {
                 : Math.max(0, Math.min(state.currentQuestionIndex, orderedLaunch.size() - 1));
         state.questionRemainingSeconds = Math.max(0, resolveIndicativeSeconds(exam, qi, state));
         persistStatut(examenId, StatutExamen.EN_COURS);
+        notifierEtudiantsExamenLance(examenId, exam);
         restartQuestionTicker(examenId);
         return publishAndSnapshot(examenId);
+    }
+
+    private void notifierEtudiantsExamenLance(Long examenId, ExamenPublie exam) {
+        try {
+            ExamenPublie fetched = examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(examenId).orElse(null);
+            if (fetched == null || fetched.getEmailsAutorisesWeb() == null || fetched.getEmailsAutorisesWeb().isEmpty()) {
+                return;
+            }
+            String profNom = exam.getProfesseur() != null ? exam.getProfesseur().getNom() : null;
+            String titre = exam.getTitre();
+            for (String email : fetched.getEmailsAutorisesWeb()) {
+                try {
+                    emailService.sendExamenLanceEmail(email, profNom, titre);
+                } catch (Exception ignored) {
+                }
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     public SnapshotResponse pause(Long examenId) {

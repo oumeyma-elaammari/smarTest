@@ -60,6 +60,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         professeur = new Professeur();
+        professeur.setId(101L);
         professeur.setNom("Ikram Laaroussi");
         professeur.setEmail("ikram@ensa.ma");
         professeur.setPassword("hashedPassword");
@@ -68,6 +69,7 @@ class AuthServiceTest {
         professeur.setResetPasswordExpiry(null);
 
         etudiant = new Etudiant();
+        etudiant.setId(202L);
         etudiant.setNom("Nissrine El Aammari");
         etudiant.setEmail("nissrine@ump.ac.ma");
         etudiant.setPassword("hashedPassword");
@@ -335,7 +337,7 @@ class AuthServiceTest {
         void login_Professeur_Success() {
             when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(true);
-            when(jwtUtil.generateToken("ikram@ensa.ma", "PROFESSEUR")).thenReturn("jwt-token-prof");
+            when(jwtUtil.generateToken("ikram@ensa.ma", "PROFESSEUR", 101L)).thenReturn("jwt-token-prof");
 
             AuthResponse response = authService.login(loginProfRequest);
 
@@ -343,6 +345,7 @@ class AuthServiceTest {
             assertThat(response.getRole()).isEqualTo("PROFESSEUR");
             assertThat(response.getNom()).isEqualTo("Ikram Laaroussi");
             assertThat(response.getEmail()).isEqualTo("ikram@ensa.ma");
+            assertThat(response.getUserId()).isEqualTo(101L);
         }
 
         @Test
@@ -393,7 +396,7 @@ class AuthServiceTest {
             when(professeurRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
             when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(true);
-            when(jwtUtil.generateToken("nissrine@ump.ac.ma", "ETUDIANT")).thenReturn("jwt-token-etudiant");
+            when(jwtUtil.generateToken("nissrine@ump.ac.ma", "ETUDIANT", 202L)).thenReturn("jwt-token-etudiant");
 
             AuthResponse response = authService.login(loginEtudiantRequest);
 
@@ -401,6 +404,7 @@ class AuthServiceTest {
             assertThat(response.getRole()).isEqualTo("ETUDIANT");
             assertThat(response.getNom()).isEqualTo("Nissrine El Aammari");
             assertThat(response.getEmail()).isEqualTo("nissrine@ump.ac.ma");
+            assertThat(response.getUserId()).isEqualTo(202L);
         }
 
         @Test

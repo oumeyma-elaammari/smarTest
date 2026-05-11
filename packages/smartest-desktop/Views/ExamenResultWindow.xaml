@@ -201,6 +201,8 @@
 							</TextBlock>
 							<TextBlock FontSize="11" Foreground="#475569" Margin="0,4,0,0"
 									   Text="{Binding ResumeBareme}"/>
+							<TextBlock FontSize="11" Foreground="#475569" Margin="0,2,0,0"
+									   Text="{Binding ResumeTempsIndicatifs}"/>
 							<Button Margin="0,14,0,0" HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Padding="14,9" Cursor="Hand"
@@ -622,7 +624,7 @@
                                 Padding="16,10" Margin="0,0,0,16">
 							<StackPanel>
 								<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#8899b8" Margin="0,0,0,10"
-                                           Text="Durée de référence pour cette question lors du passage sur le web (décompte côté élève). Réglable avant publication."/>
+                                           Text="Durée de référence pour cette question lors du passage sur le web (décompte côté élève). La somme des temps de toutes les questions reste égale à la durée totale de l'épreuve : en changeant une question, les autres se rééquilibrent. Réglable avant publication."/>
 								<ComboBox ItemsSource="{Binding ValeursDureeSecondesIndicative}"
                                           SelectedItem="{Binding QuestionSelectionnee.DureeSecondesIndicative, Mode=TwoWay}"
                                           FontSize="13"

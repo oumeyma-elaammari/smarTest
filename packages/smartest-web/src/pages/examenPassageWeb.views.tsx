@@ -2,6 +2,7 @@ import type { CSSProperties, ReactElement, ReactNode } from 'react'
 import { getEtatSessionLabel as getEtatLabel } from '../utils/examenDisplay'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
 import type { ExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
+import { coerceEntityId } from './examenPassageWeb.shared'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
@@ -183,7 +184,7 @@ function PauseReadonlyBlock(props: {
                     </p>
                     <ul style={{ margin: 0, paddingLeft: 18, color: '#475569' }}>
                         {reponses.map((r, idx) => (
-                            <li key={typeof r.id === 'number' ? r.id : `r-${idx}`} style={{ marginBottom: 6 }}>
+                            <li key={coerceEntityId(r.id) ?? `r-${idx}`} style={{ marginBottom: 6 }}>
                                 {r.contenu || '—'}
                             </li>
                         ))}
@@ -219,12 +220,12 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {reponses.map((r) => {
-                    const rid = typeof r.id === 'number' ? r.id : -1
-                    const checked = rid > 0 && selectedResponseId === rid
+                {reponses.map((r, idx) => {
+                    const rid = coerceEntityId(r.id)
+                    const checked = rid != null && selectedResponseId === rid
                     return (
                         <label
-                            key={rid}
+                            key={rid ?? `opt-${idx}`}
                             style={{
                                 display: 'flex',
                                 alignItems: 'flex-start',
@@ -243,7 +244,7 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
                                 checked={checked}
                                 disabled={tempsQuestionExpire}
                                 onChange={() => {
-                                    if (!tempsQuestionExpire) setSelectedResponseId(rid > 0 ? rid : null)
+                                    if (!tempsQuestionExpire && rid != null) setSelectedResponseId(rid)
                                 }}
                             />
                             <span style={{ lineHeight: 1.5, color: '#0f1e3d' }}>{r.contenu || 'Réponse'}</span>
@@ -349,12 +350,11 @@ export function ExamenBlocQuestion(props: BlocQuestionProps): ReactElement {
 type EpreuveHeaderProps = {
     meta: ExamenMeta | null
     id: number
-    tempsRestantAffiche: string | null
     canStart: boolean
     etat: string
 }
 
-function EpreuveHeader({ meta, id, tempsRestantAffiche, canStart, etat }: EpreuveHeaderProps): ReactElement {
+function EpreuveHeader({ meta, id, canStart, etat }: EpreuveHeaderProps): ReactElement {
     return (
         <div style={card}>
             <div
@@ -390,11 +390,6 @@ function EpreuveHeader({ meta, id, tempsRestantAffiche, canStart, etat }: Epreuv
                     >
                         {meta?.titre ?? `Examen #${id}`}
                     </h1>
-                    {tempsRestantAffiche != null ? (
-                        <p style={{ margin: '8px 0 0', color: '#475569', fontSize: 14 }} aria-live="polite" aria-atomic="true">
-                            Temps restant sur l’examen : <strong>{tempsRestantAffiche}</strong>
-                        </p>
-                    ) : null}
                 </div>
                 <EtatBadge canStart={canStart} etat={etat} />
             </div>
@@ -406,7 +401,6 @@ export function ExamenPassageEpreuveLayout(props: {
     shell: CSSProperties
     meta: ExamenMeta | null
     id: number
-    tempsRestantAffiche: string | null
     canStart: boolean
     etat: string
     status: string
@@ -419,7 +413,6 @@ export function ExamenPassageEpreuveLayout(props: {
         shell,
         meta,
         id,
-        tempsRestantAffiche,
         canStart,
         etat,
         status,
@@ -431,13 +424,7 @@ export function ExamenPassageEpreuveLayout(props: {
 
     return (
         <div style={shell}>
-            <EpreuveHeader
-                meta={meta}
-                id={id}
-                tempsRestantAffiche={tempsRestantAffiche}
-                canStart={canStart}
-                etat={etat}
-            />
+            <EpreuveHeader meta={meta} id={id} canStart={canStart} etat={etat} />
             <StatusWsNotices status={status} wsNotice={wsNotice} />
             <div style={card}>
                 <h2

@@ -9,7 +9,6 @@ import {
     parseDebutExamenMs,
 } from '../utils/examenDisplay'
 import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
-import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 import {
     useAutoJoinSalleAttente,
     useCreneauTicker,
@@ -26,7 +25,7 @@ import {
     useSnapClearsJoinedOnArrete,
     deriveIsEpreuvePath,
 } from './examenPassageWeb.hooks'
-import { extractApiMessage, readEtudiantId } from './examenPassageWeb.shared'
+import { coerceEntityId, extractApiMessage, readEtudiantId } from './examenPassageWeb.shared'
 import {
     ExamenBlocQuestion,
     ExamenPassageAttenteLayout,
@@ -46,7 +45,6 @@ async function soumettreReponseVersApi(opts: {
     canStart: boolean
     enPause: boolean
     setSubmittingAnswer: (v: boolean) => void
-    setLastAnsweredQuestionId: (v: number) => void
     setStatus: (v: string) => void
 }): Promise<boolean> {
     const {
@@ -57,11 +55,14 @@ async function soumettreReponseVersApi(opts: {
         canStart,
         enPause,
         setSubmittingAnswer,
-        setLastAnsweredQuestionId,
         setStatus,
     } = opts
 
     if (!Number.isFinite(id) || id <= 0) return false
+    if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
+        setStatus('Session incomplète : identifiant étudiant introuvable. Déconnectez-vous puis reconnectez-vous.')
+        return false
+    }
     if (!canStart || enPause) return false
     if (questionId === null || selectedResponseId === null) {
         setStatus('Sélectionnez une réponse avant de valider.')
@@ -71,7 +72,6 @@ async function soumettreReponseVersApi(opts: {
     try {
         setSubmittingAnswer(true)
         await examenApi.repondreQuestionCourante(id, etudiantId, questionId, selectedResponseId)
-        setLastAnsweredQuestionId(questionId)
         setStatus('Réponse enregistrée. Aucune correction immédiate n’est affichée pendant l’examen.')
         return true
     } catch (e: unknown) {
@@ -95,7 +95,6 @@ export default function ExamenPassageWeb() {
     const [status, setStatus] = useState<string>('')
     const [loading, setLoading] = useState(true)
     const [selectedResponseId, setSelectedResponseId] = useState<number | null>(null)
-    const [lastAnsweredQuestionId, setLastAnsweredQuestionId] = useState<number | null>(null)
     const [submittingAnswer, setSubmittingAnswer] = useState(false)
     const [wsNotice, setWsNotice] = useState<string | null>(null)
     const [creneauTick, setCreneauTick] = useState(0)
@@ -129,11 +128,6 @@ export default function ExamenPassageWeb() {
 
     const enPausePourTemps =
         Boolean(snap?.enPause) || (snap?.etat ?? '').trim().toUpperCase() === 'EN_PAUSE'
-    const tempsRestantAffiche = useExamenTempsRestantLive(
-        snap?.tempsRestantMinutes,
-        snap?.etat ?? meta?.statut ?? '',
-        enPausePourTemps,
-    )
     const minuteurQuestion = useExamenMinuteurQuestionLive(
         snap?.tempsQuestionRestantSeconds,
         snap?.etat ?? meta?.statut ?? '',
@@ -157,12 +151,12 @@ export default function ExamenPassageWeb() {
     const questionCouranteAvecReponses = questionCourante as
         | (typeof questionCourante & { reponses?: Array<{ id?: number; contenu?: string }> })
         | undefined
-    const questionId = typeof questionCourante?.id === 'number' ? questionCourante.id : null
+    const questionId = coerceEntityId(questionCourante?.id)
     const reponses = Array.isArray(questionCouranteAvecReponses?.reponses)
         ? (questionCouranteAvecReponses.reponses as Array<{ id?: number; contenu?: string }>)
         : []
 
-    useQuestionSelectionClear(questionId, lastAnsweredQuestionId, setSelectedResponseId)
+    useQuestionSelectionClear(questionId, setSelectedResponseId)
 
     if (!Number.isFinite(id) || id <= 0) {
         return <ExamenPassageInvalid />
@@ -183,7 +177,6 @@ export default function ExamenPassageWeb() {
             canStart,
             enPause,
             setSubmittingAnswer,
-            setLastAnsweredQuestionId,
             setStatus,
         })
         if (ok) {
@@ -253,7 +246,6 @@ export default function ExamenPassageWeb() {
                 shell={shell}
                 meta={meta}
                 id={id}
-                tempsRestantAffiche={tempsRestantAffiche}
                 canStart={canStart}
                 etat={etat}
                 status={status}

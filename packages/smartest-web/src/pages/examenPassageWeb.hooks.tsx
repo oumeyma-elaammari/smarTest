@@ -1,5 +1,5 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Client } from '@stomp/stompjs'
 import { examenApi } from '../api/examenApi'
@@ -333,20 +333,28 @@ export function useJoinedSiSessionActive(snapEtat: string | undefined, setJoined
     }, [snapEtat, setJoined])
 }
 
+/**
+ * Remet la sélection à zéro quand la question affichée change (nouvelle question ou perte temporaire du snapshot).
+ * L’ancienne logique comparait `lastAnsweredQuestionId !== questionId` : avec `lastAnswered` à null au départ,
+ * cela effaçait la sélection à chaque synchro WS où `questionId` était recalculé — le bouton « Valider » appelait l’API sans choix.
+ */
 export function useQuestionSelectionClear(
     questionId: number | null,
-    lastAnsweredQuestionId: number | null,
     setSelectedResponseId: (v: number | null) => void,
 ): void {
+    const prevQuestionIdRef = useRef<number | null>(null)
     useEffect(() => {
         if (questionId == null) {
             setSelectedResponseId(null)
+            prevQuestionIdRef.current = null
             return
         }
-        if (lastAnsweredQuestionId !== questionId) {
+        const prev = prevQuestionIdRef.current
+        if (prev != null && prev !== questionId) {
             setSelectedResponseId(null)
         }
-    }, [questionId, lastAnsweredQuestionId, setSelectedResponseId])
+        prevQuestionIdRef.current = questionId
+    }, [questionId, setSelectedResponseId])
 }
 
 export function useCreneauTicker(setCreneauTick: Dispatch<SetStateAction<number>>): void {

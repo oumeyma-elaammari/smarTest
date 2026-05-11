@@ -1572,35 +1572,17 @@ namespace smartest_desktop.ViewModels
                         /* clipboard occupé ou hors session interactive */
                     }
 
-                    string? navEchec = null;
-                    try
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = urlGestion,
-                            UseShellExecute = true
-                        });
-                    }
-                    catch (Exception exNav)
-                    {
-                        navEchec = exNav.Message;
-                    }
-
                     string ligneSync = syncCount > 0
                         ? $"{syncCount} question(s) avec propositions ont été enregistrées sur le serveur (supervision et passage élèves).\n\n"
                         : "Les étudiants listés verront l'épreuve à partir de la date prévue.\n\n";
                     string ligneClip = pressePapierOk
-                        ? "Lien de gestion copié dans le presse-papier.\n\n"
-                        : $"Copiez manuellement le lien :\n{urlGestion}\n\n";
-                    string ligneNav = navEchec == null
-                        ? "Le navigateur a été sollicité pour ouvrir la page de supervision (connectez-vous sur le web si besoin).\n\n"
-                        : $"Le navigateur n'a pas pu s'ouvrir automatiquement ({navEchec}). Ouvrez :\n{urlGestion}\n\n";
+                        ? "Lien de la page web de gestion copié dans le presse-papier (ouvrez-le quand vous voulez, ou utilisez « Lancer » au créneau).\n\n"
+                        : $"Lien de la page web de gestion (copiez-le pour plus tard) :\n{urlGestion}\n\n";
 
                     MessageBox.Show(
                         "L'examen a été publié sur le web.\n\n" +
                         ligneSync +
                         ligneClip +
-                        ligneNav +
                         $"(Gestion : supervision web, id serveur {backendId} — statut côté base « PLANIFIE » jusqu'au lancement.)",
                         LibellePublicationWeb,
                         MessageBoxButton.OK,

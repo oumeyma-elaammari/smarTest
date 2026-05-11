@@ -32,6 +32,7 @@ public class ExamenPublieService {
     private final ReponseEtudiantRepository reponseEtudiantRepository;
     private final StatistiqueQuestionRepository statistiqueQuestionRepository;
     private final ExamenSupervisionService examenSupervisionService;
+    private final EmailService emailService;
 
     private static final double BAREME_DEFAUT_WEB = 20.0;
     private static final String PROFESSEUR_INTROUVABLE = "Professeur introuvable";
@@ -104,6 +105,17 @@ public class ExamenPublieService {
             ex.setPublieSurWebLe(LocalDateTime.now());
         }
         examenPublieRepository.save(ex);
+
+        if (!ex.getEmailsAutorisesWeb().isEmpty()) {
+            String profNom = ex.getProfesseur() != null ? ex.getProfesseur().getNom() : null;
+            String titre = ex.getTitre();
+            for (String email : ex.getEmailsAutorisesWeb()) {
+                try {
+                    emailService.sendExamenPublieEmail(email, profNom, titre);
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
 
     /**

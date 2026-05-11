@@ -362,6 +362,29 @@ namespace smartest_desktop.Services
             }
         }
 
+        public async Task<JObject> AjusterMinuteurQuestionAsync(string bearerToken, long examenId, int deltaSeconds, CancellationToken cancellationToken = default)
+        {
+            using var http = CreateHttp(bearerToken);
+            try
+            {
+                var url = $"/api/examens-publies/{examenId}/controle/minuteur-question?deltaSeconds={deltaSeconds.ToString(CultureInfo.InvariantCulture)}";
+                var response = await http.PatchAsync(url, null, cancellationToken);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                    throw SmartestApiException.FromHttpFailure(response.StatusCode, body, "Ajustement minuteur question");
+                return string.IsNullOrWhiteSpace(body) ? new JObject() : JObject.Parse(body);
+            }
+            catch (SmartestApiException) { throw; }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+        }
+
         public async Task<JObject> ConfigurerModePassageAsync(string bearerToken, long examenId, string mode, int? questionDurationSeconds = null, CancellationToken cancellationToken = default)
         {
             using var http = CreateHttp(bearerToken);
