@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -83,6 +85,7 @@ public class ExamenPublieService {
 
     /**
      * Met à jour les emails web ; utilisé à la publication depuis le desktop.
+     * Envoie les notifications uniquement lors de la première publication web.
      */
     @Transactional
     public void definirEmailsPublicationWeb(Long examenId, Long professeurId, List<String> emailsBruts) {
@@ -91,6 +94,9 @@ public class ExamenPublieService {
         if (ex.getProfesseur() == null || !ex.getProfesseur().getId().equals(professeurId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cet examen n'appartient pas à votre compte");
         }
+        
+        boolean dejaWebPublie = ex.getPublieSurWebLe() != null;
+        
         ex.getEmailsAutorisesWeb().clear();
         if (emailsBruts != null) {
             for (String raw : emailsBruts) {
@@ -101,19 +107,38 @@ public class ExamenPublieService {
         }
         if (ex.getEmailsAutorisesWeb().isEmpty()) {
             ex.setPublieSurWebLe(null);
-        } else {
+        } else if (!dejaWebPublie) {
             ex.setPublieSurWebLe(LocalDateTime.now());
         }
         examenPublieRepository.save(ex);
 
-        if (!ex.getEmailsAutorisesWeb().isEmpty()) {
-            String profNom = ex.getProfesseur() != null ? ex.getProfesseur().getNom() : null;
-            String titre = ex.getTitre();
-            for (String email : ex.getEmailsAutorisesWeb()) {
-                try {
-                    emailService.sendExamenPublieEmail(email, profNom, titre);
-                } catch (Exception ignored) {
+        // Envoyer les notifications uniquement lors de la première publication web
+        if (!dejaWebPublie && !ex.getEmailsAutorisesWeb().isEmpty()) {
+            String profNom = ex.getProfesseur() != null && ex.getProfesseur().getNom() != null
+                    ? ex.getProfesseur().getNom().trim()
+                    : "Votre professeur";
+            String titreExamen = ex.getTitre() != null ? ex.getTitre() : "";
+            List<String> destinataires = new ArrayList<>(ex.getEmailsAutorisesWeb());
+
+            Runnable envoyerNotifications = () -> {
+                for (String email : destinataires) {
+                    try {
+                        emailService.sendExamenPublieEmail(email, profNom, titreExamen);
+                    } catch (Exception ex2) {
+                        // Log silencieux comme dans QuizService
+                    }
                 }
+            };
+
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        envoyerNotifications.run();
+                    }
+                });
+            } else {
+                envoyerNotifications.run();
             }
         }
     }
@@ -222,6 +247,7 @@ public class ExamenPublieService {
                 StatutExamen.EN_COURS, now, now);
     }
 
+    @Transactional
     public ExamenPublie demarrer(Long id) {
         ExamenPublie exam = examenPublieRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
@@ -232,7 +258,39 @@ public class ExamenPublieService {
         }
 
         exam.setStatut(StatutExamen.EN_COURS);
-        return examenPublieRepository.save(exam);
+        examenPublieRepository.save(exam);
+
+        // Envoyer les notifications aux étudiants autorisés
+        if (exam.getEmailsAutorisesWeb() != null && !exam.getEmailsAutorisesWeb().isEmpty()) {
+            String nomProf = exam.getProfesseur() != null && exam.getProfesseur().getNom() != null
+                    ? exam.getProfesseur().getNom().trim()
+                    : "Votre professeur";
+            String titreExamen = exam.getTitre() != null ? exam.getTitre() : "";
+            List<String> destinataires = new ArrayList<>(exam.getEmailsAutorisesWeb());
+
+            Runnable envoyerNotifications = () -> {
+                for (String email : destinataires) {
+                    try {
+                        emailService.sendExamenLanceEmail(email, nomProf, titreExamen);
+                    } catch (Exception ex) {
+                        // Log silencieux comme dans QuizService
+                    }
+                }
+            };
+
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        envoyerNotifications.run();
+                    }
+                });
+            } else {
+                envoyerNotifications.run();
+            }
+        }
+
+        return exam;
     }
 
     public ExamenPublie terminer(Long id) {

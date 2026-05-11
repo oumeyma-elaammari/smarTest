@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -103,8 +104,20 @@ public class ExamenPublieController {
             @RequestBody List<String> emails,
             @AuthenticationPrincipal UserDetails userDetails) {
         assertProfOwnsExamenByEmail(id, userDetails.getUsername());
-        Map<String, Object> body = supervisionService.definirEmailsAutorises(id, emails);
-        return ResponseEntity.ok(body);
+        
+        // Récupérer le professeurId pour appeler la méthode correcte
+        String emailProf = normalize(userDetails.getUsername());
+        Professeur prof = professeurRepository.findByEmailIgnoreCase(emailProf)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Professeur introuvable"));
+        
+        examenPublieService.definirEmailsPublicationWeb(id, prof.getId(), emails);
+        
+        // Retourner une réponse cohérente avec l'ancienne implémentation
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("examenId", id);
+        response.put("nombreEmailsAutorises", emails != null ? emails.size() : 0);
+        response.put("emailsAutorises", emails != null ? emails : List.of());
+        return ResponseEntity.ok(response);
     }
 
     /** Synchronise le contenu QCM (comme le quiz web) : indispensable pour la supervision et le passage étudiant. */

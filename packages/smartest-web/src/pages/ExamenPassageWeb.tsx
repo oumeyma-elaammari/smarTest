@@ -9,6 +9,7 @@ import {
     parseDebutExamenMs,
 } from '../utils/examenDisplay'
 import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
+import { useExamenWebSocketReponse } from '../hooks/useExamenWebSocketReponse'
 import {
     useAutoJoinSalleAttente,
     useCreneauTicker,
@@ -162,6 +163,8 @@ export default function ExamenPassageWeb() {
         return <ExamenPassageInvalid />
     }
 
+    const { envoyerReponseWebSocket } = useExamenWebSocketReponse()
+
     const soumettreReponseCourante = async () => {
         if (minuteurQuestion.isExpired) {
             setStatus(
@@ -169,6 +172,17 @@ export default function ExamenPassageWeb() {
             )
             return
         }
+        
+        // Envoyer via WebSocket pour mise à jour temps réel immédiate
+        if (questionId && selectedResponseId) {
+            envoyerReponseWebSocket({
+                examenId: id,
+                etudiantId,
+                questionId,
+                reponseId: selectedResponseId,
+            })
+        }
+
         const ok = await soumettreReponseVersApi({
             id,
             etudiantId,
