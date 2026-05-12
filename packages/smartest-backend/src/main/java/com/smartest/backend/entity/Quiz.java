@@ -6,7 +6,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -20,13 +22,12 @@ public class Quiz {
     private Long id;
 
     private String titre;
-    private Integer duree;
 
-    // 🔥 NOUVEAU
+    // NOUVEAU
     @Enumerated(EnumType.STRING)
     private StatutQuiz statut;   // BROUILLON / PUBLIE
 
-    // 🔥 NOUVEAU
+    // NOUVEAU
     private LocalDateTime datePublication;
 
     @ManyToOne
@@ -43,5 +44,13 @@ public class Quiz {
             inverseJoinColumns = @JoinColumn(name = "question_id")
     )
     private List<Question> questions = new ArrayList<>();
+
+    /**
+     * Emails autorisés à voir / passer ce quiz sur le web (publication web, hors QR).
+     */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "quiz_email_web_autorise", joinColumns = @JoinColumn(name = "quiz_id"))
+    @Column(name = "email", nullable = false, length = 320)
+    private Set<String> emailsAutorisesWeb = new LinkedHashSet<>();
 
 }

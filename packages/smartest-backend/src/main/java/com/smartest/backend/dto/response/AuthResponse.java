@@ -17,4 +17,7 @@ public class AuthResponse {
     private String nom;
 
     private String email;
+
+    /** Identifiant base (professeur ou étudiant), pour les appels API paramétrés par id. */
+    private Long userId;
 }

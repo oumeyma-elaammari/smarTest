@@ -21,7 +21,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
-        var prof = professeurRepository.findByEmail(email);
+        var prof = professeurRepository.findByEmailIgnoreCase(email.strip());
         if (prof.isPresent()) {
             return User.builder()
                     .username(prof.get().getEmail())

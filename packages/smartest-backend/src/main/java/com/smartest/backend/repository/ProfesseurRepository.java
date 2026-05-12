@@ -7,6 +7,9 @@ import java.util.Optional;
 
 public interface ProfesseurRepository extends JpaRepository<Professeur, Long> {
     Optional<Professeur> findByEmail(String email);
+
+    /** Comparateur insensible à la casse (évite les 403 Postgres / JWT vs métadonnées). */
+    Optional<Professeur> findByEmailIgnoreCase(String email);
     boolean existsByEmail(String email);
     Optional<Professeur> findByTokenVerification(String token);
     Optional<Professeur> findByResetPasswordToken(String token);

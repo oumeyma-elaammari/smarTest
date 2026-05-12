@@ -5,11 +5,14 @@ using System.Windows;
 using System.Text.Json;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace smartest_desktop.Views
 {
     public partial class QuizExamenWindow : Window
     {
+        private int _navigationDetailVerrouillee;
+
         public QuizExamenWindow()
         {
             InitializeComponent();
@@ -18,27 +21,31 @@ namespace smartest_desktop.Views
             {
                 vm.NavigateToQuizGeneration += () =>
                 {
-                    var quizGen = new QuizGenerationWindow();
-                    quizGen.Show();
-                    this.Hide();
+                    App.OuvrirShell(MainShellSection.QuizGeneration);
                 };
 
                 vm.NavigateToExamenGeneration += () =>
                 {
-                    var examenGen = new ExamenGenerationWindow();
-                    examenGen.Show();
-                    this.Close();
+                    App.OuvrirShell(MainShellSection.ExamenGeneration);
                 };
 
                 vm.NavigateToDashboard += () =>
                 {
-                    var dashboard = new DashboardWindow();
-                    dashboard.Show();
-                    this.Close();
+                    App.OuvrirShell(MainShellSection.Home);
+                };
+
+                vm.OuvrirStatistiques += () =>
+                {
+                    App.OuvrirShell(MainShellSection.Statistiques);
                 };
 
                 vm.NavigateToQuizDetails += async quiz =>
                 {
+                    if (Interlocked.CompareExchange(ref _navigationDetailVerrouillee, 1, 0) != 0)
+                        return;
+
+                    try
+                    {
                     var quizService = new LocalQuizService(App.LocalDb);
                     var quizComplet = await quizService.GetByIdAsync(quiz.Id);
                     if (quizComplet == null)
@@ -52,12 +59,15 @@ namespace smartest_desktop.Views
                         .Select(q => new QuestionQCM
                         {
                             Numero = q.Numero,
+                            Type = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? "VF" : "QCM",
                             Enonce = q.Enonce,
-                            OptionA = q.OptionA,
-                            OptionB = q.OptionB,
-                            OptionC = q.OptionC,
-                            OptionD = q.OptionD,
-                            ReponseCorrecte = q.ReponseCorrecte,
+                            OptionA = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? "Vrai" : q.OptionA,
+                            OptionB = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? "Faux" : q.OptionB,
+                            OptionC = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? string.Empty : q.OptionC,
+                            OptionD = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase) ? string.Empty : q.OptionD,
+                            ReponseCorrecte = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase)
+                                ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
+                                : q.ReponseCorrecte,
                             Explication = q.Explication
                         })
                         .ToList();
@@ -74,14 +84,27 @@ namespace smartest_desktop.Views
                         quizComplet.Difficulte,
                         quizComplet.CoursSourceTitre,
                         quizComplet.Statut,
-                        quizComplet.Id);
+                        quizComplet.Id,
+                        emailsPublicationWebJson: quizComplet.EmailsPublicationWebJson);
 
                     resultWindow.Show();
-                    this.Close();
+                    App.GarderUneSeuleFenetreOuverte(resultWindow);
+                    if (IsVisible)
+                        Close();
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _navigationDetailVerrouillee, 0);
+                    }
                 };
 
                 vm.NavigateToExamenDetails += async examen =>
                 {
+                    if (Interlocked.CompareExchange(ref _navigationDetailVerrouillee, 1, 0) != 0)
+                        return;
+
+                    try
+                    {
                     var examenService = new LocalExamenService(App.LocalDb);
                     var examenComplet = await examenService.GetByIdAsync(examen.Id);
                     if (examenComplet == null)
@@ -113,16 +136,27 @@ namespace smartest_desktop.Views
                         examenComplet.Duree,
                         difficulte,
                         coursTitre,
-                        examenComplet.Id);
+                        examenComplet.Id,
+                        statutExamen: examenComplet.Statut ?? "BROUILLON",
+                        emailsPublicationWebJson: examenComplet.EmailsPublicationWebJson,
+                        datePrevue: examenComplet.DatePrevue);
 
                     resultWindow.Show();
-                    this.Close();
+                    App.GarderUneSeuleFenetreOuverte(resultWindow);
+                    if (IsVisible)
+                        Close();
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _navigationDetailVerrouillee, 0);
+                    }
                 };
             }
         }
 
         private static QuestionExamen ConvertirQuestionExamen(QuestionLocale q)
         {
+            bool isVf = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase);
             var vm = new QuestionExamen
             {
                 Numero = q.Numero,
@@ -130,12 +164,16 @@ namespace smartest_desktop.Views
                 Enonce = q.Enonce,
                 Difficulte = string.IsNullOrWhiteSpace(q.Difficulte) ? "Moyen" : q.Difficulte,
                 Explication = q.Explication,
-                OptionA = q.OptionA,
-                OptionB = q.OptionB,
-                OptionC = q.OptionC,
-                OptionD = q.OptionD,
-                ReponseCorrecte = q.ReponseCorrecte,
+                OptionA = isVf ? "Vrai" : q.OptionA,
+                OptionB = isVf ? "Faux" : q.OptionB,
+                OptionC = isVf ? string.Empty : q.OptionC,
+                OptionD = isVf ? string.Empty : q.OptionD,
+                ReponseCorrecte = isVf
+                    ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
+                    : q.ReponseCorrecte,
                 ReponseModele = q.ReponseModele,
+                BaremePoints = q.BaremePoints,
+                DureeSecondesIndicative = ExamenResultViewModel.SnapDureeVersPreset(q.DureeSecondesIndicative),
                 ImageBase64 = q.ImageBase64,
                 ImageType = q.ImageType,
                 ImageNom = q.ImageNom

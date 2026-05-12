@@ -3,6 +3,7 @@ package com.smartest.backend.security;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,6 +21,8 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private static final String ROLE_ETUDIANT = "ETUDIANT";
+    private static final String ROLE_PROFESSEUR = "PROFESSEUR";
 
     private final JwtAuthFilter jwtAuthFilter;
 
@@ -46,14 +49,40 @@ public class SecurityConfig {
                                 "/auth/forgot-password/professeur",
                                 "/auth/reset-password/etudiant",
                                 "/auth/reset-password/professeur",
-                                "/ws/**"
+                                "/ws/**",
+                                "/api/qr-live/public/**"
                         ).permitAll()
-                        .requestMatchers("/api/quiz/publies").hasRole("ETUDIANT")
-                        .requestMatchers("/api/quiz/*/soumettre").hasRole("ETUDIANT")
-                        .requestMatchers("/api/quiz/*/publier").hasRole("PROFESSEUR")
+                        // Preflight navigateur (Axios PATCH depuis un autre port ex. :5173 → :8081) : sans JWT.
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions/*/reponses").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/mes-publications-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web")
+                                .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata")
+                                .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.DELETE, "/api/qr-live/sessions/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/sync-questions-prof").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/quizs/publies").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/soumettre-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/verifier-question-web").hasRole(ROLE_ETUDIANT)
+                        .requestMatchers(HttpMethod.POST, "/api/quizs/*/publication-web").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.DELETE, "/api/quizs/*").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.PATCH, "/api/quizs/*/publier").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.GET, "/api/statistiques/**").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.DELETE, "/api/examens-publies/*").hasRole(ROLE_PROFESSEUR)
+                        /* Même motif qu’ailleurs (* segment) : évite tout décalage PathPattern / variables {id}. */
+                        .requestMatchers("/api/examens-publies/*/supervision/**").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.PATCH, "/api/examens-publies/*/controle/**")
+                                .hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.PATCH, "/api/examens-publies/*/bareme").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers(HttpMethod.POST, "/api/examens-publies/*/publication-web/**")
+                                .hasRole(ROLE_PROFESSEUR)
                         .requestMatchers("/api/examens-publies/**").authenticated()
-                        .requestMatchers("/api/professeur/**").hasRole("PROFESSEUR")
-                        .requestMatchers("/api/etudiant/**").hasRole("ETUDIANT")
+                        .requestMatchers("/api/professeur/**").hasRole(ROLE_PROFESSEUR)
+                        .requestMatchers("/api/etudiant/**").hasRole(ROLE_ETUDIANT)
                         .anyRequest().authenticated()
                 )
 
@@ -82,7 +111,7 @@ public class SecurityConfig {
 
         // ✅ Autorise React web (localhost:5173) + app desktop WPF (sans Origin header)
         config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(false); // false car desktop n'envoie pas de cookies
 

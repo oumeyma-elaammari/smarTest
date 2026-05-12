@@ -1,17 +1,21 @@
 spring:
+  config:
+    import: optional:classpath:application-local.yaml
+
   application:
     name: smarTest-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/smartest_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: 
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/smartest_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    # Mot de passe : variable SPRING_DATASOURCE_PASSWORD ou fichier application-local.yaml (voir application-local.example.yaml)
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     open-in-view: false
     properties:
       hibernate:
@@ -21,7 +25,9 @@ spring:
           time_zone: UTC
 
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
 
   mail:
     host: smtp.gmail.com
@@ -36,7 +42,7 @@ spring:
             enable: true
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8082}
 
 app:
   jwt:
@@ -45,3 +51,12 @@ app:
 
   websocket:
     allowed-origins: http://localhost:5173
+
+  web:
+    # Lien affiché dans l’email « nouveau quiz publié » (espace étudiant web)
+    dashboard-url: http://localhost:5173/dashboard
+
+  flyway:
+    # true = appelle flyway.repair() avant migrate (réaligne les checksums si un script
+    # déjà appliqué a changé, ex. V7). Remettre à false après un démarrage réussi en dev.
+    repair-before-migrate: true

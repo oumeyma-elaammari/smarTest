@@ -160,8 +160,8 @@ export function inputStyle(hasError: boolean): React.CSSProperties {
 // ════════════════════════════════════════════════════
 
 export function Alert({ type, children }: {
-    type: 'success' | 'error'
-    children: React.ReactNode
+    readonly type: 'success' | 'error'
+    readonly children: React.ReactNode
 }) {
     const ok = type === 'success'
     return (
@@ -183,9 +183,9 @@ export function Alert({ type, children }: {
 }
 
 export function Field({ label, error, children }: {
-    label: string
-    error?: string
-    children: React.ReactNode
+    readonly label: string
+    readonly error?: string
+    readonly children: React.ReactNode
 }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
@@ -202,7 +202,7 @@ export function Field({ label, error, children }: {
     )
 }
 
-export function EyeBtn({ show, onClick }: { show: boolean; onClick: () => void }) {
+export function EyeBtn({ show, onClick }: { readonly show: boolean; readonly onClick: () => void }) {
     return (
         <button type="button" onClick={onClick} tabIndex={-1} style={{
             position: 'absolute', right: 10, top: '50%',
@@ -219,7 +219,7 @@ export function EyeBtn({ show, onClick }: { show: boolean; onClick: () => void }
     )
 }
 
-export function BackLink({ to }: { to: string }) {
+export function BackLink({ to }: { readonly to: string }) {
     return (
         <div style={{ textAlign: 'center', marginTop: '1.125rem' }}>
             <Link to={to} style={backLinkStyle}
@@ -232,7 +232,7 @@ export function BackLink({ to }: { to: string }) {
     )
 }
 
-export function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
+export function NavLink({ to, children }: { readonly to: string; readonly children: React.ReactNode }) {
     return (
         <Link to={to} style={linkStyle}
             onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
@@ -252,7 +252,6 @@ export function Divider() {
         </div>
     )
 }
-
 export function Footer() {
     return (
         <div style={footerStyle}>
@@ -260,3 +259,4 @@ export function Footer() {
         </div>
     )
 }
+

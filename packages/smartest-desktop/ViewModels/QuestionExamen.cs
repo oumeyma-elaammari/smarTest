@@ -5,7 +5,7 @@ namespace smartest_desktop.ViewModels
     /// <summary>
     /// Modèle UI temporaire d'une question d'examen générée par Ollama.
     /// Utilisé entre la génération et la sauvegarde en base locale.
-    /// Types : QCM | CHECKBOX | REDACTION | IMAGE
+    /// Types : QCM | VF | CHECKBOX | REDACTION | IMAGE
     /// </summary>
     public class QuestionExamen : BaseViewModel
     {
@@ -26,6 +26,9 @@ namespace smartest_desktop.ViewModels
             {
                 SetProperty(ref _type, value);
                 OnPropertyChanged(nameof(IsQCM));
+                OnPropertyChanged(nameof(IsVF));
+                OnPropertyChanged(nameof(IsQcmOuVf));
+                OnPropertyChanged(nameof(HasQuatreOptions));
                 OnPropertyChanged(nameof(IsCheckbox));
                 OnPropertyChanged(nameof(IsRedaction));
                 OnPropertyChanged(nameof(IsImage));
@@ -57,6 +60,21 @@ namespace smartest_desktop.ViewModels
         {
             get => _explication;
             set => SetProperty(ref _explication, value);
+        }
+
+        private double _baremePoints;
+        public double BaremePoints
+        {
+            get => _baremePoints;
+            set => SetProperty(ref _baremePoints, Math.Max(0, value));
+        }
+
+        /// <summary>Durée indicative pour le passage web (secondes), comme le barème.</summary>
+        private int _dureeSecondesIndicative = 60;
+        public int DureeSecondesIndicative
+        {
+            get => _dureeSecondesIndicative;
+            set => SetProperty(ref _dureeSecondesIndicative, Math.Clamp(value, 5, 7200));
         }
 
         // ── Options (QCM / CHECKBOX / IMAGE) ─────────────────────────────────
@@ -147,14 +165,18 @@ namespace smartest_desktop.ViewModels
         // ── Computed booleans ────────────────────────────────────────────────
 
         public bool IsQCM       => Type == "QCM";
+        public bool IsVF        => Type == "VF";
+        public bool IsQcmOuVf   => Type is "QCM" or "VF";
+        public bool HasQuatreOptions => Type is "QCM" or "CHECKBOX" or "IMAGE";
         public bool IsCheckbox  => Type == "CHECKBOX";
         public bool IsRedaction => Type == "REDACTION";
         public bool IsImage     => Type == "IMAGE";
-        public bool HasOptions  => Type is "QCM" or "CHECKBOX" or "IMAGE";
+        public bool HasOptions  => Type is "QCM" or "VF" or "CHECKBOX" or "IMAGE";
 
         public string TypeLabel => Type switch
         {
             "QCM"       => "Choix multiple",
+            "VF"        => "Vrai / Faux",
             "CHECKBOX"  => "Cases à cocher",
             "REDACTION" => "Rédaction",
             "IMAGE"     => "Avec image",
@@ -164,6 +186,7 @@ namespace smartest_desktop.ViewModels
         public string TypeColor => Type switch
         {
             "QCM"       => "#0369A1",
+            "VF"        => "#0F766E",
             "CHECKBOX"  => "#7C3AED",
             "REDACTION" => "#B45309",
             "IMAGE"     => "#0F766E",
@@ -173,6 +196,7 @@ namespace smartest_desktop.ViewModels
         public string TypeBackground => Type switch
         {
             "QCM"       => "#F0F9FF",
+            "VF"        => "#F0FDFA",
             "CHECKBOX"  => "#F5F3FF",
             "REDACTION" => "#FFFBEB",
             "IMAGE"     => "#F0FDFA",

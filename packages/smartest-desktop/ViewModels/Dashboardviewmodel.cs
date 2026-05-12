@@ -78,6 +78,7 @@ namespace smartest_desktop.ViewModels
         public ICommand LogoutCommand { get; }
         public ICommand OpenCoursCommand { get; }
         public ICommand OpenQuizCommand { get; }
+        public ICommand OpenStatistiquesCommand { get; }
 
         public DashboardViewModel()
         {
@@ -90,9 +91,17 @@ namespace smartest_desktop.ViewModels
             OpenCoursCommand = new RelayCommand(_ => ExecuteOpenCours());
 
 
+            OpenStatistiquesCommand = new RelayCommand(_ => ExecuteOpenStatistiques());
             OpenQuizCommand = new RelayCommand(_ => ExecuteOpenQuiz());
 
+            App.ProfilMisAJour += OnProfilMisAJour;
             _ = ChargerDonnees();
+        }
+
+        private void OnProfilMisAJour(string nom, string email)
+        {
+            Nom = nom;
+            Email = email;
         }
 
         private void ExecuteOpenCours()
@@ -115,7 +124,11 @@ namespace smartest_desktop.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    UserErrorMessage.FromException(ex, "Impossible d'ouvrir cette page pour le moment."),
+                    "Erreur",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
@@ -227,25 +240,27 @@ namespace smartest_desktop.ViewModels
         {
             try
             {
-                var hub = new Views.QuizExamenWindow();
-                hub.Show();
-                Application.Current.MainWindow = hub;
-
-                foreach (Window w in WpfApp.Current.Windows)
-                {
-                    if (w is Views.DashboardWindow)
-                    {
-                        w.Close();
-                        break;
-                    }
-                }
+                App.OuvrirShell(MainShellSection.QuizExamens);
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Erreur : {ex.Message}", "Erreur",
+                MessageBox.Show(UserErrorMessage.FromException(ex, "Impossible d'ouvrir cette page pour le moment."), "Erreur",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void ExecuteOpenStatistiques()
+        {
+            try
+            {
+                App.OuvrirShell(MainShellSection.Statistiques);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(UserErrorMessage.FromException(ex, "Impossible d'ouvrir cette page pour le moment."), "Erreur",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
 
     }
 }

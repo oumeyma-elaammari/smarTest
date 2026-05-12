@@ -1,17 +1,24 @@
 package com.smartest.backend.service;
 
+import com.smartest.backend.exception.EmailSendException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+    private static final String BONJOUR = "Bonjour,\n\n";
+    private static final String SIGNATURE = "L'équipe SmarTest";
 
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+
+    @Value("${app.web.dashboard-url:http://localhost:5173/dashboard}")
+    private String webDashboardUrl;
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -25,14 +32,14 @@ public class EmailService {
         message.setTo(toEmail);
         message.setSubject("SmarTest — Confirmez votre email");
         message.setText(
-                "Bonjour,\n\n" +
+                BONJOUR +
                         "Merci de vous être inscrit sur SmarTest.\n\n" +
                         "Cliquez sur le lien ci-dessous pour confirmer votre email :\n\n" +
                         link + "\n\n" +
                         "Ce lien expire dans 24h.\n\n" +
-                        "L'équipe SmarTest"
+                        SIGNATURE
         );
-        mailSender.send(message);
+        envoyer(message);
     }
 
     public void sendVerificationCode(String email, String code) {
@@ -41,12 +48,12 @@ public class EmailService {
         message.setTo(email);
         message.setSubject("SmarTest — Code de vérification");
         message.setText(
-                "Bonjour,\n\n" +
+                BONJOUR +
                         "Votre code de vérification est : " + code + "\n\n" +
                         "Ce code expire dans 15 minutes.\n\n" +
-                        "L'équipe SmarTest"
+                        SIGNATURE
         );
-        mailSender.send(message);
+        envoyer(message);
     }
 
 
@@ -59,7 +66,7 @@ public class EmailService {
 
         if ("PROFESSEUR".equals(role)) {
             message.setText(
-                    "Bonjour,\n\n" +
+                    BONJOUR +
                             "Vous avez demandé à réinitialiser votre mot de passe.\n\n" +
                             "Votre code de réinitialisation (valable 15 minutes) :\n\n" +
                             "━━━━━━━━━━━━━━━━━━━━━━\n" +
@@ -67,20 +74,93 @@ public class EmailService {
                             "━━━━━━━━━━━━━━━━━━━━━━\n\n" +
                             "Copiez ce code dans l'application SmarTest Desktop.\n\n" +
                             "Si vous n'avez pas fait cette demande, ignorez cet email.\n\n" +
-                            "L'équipe SmarTest"
+                            SIGNATURE
             );
         } else {
             String link = "http://localhost:5173/reset-password?token=" + token;
             message.setText(
-                    "Bonjour,\n\n" +
+                    BONJOUR +
                             "Vous avez demandé à réinitialiser votre mot de passe.\n\n" +
                             "Cliquez sur le lien ci-dessous (valable 15 minutes) :\n\n" +
                             link + "\n\n" +
                             "Si vous n'avez pas fait cette demande, ignorez cet email.\n\n" +
-                            "L'équipe SmarTest"
+                            SIGNATURE
             );
         }
 
-        mailSender.send(message);
+        envoyer(message);
+    }
+
+
+    /**
+     * Notifie un etudiant autorise qu'un examen vient d'etre publie (acces web active).
+     */
+    public void sendExamenPublieEmail(String toEmail, String professeurNom, String examenTitre) {
+        String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
+        String titre = examenTitre != null && !examenTitre.isBlank() ? examenTitre.trim() : "Examen";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("SmarTest — Nouvel examen publié : " + titre);
+        message.setText(
+                BONJOUR +
+                        "Le professeur " + nom + " a publié un nouvel examen : « " + titre + " ».\n\n" +
+                        "Vous êtes autorisé(e) à le passer. Connectez-vous à votre espace pour y accéder :\n" +
+                        webDashboardUrl + "\n\n" +
+                        SIGNATURE
+        );
+        envoyer(message);
+    }
+
+    /**
+     * Notifie un etudiant autorise qu'un examen vient d'etre lance (session demarree).
+     */
+    public void sendExamenLanceEmail(String toEmail, String professeurNom, String examenTitre) {
+        String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
+        String titre = examenTitre != null && !examenTitre.isBlank() ? examenTitre.trim() : "Examen";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("SmarTest — Examen lancé : " + titre);
+        message.setText(
+                BONJOUR +
+                        "L'examen « " + titre + " » organisé par le professeur " + nom
+                        + " vient d'être lancé. La session est maintenant EN COURS.\n\n" +
+                        "Connectez-vous immédiatement à votre espace pour commencer :\n" +
+                        webDashboardUrl + "\n\n" +
+                        SIGNATURE
+        );
+        envoyer(message);
+    }
+
+    /**
+     * Notifie un étudiant autorisé qu’un quiz vient d’être publié sur le web.
+     */
+    public void sendQuizWebPublishedEmail(String toEmail, String professeurNom, String quizTitre) {
+        String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
+        String titre = quizTitre != null && !quizTitre.isBlank() ? quizTitre.trim() : "Quiz";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("SmarTest — Nouveau quiz publié");
+        message.setText(
+                BONJOUR +
+                        "Le professeur " + nom + " a publié un nouveau quiz : « " + titre + " ».\n\n" +
+                        "Connectez-vous à votre espace pour le passer :\n" +
+                        webDashboardUrl + "\n\n" +
+                        "— L'équipe SmarTest"
+        );
+        envoyer(message);
+    }
+
+    private void envoyer(SimpleMailMessage message) {
+        try {
+            mailSender.send(message);
+        } catch (MailException ex) {
+            throw new EmailSendException("Échec de l'envoi de l'email (service de messagerie indisponible).", ex);
+        }
     }
 }

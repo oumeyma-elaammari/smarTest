@@ -1,8 +1,10 @@
 using smartest_desktop.Data.LocalEntities;
+using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using smartest_desktop.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,15 +13,23 @@ namespace smartest_desktop.Views
 {
     public partial class ExamenResultWindow : Window
     {
+        private bool _fermetureConfirmee;
+        private bool _isClosing;
+        private bool _navigationInProgress;
+
         public ExamenResultWindow(
             List<QuestionExamen> questions,
             string titre,
             int duree,
             string difficulte,
             string coursTitre,
-            int? examenIdExistant = null)
+            int? examenIdExistant = null,
+            string statutExamen = "BROUILLON",
+            string? emailsPublicationWebJson = null,
+            DateTime? datePrevue = null)
         {
             InitializeComponent();
+            Closing += ExamenResultWindow_Closing;
 
             Func<Task>? supprimerPersistant = null;
             if (examenIdExistant is int idEx)
@@ -38,16 +48,21 @@ namespace smartest_desktop.Views
                 difficulte,
                 coursTitre,
                 examenIdExistant,
-                supprimerPersistant);
+                supprimerPersistant,
+                statutExamen,
+                emailsPublicationWebJson,
+                datePrevue);
             DataContext = vm;
 
             vm.NavigationRetourRequested += () =>
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var hub = new QuizExamenWindow();
-                    hub.Show();
-                    Close();
+                    _fermetureConfirmee = true;
+                    _navigationInProgress = true;
+                    App.OuvrirShell(MainShellSection.QuizExamens);
+                    if (!_isClosing)
+                        Close();
                 });
             };
 
@@ -55,13 +70,18 @@ namespace smartest_desktop.Views
             {
                 Dispatcher.Invoke(() =>
                 {
-                    var examenGen = new ExamenGenerationWindow();
-                    examenGen.Show();
-                    Close();
+                    NaviguerEtFermer(() => new ExamenGenerationWindow());
                 });
             };
 
-            vm.ExamenValide += async (questionsValidees, titreExamen, dureeExamen, difficulteExamen, coursTitreExamen) =>
+            vm.ExamenValide += async (
+                questionsValidees,
+                titreExamen,
+                dureeExamen,
+                difficulteExamen,
+                coursTitreExamen,
+                emailsJson,
+                datePrevuePassage) =>
             {
                 try
                 {
@@ -73,7 +93,9 @@ namespace smartest_desktop.Views
                             idExistant,
                             titreExamen,
                             dureeExamen,
-                            questionsValidees.ToList());
+                            questionsValidees.ToList(),
+                            emailsJson,
+                            datePrevuePassage);
 
                         Dispatcher.Invoke(() =>
                         {
@@ -87,9 +109,7 @@ namespace smartest_desktop.Views
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
 
-                            var hub = new QuizExamenWindow();
-                            hub.Show();
-                            Close();
+                            OuvrirHubEtFermer();
                         });
                     }
                     else
@@ -99,7 +119,9 @@ namespace smartest_desktop.Views
                             Titre = titreExamen,
                             Duree = dureeExamen,
                             Statut = "BROUILLON",
-                            DateCreation = DateTime.Now
+                            DateCreation = DateTime.Now,
+                            EmailsPublicationWebJson = emailsJson ?? "[]",
+                            DatePrevue = datePrevuePassage
                         };
 
                         await svcPersist.SauvegarderAsync(
@@ -114,14 +136,13 @@ namespace smartest_desktop.Views
                                 $"• {questionsValidees.Count} questions\n" +
                                 $"• Difficulté : {difficulteExamen}\n" +
                                 $"• Durée : {dureeExamen} min\n" +
-                                $"• Cours : {coursTitreExamen}",
+                                $"• Cours : {coursTitreExamen}\n\n" +
+                                "Renseignez la publication web et le créneau dans l'écran de révision, puis utilisez « Publier sur le web » dans la liste des examens.",
                                 "Examen enregistré",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
 
-                            var hub = new QuizExamenWindow();
-                            hub.Show();
-                            Close();
+                            OuvrirHubEtFermer();
                         });
                     }
                 }
@@ -129,12 +150,47 @@ namespace smartest_desktop.Views
                 {
                     Dispatcher.Invoke(() =>
                         MessageBox.Show(
-                            $"Erreur lors de la sauvegarde :\n{ex.Message}",
+                            UserErrorMessage.FromException(ex, "Impossible d'enregistrer l'examen pour le moment."),
                             "Erreur",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error));
                 }
             };
+        }
+
+        private void OuvrirHubEtFermer()
+        {
+            _fermetureConfirmee = true;
+            _navigationInProgress = true;
+            App.OuvrirShell(MainShellSection.QuizExamens);
+            if (!_isClosing)
+                Close();
+        }
+
+        private void NaviguerEtFermer(Func<Window> nextWindowFactory)
+        {
+            if (_navigationInProgress)
+                return;
+
+            _navigationInProgress = true;
+            _fermetureConfirmee = true;
+
+            var nextWindow = nextWindowFactory();
+            nextWindow.Show();
+
+            if (!_isClosing)
+                Close();
+        }
+
+        private void ExamenResultWindow_Closing(object? sender, CancelEventArgs e)
+        {
+            _isClosing = true;
+            if (_fermetureConfirmee)
+                return;
+
+            _fermetureConfirmee = true;
+            _navigationInProgress = true;
+            Application.Current.Shutdown();
         }
     }
 }

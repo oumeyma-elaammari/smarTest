@@ -6,6 +6,6 @@ class BackendApplicationTests {
 
 	@Test
 	void contextLoads() {
-		// ✅ Test vide — pas besoin de Spring context
+		//  Test vide — pas besoin de Spring context
 	}
 }

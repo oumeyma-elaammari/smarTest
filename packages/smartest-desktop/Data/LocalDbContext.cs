@@ -6,11 +6,20 @@ namespace smartest_desktop.Data
 {
     public class LocalDbContext : DbContext
     {
+        public LocalDbContext(DbContextOptions<LocalDbContext> options)
+            : base(options)
+        {
+        }
+
+        /// <summary>SQLite local (sans options explicites) — même usage qu’historiquement.</summary>
+        public LocalDbContext()
+        {
+        }
+
         private static string _cheminBase = "smartest_local.db";
 
         /// <summary>
-        /// Chemin vers la base SQLite. Doit être défini via App.InitialiserPourEmail()
-        /// avant de créer une instance de LocalDbContext.
+        /// Chemin vers la base SQLite. Défini par <see cref="App.InitialiserPourEmail"/> : un fichier par compte sous SmarTest/&lt;email normalisé&gt;/smartest_local.db.
         /// </summary>
         public static string CheminBase
         {
@@ -42,7 +51,8 @@ namespace smartest_desktop.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite($"Data Source={CheminBase}");
+            if (!options.IsConfigured)
+                options.UseSqlite($"Data Source={CheminBase};Foreign Keys=True");
         }
 
         // ══════════════════════════════════════════════════════════
@@ -76,6 +86,8 @@ namespace smartest_desktop.Data
                 entity.Property(q => q.Type).IsRequired().HasMaxLength(20);
                 entity.Property(q => q.Difficulte).HasMaxLength(20);
                 entity.Property(q => q.Explication).HasColumnType("TEXT");
+                entity.Property(q => q.BaremePoints).HasDefaultValue(0.0);
+                entity.Property(q => q.DureeSecondesIndicative).HasDefaultValue(60);
 
                 entity.Property(q => q.ReponseModele).HasColumnType("TEXT");
                 entity.Property(q => q.ReponsesCorrectesJson).HasColumnType("TEXT");
@@ -139,6 +151,12 @@ namespace smartest_desktop.Data
                       .WithMany(c => c.Quiz)   // Correction : ajouter navigation côté CoursLocal
                       .UsingEntity(j => j.ToTable("quiz_local_cours"));
 
+                entity.Property(q => q.BackendQuizId);
+                entity.Property(q => q.BackendQuizIdPublicationWeb);
+                entity.Property(q => q.BackendQuizIdQr);
+                entity.Property(q => q.QrLiveSessionToken).HasColumnType("TEXT");
+                entity.Property(q => q.ServeurOuQrToucheUtc);
+                entity.Property(q => q.EmailsPublicationWebJson).HasColumnType("TEXT");
             });
 
             // ── ExamenLocal ───────────────────────────────────────
@@ -157,6 +175,8 @@ namespace smartest_desktop.Data
                 entity.HasMany(e => e.Cours)
                       .WithMany()
                       .UsingEntity(j => j.ToTable("examen_local_cours"));
+
+                entity.Property(e => e.EmailsPublicationWebJson).HasColumnType("TEXT");
             });
 
 

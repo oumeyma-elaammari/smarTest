@@ -44,9 +44,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+        <!-- Fournit Jackson + le bean ObjectMapper (webmvc seul ne l’enregistre pas en Boot 4) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-json</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-messaging</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -106,7 +115,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <!--  Security test pour MockMvc avec auth -->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -144,8 +152,6 @@
                         <id>default-compile</id>
                         <phase>compile</phase>
                         <goals>
-                            
-                        
                             <goal>compile</goal>
                         </goals>
                         <configuration>
@@ -159,7 +165,6 @@
                     </execution>
                     <execution>
                         <id>default-testCompile</id>
-                        
                         <phase>test-compile</phase>
                         <goals>
                             <goal>testCompile</goal>

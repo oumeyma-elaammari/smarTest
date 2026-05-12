@@ -30,10 +30,13 @@ namespace smartest_desktop.Data.LocalEntities
 
         /// <summary>
         /// ID de l'examen côté backend après publication.
-        /// Seules les MÉTADONNÉES sont envoyées — questions restent en local.
+        /// Les questions QCM (énoncé + options) sont synchronisées avec le serveur lors du « Publier sur le web ».
         /// null = pas encore publié.
         /// </summary>
         public long? BackendId { get; set; }
+
+        /// <summary>JSON : tableau d'emails autorisés pour la publication web (comme pour les quiz).</summary>
+        public string EmailsPublicationWebJson { get; set; }
 
         // ── Relation Many-to-Many avec CoursLocal ────────────────
         public List<CoursLocal> Cours { get; set; } = new();

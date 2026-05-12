@@ -10,144 +10,21 @@
         Background="White"
         FontFamily="Segoe UI">
 
-	<Window.DataContext>
-		<vm:DashboardViewModel />
-	</Window.DataContext>
+    <Window.DataContext>
+        <vm:DashboardViewModel />
+    </Window.DataContext>
 
-	<Window.Resources>
-		<ResourceDictionary>
-			<ResourceDictionary.MergedDictionaries>
-				<ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
-			</ResourceDictionary.MergedDictionaries>
-		</ResourceDictionary>
-	</Window.Resources>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
 
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="230"/>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-
-		<!-- ══ SIDEBAR ══ -->
-		<Border Grid.Column="0" Background="White"
-                BorderBrush="#e2e8f4" BorderThickness="0,0,1,0">
-			<Grid>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
-				<!-- Logo -->
-				<StackPanel Grid.Row="0" Margin="22,28,22,32">
-					<StackPanel Orientation="Horizontal">
-						<Ellipse Width="8" Height="8" Fill="{StaticResource AccentBrush}"
-                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
-						<TextBlock FontFamily="Georgia" FontSize="18" FontWeight="Bold"
-						   Foreground="{StaticResource NavyBrush}" VerticalAlignment="Center">
-							Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
-						</TextBlock>
-					</StackPanel>
-					<TextBlock Text="Espace professeur" FontSize="11"
-                               Foreground="#8899b8" Margin="16,5,0,0"/>
-				</StackPanel>
-
-				<!-- Nav items -->
-				<StackPanel Grid.Row="1" Margin="12,0">
-
-					<!-- Home — actif -->
-					<Border CornerRadius="8" Height="40" Padding="14,0"
-                            Background="#0f1e3d" Margin="0,1">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE80F;" FontSize="13" Foreground="White"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Home" FontSize="13"
-                                       FontWeight="SemiBold" Foreground="White"/>
-						</StackPanel>
-					</Border>
-
-					<!-- Quiz et examens -->
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding OpenQuizCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE9D5;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Quiz et examens" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-
-					<!-- Sessions actives -->
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE7FC;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Sessions actives" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-
-					<!-- Statistiques -->
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE9D2;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Statistiques" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-
-
-					<!-- Paramètres -->
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,1">
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xE713;" FontSize="13" Foreground="#6b7a99"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Paramètres" FontSize="13" Foreground="#0f1e3d"/>
-						</StackPanel>
-					</Border>
-
-				</StackPanel>
-
-				<!-- User info + Déconnexion -->
-				<StackPanel Grid.Row="2" Margin="12,0,12,18">
-					<Border Background="#f0f3f9" CornerRadius="10"
-                            BorderBrush="#e2e8f4" BorderThickness="1"
-                            Padding="8,6" Margin="0,0,0,8">
-						<StackPanel>
-							<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-								<Ellipse Width="7" Height="7" Fill="#16a34a"
-                                         VerticalAlignment="Center" Margin="0,0,7,0"/>
-								<TextBlock Text="{Binding Nom}" FontSize="13"
-                                           FontWeight="600" Foreground="#0f1e3d"/>
-							</StackPanel>
-							<TextBlock Text="{Binding Email}" FontSize="11"
-                                       Foreground="#8899b8" Margin="14,0,0,0"/>
-						</StackPanel>
-					</Border>
-					<Border Style="{StaticResource MenuPopupItem}" Margin="0,2">
-						<Border.InputBindings>
-							<MouseBinding MouseAction="LeftClick" Command="{Binding LogoutCommand}"/>
-						</Border.InputBindings>
-						<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-							<TextBlock Text="&#xF3B1;" FontSize="13" Foreground="#dc2626"
-                                       FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-							<TextBlock Text="Déconnexion" FontSize="13" Foreground="#dc2626"/>
-						</StackPanel>
-					</Border>
-				</StackPanel>
-
-			</Grid>
-		</Border>
-
-		<!-- ══ MAIN CONTENT ══ -->
-		<Grid Grid.Column="1">
-			<Grid.RowDefinitions>
-				<RowDefinition Height="*"/>
-				<RowDefinition Height="Auto"/>
-			</Grid.RowDefinitions>
-
-			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="White">
-				<StackPanel Margin="40,36,40,40">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Background="White">
+            <StackPanel Margin="40,36,40,40">
 
 					<!-- Header -->
 					<StackPanel Margin="0,0,0,32">
@@ -261,18 +138,7 @@
 						</StackPanel>
 					</Border>
 
-				</StackPanel>
-			</ScrollViewer>
-
-			<!-- Footer -->
-			<Border Grid.Row="1" Background="White"
-                    BorderBrush="#e2e8f4" BorderThickness="0,1,0,0"
-                    Padding="18,14">
-				<TextBlock Text="SmarTest — ENSA Oujda · Génie Informatique · 2025–2026"
-                           FontSize="11" Foreground="#aab4cc"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-			</Border>
-
-		</Grid>
-	</Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </Window>

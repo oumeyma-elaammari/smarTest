@@ -39,10 +39,14 @@ namespace smartest_desktop.Data.LocalEntities
 
 		public int? CoursId { get; set; }
 
-		/// <summary>QCM | CHECKBOX | REDACTION | IMAGE</summary>
+		/// <summary>QCM | VF | CHECKBOX | REDACTION | IMAGE</summary>
 		public string Type { get; set; } = "QCM";
 		public string Difficulte { get; set; } = "Moyen";
 		public string ReponseModele { get; set; } = string.Empty;
+		public double BaremePoints { get; set; } = 0;
+
+		/// <summary>Durée indicative passage web (secondes).</summary>
+		public int DureeSecondesIndicative { get; set; } = 60;
 
 		/// <summary>Réponses correctes pour CHECKBOX — JSON ex: ["A","C"]</summary>
 		public string ReponsesCorrectesJson { get; set; } = string.Empty;

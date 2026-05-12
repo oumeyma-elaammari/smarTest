@@ -103,10 +103,19 @@ namespace smartest_desktop.ViewModels
             // Initialiser la base de données propre à cet email
             App.InitialiserPourEmail(auth.Email);
 
+            try
+            {
+                await LocalProfesseurIdentityService.ApresConnexionProfesseurAsync(auth);
+            }
+            catch
+            {
+                // Réseau ou API : la session reste ouverte ; l’id serveur sera réessayé au prochain lancement.
+            }
+
             var sessionService = new SessionService(App.LocalDb);
             sessionService.SauvegarderSession(auth);
 
-            NavigationService.NavigateTo<Views.DashboardWindow, Views.LoginWindow>();
+            NavigationService.NavigateTo<Views.MainShellWindow, Views.LoginWindow>();
             
         }
     }

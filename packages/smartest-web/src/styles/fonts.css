@@ -1,0 +1,15 @@
+/*
+ * Polices auto-hébergées (bundlées par Vite) — pas de liaison externe fonts.googleapis.com ;
+ * évite les remontées SRI / intégrité sur une feuille dont le contenu CDN peut évoluer.
+ *
+ * Fontsource v5 : préférer les fichiers latin-*.css (les anciens chemins type /400-italic.css
+ * peuvent ne pas résoudre selon résolution des exports / installation).
+ */
+@import '@fontsource/dm-sans/latin-400.css';
+@import '@fontsource/dm-sans/latin-400-italic.css';
+@import '@fontsource/dm-sans/latin-500.css';
+@import '@fontsource/dm-sans/latin-600.css';
+@import '@fontsource/dm-sans/latin-700.css';
+/* DM Serif Display : graisses publiées = 400 (+ italique) ; le gras UI reste en synthèse navigateur. */
+@import '@fontsource/dm-serif-display/latin-400.css';
+@import '@fontsource/dm-serif-display/latin-400-italic.css';

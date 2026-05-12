@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using smartest_desktop.ViewModels;
 
 namespace smartest_desktop.Views
@@ -13,8 +13,13 @@ namespace smartest_desktop.Views
             {
                 vm.NavigateToDashboardRequested += () =>
                 {
-                    var dashboard = new DashboardWindow();
-                    dashboard.Show();
+                    App.OuvrirShell(MainShellSection.Home);
+                    this.Close();
+                };
+
+                vm.NavigateToStatistiquesRequested += () =>
+                {
+                    App.OuvrirShell(MainShellSection.Statistiques);
                     this.Close();
                 };
             }

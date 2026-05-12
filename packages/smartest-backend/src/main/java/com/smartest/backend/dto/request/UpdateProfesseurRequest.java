@@ -11,4 +11,8 @@ public class UpdateProfesseurRequest {
             message = "Le nom ne doit contenir que des lettres (2 à 50 caractères)"
     )
     private String nom;
+
+    @Email(message = "Email invalide")
+    @Size(max = 150, message = "L'email ne doit pas dépasser 150 caractères")
+    private String email;
 }

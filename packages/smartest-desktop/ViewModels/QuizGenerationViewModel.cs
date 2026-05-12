@@ -1,9 +1,11 @@
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.Win32;
+using smartest_desktop.Constants;
 using smartest_desktop.Data;
 using smartest_desktop.Helpers;
 using smartest_desktop.Services;
 using smartest_desktop.Views;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -20,6 +22,9 @@ namespace smartest_desktop.ViewModels
 {
     public class QuestionQCM : BaseViewModel
     {
+        private string _type = "QCM";
+        public string Type { get => _type; set => SetProperty(ref _type, value); }
+
         private string _enonce = string.Empty;
         public string Enonce { get => _enonce; set => SetProperty(ref _enonce, value); }
 
@@ -54,8 +59,9 @@ namespace smartest_desktop.ViewModels
     public class QuizGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
-        private GroqService? _groq;
+        private readonly IGroqGenerationClient? _groqClientOverride;
         private CancellationTokenSource? _cts;
+        private bool _annulationDemandeeParUtilisateur;
 
         // ── Cours importé ─────────────────────────────────────────────────────
 
@@ -128,6 +134,28 @@ namespace smartest_desktop.ViewModels
 
         public List<int> NombresQuestions { get; } = new() { 3, 5, 7, 10, 15, 20 };
 
+        // ── Emails publication web (importés ici, enregistrés avec le quiz à la validation) ──
+
+        private readonly List<string> _emailsPublicationWeb = new();
+
+        public int NombreEmailsPublicationWeb => _emailsPublicationWeb.Count;
+
+        public bool HasEmailsPublicationWeb => _emailsPublicationWeb.Count > 0;
+
+        public string LibelleEmailsPublicationWeb =>
+            HasEmailsPublicationWeb
+                ? $"{NombreEmailsPublicationWeb} email(s) — plafond {QuizPublicationLimits.MaxAuthorizedStudentEmails}"
+                : "Aucun fichier importé.";
+
+        private void NotifierEmailsPublicationWeb()
+        {
+            OnPropertyChanged(nameof(NombreEmailsPublicationWeb));
+            OnPropertyChanged(nameof(HasEmailsPublicationWeb));
+            OnPropertyChanged(nameof(LibelleEmailsPublicationWeb));
+            if (ImporterEmailsPublicationWebCommand is RelayCommand ri) ri.RaiseCanExecuteChanged();
+            if (EffacerEmailsPublicationWebCommand is RelayCommand re) re.RaiseCanExecuteChanged();
+        }
+
         // ── État UI ───────────────────────────────────────────────────────────
 
         private bool _isImporting;
@@ -169,21 +197,24 @@ namespace smartest_desktop.ViewModels
         public bool HasStatus => !string.IsNullOrEmpty(StatusMessage);
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-        public string Nom => WpfApp.Current.Properties["Nom"]?.ToString() ?? "Professeur";
-        public string Email => WpfApp.Current.Properties["Email"]?.ToString() ?? "";
+        public string Nom => WpfApp.Current?.Properties["Nom"]?.ToString() ?? "Professeur";
+        public string Email => WpfApp.Current?.Properties["Email"]?.ToString() ?? "";
 
         // ── Commandes ─────────────────────────────────────────────────────────
 
-        public ICommand ImporterFichierCommand { get; }
-        public ICommand EffacerContenuCommand { get; }
-        public ICommand SetDifficulteCommand { get; }
-        public ICommand GenererCommand { get; }
-        public ICommand AnnulerGenerationCommand { get; }
-        public ICommand AnnulerCommand { get; }
-        public ICommand RetourDashboardCommand { get; }
-        public ICommand LogoutCommand { get; }
+        public ICommand ImporterFichierCommand { get; private set; } = null!;
+        public ICommand ImporterEmailsPublicationWebCommand { get; private set; } = null!;
+        public ICommand EffacerEmailsPublicationWebCommand { get; private set; } = null!;
+        public ICommand EffacerContenuCommand { get; private set; } = null!;
+        public ICommand SetDifficulteCommand { get; private set; } = null!;
+        public ICommand GenererCommand { get; private set; } = null!;
+        public ICommand AnnulerGenerationCommand { get; private set; } = null!;
+        public ICommand AnnulerCommand { get; private set; } = null!;
+        public ICommand RetourDashboardCommand { get; private set; } = null!;
+        public ICommand LogoutCommand { get; private set; } = null!;
 
-        public event Action<List<QuestionQCM>, string, string, int, string?>? QuizGenereAvecSucces;
+        /// <summary>Dernier paramètre : JSON du tableau d'emails (publication web), ou null si aucun import.</summary>
+        public event Action<List<QuestionQCM>, string, string, int, string?, string?>? QuizGenereAvecSucces;
         public event Action? NavigationAnnulee;
         public event Action? NavigateToDashboard;
         public event Action? NavigateToLogin;
@@ -193,10 +224,37 @@ namespace smartest_desktop.ViewModels
         public QuizGenerationViewModel()
         {
             _db = App.LocalDb;
+            _groqClientOverride = null;
+            EnregistrerCommandes();
+        }
 
+        /// <summary>Constructeur pour les tests (base injectée + client Groq simulé, sans fenêtre clé).</summary>
+        public QuizGenerationViewModel(LocalDbContext db, IGroqGenerationClient groqClientOverride)
+        {
+            ArgumentNullException.ThrowIfNull(db);
+            ArgumentNullException.ThrowIfNull(groqClientOverride);
+            _db = db;
+            _groqClientOverride = groqClientOverride;
+            EnregistrerCommandes();
+        }
+
+        private void EnregistrerCommandes()
+        {
             ImporterFichierCommand = new RelayCommand(
                 async _ => await ImporterFichierAsync(),
                 _ => !IsImporting && !IsGenerating);
+
+            ImporterEmailsPublicationWebCommand = new RelayCommand(
+                _ => ImporterEmailsPublicationWeb(),
+                _ => !IsGenerating);
+
+            EffacerEmailsPublicationWebCommand = new RelayCommand(
+                _ =>
+                {
+                    _emailsPublicationWeb.Clear();
+                    NotifierEmailsPublicationWeb();
+                },
+                _ => HasEmailsPublicationWeb && !IsGenerating);
 
             EffacerContenuCommand = new RelayCommand(
                 _ => EffacerContenu(),
@@ -214,6 +272,7 @@ namespace smartest_desktop.ViewModels
             AnnulerGenerationCommand = new RelayCommand(
                 _ =>
                 {
+                    _annulationDemandeeParUtilisateur = true;
                     _cts?.Cancel();
                     StatusMessage = "⛔ Génération annulée.";
                     ErrorMessage = string.Empty;
@@ -223,6 +282,7 @@ namespace smartest_desktop.ViewModels
 
             AnnulerCommand = new RelayCommand(_ =>
             {
+                _annulationDemandeeParUtilisateur = true;
                 _cts?.Cancel();
                 NavigationAnnulee?.Invoke();
             });
@@ -301,6 +361,71 @@ namespace smartest_desktop.ViewModels
             finally
             {
                 IsImporting = false;
+            }
+        }
+
+        private void ImporterEmailsPublicationWeb()
+        {
+            var dlg = new OpenFileDialog
+            {
+                Filter = "CSV ou Excel|*.csv;*.xlsx|CSV (*.csv)|*.csv|Excel (*.xlsx)|*.xlsx",
+                Title = "Importer les emails autorisés (colonne « email » ou une adresse par ligne)"
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            try
+            {
+                var detail = ImportEtudiantsService.ImporterDepuisFichierDetaille(dlg.FileName);
+                var liste = detail.EmailsValides;
+                if (liste.Count == 0)
+                {
+                    MessageBox.Show(
+                        "Aucun email valide trouvé dans le fichier.",
+                        "Publication web",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                if (liste.Count > QuizPublicationLimits.MaxAuthorizedStudentEmails)
+                {
+                    MessageBox.Show(
+                        $"Le fichier contient plus de {QuizPublicationLimits.MaxAuthorizedStudentEmails} emails. " +
+                        $"Seuls les {QuizPublicationLimits.MaxAuthorizedStudentEmails} premiers seront conservés.",
+                        "Publication web",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    liste = liste.Take(QuizPublicationLimits.MaxAuthorizedStudentEmails).ToList();
+                }
+
+                _emailsPublicationWeb.Clear();
+                _emailsPublicationWeb.AddRange(liste);
+                NotifierEmailsPublicationWeb();
+                StatusMessage = $"✅ {NombreEmailsPublicationWeb} email(s) importé(s) pour la publication web.";
+            }
+            catch (NotSupportedException)
+            {
+                MessageBox.Show(
+                    "Format non supporté. Utilisez un fichier .csv ou .xlsx.",
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show(
+                    UserErrorMessage.FromException(ex, "Lecture du fichier impossible. Verifiez qu'il n'est pas deja ouvert."),
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    UserErrorMessage.FromException(ex, "Import impossible. Verifiez le format du fichier puis reessayez."),
+                    "Publication web",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
@@ -385,27 +510,31 @@ namespace smartest_desktop.ViewModels
         {
             if (!HasCours) return;
 
-            // Vérifier / demander la clé API avant de démarrer
-            string? apiKey = GroqKeyService.LireCle(App.LocalDb);
-            if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+            string? apiKey = null;
+            if (_groqClientOverride == null)
             {
-                var dialog = new GroqKeySetupWindow();
-                if (dialog.ShowDialog() != true) return;
-                apiKey = GroqKeyService.LireCle(App.LocalDb);
-                if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+                apiKey = GroqKeyService.LireCle(_db);
+                if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+                {
+                    var dialog = new GroqKeySetupWindow();
+                    if (dialog.ShowDialog() != true) return;
+                    apiKey = GroqKeyService.LireCle(_db);
+                    if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+                }
             }
 
             _cts?.Cancel();
             _cts = new CancellationTokenSource();
+            _annulationDemandeeParUtilisateur = false;
             var token = _cts.Token;
 
             IsGenerating = true;
             ErrorMessage = string.Empty;
-            _groq = new GroqService(apiKey!);
+            IGroqGenerationClient groqClient = _groqClientOverride ?? new GroqService(apiKey!);
 
             try
             {
-                StatusMessage = $"🚀 Connexion à Groq ({GroqService.NomModele})...";
+                StatusMessage = $"Connexion à Groq ({GroqService.NomModele})...";
                 await Task.Delay(100, token);
 
                 // ── Découpe en lots de MAX 5 questions ───────────────────────
@@ -427,8 +556,8 @@ namespace smartest_desktop.ViewModels
                     string contenuLot = segmentsCours[lotIdx];
 
                     StatusMessage = nbLots > 1
-                        ? $"🧠 Lot {lotIdx + 1}/{nbLots} — génération de {nbCeLot} questions ({Difficulte})..."
-                        : $"🧠 Génération de {NombreQuestions} questions ({Difficulte})...";
+                        ? $"Lot {lotIdx + 1}/{nbLots} — génération de {nbCeLot} questions ({Difficulte})..."
+                        : $"Génération de {NombreQuestions} questions ({Difficulte})...";
 
                     // Délai anti-rate-limit entre lots (même réglage que GroqService.GenererParLotsAsync)
                     if (lotIdx > 0)
@@ -452,7 +581,7 @@ namespace smartest_desktop.ViewModels
                             : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte, enoncesExistants);
 
                         var sw = System.Diagnostics.Stopwatch.StartNew();
-                        var reponse = await _groq.GenererAvecRetryAsync(prompt, token, GroqService.TemperaturePourDifficulte(Difficulte));
+                        var reponse = await groqClient.GenererAvecRetryAsync(prompt, token, GroqService.TemperaturePourDifficulte(Difficulte));
                         sw.Stop();
                         var duree = sw.Elapsed;
                         dureeTotale += duree;
@@ -515,26 +644,44 @@ namespace smartest_desktop.ViewModels
 
                 Debug.WriteLine($"[GenererQuiz] ✅ Terminé — {toutesQuestions.Count} questions en {dureeTotale.TotalSeconds:F1} s");
 
-                QuizGenereAvecSucces?.Invoke(toutesQuestions, titre, Difficulte, NombreQuestions, TitreCours);
+                string? emailsJson = _emailsPublicationWeb.Count > 0
+                    ? JsonSerializer.Serialize(_emailsPublicationWeb)
+                    : null;
+
+                QuizGenereAvecSucces?.Invoke(toutesQuestions, titre, Difficulte, NombreQuestions, TitreCours, emailsJson);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                StatusMessage = "Génération annulée.";
+                ErrorMessage = string.Empty;
             }
             catch (OperationCanceledException)
             {
-                StatusMessage = "⛔ Génération annulée.";
-                ErrorMessage = string.Empty;
+                ErrorMessage =
+                    "La requête vers Groq a expiré ou a été annulée par le réseau. Vérifiez votre connexion et réessayez.";
+                StatusMessage = string.Empty;
             }
             catch (InvalidOperationException)
             {
-                ErrorMessage = "⚙️ Clé API non configurée. Cliquez sur Générer pour en saisir une.";
+                ErrorMessage = "Clé API non configurée. Cliquez sur Générer pour en saisir une.";
                 StatusMessage = string.Empty;
             }
             catch (TimeoutException)
             {
-                ErrorMessage = "⏱️ La génération prend trop de temps. Vérifiez votre connexion internet et réessayez.";
-                StatusMessage = string.Empty;
+                if (_annulationDemandeeParUtilisateur || token.IsCancellationRequested)
+                {
+                    StatusMessage = "Génération annulée.";
+                    ErrorMessage = string.Empty;
+                }
+                else
+                {
+                    ErrorMessage = "La génération prend trop de temps. Vérifiez votre connexion internet et réessayez.";
+                    StatusMessage = string.Empty;
+                }
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("401") || ex.Message.Contains("invalide"))
             {
-                GroqKeyService.SupprimerCle(App.LocalDb);
+                GroqKeyService.SupprimerCle(_db);
                 ErrorMessage = string.Empty;
                 StatusMessage = string.Empty;
                 var dialog = new GroqKeySetupWindow("Votre clé a été révoquée ou supprimée sur console.groq.com.");
@@ -542,17 +689,18 @@ namespace smartest_desktop.ViewModels
             }
             catch (HttpRequestException ex)
             {
-                ErrorMessage = $"❌ {ex.Message}";
+                ErrorMessage = $"❌ {UserErrorMessage.FromException(ex, "Impossible de contacter le service de generation. Reessayez.")}";
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"❌ {ex.Message}";
+                ErrorMessage = $"❌ {UserErrorMessage.FromException(ex, "La generation du quiz a echoue. Reessayez.")}";
                 StatusMessage = string.Empty;
             }
             finally
             {
                 IsGenerating = false;
+                _annulationDemandeeParUtilisateur = false;
             }
         }
 
@@ -648,15 +796,37 @@ namespace smartest_desktop.ViewModels
                 "\nGenerate COMPLETELY DIFFERENT questions covering other aspects of the content.\n";
         }
 
+        private static string BuildVariationSection() =>
+            "VARIATION REQUIREMENTS:\n" +
+            $"- Session identifier: {Guid.NewGuid()}\n" +
+            "- Vary the generated questions compared to previous generations.\n" +
+            "- Ne répète pas les mêmes questions. Génère des questions différentes à chaque appel, en explorant des angles variés du contenu.\n";
+
+        private static string BuildPedagogicalSection(string difficulte) =>
+            "PEDAGOGICAL QUALITY REQUIREMENTS:\n" +
+            "- Every question must have one clear learning objective.\n" +
+            "- Keep wording unambiguous and avoid trick wording.\n" +
+            "- Provide a concise explanation tied to the course text.\n" +
+            "- Use plausible distractors that target common misconceptions.\n" +
+            (difficulte == "Facile"
+                ? "- Cognitive mix: about 70% compréhension de base, 30% application simple.\n"
+                : difficulte == "Difficile"
+                    ? "- Cognitive mix: about 30% compréhension, 70% application/raisonnement.\n"
+                    : "- Cognitive mix: about 50% compréhension, 50% application/raisonnement.\n");
+
         private string BuildPrompt(string contenu, int nbQuestions, string difficulte, IReadOnlyList<string>? avoid = null)
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
+            string variationSection = BuildVariationSection();
+            string pedagogicalSection = BuildPedagogicalSection(difficulte);
 
             return
 $@"Generate EXACTLY {nbQuestions} multiple-choice questions in FRENCH about the text below.
 
 {difficultyInstructions}
+{variationSection}
+{pedagogicalSection}
 IMPORTANT: Base ALL questions STRICTLY on the provided text. Do NOT invent or assume any information not explicitly present in the text.
 {avoidSection}
 TEXT:
@@ -682,6 +852,8 @@ RULES:
         {
             string difficultyInstructions = GetDifficultyInstructions(difficulte);
             string avoidSection = BuildAvoidSection(avoid);
+            string variationSection = BuildVariationSection();
+            string pedagogicalSection = BuildPedagogicalSection(difficulte);
             int texteLength = Math.Min(contenu.Length, 4000);
             string texteTronque = contenu.Length > texteLength ? contenu[..texteLength] : contenu;
 
@@ -689,6 +861,8 @@ RULES:
 $@"GÉNÉRATION STRICTE DE {nbQuestions} QUESTIONS QCM EN FRANÇAIS
 
 {difficultyInstructions}
+{variationSection}
+{pedagogicalSection}
 IMPORTANT: Baser TOUTES les questions UNIQUEMENT sur le texte fourni. Ne pas inventer d'informations absentes du texte.
 {avoidSection}
 TEXTE SOURCE:
@@ -773,9 +947,12 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                     {
                         string enonce = StrAlt(item,
                             "enonce", "question", "text", "texte", "questionText", "enoncé");
+                        string type = StrAlt(item, "type", "questionType", "question_type", "kind")
+                            .ToUpperInvariant().Trim();
+                        bool isVf = type == "VF" || type.Contains("VRAI") || type.Contains("FAUX") || type == "TRUE_FALSE";
 
-                        string optA = StrAlt(item, "optionA", "option_a", "a", "choiceA");
-                        string optB = StrAlt(item, "optionB", "option_b", "b", "choiceB");
+                        string optA = isVf ? "Vrai" : StrAlt(item, "optionA", "option_a", "a", "choiceA");
+                        string optB = isVf ? "Faux" : StrAlt(item, "optionB", "option_b", "b", "choiceB");
                         string optC = StrAlt(item, "optionC", "option_c", "c", "choiceC");
                         string optD = StrAlt(item, "optionD", "option_d", "d", "choiceD");
 
@@ -792,6 +969,15 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                             "correctAnswer", "correct", "bonne_reponse", "bonneReponse",
                             "reponse", "response");
                         rep = rep.ToUpper().Trim();
+                        if (isVf)
+                        {
+                            rep = rep switch
+                            {
+                                "A" or "VRAI" or "TRUE" or "1" => "A",
+                                "B" or "FAUX" or "FALSE" or "2" => "B",
+                                _ => "A"
+                            };
+                        }
 
                         if (rep == "1") rep = "A";
                         else if (rep == "2") rep = "B";
@@ -807,6 +993,7 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                         var q = new QuestionQCM
                         {
                             Numero = n++,
+                            Type = isVf ? "VF" : "QCM",
                             Enonce = enonce,
                             OptionA = optA,
                             OptionB = optB,
@@ -820,7 +1007,7 @@ RÉPONSE UNIQUEMENT LE JSON - RIEN D'AUTRE!";
                             !string.IsNullOrWhiteSpace(q.OptionA) &&
                             !string.IsNullOrWhiteSpace(q.OptionB) &&
                             !string.IsNullOrWhiteSpace(q.ReponseCorrecte) &&
-                            "ABCD".Contains(q.ReponseCorrecte))
+                            (q.Type == "VF" ? "AB".Contains(q.ReponseCorrecte) : "ABCD".Contains(q.ReponseCorrecte)))
                         {
                             questions.Add(q);
                         }

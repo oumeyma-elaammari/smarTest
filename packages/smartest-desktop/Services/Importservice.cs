@@ -22,8 +22,13 @@ namespace smartest_desktop.Services
         private static readonly string[] FormatsTexte = { ".txt", ".md" };
 
         public ImportService()
+            : this(new LocalCoursService())
         {
-            _coursService = new LocalCoursService();
+        }
+
+        public ImportService(LocalCoursService coursService)
+        {
+            _coursService = coursService ?? throw new ArgumentNullException(nameof(coursService));
         }
 
         // ══════════════════════════════════════════════════════════
@@ -106,12 +111,11 @@ namespace smartest_desktop.Services
 
                 return sb.ToString().Trim();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException(
                     $"Erreur lors de la lecture du PDF.\n" +
-                    $"Le fichier est peut-être protégé par mot de passe.\n" +
-                    $"Détail : {ex.Message}");
+                    "Le fichier est peut-être protégé par mot de passe.");
             }
         }
 
@@ -160,11 +164,10 @@ namespace smartest_desktop.Services
             {
                 throw; // propager l'exception .doc
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException(
-                    $"Erreur lors de la lecture du fichier Word.\n" +
-                    $"Détail : {ex.Message}");
+                    "Erreur lors de la lecture du fichier Word.");
             }
         }
 
@@ -181,11 +184,10 @@ namespace smartest_desktop.Services
             {
                 return File.ReadAllText(cheminFichier, Encoding.UTF8).Trim();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw new InvalidOperationException(
-                    $"Erreur lors de la lecture du fichier texte.\n" +
-                    $"Détail : {ex.Message}");
+                    "Erreur lors de la lecture du fichier texte.");
             }
         }
 

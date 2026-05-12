@@ -7,12 +7,25 @@ const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
 
 type NavbarProps = {
-    authenticated?: boolean
+    readonly authenticated?: boolean
 }
 
 export default function Navbar({ authenticated = true }: NavbarProps) {
     const navigate = useNavigate()
     const { nom, logout } = useAuth()
+
+    const handleLogout = () => {
+        try {
+            logout()
+        } catch {
+            try {
+                localStorage.clear()
+            } catch {
+                /* stockage indisponible */
+            }
+            globalThis.location.href = '/login'
+        }
+    }
 
     const shell: CSSProperties = {
         position: 'sticky',
@@ -54,37 +67,78 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
         cursor: 'pointer',
     }
 
-    if (authenticated === false) {
+    if (authenticated) {
         return (
-            <nav style={shell} aria-label="Navigation principale">
-                <button type="button" onClick={() => navigate('/')} style={logoBtn}>
+            <nav style={shell} aria-label="Navigation">
+                <button type="button" onClick={() => navigate('/dashboard')} style={logoBtn}>
                     Smar<span style={{ color: '#4f8ef7' }}>Test</span>
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                        justifyContent: 'flex-end',
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: '#f4f7fc',
+                            border: '1px solid #e2e8f4',
+                            maxWidth: 'min(100%, 240px)',
+                        }}
+                    >
+                        <span
+                            style={{
+                                width: 5,
+                                height: 5,
+                                borderRadius: '50%',
+                                background: '#22c55e',
+                                flexShrink: 0,
+                            }}
+                        />
+                        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>
+                            Connecté
+                        </span>
+                        <span
+                            style={{
+                                fontSize: 11,
+                                color: '#0f1e3d',
+                                fontWeight: 600,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            }}
+                            title={nom || undefined}
+                        >
+                            {nom}
+                        </span>
+                    </div>
+
                     <button
                         type="button"
-                        onClick={() => navigate('/login')}
+                        onClick={handleLogout}
+                        aria-label="Se déconnecter"
                         style={{
                             ...btnSm,
-                            color: '#1a2e5a',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            padding: '0 10px',
+                            color: '#64748b',
                             background: '#fff',
-                            border: '1px solid #d4dce8',
+                            border: '1px solid #e2e8f4',
                         }}
                     >
-                        Connexion
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate('/register')}
-                        style={{
-                            ...btnSm,
-                            color: '#fff',
-                            background: '#0f1e3d',
-                            border: 'none',
-                            boxShadow: '0 1px 4px rgba(15, 30, 61, 0.12)',
-                        }}
-                    >
-                        Inscription
+                        <LogOut size={14} strokeWidth={2} />
+                        Déconnexion
                     </button>
                 </div>
             </nav>
@@ -92,76 +146,35 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
     }
 
     return (
-        <nav style={shell} aria-label="Navigation">
-            <button type="button" onClick={() => navigate('/dashboard')} style={logoBtn}>
+        <nav style={shell} aria-label="Navigation principale">
+            <button type="button" onClick={() => navigate('/')} style={logoBtn}>
                 Smar<span style={{ color: '#4f8ef7' }}>Test</span>
             </button>
-
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                    justifyContent: 'flex-end',
-                }}
-            >
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                        background: '#f4f7fc',
-                        border: '1px solid #e2e8f4',
-                        maxWidth: 'min(100%, 240px)',
-                    }}
-                >
-                    <span
-                        style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: '50%',
-                            background: '#22c55e',
-                            flexShrink: 0,
-                        }}
-                    />
-                    <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>
-                        Connecté
-                    </span>
-                    <span
-                        style={{
-                            fontSize: 11,
-                            color: '#0f1e3d',
-                            fontWeight: 600,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                        }}
-                        title={nom || undefined}
-                    >
-                        {nom}
-                    </span>
-                </div>
-
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 <button
                     type="button"
-                    onClick={logout}
-                    aria-label="Se déconnecter"
+                    onClick={() => navigate('/login')}
                     style={{
                         ...btnSm,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        padding: '0 10px',
-                        color: '#64748b',
+                        color: '#1a2e5a',
                         background: '#fff',
-                        border: '1px solid #e2e8f4',
+                        border: '1px solid #d4dce8',
                     }}
                 >
-                    <LogOut size={14} strokeWidth={2} />
-                    Déconnexion
+                    Connexion
+                </button>
+                <button
+                    type="button"
+                    onClick={() => navigate('/register')}
+                    style={{
+                        ...btnSm,
+                        color: '#fff',
+                        background: '#0f1e3d',
+                        border: 'none',
+                        boxShadow: '0 1px 4px rgba(15, 30, 61, 0.12)',
+                    }}
+                >
+                    Inscription
                 </button>
             </div>
         </nav>

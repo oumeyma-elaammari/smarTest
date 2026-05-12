@@ -1,20 +1,26 @@
 package com.smartest.backend.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private static final String JSON_UNAUTHORIZED = "{\"error\":\"Token invalide ou expiré\"}";
 
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
@@ -28,6 +34,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+        if (path.startsWith("/api/qr-live/public/")) {
+            return true;
+        }
         return path.equals("/auth/register")
                 || path.equals("/auth/register/etudiant")
                 || path.equals("/auth/login")
@@ -49,25 +58,37 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
 
-        String token = null;
-        String email = null;
-
         if (header != null && header.startsWith("Bearer ")) {
-            token = header.substring(7);
+            String token = header.substring(7).trim();
+            if (token.isEmpty()) {
+                ecrire401(response);
+                return;
+            }
 
+            String email;
             try {
                 email = jwtUtil.extractEmail(token);
-            } catch (Exception e) {
-        }
-        }
+            } catch (JwtException ex) {
+                logger.warn("JWT rejeté : " + ex.getMessage());
+                ecrire401(response);
+                return;
+            }
 
-        if (email != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (!jwtUtil.validateToken(token)) {
+                logger.warn("JWT non valide après extraction (expiré ou signature incorrecte)");
+                ecrire401(response);
+                return;
+            }
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(email);
-
-            if (jwtUtil.validateToken(token)) {
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                final UserDetails userDetails;
+                try {
+                    userDetails = userDetailsService.loadUserByUsername(email);
+                } catch (UsernameNotFoundException ex) {
+                    logger.warn("Utilisateur JWT inconnu : " + email);
+                    ecrire401(response);
+                    return;
+                }
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -87,5 +108,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private static void ecrire401(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write(JSON_UNAUTHORIZED);
     }
 }
