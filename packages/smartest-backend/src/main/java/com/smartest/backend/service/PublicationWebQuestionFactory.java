@@ -33,13 +33,6 @@ final class PublicationWebQuestionFactory {
         q.getReponses().add(buildReponse(q, src != null ? src.getOptionB() : null, "B".equals(correcte)));
         q.getReponses().add(buildReponse(q, src != null ? src.getOptionC() : null, "C".equals(correcte)));
         q.getReponses().add(buildReponse(q, src != null ? src.getOptionD() : null, "D".equals(correcte)));
-
-        if (src != null && src.getDureeSecondesIndicative() != null) {
-            int sec = src.getDureeSecondesIndicative();
-            if (sec >= 5 && sec <= 7200) {
-                q.setDureeSecondesIndicative(sec);
-            }
-        }
         return q;
     }
 

@@ -91,50 +91,6 @@ public class EmailService {
         envoyer(message);
     }
 
-
-    /**
-     * Notifie un etudiant autorise qu'un examen vient d'etre publie (acces web active).
-     */
-    public void sendExamenPublieEmail(String toEmail, String professeurNom, String examenTitre) {
-        String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
-        String titre = examenTitre != null && !examenTitre.isBlank() ? examenTitre.trim() : "Examen";
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject("SmarTest — Nouvel examen publié : " + titre);
-        message.setText(
-                BONJOUR +
-                        "Le professeur " + nom + " a publié un nouvel examen : « " + titre + " ».\n\n" +
-                        "Vous êtes autorisé(e) à le passer. Connectez-vous à votre espace pour y accéder :\n" +
-                        webDashboardUrl + "\n\n" +
-                        SIGNATURE
-        );
-        envoyer(message);
-    }
-
-    /**
-     * Notifie un etudiant autorise qu'un examen vient d'etre lance (session demarree).
-     */
-    public void sendExamenLanceEmail(String toEmail, String professeurNom, String examenTitre) {
-        String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
-        String titre = examenTitre != null && !examenTitre.isBlank() ? examenTitre.trim() : "Examen";
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject("SmarTest — Examen lancé : " + titre);
-        message.setText(
-                BONJOUR +
-                        "L'examen « " + titre + " » organisé par le professeur " + nom
-                        + " vient d'être lancé. La session est maintenant EN COURS.\n\n" +
-                        "Connectez-vous immédiatement à votre espace pour commencer :\n" +
-                        webDashboardUrl + "\n\n" +
-                        SIGNATURE
-        );
-        envoyer(message);
-    }
-
     /**
      * Notifie un étudiant autorisé qu’un quiz vient d’être publié sur le web.
      */

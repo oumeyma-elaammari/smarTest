@@ -46,11 +46,6 @@ namespace smartest_desktop.ViewModels
                 OnPropertyChanged(nameof(Duree));
                 OnPropertyChanged(nameof(SousTitreCompteur));
                 OnPropertyChanged(nameof(LibelleCreneauResume));
-                OnPropertyChanged(nameof(SecondesCibleExamen));
-                if (!QuestionsVerrouilleesParPublication)
-                    AppliquerRepartitionDureesEquitable();
-                else
-                    ActualiserEtatDuree();
             }
         }
 
@@ -242,54 +237,6 @@ namespace smartest_desktop.ViewModels
         public IReadOnlyList<double> ValeursBareme { get; } =
             Enumerable.Range(0, 81).Select(i => i * ExamenBaremeHelper.Pas).ToList();
 
-        private static readonly int[] PresetsDureeSecondesIndicative =
-        {
-            30, 45, 60, 90, 120, 180, 240, 300, 360, 420, 480, 540, 600,
-        };
-
-        private IReadOnlyList<int> _valeursDureeSecondesCombo =
-            PresetsDureeSecondesIndicative.ToList();
-
-        /// <summary>Presets + valeurs actuelles des questions (pour le ComboBox si durée hors liste).</summary>
-        public IReadOnlyList<int> ValeursDureeSecondesIndicative => _valeursDureeSecondesCombo;
-
-        private bool _suspendDureeQuestionPropagation;
-
-        public int SecondesCibleExamen => ExamenDureeQuestionsHelper.SecondesTotalesCible(_dureeMinutes);
-
-        public int TotalSecondesIndicatifQuestions =>
-            Questions.Sum(q => q.DureeSecondesIndicative);
-
-        public bool DureeQuestionsValide =>
-            QuestionsVerrouilleesParPublication
-            || Questions.Count == 0
-            || (ExamenDureeQuestionsHelper.RepartitionAuMinimumRealisable(Questions.Count, SecondesCibleExamen)
-                && TotalSecondesIndicatifQuestions == SecondesCibleExamen);
-
-        public string ResumeTempsIndicatifs
-        {
-            get
-            {
-                if (Questions.Count == 0)
-                    return "Temps web : —";
-                int t = TotalSecondesIndicatifQuestions;
-                string mmss =
-                    $"{t / 60} min {(t % 60).ToString("D2", CultureInfo.InvariantCulture)} s";
-                if (QuestionsVerrouilleesParPublication)
-                    return $"Temps web (questions) : {mmss} (somme des questions)";
-                return DureeQuestionsValide
-                    ? $"Temps web : {mmss} — aligné sur la durée totale ({Duree} min)"
-                    : $"Temps web : {mmss} — doit égaler {Duree} min d'épreuve";
-            }
-        }
-
-        /// <summary>Reprend la valeur la plus proche des choix proposés (liste déroulante).</summary>
-        public static int SnapDureeVersPreset(int secondes)
-        {
-            int v = secondes <= 0 ? 60 : secondes;
-            return PresetsDureeSecondesIndicative.OrderBy(p => Math.Abs(p - v)).First();
-        }
-
         public double TotalBareme => Math.Round(Questions.Sum(q => q.BaremePoints), 2);
         public double EcartBareme => Math.Round(ExamenBaremeHelper.TotalCible - TotalBareme, 2);
         public bool BaremeValide => Math.Abs(EcartBareme) < 1e-9 && Questions.All(q => ExamenBaremeHelper.EstAuPas(q.BaremePoints));
@@ -377,10 +324,6 @@ namespace smartest_desktop.ViewModels
 
             if (Questions.Sum(q => q.BaremePoints) <= 0.001)
                 ExamenBaremeHelper.AppliquerBaremeParDefaut(Questions.ToList());
-            if (!QuestionsVerrouilleesParPublication)
-                AppliquerRepartitionDureesEquitable();
-            else
-                RebuildValeursDureeCombo();
             RafraichirQualitePedagogique();
             _empreinteInitiale = CalculerEmpreinte();
 
@@ -557,16 +500,6 @@ namespace smartest_desktop.ViewModels
                         return;
                     }
 
-                    if (!DureeQuestionsValide)
-                    {
-                        MessageBox.Show(
-                            MessageErreurDureeQuestionsIndicatives(),
-                            "Temps par question",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                        return;
-                    }
-
                     int nbEmails = CompterEmailsValides(TexteEmailsWeb);
                     string ligneEmails =
                         $"• Publication web : {nbEmails} email(s) autorisé(s) (max {QuizPublicationLimits.MaxAuthorizedStudentEmails})\n";
@@ -625,15 +558,10 @@ namespace smartest_desktop.ViewModels
                 RebrancherEvenementsQuestions();
                 ActualiserEtatBareme();
                 RafraichirQualitePedagogique();
-                if (!QuestionsVerrouilleesParPublication)
-                    AppliquerRepartitionDureesEquitable();
-                else
-                    ActualiserEtatDuree();
                 _validerExamenCommand.RaiseCanExecuteChanged();
             };
             RebrancherEvenementsQuestions();
             ActualiserEtatBareme();
-            ActualiserEtatDuree();
 
             RegenerarCommand = new RelayCommand(_ =>
             {
@@ -924,7 +852,6 @@ namespace smartest_desktop.ViewModels
                 q.OptionDCorrecte,
                 q.ReponseModele,
                 q.BaremePoints,
-                q.DureeSecondesIndicative,
                 q.Explication,
                 ImgLen = q.ImageBase64?.Length ?? 0,
                 q.ImageNom,
@@ -969,32 +896,6 @@ namespace smartest_desktop.ViewModels
                 ActualiserEtatBareme();
                 _validerExamenCommand.RaiseCanExecuteChanged();
             }
-
-            if (e.PropertyName == nameof(QuestionExamen.DureeSecondesIndicative))
-            {
-                if (!QuestionsVerrouilleesParPublication
-                    && sender is QuestionExamen q
-                    && Questions.Count > 0
-                    && !_suspendDureeQuestionPropagation)
-                {
-                    _suspendDureeQuestionPropagation = true;
-                    try
-                    {
-                        ExamenDureeQuestionsHelper.RepartirEnConservantUneQuestion(
-                            Questions.ToList(),
-                            q,
-                            _dureeMinutes);
-                    }
-                    finally
-                    {
-                        _suspendDureeQuestionPropagation = false;
-                    }
-                }
-
-                ActualiserEtatDuree();
-                _validerExamenCommand.RaiseCanExecuteChanged();
-            }
-
             if (e.PropertyName is nameof(QuestionExamen.Enonce)
                 or nameof(QuestionExamen.OptionA)
                 or nameof(QuestionExamen.OptionB)
@@ -1014,64 +915,6 @@ namespace smartest_desktop.ViewModels
             OnPropertyChanged(nameof(EcartBareme));
             OnPropertyChanged(nameof(BaremeValide));
             OnPropertyChanged(nameof(ResumeBareme));
-        }
-
-        private void AppliquerRepartitionDureesEquitable()
-        {
-            if (QuestionsVerrouilleesParPublication || Questions.Count == 0)
-            {
-                ActualiserEtatDuree();
-                return;
-            }
-
-            _suspendDureeQuestionPropagation = true;
-            try
-            {
-                ExamenDureeQuestionsHelper.RepartirEquitable(Questions.ToList(), _dureeMinutes);
-            }
-            finally
-            {
-                _suspendDureeQuestionPropagation = false;
-            }
-
-            ActualiserEtatDuree();
-        }
-
-        private void RebuildValeursDureeCombo()
-        {
-            var merged = new SortedSet<int>(PresetsDureeSecondesIndicative);
-            foreach (var q in Questions)
-                merged.Add(q.DureeSecondesIndicative);
-            _valeursDureeSecondesCombo = merged.ToList();
-            OnPropertyChanged(nameof(ValeursDureeSecondesIndicative));
-        }
-
-        private void ActualiserEtatDuree()
-        {
-            OnPropertyChanged(nameof(SecondesCibleExamen));
-            OnPropertyChanged(nameof(TotalSecondesIndicatifQuestions));
-            OnPropertyChanged(nameof(DureeQuestionsValide));
-            OnPropertyChanged(nameof(ResumeTempsIndicatifs));
-            RebuildValeursDureeCombo();
-        }
-
-        private string MessageErreurDureeQuestionsIndicatives()
-        {
-            int n = Questions.Count;
-            int cible = SecondesCibleExamen;
-            if (!ExamenDureeQuestionsHelper.RepartitionAuMinimumRealisable(n, cible))
-            {
-                int secMin = n * ExamenDureeQuestionsHelper.MinSecondesParQuestion;
-                double minMinutes = secMin / 60.0;
-                return
-                    $"Avec {n} questions, la durée minimale de l'épreuve est d'environ {minMinutes:0.#} minute(s) " +
-                    $"(au moins {ExamenDureeQuestionsHelper.MinSecondesParQuestion} s par question). Augmentez la durée totale.";
-            }
-
-            int total = TotalSecondesIndicatifQuestions;
-            return
-                $"La somme des temps indicatifs par question ({total} s) doit égaler la durée totale de l'épreuve ({cible} s, soit {Duree} min). " +
-                "Modifiez la durée de l'épreuve ou ajustez une durée de question : les autres se rééquilibrent automatiquement.";
         }
 
         private void RafraichirQualitePedagogique()

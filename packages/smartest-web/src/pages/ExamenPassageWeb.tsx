@@ -8,8 +8,7 @@ import {
     formatTime,
     parseDebutExamenMs,
 } from '../utils/examenDisplay'
-import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
-import { useExamenWebSocketReponse } from '../hooks/useExamenWebSocketReponse'
+import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 import {
     useAutoJoinSalleAttente,
     useCreneauTicker,
@@ -26,7 +25,7 @@ import {
     useSnapClearsJoinedOnArrete,
     deriveIsEpreuvePath,
 } from './examenPassageWeb.hooks'
-import { coerceEntityId, extractApiMessage, readEtudiantId } from './examenPassageWeb.shared'
+import { extractApiMessage, readEtudiantId } from './examenPassageWeb.shared'
 import {
     ExamenBlocQuestion,
     ExamenPassageAttenteLayout,
@@ -46,6 +45,7 @@ async function soumettreReponseVersApi(opts: {
     canStart: boolean
     enPause: boolean
     setSubmittingAnswer: (v: boolean) => void
+    setLastAnsweredQuestionId: (v: number) => void
     setStatus: (v: string) => void
 }): Promise<boolean> {
     const {
@@ -56,14 +56,11 @@ async function soumettreReponseVersApi(opts: {
         canStart,
         enPause,
         setSubmittingAnswer,
+        setLastAnsweredQuestionId,
         setStatus,
     } = opts
 
     if (!Number.isFinite(id) || id <= 0) return false
-    if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
-        setStatus('Session incomplète : identifiant étudiant introuvable. Déconnectez-vous puis reconnectez-vous.')
-        return false
-    }
     if (!canStart || enPause) return false
     if (questionId === null || selectedResponseId === null) {
         setStatus('Sélectionnez une réponse avant de valider.')
@@ -73,6 +70,7 @@ async function soumettreReponseVersApi(opts: {
     try {
         setSubmittingAnswer(true)
         await examenApi.repondreQuestionCourante(id, etudiantId, questionId, selectedResponseId)
+        setLastAnsweredQuestionId(questionId)
         setStatus('Réponse enregistrée. Aucune correction immédiate n’est affichée pendant l’examen.')
         return true
     } catch (e: unknown) {
@@ -96,6 +94,7 @@ export default function ExamenPassageWeb() {
     const [status, setStatus] = useState<string>('')
     const [loading, setLoading] = useState(true)
     const [selectedResponseId, setSelectedResponseId] = useState<number | null>(null)
+    const [lastAnsweredQuestionId, setLastAnsweredQuestionId] = useState<number | null>(null)
     const [submittingAnswer, setSubmittingAnswer] = useState(false)
     const [wsNotice, setWsNotice] = useState<string | null>(null)
     const [creneauTick, setCreneauTick] = useState(0)
@@ -129,8 +128,8 @@ export default function ExamenPassageWeb() {
 
     const enPausePourTemps =
         Boolean(snap?.enPause) || (snap?.etat ?? '').trim().toUpperCase() === 'EN_PAUSE'
-    const minuteurQuestion = useExamenMinuteurQuestionLive(
-        snap?.tempsQuestionRestantSeconds,
+    const tempsRestantAffiche = useExamenTempsRestantLive(
+        snap?.tempsRestantMinutes,
         snap?.etat ?? meta?.statut ?? '',
         enPausePourTemps,
     )
@@ -152,38 +151,19 @@ export default function ExamenPassageWeb() {
     const questionCouranteAvecReponses = questionCourante as
         | (typeof questionCourante & { reponses?: Array<{ id?: number; contenu?: string }> })
         | undefined
-    const questionId = coerceEntityId(questionCourante?.id)
+    const questionId = typeof questionCourante?.id === 'number' ? questionCourante.id : null
     const reponses = Array.isArray(questionCouranteAvecReponses?.reponses)
         ? (questionCouranteAvecReponses.reponses as Array<{ id?: number; contenu?: string }>)
         : []
 
-    useQuestionSelectionClear(questionId, setSelectedResponseId)
+    useQuestionSelectionClear(questionId, lastAnsweredQuestionId, setSelectedResponseId)
 
     if (!Number.isFinite(id) || id <= 0) {
         return <ExamenPassageInvalid />
     }
 
-    const { envoyerReponseWebSocket } = useExamenWebSocketReponse()
-
-    const soumettreReponseCourante = async () => {
-        if (minuteurQuestion.isExpired) {
-            setStatus(
-                'Le temps pour cette question est écoulé. Vous ne pouvez plus enregistrer de réponse tant que le professeur n’a pas ajouté du temps au minuteur.',
-            )
-            return
-        }
-        
-        // Envoyer via WebSocket pour mise à jour temps réel immédiate
-        if (questionId && selectedResponseId) {
-            envoyerReponseWebSocket({
-                examenId: id,
-                etudiantId,
-                questionId,
-                reponseId: selectedResponseId,
-            })
-        }
-
-        const ok = await soumettreReponseVersApi({
+    const soumettreReponseCourante = async () =>
+        soumettreReponseVersApi({
             id,
             etudiantId,
             questionId,
@@ -191,18 +171,9 @@ export default function ExamenPassageWeb() {
             canStart,
             enPause,
             setSubmittingAnswer,
+            setLastAnsweredQuestionId,
             setStatus,
         })
-        if (ok) {
-            try {
-                const bc = new BroadcastChannel(`smartest.examen.${id}`)
-                bc.postMessage({ type: 'reponse-enregistree', examenId: id })
-                bc.close()
-            } catch {
-                /* BroadcastChannel indisponible */
-            }
-        }
-    }
 
     const heureLancement = formatTime(meta?.dateDebut)
     const dateExamen = formatDateTime(meta?.dateDebut)
@@ -233,11 +204,6 @@ export default function ExamenPassageWeb() {
         )
     }
 
-    const questionHeading =
-        snap?.questionCourante?.numero != null && typeof snap.questionCourante.numero === 'number'
-            ? `Question ${snap.questionCourante.numero}`
-            : 'Question en cours'
-
     const blocQuestionEl = (
         <ExamenBlocQuestion
             enPause={enPause}
@@ -249,7 +215,6 @@ export default function ExamenPassageWeb() {
             selectedResponseId={selectedResponseId}
             setSelectedResponseId={setSelectedResponseId}
             submittingAnswer={submittingAnswer}
-            tempsQuestionExpire={minuteurQuestion.isExpired}
             onValider={soumettreReponseCourante}
         />
     )
@@ -260,12 +225,11 @@ export default function ExamenPassageWeb() {
                 shell={shell}
                 meta={meta}
                 id={id}
+                tempsRestantAffiche={tempsRestantAffiche}
                 canStart={canStart}
                 etat={etat}
                 status={status}
                 wsNotice={wsNotice}
-                questionHeading={questionHeading}
-                minuteurQuestion={minuteurQuestion}
                 blocQuestion={blocQuestionEl}
             />
         )

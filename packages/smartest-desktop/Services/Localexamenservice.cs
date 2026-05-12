@@ -94,16 +94,12 @@ namespace smartest_desktop.Services
         public Task SupprimerAsync(int id, CancellationToken cancellationToken = default) =>
             InvokeDbAsync(async () =>
             {
-                var examen = await _db.Examens
-                    .Include(e => e.Questions)
-                    .Include(e => e.Cours)
-                    .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-                if (examen == null)
-                    return;
-
-                examen.Cours.Clear();
-                _db.Examens.Remove(examen);
-                await _db.SaveChangesAsync(cancellationToken);
+                var examen = await _db.Examens.FindAsync(new object[] { id }, cancellationToken);
+                if (examen != null)
+                {
+                    _db.Examens.Remove(examen);
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
             }, "Suppression de l’examen");
 
         public Task ChangerStatutAsync(int id, string statut, CancellationToken cancellationToken = default) =>

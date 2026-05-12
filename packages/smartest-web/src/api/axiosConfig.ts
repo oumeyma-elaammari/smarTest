@@ -1,10 +1,9 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import toast from 'react-hot-toast'
-import { resolveHttpApiBase } from '../config/runtimeBackend'
 import { getUserErrorMessage } from '../utils/userErrorMessage'
 
 const api = axios.create({
-    baseURL: resolveHttpApiBase(),
+    baseURL: 'http://localhost:8081',
     headers: { 'Content-Type': 'application/json' },
     timeout: 15_000,
 })

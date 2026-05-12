@@ -111,7 +111,6 @@ namespace smartest_desktop.Services
                     ? JsonSerializer.Serialize(q.ReponsesCorrectes)
                     : string.Empty,
                 BaremePoints = q.BaremePoints,
-                DureeSecondesIndicative = q.DureeSecondesIndicative,
                 ImageBase64 = q.ImageBase64,
                 ImageType = q.ImageType,
                 ImageNom = q.ImageNom,

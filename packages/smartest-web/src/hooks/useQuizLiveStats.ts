@@ -7,10 +7,8 @@ import type {
     StreamEnvelope,
 } from '../types/quizLive'
 
-import { resolveHttpApiBase, stompBrokerUrl } from '../config/runtimeBackend'
-
-const API_BASE = resolveHttpApiBase()
-const WS_URL = stompBrokerUrl()
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8081'
+const WS_URL = `${API_BASE.replace(/^http/, 'ws')}/ws`
 
 function stringifyEnonce(v: unknown): string {
     if (v == null) return ''

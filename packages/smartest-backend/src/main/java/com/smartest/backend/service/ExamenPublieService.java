@@ -3,7 +3,6 @@ package com.smartest.backend.service;
 import com.smartest.backend.dto.request.PublicationWebQuestionRequest;
 import com.smartest.backend.dto.response.ExamenPublieMetadataResponse;
 import com.smartest.backend.exception.InvalidSessionStateException;
-import com.smartest.backend.exception.UnauthorizedAccessException;
 import com.smartest.backend.entity.*;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import com.smartest.backend.repository.*;
@@ -11,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -29,17 +26,8 @@ public class ExamenPublieService {
     private final ExamenPublieRepository examenPublieRepository;
     private final ProfesseurRepository professeurRepository;
     private final QuestionRepository questionRepository;
-    private final QuizRepository quizRepository;
-    private final SessionExamenRepository sessionExamenRepository;
-    private final ReponseEtudiantRepository reponseEtudiantRepository;
-    private final StatistiqueQuestionRepository statistiqueQuestionRepository;
-    private final ExamenSupervisionService examenSupervisionService;
-    private final EmailService emailService;
 
     private static final double BAREME_DEFAUT_WEB = 20.0;
-    private static final String PROFESSEUR_INTROUVABLE = "Professeur introuvable";
-    private static final String EXAMEN_INTROUVABLE = "Examen introuvable";
-    private static final String EXAMEN_HORS_PROPRIETE = "Cet examen n'appartient pas à votre compte";
 
     @Transactional(readOnly = true)
     public List<ExamenPublieMetadataResponse> getMesExamensPublicationWeb(String emailUtilisateur) {
@@ -85,7 +73,6 @@ public class ExamenPublieService {
 
     /**
      * Met à jour les emails web ; utilisé à la publication depuis le desktop.
-     * Envoie les notifications uniquement lors de la première publication web.
      */
     @Transactional
     public void definirEmailsPublicationWeb(Long examenId, Long professeurId, List<String> emailsBruts) {
@@ -94,9 +81,6 @@ public class ExamenPublieService {
         if (ex.getProfesseur() == null || !ex.getProfesseur().getId().equals(professeurId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cet examen n'appartient pas à votre compte");
         }
-        
-        boolean dejaWebPublie = ex.getPublieSurWebLe() != null;
-        
         ex.getEmailsAutorisesWeb().clear();
         if (emailsBruts != null) {
             for (String raw : emailsBruts) {
@@ -107,40 +91,10 @@ public class ExamenPublieService {
         }
         if (ex.getEmailsAutorisesWeb().isEmpty()) {
             ex.setPublieSurWebLe(null);
-        } else if (!dejaWebPublie) {
+        } else {
             ex.setPublieSurWebLe(LocalDateTime.now());
         }
         examenPublieRepository.save(ex);
-
-        // Envoyer les notifications uniquement lors de la première publication web
-        if (!dejaWebPublie && !ex.getEmailsAutorisesWeb().isEmpty()) {
-            String profNom = ex.getProfesseur() != null && ex.getProfesseur().getNom() != null
-                    ? ex.getProfesseur().getNom().trim()
-                    : "Votre professeur";
-            String titreExamen = ex.getTitre() != null ? ex.getTitre() : "";
-            List<String> destinataires = new ArrayList<>(ex.getEmailsAutorisesWeb());
-
-            Runnable envoyerNotifications = () -> {
-                for (String email : destinataires) {
-                    try {
-                        emailService.sendExamenPublieEmail(email, profNom, titreExamen);
-                    } catch (Exception ex2) {
-                        // Log silencieux comme dans QuizService
-                    }
-                }
-            };
-
-            if (TransactionSynchronizationManager.isSynchronizationActive()) {
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        envoyerNotifications.run();
-                    }
-                });
-            } else {
-                envoyerNotifications.run();
-            }
-        }
     }
 
     /**
@@ -247,7 +201,6 @@ public class ExamenPublieService {
                 StatutExamen.EN_COURS, now, now);
     }
 
-    @Transactional
     public ExamenPublie demarrer(Long id) {
         ExamenPublie exam = examenPublieRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
@@ -258,39 +211,7 @@ public class ExamenPublieService {
         }
 
         exam.setStatut(StatutExamen.EN_COURS);
-        examenPublieRepository.save(exam);
-
-        // Envoyer les notifications aux étudiants autorisés
-        if (exam.getEmailsAutorisesWeb() != null && !exam.getEmailsAutorisesWeb().isEmpty()) {
-            String nomProf = exam.getProfesseur() != null && exam.getProfesseur().getNom() != null
-                    ? exam.getProfesseur().getNom().trim()
-                    : "Votre professeur";
-            String titreExamen = exam.getTitre() != null ? exam.getTitre() : "";
-            List<String> destinataires = new ArrayList<>(exam.getEmailsAutorisesWeb());
-
-            Runnable envoyerNotifications = () -> {
-                for (String email : destinataires) {
-                    try {
-                        emailService.sendExamenLanceEmail(email, nomProf, titreExamen);
-                    } catch (Exception ex) {
-                        // Log silencieux comme dans QuizService
-                    }
-                }
-            };
-
-            if (TransactionSynchronizationManager.isSynchronizationActive()) {
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        envoyerNotifications.run();
-                    }
-                });
-            } else {
-                envoyerNotifications.run();
-            }
-        }
-
-        return exam;
+        return examenPublieRepository.save(exam);
     }
 
     public ExamenPublie terminer(Long id) {
@@ -303,62 +224,5 @@ public class ExamenPublieService {
 
         exam.setStatut(StatutExamen.TERMINE);
         return examenPublieRepository.save(exam);
-    }
-
-    /**
-     * Supprime l'examen publié côté serveur : réservé au professeur propriétaire (aligné sur {@link QuizService#deleteQuiz}).
-     */
-    @Transactional
-    public void deleteExamenPublie(Long examenId, String professeurEmail) {
-        Professeur prof = professeurRepository.findByEmail(professeurEmail.trim().toLowerCase(Locale.ROOT))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, PROFESSEUR_INTROUVABLE));
-
-        ExamenPublie exam = examenPublieRepository.findWithQuestionsAndProfesseurById(examenId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, EXAMEN_INTROUVABLE));
-
-        if (exam.getProfesseur() == null || !exam.getProfesseur().getId().equals(prof.getId())) {
-            throw new UnauthorizedAccessException(EXAMEN_HORS_PROPRIETE);
-        }
-
-        examenSupervisionService.evictRuntimeState(examenId);
-
-        List<Question> questionsLiees = exam.getQuestions() != null
-                ? new ArrayList<>(exam.getQuestions())
-                : new ArrayList<>();
-
-        for (Question q : questionsLiees) {
-            reponseEtudiantRepository.deleteByQuestionId(q.getId());
-        }
-
-        List<SessionExamen> sessions = sessionExamenRepository.findByExamenPublieId(examenId);
-        List<Long> sessionIds = sessions.stream()
-                .map(SessionExamen::getId)
-                .filter(Objects::nonNull)
-                .toList();
-
-        if (!sessionIds.isEmpty()) {
-            statistiqueQuestionRepository.deleteAllBySessionExamenIdIn(sessionIds);
-        }
-        statistiqueQuestionRepository.deleteAllByExamenPublieId(examenId);
-
-        for (SessionExamen s : sessions) {
-            reponseEtudiantRepository.deleteBySessionExamenId(s.getId());
-        }
-        sessionExamenRepository.deleteAll(sessions);
-
-        if (exam.getQuestions() != null) {
-            exam.getQuestions().clear();
-        }
-        examenPublieRepository.saveAndFlush(exam);
-
-        examenPublieRepository.delete(exam);
-        examenPublieRepository.flush();
-
-        for (Question q : questionsLiees) {
-            if (quizRepository.countQuizzesWithQuestion(q.getId()) == 0
-                    && questionRepository.countExamensWithQuestion(q.getId()) == 0) {
-                questionRepository.deleteById(q.getId());
-            }
-        }
     }
 }

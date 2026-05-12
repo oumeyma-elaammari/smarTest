@@ -61,17 +61,6 @@ export const examenApi = {
             params: { deltaMinutes },
         })
     },
-    ajusterMinuteurQuestion(examenId: number, deltaSeconds: number) {
-        return api.patch<ExamenSnapshot>(`/api/examens-publies/${examenId}/controle/minuteur-question`, null, {
-            params: { deltaSeconds },
-        })
-    },
-    /** Durée par défaut du minuteur pour chaque question (≥ 5 s). Au lancement et à chaque changement de question. */
-    definirDureeMinuteurParQuestion(examenId: number, questionDurationSeconds: number) {
-        return api.patch<ExamenSnapshot>(`/api/examens-publies/${examenId}/controle/mode-passage`, null, {
-            params: { mode: 'MANUAL', questionDurationSeconds },
-        })
-    },
     definirBareme(examenId: number, baremeSur20: number) {
         return api.patch<ExamenSnapshot>(`/api/examens-publies/${examenId}/bareme`, null, {
             params: { baremeSur20 },

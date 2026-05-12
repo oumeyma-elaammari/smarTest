@@ -28,23 +28,13 @@ public class JwtUtil {
     }
 
     public String generateToken(String email, String role) {
-        return generateToken(email, role, null);
-    }
-
-    /**
-     * @param userId identifiant base (prof ou étudiant), exposé en claim {@code userId} pour le client web
-     *               (ex. passage examen : paramètre {@code etudiantId} aligné sur le JWT).
-     */
-    public String generateToken(String email, String role, Long userId) {
-        var builder = Jwts.builder()
+        return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration));
-        if (userId != null) {
-            builder.claim("userId", userId);
-        }
-        return builder.signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String extractEmail(String token) {

@@ -69,14 +69,6 @@ namespace smartest_desktop.ViewModels
             set => SetProperty(ref _baremePoints, Math.Max(0, value));
         }
 
-        /// <summary>Durée indicative pour le passage web (secondes), comme le barème.</summary>
-        private int _dureeSecondesIndicative = 60;
-        public int DureeSecondesIndicative
-        {
-            get => _dureeSecondesIndicative;
-            set => SetProperty(ref _dureeSecondesIndicative, Math.Clamp(value, 5, 7200));
-        }
-
         // ── Options (QCM / CHECKBOX / IMAGE) ─────────────────────────────────
 
         private string _optionA = string.Empty;

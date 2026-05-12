@@ -208,10 +208,9 @@ public class AuthService {
             if (!passwordEncoder.matches(request.getPassword(), prof.get().getPassword()))
                 throw new InvalidPasswordException();
 
-            Long pid = prof.get().getId();
-            String token = jwtUtil.generateToken(prof.get().getEmail(), "PROFESSEUR", pid);
+            String token = jwtUtil.generateToken(prof.get().getEmail(), "PROFESSEUR");
             return new AuthResponse(token, "PROFESSEUR",
-                    prof.get().getNom(), prof.get().getEmail(), pid);
+                    prof.get().getNom(), prof.get().getEmail());
         }
 
         var etudiant = etudiantRepository.findByEmail(request.getEmail());
@@ -221,10 +220,9 @@ public class AuthService {
             if (!passwordEncoder.matches(request.getPassword(), etudiant.get().getPassword()))
                 throw new InvalidPasswordException();
 
-            Long eid = etudiant.get().getId();
-            String token = jwtUtil.generateToken(etudiant.get().getEmail(), "ETUDIANT", eid);
+            String token = jwtUtil.generateToken(etudiant.get().getEmail(), "ETUDIANT");
             return new AuthResponse(token, "ETUDIANT",
-                    etudiant.get().getNom(), etudiant.get().getEmail(), eid);
+                    etudiant.get().getNom(), etudiant.get().getEmail());
         }
 
         throw new AccountNotFoundException(request.getEmail());

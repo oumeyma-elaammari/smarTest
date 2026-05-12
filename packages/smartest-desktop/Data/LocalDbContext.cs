@@ -52,7 +52,7 @@ namespace smartest_desktop.Data
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             if (!options.IsConfigured)
-                options.UseSqlite($"Data Source={CheminBase};Foreign Keys=True");
+                options.UseSqlite($"Data Source={CheminBase}");
         }
 
         // ══════════════════════════════════════════════════════════
@@ -87,7 +87,6 @@ namespace smartest_desktop.Data
                 entity.Property(q => q.Difficulte).HasMaxLength(20);
                 entity.Property(q => q.Explication).HasColumnType("TEXT");
                 entity.Property(q => q.BaremePoints).HasDefaultValue(0.0);
-                entity.Property(q => q.DureeSecondesIndicative).HasDefaultValue(60);
 
                 entity.Property(q => q.ReponseModele).HasColumnType("TEXT");
                 entity.Property(q => q.ReponsesCorrectesJson).HasColumnType("TEXT");

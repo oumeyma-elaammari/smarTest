@@ -125,16 +125,12 @@ export const examenSnapshotSchema = z.object({
     /** Ordre et énoncés de toute l'épreuve (supervision prof). */
     planQuestions: z.array(planQuestionRowSchema).optional(),
     tempsRestantMinutes: z.number().nullish(),
-    /** Minuteur de la question courante (secondes), synchronisé serveur. */
-    tempsQuestionRestantSeconds: z.coerce.number().nullish(),
     baremeSur20: z.coerce.number().optional(),
     participantsEnAttente: z.coerce.number().optional(),
     resultatsEnAttente: z.coerce.number().optional(),
     resultatsValides: z.coerce.number().optional(),
     advanceMode: z.string().optional(),
     questionDurationSeconds: z.coerce.number().optional(),
-    /** Supervision : étudiants présents ayant déjà répondu à la question courante. */
-    reponsesPourQuestionCourante: z.coerce.number().optional(),
 })
 
 export type ExamenMeta = z.infer<typeof examenMetaSchema>
@@ -150,9 +146,6 @@ export const examenQuestionStateSchema = z.object({
     questionCouranteIndex: z.number().nullable().optional(),
     questionCourante: questionCouranteSnapshotPart.nullish(),
     tempsRestantMinutes: z.number().nullish(),
-    tempsQuestionRestantSeconds: z.coerce.number().nullish(),
-    /** Durée indicative prévue pour répondre (secondes), même sens que le snapshot supervision. */
-    questionDurationSeconds: z.coerce.number().optional(),
 })
 
 export function mapQuestionStateToSnapshot(raw: unknown): ExamenSnapshot | null {
@@ -167,7 +160,5 @@ export function mapQuestionStateToSnapshot(raw: unknown): ExamenSnapshot | null 
         totalQuestions: q.totalQuestions,
         questionCourante: q.questionCourante ?? undefined,
         tempsRestantMinutes: q.tempsRestantMinutes ?? undefined,
-        tempsQuestionRestantSeconds: q.tempsQuestionRestantSeconds ?? undefined,
-        questionDurationSeconds: q.questionDurationSeconds ?? undefined,
     }
 }

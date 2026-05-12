@@ -28,11 +28,11 @@ export type ExamenListeCardProps = {
     /** Si défini : affichage superviseur avec pilotage dédié. */
     readonly superviseurProps?: {
         readonly onOuvrirPilotage: () => void
-        /** Démarrer la session sur le serveur puis redirection (ex. vers /supervision/...). */
+        /** Lancer la session sur le serveur puis redirection (ex. vers /supervision/...). */
         readonly onLancerSession?: () => void | Promise<void>
-        /** Désactive le bouton pendant l'appel API. */
+        /** Désactive le bouton lancer pendant l'appel API. */
         readonly lancementEnCours?: boolean
-        /** Affiche « Démarrer » seulement tant que la session n'a pas été démarrée côté serveur (métadonnée). */
+        /** Affiche « Lancer » seulement tant que la session n'a pas été démarrée côté serveur (métadonnée). */
         readonly peutLancerSession: boolean
     }
 }
@@ -119,7 +119,7 @@ function SuperviseurBlock({
                     }}
                     style={styleLancerBtn}
                 >
-                    {superviseurProps.lancementEnCours ? 'Démarrage…' : 'Démarrer et piloter'}
+                    {superviseurProps.lancementEnCours ? 'Lancement…' : 'Lancer et piloter'}
                 </button>
             ) : null}
             <button
@@ -390,7 +390,7 @@ export function ExamenListeCard({
                         />
                         <div>
                             <span style={{ display: 'block', color: '#64748b', fontSize: 12, marginBottom: 2 }}>
-                                Créneau de démarrage
+                                Créneau de lancement
                             </span>
                             <span style={{ fontWeight: 600, color: '#0f1e3d', lineHeight: 1.45 }}>{dateLigne}</span>
                         </div>

@@ -1,5 +1,0 @@
-# Copier ce fichier vers application-local.yaml et renseigner le mot de passe MySQL.
-# application-local.yaml est ignoré par git.
-spring:
-  datasource:
-    password: REMPLACER_PAR_VOTRE_MOT_DE_PASSE_MYSQL
