@@ -153,12 +153,16 @@ namespace smartest_desktop.Views
             int qIdx = snap.Value<int?>("questionCouranteIndex") ?? snap.Value<int?>("QuestionCouranteIndex") ?? 0;
             int total = snap.Value<int?>("totalQuestions") ?? snap.Value<int?>("TotalQuestions") ?? 0;
             int temps = snap.Value<int?>("tempsRestantMinutes") ?? snap.Value<int?>("TempsRestantMinutes") ?? 0;
+            int tempsQuestion = snap.Value<int?>("tempsQuestionRestantSeconds") ?? snap.Value<int?>("TempsQuestionRestantSeconds") ?? -1;
 
             if (total > 0)
                 TxtQuestion.Text = $"Question {Math.Min(qIdx + 1, total)} / {total}";
             else
                 TxtQuestion.Text = "Aucune question sur le serveur.";
-            TxtTemps.Text = temps >= 0 ? $"Temps restant (minuteur) : {temps} min" : "";
+            if (tempsQuestion >= 0 && (etat == "EN_COURS" || etat == "EN_PAUSE"))
+                TxtTemps.Text = $"Temps examen : {Math.Max(0, temps)} min — Temps question : {Math.Max(0, tempsQuestion)} s";
+            else
+                TxtTemps.Text = temps >= 0 ? $"Temps examen : {temps} min" : "";
 
             var qc = snap["questionCourante"] ?? snap["QuestionCourante"];
             if (qc is JObject q)
@@ -178,7 +182,7 @@ namespace smartest_desktop.Views
             BtnReprendre.Visibility = etat == "EN_PAUSE" ? Visibility.Visible : Visibility.Collapsed;
             BtnPrecedente.Visibility = etat == "EN_COURS" ? Visibility.Visible : Visibility.Collapsed;
             BtnSuivante.Visibility = etat == "EN_COURS" ? Visibility.Visible : Visibility.Collapsed;
-            BtnTempsMoins.Visibility = (etat == "EN_COURS" || etat == "EN_PAUSE" || etat == "PLANIFIE") && !termine
+            BtnTempsMoins.Visibility = etat == "EN_COURS" && !termine
                 ? Visibility.Visible
                 : Visibility.Collapsed;
             BtnTempsPlus.Visibility = BtnTempsMoins.Visibility;
@@ -189,7 +193,7 @@ namespace smartest_desktop.Views
             BtnReprendre.IsEnabled = !termine && etat == "EN_PAUSE";
             BtnPrecedente.IsEnabled = !termine && etat == "EN_COURS" && total > 0 && qIdx > 0;
             BtnSuivante.IsEnabled = !termine && etat == "EN_COURS" && total > 0;
-            BtnTempsMoins.IsEnabled = !termine && (etat == "EN_COURS" || etat == "EN_PAUSE" || etat == "PLANIFIE");
+            BtnTempsMoins.IsEnabled = !termine && etat == "EN_COURS" && total > 0;
             BtnTempsPlus.IsEnabled = BtnTempsMoins.IsEnabled;
             BtnTerminer.IsEnabled = !termine;
         }
@@ -316,7 +320,7 @@ namespace smartest_desktop.Views
             await ExecuterAsync(async () =>
             {
                 string tok = RequireToken();
-                return await _api.AjusterTempsAsync(tok, _examenId, -5);
+                return await _api.AjusterMinuteurQuestionAsync(tok, _examenId, -30);
             });
         }
 
@@ -325,7 +329,7 @@ namespace smartest_desktop.Views
             await ExecuterAsync(async () =>
             {
                 string tok = RequireToken();
-                return await _api.AjusterTempsAsync(tok, _examenId, 5);
+                return await _api.AjusterMinuteurQuestionAsync(tok, _examenId, 30);
             });
         }
 

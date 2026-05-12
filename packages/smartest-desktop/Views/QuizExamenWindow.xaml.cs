@@ -173,6 +173,7 @@ namespace smartest_desktop.Views
                     : q.ReponseCorrecte,
                 ReponseModele = q.ReponseModele,
                 BaremePoints = q.BaremePoints,
+                DureeSecondesIndicative = ExamenResultViewModel.SnapDureeVersPreset(q.DureeSecondesIndicative),
                 ImageBase64 = q.ImageBase64,
                 ImageType = q.ImageType,
                 ImageNom = q.ImageNom

@@ -5,6 +5,8 @@ import com.smartest.backend.entity.Question;
 import com.smartest.backend.entity.Reponse;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import com.smartest.backend.repository.ExamenPublieRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,14 +35,21 @@ public class ExamenSupervisionService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ExamenPublieRepository examenPublieRepository;
+    private final ObjectMapper objectMapper;
+    private final EmailService emailService;
     private final Map<Long, ExamenRuntimeState> states = new ConcurrentHashMap<>();
-    private final Map<Long, ScheduledFuture<?>> timerTasks = new ConcurrentHashMap<>();
+    /** Décompte 1 s pour le minuteur de la question courante (pas de passage auto à la suivante). */
+    private final Map<Long, ScheduledFuture<?>> questionTickerTasks = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     public ExamenSupervisionService(SimpMessagingTemplate messagingTemplate,
-                                    ExamenPublieRepository examenPublieRepository) {
+                                    ExamenPublieRepository examenPublieRepository,
+                                    ObjectMapper objectMapper,
+                                    EmailService emailService) {
         this.messagingTemplate = messagingTemplate;
         this.examenPublieRepository = examenPublieRepository;
+        this.objectMapper = objectMapper;
+        this.emailService = emailService;
     }
 
     /** Bloque la salle d’attente étudiant tant que le créneau de début n’est pas atteint côté serveur. */
@@ -78,6 +87,8 @@ public class ExamenSupervisionService {
                 state.phase
         );
         publish(examenId, "salle-attente", getSalleAttente(examenId));
+        /* Supervision et minuteurs prof : aligner participants / compteurs sur /topic/.../etat */
+        publishAndSnapshot(examenId);
         return response;
     }
 
@@ -146,7 +157,7 @@ public class ExamenSupervisionService {
              * PLANIFIE / TERMINE : pas de contenu tant que pas inscrit en salle (sauf méta via total).
              */
             ExamenPublie examSansRoom = chargerExamen(examenId);
-            int totalSansRoom = examSansRoom.getQuestions() == null ? 0 : examSansRoom.getQuestions().size();
+            int totalSansRoom = questionsOrderedForExamen(examSansRoom).size();
             return new ExamQuestionStateResponse(
                     examenId,
                     state.phase,
@@ -154,12 +165,15 @@ public class ExamenSupervisionService {
                     totalSansRoom,
                     null,
                     null,
-                    state.remainingMinutes
+                    state.remainingMinutes,
+                    null,
+                    resolveIndicativeSeconds(examSansRoom, 0, state)
             );
         }
 
         ExamenPublie exam = chargerExamen(examenId);
-        int totalQuestions = exam.getQuestions() == null ? 0 : exam.getQuestions().size();
+        List<Question> ordered = questionsOrderedForExamen(exam);
+        int totalQuestions = ordered.size();
         Integer idx = null;
         if (totalQuestions > 0) {
             idx = Math.max(0, Math.min(state.currentQuestionIndex, totalQuestions - 1));
@@ -168,7 +182,7 @@ public class ExamenSupervisionService {
         boolean montrerContenuQuestions =
                 "EN_COURS".equals(state.phase) || "EN_PAUSE".equals(state.phase);
         Map<String, Object> questionPayload =
-                montrerContenuQuestions ? buildQuestionPayload(exam, idx) : null;
+                montrerContenuQuestions ? buildQuestionPayload(ordered, idx) : null;
 
         return new ExamQuestionStateResponse(
                 examenId,
@@ -177,7 +191,9 @@ public class ExamenSupervisionService {
                 totalQuestions,
                 idx,
                 questionPayload,
-                state.remainingMinutes
+                state.remainingMinutes,
+                state.questionRemainingSeconds,
+                idx != null ? resolveIndicativeSeconds(exam, idx, state) : resolveIndicativeSeconds(exam, 0, state)
         );
     }
 
@@ -200,6 +216,7 @@ public class ExamenSupervisionService {
         }
         state.waitingRoom.put(etudiantId, new StudentPresence(etudiantId, emailBrut.trim(), LocalDateTime.now()));
         publish(examenId, "salle-attente", getSalleAttente(examenId));
+        publishAndSnapshot(examenId);
     }
 
     public Map<String, Object> enregistrerReponseEtudiant(Long examenId, Long etudiantId, Long questionId, Long reponseId) {
@@ -222,14 +239,20 @@ public class ExamenSupervisionService {
         }
 
         ExamenPublie exam = chargerExamen(examenId);
-        int totalQuestions = exam.getQuestions() == null ? 0 : exam.getQuestions().size();
+        List<Question> ordered = questionsOrderedForExamen(exam);
+        int totalQuestions = ordered.size();
         if (totalQuestions <= 0) {
             throw new IllegalStateException("Aucune question disponible pour cet examen.");
         }
         int currentIdx = Math.max(0, Math.min(state.currentQuestionIndex, totalQuestions - 1));
-        Question currentQuestion = exam.getQuestions().get(currentIdx);
+        Question currentQuestion = ordered.get(currentIdx);
         if (!currentQuestion.getId().equals(questionId)) {
             throw new IllegalStateException("Vous ne pouvez répondre qu'à la question active.");
+        }
+
+        if (state.questionRemainingSeconds <= 0) {
+            throw new IllegalStateException(
+                    "Le temps imparti pour cette question est écoulé. Attendez que le professeur ajoute du temps au minuteur.");
         }
 
         Reponse choix = currentQuestion.getReponses()
@@ -241,6 +264,15 @@ public class ExamenSupervisionService {
         state.answersByStudent
                 .computeIfAbsent(etudiantId, __ -> new ConcurrentHashMap<>())
                 .put(questionId, choix.getId());
+
+        /* Actualise la supervision prof en temps réel (compteur réponses / étudiants actifs). */
+        int repCount = compterReponsesPourQuestionCourante(state, ordered, currentIdx);
+        Map<String, Object> compteurs = new LinkedHashMap<>();
+        compteurs.put("reponsesPourQuestionCourante", repCount);
+        compteurs.put("participantsEnAttente", state.waitingRoom.size());
+        compteurs.put("questionCouranteIndex", currentIdx);
+        publish(examenId, "compteurs-supervision", compteurs);
+        publishAndSnapshot(examenId);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("enregistree", true);
@@ -272,11 +304,12 @@ public class ExamenSupervisionService {
         }
 
         ExamenPublie exam = chargerExamen(examenId);
-        int totalQuestions = exam.getQuestions() == null ? 0 : exam.getQuestions().size();
+        List<Question> ordered = questionsOrderedForExamen(exam);
+        int totalQuestions = ordered.size();
         Map<Long, Long> answers = state.answersByStudent.getOrDefault(etudiantId, new ConcurrentHashMap<>());
 
         int bonnes = 0;
-        for (Question q : exam.getQuestions()) {
+        for (Question q : ordered) {
             Long selectedResponseId = answers.get(q.getId());
             if (selectedResponseId == null) continue;
             boolean isCorrect = q.getReponses()
@@ -310,9 +343,33 @@ public class ExamenSupervisionService {
         state.paused = false;
         state.startedAt = LocalDateTime.now();
         state.remainingMinutes = Math.max(0, exam.getDuree() == null ? state.remainingMinutes : exam.getDuree());
+        List<Question> orderedLaunch = questionsOrderedForExamen(exam);
+        int qi = orderedLaunch.isEmpty()
+                ? 0
+                : Math.max(0, Math.min(state.currentQuestionIndex, orderedLaunch.size() - 1));
+        state.questionRemainingSeconds = Math.max(0, resolveIndicativeSeconds(exam, qi, state));
         persistStatut(examenId, StatutExamen.EN_COURS);
-        restartAutoAdvanceIfNeeded(examenId, state);
+        notifierEtudiantsExamenLance(examenId, exam);
+        restartQuestionTicker(examenId);
         return publishAndSnapshot(examenId);
+    }
+
+    private void notifierEtudiantsExamenLance(Long examenId, ExamenPublie exam) {
+        try {
+            ExamenPublie fetched = examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(examenId).orElse(null);
+            if (fetched == null || fetched.getEmailsAutorisesWeb() == null || fetched.getEmailsAutorisesWeb().isEmpty()) {
+                return;
+            }
+            String profNom = exam.getProfesseur() != null ? exam.getProfesseur().getNom() : null;
+            String titre = exam.getTitre();
+            for (String email : fetched.getEmailsAutorisesWeb()) {
+                try {
+                    emailService.sendExamenLanceEmail(email, profNom, titre);
+                } catch (Exception ignored) {
+                }
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     public SnapshotResponse pause(Long examenId) {
@@ -321,7 +378,7 @@ public class ExamenSupervisionService {
         state.paused = true;
         state.phase = "EN_PAUSE";
         persistStatut(examenId, StatutExamen.EN_PAUSE);
-        cancelTimer(examenId);
+        cancelQuestionTicker(examenId);
         return publishAndSnapshot(examenId);
     }
 
@@ -331,7 +388,7 @@ public class ExamenSupervisionService {
         state.paused = false;
         state.phase = "EN_COURS";
         persistStatut(examenId, StatutExamen.EN_COURS);
-        restartAutoAdvanceIfNeeded(examenId, state);
+        restartQuestionTicker(examenId);
         return publishAndSnapshot(examenId);
     }
 
@@ -343,7 +400,7 @@ public class ExamenSupervisionService {
         state.finishedAt = LocalDateTime.now();
         state.waitingRoom.clear();
         persistStatut(examenId, StatutExamen.ANNULE);
-        cancelTimer(examenId);
+        cancelQuestionTicker(examenId);
         return publishAndSnapshot(examenId);
     }
 
@@ -355,7 +412,7 @@ public class ExamenSupervisionService {
         state.finishedAt = LocalDateTime.now();
         /* Conserver la salle d'attente : les étudiants doivent pouvoir soumettre après la fin imposée par le prof. */
         persistStatut(examenId, StatutExamen.TERMINE);
-        cancelTimer(examenId);
+        cancelQuestionTicker(examenId);
         return publishAndSnapshot(examenId);
     }
 
@@ -366,8 +423,12 @@ public class ExamenSupervisionService {
         if (totalQuestions > 0 && state.currentQuestionIndex < totalQuestions - 1) {
             state.currentQuestionIndex++;
         }
+        ExamenPublie examAfter = chargerExamen(examenId);
+        state.questionRemainingSeconds = Math.max(
+                0,
+                resolveIndicativeSeconds(examAfter, state.currentQuestionIndex, state));
         SnapshotResponse snap = publishAndSnapshot(examenId);
-        restartAutoAdvanceIfNeeded(examenId, state);
+        restartQuestionTicker(examenId);
         return snap;
     }
 
@@ -377,8 +438,12 @@ public class ExamenSupervisionService {
         if (state.currentQuestionIndex > 0) {
             state.currentQuestionIndex--;
         }
+        ExamenPublie examPrev = chargerExamen(examenId);
+        state.questionRemainingSeconds = Math.max(
+                0,
+                resolveIndicativeSeconds(examPrev, state.currentQuestionIndex, state));
         SnapshotResponse snap = publishAndSnapshot(examenId);
-        restartAutoAdvanceIfNeeded(examenId, state);
+        restartQuestionTicker(examenId);
         return snap;
     }
 
@@ -386,10 +451,12 @@ public class ExamenSupervisionService {
         ExamenRuntimeState state = getState(examenId);
         ensurePhase(state, "EN_COURS");
         int totalQuestions = resolveTotalQuestions(examenId);
+        ExamenPublie exam = chargerExamen(examenId);
         if (totalQuestions <= 0) {
             state.currentQuestionIndex = 0;
+            state.questionRemainingSeconds = Math.max(0, resolveIndicativeSeconds(exam, 0, state));
             SnapshotResponse snap = publishAndSnapshot(examenId);
-            restartAutoAdvanceIfNeeded(examenId, state);
+            restartQuestionTicker(examenId);
             return snap;
         }
         if (numeroQuestion == null) {
@@ -397,8 +464,11 @@ public class ExamenSupervisionService {
         }
         int cible = Math.max(1, Math.min(numeroQuestion, totalQuestions));
         state.currentQuestionIndex = cible - 1;
+        state.questionRemainingSeconds = Math.max(
+                0,
+                resolveIndicativeSeconds(exam, state.currentQuestionIndex, state));
         SnapshotResponse snap = publishAndSnapshot(examenId);
-        restartAutoAdvanceIfNeeded(examenId, state);
+        restartQuestionTicker(examenId);
         return snap;
     }
 
@@ -409,20 +479,28 @@ public class ExamenSupervisionService {
         return publishAndSnapshot(examenId);
     }
 
+    /**
+     * Ajuste le minuteur de la question courante (+/- secondes). Ne change pas la durée par défaut des questions suivantes.
+     */
+    public SnapshotResponse ajusterMinuteurQuestion(Long examenId, Integer deltaSeconds) {
+        ExamenRuntimeState state = getState(examenId);
+        ensurePhaseIsNot(state, "TERMINE", "ARRETE");
+        int d = deltaSeconds == null ? 0 : deltaSeconds;
+        state.questionRemainingSeconds = Math.max(0, state.questionRemainingSeconds + d);
+        SnapshotResponse snap = publishAndSnapshot(examenId);
+        restartQuestionTicker(examenId);
+        return snap;
+    }
+
     public SnapshotResponse configurerModePassage(Long examenId, String advanceMode, Integer questionDurationSeconds) {
         ExamenRuntimeState state = getState(examenId);
         ensurePhaseIsNot(state, "TERMINE", "ARRETE");
         AdvanceMode parsedMode = parseAdvanceMode(advanceMode);
         state.advanceMode = parsedMode;
-        if (parsedMode == AdvanceMode.AUTO_TIMER) {
-            if (questionDurationSeconds == null || questionDurationSeconds < 5) {
-                throw new IllegalArgumentException("La durée par question doit être >= 5 secondes en mode AUTO_TIMER.");
-            }
-            state.questionDurationSeconds = questionDurationSeconds;
-        } else if (questionDurationSeconds != null && questionDurationSeconds >= 5) {
+        if (questionDurationSeconds != null && questionDurationSeconds >= 5) {
             state.questionDurationSeconds = questionDurationSeconds;
         }
-        restartAutoAdvanceIfNeeded(examenId, state);
+        /* Plus de passage automatique : le minuteur par question est toujours piloté manuellement pour changer de question. */
         return publishAndSnapshot(examenId);
     }
 
@@ -490,13 +568,25 @@ public class ExamenSupervisionService {
     public SnapshotResponse snapshot(Long examenId) {
         ExamenRuntimeState state = getState(examenId);
         ExamenPublie exam = chargerExamen(examenId);
-        int totalQuestions = exam.getQuestions() == null ? 0 : exam.getQuestions().size();
+        List<Question> orderedSnap = questionsOrderedForExamen(exam);
+        int totalQuestions = orderedSnap.size();
         if (totalQuestions <= 0) {
             state.currentQuestionIndex = 0;
         } else if (state.currentQuestionIndex >= totalQuestions) {
             state.currentQuestionIndex = totalQuestions - 1;
         }
         Integer idx = totalQuestions > 0 ? state.currentQuestionIndex : null;
+        int indicativeSnap = totalQuestions > 0 && idx != null
+                ? resolveIndicativeSeconds(exam, idx, state)
+                : clampFallbackSeconds(state.questionDurationSeconds);
+
+        /*
+         * Ne pas retirer les choix (reponses) : le même snapshot est diffusé sur /topic/examen/{id}/etat pour les étudiants.
+         * Les retirer faisait écraser l’état côté web à chaque tick WS — les énoncés restaient mais les options QCM disparaissaient.
+         * Seuls id + contenu sont exposés (pas la correction).
+         */
+        Map<String, Object> questionPourSupervision = buildQuestionPayload(orderedSnap, idx);
+        int reponsesPourQuestionCourante = compterReponsesPourQuestionCourante(state, orderedSnap, idx);
 
         return new SnapshotResponse(
                 examenId,
@@ -505,17 +595,42 @@ public class ExamenSupervisionService {
                 state.paused,
                 state.currentQuestionIndex,
                 totalQuestions,
-                buildQuestionPayload(exam, idx),
+                questionPourSupervision,
                 buildPlanQuestionsLight(exam),
                 state.remainingMinutes,
+                state.questionRemainingSeconds,
                 state.baremeSur20,
                 state.waitingRoom.size(),
                 state.allowedEmails.size(),
                 state.pendingResults.size(),
                 state.validatedResults.size(),
                 state.advanceMode.name(),
-                state.questionDurationSeconds
+                indicativeSnap,
+                reponsesPourQuestionCourante
         );
+    }
+
+    /** Nombre d’étudiants présents en session ayant enregistré une réponse pour la question à l’index donné. */
+    private static int compterReponsesPourQuestionCourante(
+            ExamenRuntimeState state,
+            List<Question> orderedQuestions,
+            Integer idx) {
+        if (idx == null || idx < 0 || idx >= orderedQuestions.size()) {
+            return 0;
+        }
+        Question q = orderedQuestions.get(idx);
+        Long qid = q.getId();
+        if (qid == null) {
+            return 0;
+        }
+        int n = 0;
+        for (Long etudiantId : state.waitingRoom.keySet()) {
+            Map<Long, Long> parQuestion = state.answersByStudent.get(etudiantId);
+            if (parQuestion != null && parQuestion.containsKey(qid)) {
+                n++;
+            }
+        }
+        return n;
     }
 
     private void mergeEmailsFromDatabase(Long examenId) {
@@ -548,61 +663,75 @@ public class ExamenSupervisionService {
 
     private SnapshotResponse publishAndSnapshot(Long examenId) {
         SnapshotResponse snap = snapshot(examenId);
-        publish(examenId, "etat", snap);
+        /*
+         * Même sérialisation que l’API REST : convertAndSend avec un record peut être traité par un
+         * MessageConverter différent ; une Map garantit que tous les champs (dont reponsesPourQuestionCourante)
+         * partent bien vers /topic/examen/{id}/etat pour la supervision temps réel.
+         */
+        Map<String, Object> body = objectMapper.convertValue(snap, new TypeReference<Map<String, Object>>() {});
+        publish(examenId, "etat", body);
         return snap;
     }
 
-    private void restartAutoAdvanceIfNeeded(Long examenId, ExamenRuntimeState state) {
-        cancelTimer(examenId);
-        if (state.advanceMode != AdvanceMode.AUTO_TIMER) {
-            return;
-        }
+    private void restartQuestionTicker(Long examenId) {
+        cancelQuestionTicker(examenId);
+        ExamenRuntimeState state = getState(examenId);
         if (!Objects.equals(state.phase, "EN_COURS") || state.paused) {
             return;
         }
         int totalQuestions = resolveTotalQuestions(examenId);
-        if (totalQuestions <= 0 || state.currentQuestionIndex >= totalQuestions - 1) {
+        if (totalQuestions <= 0 || state.questionRemainingSeconds <= 0) {
             return;
         }
-        int everySeconds = Math.max(5, state.questionDurationSeconds);
-        ScheduledFuture<?> task = scheduler.schedule(() -> safeAutoAdvance(examenId), everySeconds, TimeUnit.SECONDS);
-        timerTasks.put(examenId, task);
+        ScheduledFuture<?> task = scheduler.scheduleAtFixedRate(() -> tickQuestionTimer(examenId), 1, 1, TimeUnit.SECONDS);
+        questionTickerTasks.put(examenId, task);
     }
 
-    private void safeAutoAdvance(Long examenId) {
+    private void tickQuestionTimer(Long examenId) {
         try {
             ExamenRuntimeState state = getState(examenId);
-            if (!Objects.equals(state.phase, "EN_COURS") || state.paused || state.advanceMode != AdvanceMode.AUTO_TIMER) {
+            if (!Objects.equals(state.phase, "EN_COURS") || state.paused) {
                 return;
             }
-            int totalQuestions = resolveTotalQuestions(examenId);
-            if (totalQuestions <= 0) {
+            if (state.questionRemainingSeconds <= 0) {
+                cancelQuestionTicker(examenId);
                 return;
             }
-            if (state.currentQuestionIndex < totalQuestions - 1) {
-                state.currentQuestionIndex++;
-                publishAndSnapshot(examenId);
-                restartAutoAdvanceIfNeeded(examenId, state);
+            state.questionRemainingSeconds--;
+            publishAndSnapshot(examenId);
+            if (state.questionRemainingSeconds <= 0) {
+                cancelQuestionTicker(examenId);
             }
         } catch (Exception ignored) {
         }
     }
 
-    private void cancelTimer(Long examenId) {
-        ScheduledFuture<?> existing = timerTasks.remove(examenId);
+    private void cancelQuestionTicker(Long examenId) {
+        ScheduledFuture<?> existing = questionTickerTasks.remove(examenId);
         if (existing != null) {
             existing.cancel(false);
         }
     }
 
+    /** Arrête minuteurs / état mémoire pour cet examen (ex. suppression par le professeur). */
+    public void evictRuntimeState(Long examenId) {
+        cancelQuestionTicker(examenId);
+        states.remove(examenId);
+    }
+
     private static AdvanceMode parseAdvanceMode(String raw) {
         if (raw == null || raw.isBlank()) {
-            throw new IllegalArgumentException("Le mode de passage est obligatoire.");
+            return AdvanceMode.MANUAL;
+        }
+        String u = raw.trim().toUpperCase(Locale.ROOT);
+        /* Ancien mode AUTO_TIMER : le passage à la question suivante est toujours manuel ; seul le minuteur par question compte. */
+        if ("AUTO_TIMER".equals(u)) {
+            return AdvanceMode.MANUAL;
         }
         try {
-            return AdvanceMode.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+            return AdvanceMode.valueOf(u);
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Mode de passage invalide. Utilisez MANUAL ou AUTO_TIMER.");
+            throw new IllegalArgumentException("Mode de passage invalide. Utilisez MANUAL.");
         }
     }
 
@@ -636,19 +765,63 @@ public class ExamenSupervisionService {
                 .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
     }
 
-    private int resolveTotalQuestions(Long examenId) {
-        ExamenPublie exam = chargerExamen(examenId);
-        return exam.getQuestions() == null ? 0 : exam.getQuestions().size();
+    /**
+     * Ordre stable entre requêtes : {@link ExamenPublie#getQuestions()} est une association {@code ManyToMany}
+     * sans colonne d’ordre ; Hibernate peut renvoyer une permutation différente à chaque chargement. Toutes les
+     * opérations indexées (énoncé affiché, validation élève, compteur de réponses) doivent utiliser cette liste.
+     */
+    private static List<Question> questionsOrderedForExamen(ExamenPublie exam) {
+        List<Question> raw = exam.getQuestions();
+        if (raw == null || raw.isEmpty()) {
+            return List.of();
+        }
+        List<Question> copy = new ArrayList<>();
+        for (Question q : raw) {
+            if (q != null) {
+                copy.add(q);
+            }
+        }
+        copy.sort(Comparator.comparing(Question::getId, Comparator.nullsLast(Long::compareTo)));
+        return copy;
     }
 
-    private Map<String, Object> buildQuestionPayload(ExamenPublie exam, Integer idx) {
-        if (idx == null || exam.getQuestions() == null || exam.getQuestions().isEmpty()) {
+    private static int clampFallbackSeconds(int configuredDefault) {
+        if (configuredDefault >= 5 && configuredDefault <= 7200) {
+            return configuredDefault;
+        }
+        return 60;
+    }
+
+    /**
+     * Durée indicative pour l’index donné : valeur persistée sur la question si présente, sinon repli sur
+     * {@link ExamenRuntimeState#questionDurationSeconds} (ex. API legacy / défaut).
+     */
+    private int resolveIndicativeSeconds(ExamenPublie exam, int questionIndex, ExamenRuntimeState state) {
+        List<Question> list = questionsOrderedForExamen(exam);
+        if (list.isEmpty() || questionIndex < 0 || questionIndex >= list.size()) {
+            return clampFallbackSeconds(state.questionDurationSeconds);
+        }
+        Question q = list.get(questionIndex);
+        Integer d = q.getDureeSecondesIndicative();
+        if (d != null && d >= 5) {
+            return Math.min(d, 7200);
+        }
+        return clampFallbackSeconds(state.questionDurationSeconds);
+    }
+
+    private int resolveTotalQuestions(Long examenId) {
+        ExamenPublie exam = chargerExamen(examenId);
+        return questionsOrderedForExamen(exam).size();
+    }
+
+    private Map<String, Object> buildQuestionPayload(List<Question> orderedQuestions, Integer idx) {
+        if (idx == null || orderedQuestions.isEmpty()) {
             return null;
         }
-        if (idx < 0 || idx >= exam.getQuestions().size()) {
+        if (idx < 0 || idx >= orderedQuestions.size()) {
             return null;
         }
-        Question question = exam.getQuestions().get(idx);
+        Question question = orderedQuestions.get(idx);
         Map<String, Object> qc = new LinkedHashMap<>();
         qc.put("id", question.getId());
         qc.put("numero", idx + 1);
@@ -672,12 +845,13 @@ public class ExamenSupervisionService {
 
     /** Plan complet pour la supervision (énoncés + type, sans les choix — ceux-ci sont sur {@link #buildQuestionPayload}). */
     private List<Map<String, Object>> buildPlanQuestionsLight(ExamenPublie exam) {
-        if (exam.getQuestions() == null || exam.getQuestions().isEmpty()) {
+        List<Question> ordered = questionsOrderedForExamen(exam);
+        if (ordered.isEmpty()) {
             return List.of();
         }
         List<Map<String, Object>> plan = new ArrayList<>();
         int i = 0;
-        for (Question q : exam.getQuestions()) {
+        for (Question q : ordered) {
             if (q == null) {
                 continue;
             }
@@ -696,7 +870,10 @@ public class ExamenSupervisionService {
         private String phase = "PLANIFIE";
         private boolean paused = false;
         private AdvanceMode advanceMode = AdvanceMode.MANUAL;
-        private int questionDurationSeconds = 30;
+        /** Durée par défaut du minuteur à chaque nouvelle question (secondes). */
+        private int questionDurationSeconds = 60;
+        /** Décompte serveur pour la question affichée ; à 0 le temps est écoulé sans changer de question automatiquement. */
+        private int questionRemainingSeconds = 0;
         private int currentQuestionIndex = 0;
         private int remainingMinutes = 0;
         private double baremeSur20 = DEFAULT_BAREME;
@@ -729,7 +906,10 @@ public class ExamenSupervisionService {
             int totalQuestions,
             Integer questionCouranteIndex,
             Map<String, Object> questionCourante,
-            int tempsRestantMinutes
+            int tempsRestantMinutes,
+            Integer tempsQuestionRestantSeconds,
+            /** Durée indicatif prévue pour répondre à la question (secondes), affichée aux étudiants. */
+            int questionDurationSeconds
     ) {
     }
 
@@ -743,13 +923,16 @@ public class ExamenSupervisionService {
             Map<String, Object> questionCourante,
             List<Map<String, Object>> planQuestions,
             int tempsRestantMinutes,
+            int tempsQuestionRestantSeconds,
             double baremeSur20,
             int participantsEnAttente,
             int emailsAutorises,
             int resultatsEnAttente,
             int resultatsValides,
             String advanceMode,
-            int questionDurationSeconds
+            int questionDurationSeconds,
+            /** Parmi les étudiants présents en session, combien ont déjà répondu à la question courante. */
+            int reponsesPourQuestionCourante
     ) {
     }
 
@@ -760,8 +943,8 @@ public class ExamenSupervisionService {
 
     @PreDestroy
     void shutdownScheduler() {
-        timerTasks.values().forEach(task -> task.cancel(false));
-        timerTasks.clear();
+        questionTickerTasks.values().forEach(task -> task.cancel(false));
+        questionTickerTasks.clear();
         scheduler.shutdownNow();
     }
 }

@@ -18,12 +18,13 @@ import {
 } from 'lucide-react'
 import { examenApi } from '../api/examenApi'
 import useAuth from '../hooks/useAuth'
+import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
 import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
+import { stompBrokerUrl } from '../config/runtimeBackend'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
-const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8081/ws'
 
 export type ExamenSupervisionPageProps = {
     /** Aligné sur le thème web (ex. `#4f8ef7` dans `App.tsx`). */
@@ -120,6 +121,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const isProf = (useAuth((s) => s.role) ?? '').trim().toUpperCase() === 'PROFESSEUR'
+    const authToken = useAuth((s) => s.token)
     const [meta, setMeta] = useState<ExamenMeta | null>(null)
     const [snap, setSnap] = useState<ExamenSnapshot | null>(null)
     const [feedback, setFeedback] = useState('')
@@ -167,16 +169,33 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         if (trimmed.length === 0 && prev?.titre != null) {
             merged.titre = prev.titre
         }
-        const idxIn = incoming.questionCouranteIndex
-        const idxPrev = prev?.questionCouranteIndex
+        const prevIdx = prev?.questionCouranteIndex
+        const mergedIdx = merged.questionCouranteIndex
         const sameQuestion =
-            idxIn === undefined ? true : idxPrev === undefined ? true : idxIn === idxPrev
+            prevIdx === undefined || mergedIdx === undefined ? true : prevIdx === mergedIdx
         if (
             (incoming.questionCourante === undefined || incoming.questionCourante === null) &&
             prev?.questionCourante != null &&
             sameQuestion
         ) {
             merged.questionCourante = prev.questionCourante
+        }
+        const rawRep = (incoming as { reponsesPourQuestionCourante?: unknown }).reponsesPourQuestionCourante
+        if (rawRep !== undefined && rawRep !== null) {
+            const n = Number(rawRep)
+            if (!Number.isNaN(n)) {
+                /** Évite une course entre ticks minuteur et POST réponse étudiant : dernier message non garanti. */
+                const prevRep = prev?.reponsesPourQuestionCourante
+                if (
+                    sameQuestion &&
+                    typeof prevRep === 'number' &&
+                    !Number.isNaN(prevRep)
+                ) {
+                    merged.reponsesPourQuestionCourante = Math.max(prevRep, n)
+                } else {
+                    merged.reponsesPourQuestionCourante = n
+                }
+            }
         }
         return merged
     }, [])
@@ -224,7 +243,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         if (sessionDemarreeHint !== '1') return
         setFeedbackTone('neutral')
         setFeedback(
-            'Session lancée pour les étudiants : ils passent sur l’écran d’épreuve quand la phase est « En cours » (même flux que la question active ci-dessous).',
+            'Session démarrée pour les étudiants : ils passent sur l’écran d’épreuve quand la phase est « En cours » (même flux que la question active ci-dessous).',
         )
         globalThis.scrollTo({ top: 0, behavior: 'smooth' })
         const t = globalThis.setTimeout(() => {
@@ -233,13 +252,35 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         return () => globalThis.clearTimeout(t)
     }, [sessionDemarreeHint, id, navigate])
 
+    /** Même navigateur (prof + élève) : rafraîchir le snapshot dès qu’une réponse est enregistrée côté élève. */
+    useEffect(() => {
+        if (!Number.isFinite(id) || id <= 0) return
+        let bc: BroadcastChannel | null = null
+        try {
+            bc = new BroadcastChannel(`smartest.examen.${id}`)
+            bc.onmessage = () => {
+                void refresh()
+            }
+        } catch {
+            /* BroadcastChannel indisponible */
+        }
+        return () => {
+            try {
+                bc?.close()
+            } catch {
+                /* ignore */
+            }
+        }
+    }, [id, refresh])
+
     useEffect(() => {
         if (!Number.isFinite(id) || id <= 0) return
 
         let cancelled = false
         const client = new Client({
-            brokerURL: WS_BASE_URL,
+            brokerURL: stompBrokerUrl(),
             reconnectDelay: 3000,
+            connectHeaders: authToken ? { Authorization: `Bearer ${authToken}` } : {},
             onConnect: () => {
                 client.subscribe(`/topic/examen/${id}/etat`, (message) => {
                     try {
@@ -249,6 +290,17 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         setWsNotice(null)
                     } catch {
                         if (!cancelled) setWsNotice('Message temps réel invalide (supervision examen).')
+                    }
+                })
+                /** Payload minimal à chaque validation élève : évite de dépendre uniquement du snapshot /etat (gros JSON). */
+                client.subscribe(`/topic/examen/${id}/compteurs-supervision`, (message) => {
+                    try {
+                        const data = JSON.parse(message.body) as Partial<ExamenSnapshot>
+                        if (cancelled) return
+                        setSnap((prev) => mergeSnapshot(prev, data))
+                        setWsNotice(null)
+                    } catch {
+                        /* ignoré : /etat + polling restent le filet */
                     }
                 })
                 client.subscribe(`/topic/examen/${id}/salle-attente`, (message) => {
@@ -278,7 +330,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
             cancelled = true
             client.deactivate()
         }
-    }, [id, mergeSnapshot])
+    }, [id, mergeSnapshot, authToken])
 
     const supervisionEnPause =
         ((snap?.etat ?? meta?.statut ?? '').trim().toUpperCase() === 'EN_PAUSE') || !!snap?.enPause
@@ -287,7 +339,11 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         snap?.etat ?? meta?.statut ?? '',
         supervisionEnPause,
     )
-
+    const minuteurQuestionLive = useExamenMinuteurQuestionLive(
+        snap?.tempsQuestionRestantSeconds,
+        snap?.etat ?? meta?.statut ?? '',
+        supervisionEnPause,
+    )
     const action = async (run: () => Promise<unknown>) => {
         try {
             setIsSubmitting(true)
@@ -339,20 +395,36 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     const currentIndex = Math.max(0, snap?.questionCouranteIndex ?? 0)
     const questionNumero = totalQuestions > 0 ? Math.min(currentIndex + 1, totalQuestions) : 0
     const etat = (snap?.etat ?? meta?.statut ?? 'PLANIFIE').toUpperCase()
-    /** Avant lancement : liste d’attente. Pendant l’épreuve : participants actifs (même API, libellés différents). */
+    /** Avant démarrage : liste d’attente. Pendant l’épreuve : participants actifs (même API, libellés différents). */
     const modeListeParticipants = modeListeParticipantsFromEtat(etat)
     const estEnCours = etat === 'EN_COURS'
     const peutLancer = etat === 'PLANIFIE' || etat === 'EN_PAUSE'
     const peutPause = etat === 'EN_COURS'
     const peutReprendre = etat === 'EN_PAUSE'
     const peutTerminer = etat !== 'TERMINE' && etat !== 'ARRETE'
+    /** Hors planifié : le même emplacement que « Démarrer » affiche « Terminer » (pas de second bouton). */
+    const lancerAuPremierPoste = etat === 'PLANIFIE'
+    const terminerAuPremierPoste = !lancerAuPremierPoste && peutTerminer
     const questionPills = totalQuestions > 0 ? Array.from({ length: totalQuestions }, (_, i) => i + 1) : []
 
     const questionCouranteBloc = snap?.questionCourante as
         | { id?: number; enonce?: string; reponses?: Array<{ id?: number; contenu?: string }> }
         | undefined
-    const reponsesPilotage = Array.isArray(questionCouranteBloc?.reponses) ? questionCouranteBloc.reponses : []
     const planListe = snap?.planQuestions ?? []
+    /** Fallbacks : anciens snapshots / fusion WS partielle — évite de masquer le compteur. */
+    const reponsesPourQuestionCouranteAffiche = (() => {
+        const v = snap?.reponsesPourQuestionCourante
+        if (typeof v === 'number' && !Number.isNaN(v)) return v
+        const n = Number(v)
+        return Number.isNaN(n) ? 0 : n
+    })()
+    /** Snapshot parfois en retard sur la liste présence WS ; le max évite un dénominateur figé. */
+    const participantsActifsAffiche = Math.max(
+        typeof snap?.participantsEnAttente === 'number' && !Number.isNaN(snap.participantsEnAttente)
+            ? snap.participantsEnAttente
+            : 0,
+        connectesLabels.length,
+    )
 
     const feedbackBanner = supervisionFeedbackBannerStyles(feedbackTone)
 
@@ -555,8 +627,8 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                             </h2>
                             {modeListeParticipants === 'attente' ? (
                                 <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.5, maxWidth: 560 }}>
-                                    Liste d’attente avant le lancement : les élèves connectés (après le créneau) apparaissent ici ;
-                                    vous pouvez lancer l’épreuve quand vous le décidez (mise à jour automatique).
+                                    Liste d’attente avant le démarrage : les élèves connectés (après le créneau) apparaissent ici ;
+                                    vous pouvez démarrer l’épreuve quand vous le décidez (mise à jour automatique).
                                 </p>
                             ) : modeListeParticipants === 'actifs' ? (
                                 <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.5, maxWidth: 560 }}>
@@ -627,7 +699,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                 )}
                 {statTile(
                     <Timer size={18} strokeWidth={2} />,
-                    'Temps restant',
+                    'Temps examen',
                     <span aria-live="polite" aria-atomic="true">
                         {tempsRestantSupervision ??
                             (snap?.tempsRestantMinutes != null ? `${snap.tempsRestantMinutes} min` : '—')}
@@ -650,37 +722,54 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         marginBottom: 12,
                     }}
                 >
-                    <button
-                        type="button"
-                        style={{
-                            ...btnPrimary(!isSubmitting && peutLancer),
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 8,
-                        }}
-                        disabled={isSubmitting || !peutLancer}
-                        onClick={async () => {
-                            try {
-                                setIsSubmitting(true)
-                                await examenApi.lancer(id)
-                                await refresh()
-                                setFeedbackTone('success')
+                    {lancerAuPremierPoste ? (
+                        <button
+                            type="button"
+                            style={{
+                                ...btnPrimary(!isSubmitting && peutLancer),
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                            }}
+                            disabled={isSubmitting || !peutLancer}
+                            onClick={async () => {
+                                try {
+                                    setIsSubmitting(true)
+                                    await examenApi.lancer(id)
+                                    await refresh()
+                                    setFeedbackTone('success')
                                 setFeedback(
-                                    'Session lancée. Les étudiants encore en salle passent sur l’épreuve ; le suivi reste sur cette page.',
+                                    'Session démarrée. Les étudiants encore en salle passent sur l’épreuve ; le suivi reste sur cette page.',
                                 )
-                                navigate(`/supervision/examen/${id}?started=1`, { replace: true })
-                                globalThis.scrollTo({ top: 0, behavior: 'smooth' })
-                            } catch (error: unknown) {
-                                setFeedbackTone('error')
-                                setFeedback(extractApiMessage(error, 'Lancement impossible dans l’état actuel.'))
-                            } finally {
-                                setIsSubmitting(false)
-                            }
-                        }}
-                    >
-                        <Play size={17} strokeWidth={2} aria-hidden /> Lancer
-                    </button>
+                                    navigate(`/supervision/examen/${id}?started=1`, { replace: true })
+                                    globalThis.scrollTo({ top: 0, behavior: 'smooth' })
+                                } catch (error: unknown) {
+                                    setFeedbackTone('error')
+                                    setFeedback(extractApiMessage(error, 'Démarrage impossible dans l’état actuel.'))
+                                } finally {
+                                    setIsSubmitting(false)
+                                }
+                            }}
+                        >
+                            <Play size={17} strokeWidth={2} aria-hidden /> Démarrer
+                        </button>
+                    ) : terminerAuPremierPoste ? (
+                        <button
+                            type="button"
+                            style={{
+                                ...btnDangerOutline(!isSubmitting && peutTerminer),
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                            }}
+                            disabled={isSubmitting || !peutTerminer}
+                            onClick={() => action(() => examenApi.terminer(id))}
+                        >
+                            <Square size={15} strokeWidth={2} aria-hidden /> Terminer
+                        </button>
+                    ) : null}
                     <button
                         type="button"
                         style={{ ...btnGhost(isSubmitting || !peutPause), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
@@ -697,22 +786,12 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     >
                         <Play size={17} strokeWidth={2} aria-hidden /> Reprendre
                     </button>
-                    <button
-                        type="button"
-                        style={{
-                            ...btnDangerOutline(!isSubmitting && peutTerminer),
-                            gridColumn: 'span 1',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 8,
-                        }}
-                        disabled={isSubmitting || !peutTerminer}
-                        onClick={() => action(() => examenApi.terminer(id))}
-                    >
-                        <Square size={15} strokeWidth={2} aria-hidden /> Terminer
-                    </button>
                 </div>
+
+                <p style={{ margin: '0 0 12px', fontSize: 13, color: '#64748b', lineHeight: 1.55, maxWidth: 720 }}>
+                    Pour changer de question affichée aux étudiants, utilisez <strong>Question précédente</strong> /{' '}
+                    <strong>Question suivante</strong> ou les pastilles numérotées (pas de saut automatique).
+                </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 12 }}>
                     <button
@@ -757,11 +836,55 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         gap: 10,
                     }}
                 >
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b', flex: '1 1 140px' }}>Ajustements</span>
-                    <button type="button" style={btnGhost(isSubmitting)} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, -1))}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b', flex: '1 1 100%' }}>
+                        Ajustements — temps question (courante)
+                    </span>
+                    <button
+                        type="button"
+                        style={btnGhost(isSubmitting)}
+                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0}
+                        onClick={() => action(() => examenApi.ajusterMinuteurQuestion(id, -10))}
+                    >
+                        −10 s
+                    </button>
+                    <button
+                        type="button"
+                        style={btnGhost(isSubmitting)}
+                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0}
+                        onClick={() => action(() => examenApi.ajusterMinuteurQuestion(id, 10))}
+                    >
+                        +10 s
+                    </button>
+                    <button
+                        type="button"
+                        style={btnGhost(isSubmitting)}
+                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0}
+                        onClick={() => action(() => examenApi.ajusterMinuteurQuestion(id, -30))}
+                    >
+                        −30 s
+                    </button>
+                    <button
+                        type="button"
+                        style={btnGhost(isSubmitting)}
+                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0}
+                        onClick={() => action(() => examenApi.ajusterMinuteurQuestion(id, 30))}
+                    >
+                        +30 s
+                    </button>
+                    <button
+                        type="button"
+                        style={btnGhost(isSubmitting)}
+                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0}
+                        onClick={() => action(() => examenApi.ajusterMinuteurQuestion(id, -60))}
+                    >
                         −1 min
                     </button>
-                    <button type="button" style={btnGhost(isSubmitting)} disabled={isSubmitting} onClick={() => action(() => examenApi.ajusterTemps(id, 1))}>
+                    <button
+                        type="button"
+                        style={btnGhost(isSubmitting)}
+                        disabled={isSubmitting || !estEnCours || totalQuestions <= 0}
+                        onClick={() => action(() => examenApi.ajusterMinuteurQuestion(id, 60))}
+                    >
                         +1 min
                     </button>
                 </div>
@@ -802,8 +925,44 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     <div style={{ color: accentBleu, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
                         Question active (copie écran élève)
                     </div>
-                    <div style={{ fontWeight: 700, marginBottom: 8, fontSize: '1rem', color: '#0f1e3d' }}>
-                        {totalQuestions > 0 ? `Question ${questionNumero} / ${totalQuestions}` : 'Aucune question disponible'}
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'baseline',
+                            gap: '6px 18px',
+                            fontWeight: 700,
+                            marginBottom: 8,
+                            fontSize: '1rem',
+                            color: '#0f1e3d',
+                        }}
+                    >
+                        <span>
+                            {totalQuestions > 0 ? `Question ${questionNumero} / ${totalQuestions}` : 'Aucune question disponible'}
+                        </span>
+                        {totalQuestions > 0 && minuteurQuestionLive.formatted != null ? (
+                            <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#475569' }} aria-live="polite">
+                                Décompte (indication) :{' '}
+                                <strong style={{ color: '#0f1e3d' }}>{minuteurQuestionLive.formatted}</strong>
+                                {snap?.tempsQuestionRestantSeconds === 0 && estEnCours ? (
+                                    <span style={{ color: '#92400e', fontWeight: 600 }}>
+                                        {' '}
+                                        — temps indicatif écoulé ; passez à la suivante si besoin.
+                                    </span>
+                                ) : null}
+                            </span>
+                        ) : null}
+                        {totalQuestions > 0 && (estEnCours || etat === 'EN_PAUSE') ? (
+                            <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#475569' }} aria-live="polite">
+                                Réponses (temps réel) :{' '}
+                                <strong style={{ color: '#0f1e3d' }}>{reponsesPourQuestionCouranteAffiche}</strong>
+                                <span style={{ color: '#94a3b8', margin: '0 5px' }}>/</span>
+                                <strong style={{ color: '#0f1e3d' }}>{participantsActifsAffiche}</strong>
+                                <span style={{ fontWeight: 600, color: '#64748b', marginLeft: 6 }}>
+                                    étudiants actifs
+                                </span>
+                            </span>
+                        ) : null}
                     </div>
                     <div style={{ color: '#334155', lineHeight: 1.58, fontSize: 14, whiteSpace: 'pre-wrap' }}>
                         {questionCouranteBloc?.enonce?.trim() ||
@@ -811,31 +970,8 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                                 ? 'Aucune question liée à cet examen sur le serveur. Depuis SmarTest bureau : fermez puis rouvrez l’application si besoin, cliquez à nouveau « Publier sur le web » pour ré-envoyer les QCM (messages de confirmation avec le nombre de questions), puis actualisez cette page. Conditions : au moins 2 réponses renseignées parmi les options A–D par question. Si la situation continue, vérifiez que le backend a bien exécuté la migration Flyway (table examen_publie_question).'
                                 : estEnCours || etat === 'EN_PAUSE'
                                   ? 'Contenu non chargé ou indisponible pour cet index.'
-                                  : 'Lancez la session (« En cours ») pour voir l’énoncé et les propositions exactement comme les étudiants.')}
+                                  : 'Démarrez la session (« En cours ») pour voir l’énoncé comme les étudiants.')}
                     </div>
-                    {reponsesPilotage.length > 0 ? (
-                        <div style={{ marginTop: 14 }}>
-                            <div
-                                style={{
-                                    color: '#475569',
-                                    fontSize: 11,
-                                    fontWeight: 700,
-                                    letterSpacing: '0.05em',
-                                    textTransform: 'uppercase',
-                                    marginBottom: 8,
-                                }}
-                            >
-                                Propositions
-                            </div>
-                            <ul style={{ margin: 0, paddingLeft: 18, color: '#334155', lineHeight: 1.55, fontSize: 14 }}>
-                                {reponsesPilotage.map((r, idx) => (
-                                    <li key={typeof r.id === 'number' ? r.id : `p-${idx}`} style={{ marginBottom: 6 }}>
-                                        {r.contenu?.trim() || '—'}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ) : null}
                 </div>
                 {planListe.length > 0 ? (
                     <details

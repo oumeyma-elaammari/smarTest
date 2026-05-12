@@ -12,4 +12,6 @@ public class PublicationWebQuestionRequest {
     private String reponseCorrecte;
     private String explication;
     private String difficulte;
+    /** Secondes (≥ 5), optionnel — défini depuis le bureau lors de la publication web de l'examen. */
+    private Integer dureeSecondesIndicative;
 }

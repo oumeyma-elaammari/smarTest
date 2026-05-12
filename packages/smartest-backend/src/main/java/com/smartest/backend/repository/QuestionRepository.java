@@ -32,5 +32,9 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<QuestionStats> countQuestionsByType();
 
     //List<Question> findByCoursIdAndDifficulte(Long coursId, Difficulte difficulte);
+
+    /** Nombre d'examens publiés contenant cette question (liaison {@code examen_publie_question}). */
+    @Query("SELECT COUNT(DISTINCT e.id) FROM ExamenPublie e JOIN e.questions qq WHERE qq.id = :questionId")
+    long countExamensWithQuestion(@Param("questionId") Long questionId);
 }
 

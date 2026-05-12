@@ -122,7 +122,7 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
             setActionErr(
                 extractActionError(
                     e,
-                    'Impossible de lancer la session. Vérifiez le créneau ou ouvrez l’espace superviseur pour plus de détails.',
+                    'Impossible de démarrer la session. Vérifiez le créneau ou ouvrez l’espace superviseur pour plus de détails.',
                 ),
             )
         } finally {

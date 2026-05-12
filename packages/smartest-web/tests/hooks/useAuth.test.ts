@@ -11,6 +11,7 @@ describe('useAuth', () => {
                 role: null,
                 nom: null,
                 email: null,
+                userId: null,
                 isAuthenticated: false,
             })
         })
@@ -42,6 +43,20 @@ describe('useAuth', () => {
         expect(useAuth.getState().isAuthenticated).toBe(true)
         expect(localStorage.getItem('token')).toBe('tok-1')
         expect(localStorage.getItem('nom')).toBe('Alice')
+    })
+
+    it('login persists userId when provided', () => {
+        act(() => {
+            useAuth.getState().login({
+                token: 't2',
+                role: 'ETUDIANT',
+                nom: 'Dana',
+                email: 'dana@ump.ac.ma',
+                userId: 42,
+            })
+        })
+        expect(useAuth.getState().userId).toBe('42')
+        expect(localStorage.getItem('userId')).toBe('42')
     })
 
     it('logout clears the store and localStorage and redirects to login', () => {
@@ -116,6 +131,7 @@ describe('useAuth', () => {
                 role: null,
                 nom: null,
                 email: null,
+                userId: null,
                 isAuthenticated: false,
             })
         })

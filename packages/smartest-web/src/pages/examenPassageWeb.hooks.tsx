@@ -1,5 +1,5 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Client } from '@stomp/stompjs'
 import { examenApi } from '../api/examenApi'
@@ -11,9 +11,9 @@ import {
     type ExamenSnapshot,
 } from '../api/quizSchemas'
 import { parseDebutExamenMs } from '../utils/examenDisplay'
+import useAuth from '../hooks/useAuth'
+import { stompBrokerUrl } from '../config/runtimeBackend'
 import { joinedStorageKey, readEtudiantId, extractApiMessage } from './examenPassageWeb.shared'
-
-const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8081/ws'
 
 export function useExamenMetaLoad(
     id: number,
@@ -129,14 +129,17 @@ export function useExamenStomp(
     setJoined: (v: boolean) => void,
     setWsNotice: (v: string | null) => void,
 ): void {
+    const authToken = useAuth((s) => s.token)
+
     useEffect(() => {
         if (!Number.isFinite(id) || id <= 0) return
         const etudiantId = readEtudiantId()
         let cancelled = false
 
         const client = new Client({
-            brokerURL: WS_BASE_URL,
+            brokerURL: stompBrokerUrl(),
             reconnectDelay: 3000,
+            connectHeaders: authToken ? { Authorization: `Bearer ${authToken}` } : {},
             onConnect: () => {
                 client.subscribe(`/topic/examen/${id}/etat`, (message) => {
                     try {
@@ -181,7 +184,7 @@ export function useExamenStomp(
             cancelled = true
             client.deactivate()
         }
-    }, [id, setSnap, setJoined, setWsNotice])
+    }, [id, setSnap, setJoined, setWsNotice, authToken])
 }
 
 export function useSnapClearsJoinedOnArrete(snapEtat: string | undefined, id: number, setJoined: (v: boolean) => void): void {
@@ -330,20 +333,28 @@ export function useJoinedSiSessionActive(snapEtat: string | undefined, setJoined
     }, [snapEtat, setJoined])
 }
 
+/**
+ * Remet la sélection à zéro quand la question affichée change (nouvelle question ou perte temporaire du snapshot).
+ * L’ancienne logique comparait `lastAnsweredQuestionId !== questionId` : avec `lastAnswered` à null au départ,
+ * cela effaçait la sélection à chaque synchro WS où `questionId` était recalculé — le bouton « Valider » appelait l’API sans choix.
+ */
 export function useQuestionSelectionClear(
     questionId: number | null,
-    lastAnsweredQuestionId: number | null,
     setSelectedResponseId: (v: number | null) => void,
 ): void {
+    const prevQuestionIdRef = useRef<number | null>(null)
     useEffect(() => {
         if (questionId == null) {
             setSelectedResponseId(null)
+            prevQuestionIdRef.current = null
             return
         }
-        if (lastAnsweredQuestionId !== questionId) {
+        const prev = prevQuestionIdRef.current
+        if (prev != null && prev !== questionId) {
             setSelectedResponseId(null)
         }
-    }, [questionId, lastAnsweredQuestionId, setSelectedResponseId])
+        prevQuestionIdRef.current = questionId
+    }, [questionId, setSelectedResponseId])
 }
 
 export function useCreneauTicker(setCreneauTick: Dispatch<SetStateAction<number>>): void {

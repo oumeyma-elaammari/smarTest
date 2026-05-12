@@ -80,10 +80,10 @@
                 <Button x:Name="BtnSuivante" Content="Question suivante" Margin="0,0,8,8" Padding="14,8"
                         Background="#eef3fd" Foreground="#1e40af" BorderBrush="#dbeafe" BorderThickness="1" FontWeight="600" Cursor="Hand"
                         Click="BtnSuivante_Click"/>
-                <Button x:Name="BtnTempsMoins" Content="Temps −5 min" Margin="0,0,8,8" Padding="14,8"
+                <Button x:Name="BtnTempsMoins" Content="Temps question −30 s" Margin="0,0,8,8" Padding="14,8"
                         Background="#fff" Foreground="#475569" BorderBrush="#cbd5e1" BorderThickness="1" FontWeight="600" Cursor="Hand"
                         Click="BtnTempsMoins_Click"/>
-                <Button x:Name="BtnTempsPlus" Content="Temps +5 min" Margin="0,0,8,8" Padding="14,8"
+                <Button x:Name="BtnTempsPlus" Content="Temps question +30 s" Margin="0,0,8,8" Padding="14,8"
                         Background="#fff" Foreground="#475569" BorderBrush="#cbd5e1" BorderThickness="1" FontWeight="600" Cursor="Hand"
                         Click="BtnTempsPlus_Click"/>
                 <Button x:Name="BtnTerminer" Content="Terminer l'examen" Margin="0,0,8,8" Padding="14,8"

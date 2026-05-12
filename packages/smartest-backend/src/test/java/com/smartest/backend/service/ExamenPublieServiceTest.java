@@ -6,6 +6,11 @@ import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import com.smartest.backend.repository.ExamenPublieRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.repository.QuestionRepository;
+import com.smartest.backend.repository.QuizRepository;
+import com.smartest.backend.repository.ReponseEtudiantRepository;
+import com.smartest.backend.repository.SessionExamenRepository;
+import com.smartest.backend.repository.StatistiqueQuestionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,12 +20,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +40,27 @@ class ExamenPublieServiceTest {
     private ExamenPublieRepository examenPublieRepository;
     @Mock
     private ProfesseurRepository professeurRepository;
+
+    @Mock
+    private QuestionRepository questionRepository;
+
+    @Mock
+    private QuizRepository quizRepository;
+
+    @Mock
+    private SessionExamenRepository sessionExamenRepository;
+
+    @Mock
+    private ReponseEtudiantRepository reponseEtudiantRepository;
+
+    @Mock
+    private StatistiqueQuestionRepository statistiqueQuestionRepository;
+
+    @Mock
+    private ExamenSupervisionService examenSupervisionService;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private ExamenPublieService examenPublieService;
@@ -100,6 +130,83 @@ class ExamenPublieServiceTest {
 
         assertThatThrownBy(() -> examenPublieService.demarrer(10L))
                 .isInstanceOf(InvalidSessionStateException.class);
+    }
+
+    @Test
+    @DisplayName("demarrer : examen avec étudiants autorisés → envoi des notifications")
+    void demarrerAvecEtudiantsAutorisesEnvoieNotifications() {
+        ExamenPublie exam = new ExamenPublie();
+        exam.setId(10L);
+        exam.setStatut(StatutExamen.PLANIFIE);
+        exam.setTitre("Examen Test");
+        exam.setProfesseur(professeur);
+        professeur.setNom("Prof Test");
+        exam.setEmailsAutorisesWeb(Set.of("etudiant1@test.com", "etudiant2@test.com"));
+
+        when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(exam));
+        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ExamenPublie apres = examenPublieService.demarrer(10L);
+
+        assertThat(apres.getStatut()).isEqualTo(StatutExamen.EN_COURS);
+        verify(emailService).sendExamenLanceEmail("etudiant1@test.com", "Prof Test", "Examen Test");
+        verify(emailService).sendExamenLanceEmail("etudiant2@test.com", "Prof Test", "Examen Test");
+    }
+
+    @Test
+    @DisplayName("demarrer : examen sans étudiants autorisés → pas d'envoi de notification")
+    void demarrerSansEtudiantsAutorisesPasDeNotification() {
+        ExamenPublie exam = new ExamenPublie();
+        exam.setId(10L);
+        exam.setStatut(StatutExamen.PLANIFIE);
+        exam.setEmailsAutorisesWeb(Set.of());
+
+        when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(exam));
+        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ExamenPublie apres = examenPublieService.demarrer(10L);
+
+        assertThat(apres.getStatut()).isEqualTo(StatutExamen.EN_COURS);
+        // Aucune notification ne doit être envoyée
+    }
+
+    @Test
+    @DisplayName("definirEmailsPublicationWeb : première publication → envoi des notifications")
+    void definirEmailsPublicationWebPremierePublicationEnvoieNotifications() {
+        ExamenPublie exam = new ExamenPublie();
+        exam.setId(10L);
+        exam.setTitre("Examen Test");
+        exam.setProfesseur(professeur);
+        professeur.setNom("Prof Test");
+        exam.setEmailsAutorisesWeb(new HashSet<>());
+        exam.setPublieSurWebLe(null);
+
+        when(examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(10L)).thenReturn(Optional.of(exam));
+        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        examenPublieService.definirEmailsPublicationWeb(10L, 1L, List.of("etudiant1@test.com", "etudiant2@test.com"));
+
+        verify(emailService).sendExamenPublieEmail("etudiant1@test.com", "Prof Test", "Examen Test");
+        verify(emailService).sendExamenPublieEmail("etudiant2@test.com", "Prof Test", "Examen Test");
+    }
+
+    @Test
+    @DisplayName("definirEmailsPublicationWeb : mise à jour → pas d'envoi de notification")
+    void definirEmailsPublicationWebMiseAJourPasDeNotification() {
+        ExamenPublie exam = new ExamenPublie();
+        exam.setId(10L);
+        exam.setTitre("Examen Test");
+        exam.setProfesseur(professeur);
+        exam.setEmailsAutorisesWeb(new HashSet<>(Set.of("ancien@test.com")));
+        exam.setPublieSurWebLe(LocalDateTime.now().minusDays(1));
+
+        when(examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(10L)).thenReturn(Optional.of(exam));
+        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        examenPublieService.definirEmailsPublicationWeb(10L, 1L, List.of("nouveau@test.com"));
+
+        // Aucune notification ne doit être envoyée lors de la mise à jour
+        verify(emailService, never()).sendExamenPublieEmail(any(), any(), any());
     }
 
     @Test

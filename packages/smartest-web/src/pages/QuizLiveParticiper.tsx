@@ -7,9 +7,10 @@ import type {
     QrLiveSubmitAnswerResponseDto,
     StreamEnvelope,
 } from '../types/quizLive'
+import { resolveHttpApiBase } from '../config/runtimeBackend'
 import { shuffleCopy } from '../utils/shuffle'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8081'
+const API_BASE = resolveHttpApiBase()
 
 /** Aligné sur QuizPassageWeb (`styleOption`) */
 const QP = {

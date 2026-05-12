@@ -189,7 +189,7 @@ export default function App() {
                     <Route
                         path="/dashboard"
                         element={
-                            <PrivateRoute>
+                            <PrivateRoute allowedRoles={['ETUDIANT', 'PROFESSEUR']}>
                                 <DashboardLayout>
                                     <Dashboard />
                                 </DashboardLayout>

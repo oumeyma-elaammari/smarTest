@@ -13,6 +13,9 @@ obj/
 build-out-desktop/
 **/_build_out*/
 
+# Backend secrets (local overrides)
+packages/smartest-backend/src/main/resources/application-local.yaml
+
 # Executables / binaries
 *.exe
 *.dll

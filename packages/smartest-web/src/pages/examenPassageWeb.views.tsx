@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react'
 import { getEtatSessionLabel as getEtatLabel } from '../utils/examenDisplay'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
+import type { ExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
+import { coerceEntityId } from './examenPassageWeb.shared'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
@@ -143,6 +145,7 @@ type BlocQuestionProps = {
     selectedResponseId: number | null
     setSelectedResponseId: (v: number | null) => void
     submittingAnswer: boolean
+    tempsQuestionExpire: boolean
     onValider: () => void
 }
 
@@ -154,6 +157,7 @@ type QuestionActiveBlockProps = {
     selectedResponseId: number | null
     setSelectedResponseId: (v: number | null) => void
     submittingAnswer: boolean
+    tempsQuestionExpire: boolean
     onValider: () => void
 }
 
@@ -180,7 +184,7 @@ function PauseReadonlyBlock(props: {
                     </p>
                     <ul style={{ margin: 0, paddingLeft: 18, color: '#475569' }}>
                         {reponses.map((r, idx) => (
-                            <li key={typeof r.id === 'number' ? r.id : `r-${idx}`} style={{ marginBottom: 6 }}>
+                            <li key={coerceEntityId(r.id) ?? `r-${idx}`} style={{ marginBottom: 6 }}>
                                 {r.contenu || '—'}
                             </li>
                         ))}
@@ -200,10 +204,11 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
         selectedResponseId,
         setSelectedResponseId,
         submittingAnswer,
+        tempsQuestionExpire,
         onValider,
     } = props
 
-    const submitDisabled = submittingAnswer || selectedResponseId == null
+    const submitDisabled = submittingAnswer || selectedResponseId == null || tempsQuestionExpire
 
     return (
         <>
@@ -215,12 +220,12 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {reponses.map((r) => {
-                    const rid = typeof r.id === 'number' ? r.id : -1
-                    const checked = rid > 0 && selectedResponseId === rid
+                {reponses.map((r, idx) => {
+                    const rid = coerceEntityId(r.id)
+                    const checked = rid != null && selectedResponseId === rid
                     return (
                         <label
-                            key={rid}
+                            key={rid ?? `opt-${idx}`}
                             style={{
                                 display: 'flex',
                                 alignItems: 'flex-start',
@@ -229,20 +234,31 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
                                 borderRadius: 10,
                                 background: checked ? '#eff6ff' : '#fff',
                                 padding: '10px 12px',
-                                cursor: 'pointer',
+                                cursor: tempsQuestionExpire ? 'not-allowed' : 'pointer',
+                                opacity: tempsQuestionExpire ? 0.65 : 1,
                             }}
                         >
                             <input
                                 type="radio"
                                 name={`question-${questionId ?? 'x'}`}
                                 checked={checked}
-                                onChange={() => setSelectedResponseId(rid > 0 ? rid : null)}
+                                disabled={tempsQuestionExpire}
+                                onChange={() => {
+                                    if (!tempsQuestionExpire && rid != null) setSelectedResponseId(rid)
+                                }}
                             />
                             <span style={{ lineHeight: 1.5, color: '#0f1e3d' }}>{r.contenu || 'Réponse'}</span>
                         </label>
                     )
                 })}
             </div>
+
+            {tempsQuestionExpire ? (
+                <p style={{ margin: '12px 0 0', color: '#92400e', fontSize: 14, lineHeight: 1.5 }}>
+                    Temps écoulé pour cette question : vous ne pouvez plus modifier votre réponse. Si le professeur ajoute du
+                    temps au minuteur question, vous pourrez à nouveau sélectionner et valider.
+                </p>
+            ) : null}
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
                 <button
@@ -300,6 +316,7 @@ export function ExamenBlocQuestion(props: BlocQuestionProps): ReactElement {
         selectedResponseId,
         setSelectedResponseId,
         submittingAnswer,
+        tempsQuestionExpire,
         onValider,
     } = props
 
@@ -317,6 +334,7 @@ export function ExamenBlocQuestion(props: BlocQuestionProps): ReactElement {
                 selectedResponseId={selectedResponseId}
                 setSelectedResponseId={setSelectedResponseId}
                 submittingAnswer={submittingAnswer}
+                tempsQuestionExpire={tempsQuestionExpire}
                 onValider={onValider}
             />
         )
@@ -332,12 +350,11 @@ export function ExamenBlocQuestion(props: BlocQuestionProps): ReactElement {
 type EpreuveHeaderProps = {
     meta: ExamenMeta | null
     id: number
-    tempsRestantAffiche: string | null
     canStart: boolean
     etat: string
 }
 
-function EpreuveHeader({ meta, id, tempsRestantAffiche, canStart, etat }: EpreuveHeaderProps): ReactElement {
+function EpreuveHeader({ meta, id, canStart, etat }: EpreuveHeaderProps): ReactElement {
     return (
         <div style={card}>
             <div
@@ -373,11 +390,6 @@ function EpreuveHeader({ meta, id, tempsRestantAffiche, canStart, etat }: Epreuv
                     >
                         {meta?.titre ?? `Examen #${id}`}
                     </h1>
-                    {tempsRestantAffiche != null ? (
-                        <p style={{ margin: '10px 0 0', color: '#475569', fontSize: 14 }} aria-live="polite" aria-atomic="true">
-                            Temps restant : <strong>{tempsRestantAffiche}</strong>
-                        </p>
-                    ) : null}
                 </div>
                 <EtatBadge canStart={canStart} etat={etat} />
             </div>
@@ -389,24 +401,30 @@ export function ExamenPassageEpreuveLayout(props: {
     shell: CSSProperties
     meta: ExamenMeta | null
     id: number
-    tempsRestantAffiche: string | null
     canStart: boolean
     etat: string
     status: string
     wsNotice: string | null
+    questionHeading: string
+    minuteurQuestion: ExamenMinuteurQuestionLive
     blocQuestion: ReactNode
 }): ReactElement {
-    const { shell, meta, id, tempsRestantAffiche, canStart, etat, status, wsNotice, blocQuestion } = props
+    const {
+        shell,
+        meta,
+        id,
+        canStart,
+        etat,
+        status,
+        wsNotice,
+        questionHeading,
+        minuteurQuestion,
+        blocQuestion,
+    } = props
 
     return (
         <div style={shell}>
-            <EpreuveHeader
-                meta={meta}
-                id={id}
-                tempsRestantAffiche={tempsRestantAffiche}
-                canStart={canStart}
-                etat={etat}
-            />
+            <EpreuveHeader meta={meta} id={id} canStart={canStart} etat={etat} />
             <StatusWsNotices status={status} wsNotice={wsNotice} />
             <div style={card}>
                 <h2
@@ -417,8 +435,19 @@ export function ExamenPassageEpreuveLayout(props: {
                         fontWeight: 550,
                     }}
                 >
-                    Question en cours
+                    {questionHeading}
                 </h2>
+                {minuteurQuestion.formatted != null ? (
+                    <p style={{ margin: '0 0 14px', color: '#64748b', fontSize: 13 }} aria-live="polite">
+                        Décompte (indication) : <strong>{minuteurQuestion.formatted}</strong>
+                        {minuteurQuestion.isExpired ? (
+                            <span style={{ color: '#92400e', fontWeight: 600 }}>
+                                {' '}
+                                — temps écoulé ; vos réponses sont verrouillées jusqu’à ajout de temps par le professeur.
+                            </span>
+                        ) : null}
+                    </p>
+                ) : null}
                 {blocQuestion}
             </div>
         </div>

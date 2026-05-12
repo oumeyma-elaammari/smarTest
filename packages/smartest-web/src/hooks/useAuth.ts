@@ -5,6 +5,7 @@ interface AuthResponse {
     role: string
     nom: string
     email: string
+    userId?: number | null
 }
 
 interface AuthState {
@@ -12,6 +13,7 @@ interface AuthState {
     role: string | null
     nom: string | null
     email: string | null
+    userId: string | null
     isAuthenticated: boolean
     login: (data: AuthResponse) => void
     logout: () => void
@@ -56,13 +58,19 @@ function removeLsKeys(keys: string[]): void {
     }
 }
 
-const AUTH_KEYS = ['token', 'role', 'nom', 'email'] as const
+const AUTH_KEYS = ['token', 'role', 'nom', 'email', 'userId'] as const
+
+function userIdToLs(v: number | null | undefined): string | null {
+    if (v == null || !Number.isFinite(v) || v <= 0) return null
+    return String(Math.trunc(v))
+}
 
 const useAuth = create<AuthState>((set) => ({
     token: readLs('token'),
     role: readLs('role'),
     nom: readLs('nom'),
     email: readLs('email'),
+    userId: readLs('userId'),
     isAuthenticated: !!readLs('token'),
 
     login: (data: AuthResponse) => {
@@ -70,11 +78,21 @@ const useAuth = create<AuthState>((set) => ({
         writeLs('role', data.role)
         writeLs('nom', data.nom)
         writeLs('email', data.email)
+        const uid = userIdToLs(data.userId ?? undefined)
+        if (uid != null) writeLs('userId', uid)
+        else {
+            try {
+                localStorage.removeItem('userId')
+            } catch {
+                /* ignore */
+            }
+        }
         set({
             token: data.token,
             role: data.role,
             nom: data.nom,
             email: data.email,
+            userId: uid,
             isAuthenticated: true,
         })
     },
@@ -91,6 +109,7 @@ const useAuth = create<AuthState>((set) => ({
                 role: null,
                 nom: null,
                 email: null,
+                userId: null,
                 isAuthenticated: false,
             })
 
@@ -109,6 +128,7 @@ const useAuth = create<AuthState>((set) => ({
             role: readLs('role'),
             nom: readLs('nom'),
             email: readLs('email'),
+            userId: readLs('userId'),
             isAuthenticated: !!token,
         })
     },
@@ -118,11 +138,13 @@ const useAuth = create<AuthState>((set) => ({
         localStorage.removeItem('role')
         localStorage.removeItem('nom')
         localStorage.removeItem('email')
+        localStorage.removeItem('userId')
         set({
             token: null,
             role: null,
             nom: null,
             email: null,
+            userId: null,
             isAuthenticated: false,
         })
     },

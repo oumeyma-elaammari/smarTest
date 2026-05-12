@@ -35,6 +35,10 @@ public interface StatistiqueQuestionRepository extends JpaRepository<Statistique
     void deleteAllByExamenPublieId(@Param("examenId") Long examenId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM StatistiqueQuestion s WHERE s.sessionExamen.id IN :sessionIds")
+    void deleteAllBySessionExamenIdIn(@Param("sessionIds") Collection<Long> sessionIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM StatistiqueQuestion s WHERE s.sessionExamen.id = :sessionId")
     void deleteAllBySessionExamenId(@Param("sessionId") Long sessionId);
 

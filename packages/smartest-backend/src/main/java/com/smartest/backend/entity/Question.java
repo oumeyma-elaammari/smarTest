@@ -34,6 +34,11 @@ public class Question {
     @Column(columnDefinition = "TEXT")
     private String explication;  // ← Ajouté pour l'explication pédagogique
 
+    /**
+     * Durée indicative pour la question lors du passage web (secondes), définie depuis le bureau à la publication.
+     */
+    private Integer dureeSecondesIndicative;
+
     // ===== RELATIONS =====
     @JsonIgnore
     @ToString.Exclude
