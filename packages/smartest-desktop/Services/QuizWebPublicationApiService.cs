@@ -314,7 +314,9 @@ namespace smartest_desktop.Services
                             optionD = q.OptionD,
                             reponseCorrecte = q.ReponseCorrecte,
                             explication = q.Explication,
-                            difficulte = q.Difficulte
+                            difficulte = q.Difficulte,
+                            imageBase64 = string.IsNullOrWhiteSpace(q.ImageBase64) ? null : q.ImageBase64.Trim(),
+                            imageType = string.IsNullOrWhiteSpace(q.ImageType) ? null : q.ImageType.Trim(),
                         })
                         .ToList()
                 };

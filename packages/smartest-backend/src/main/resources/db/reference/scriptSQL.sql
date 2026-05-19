@@ -53,7 +53,7 @@ CREATE TABLE cours (
 CREATE TABLE question (
                           id            BIGINT PRIMARY KEY AUTO_INCREMENT,
                           enonce        TEXT         NOT NULL,
-                          type          ENUM('QCM', 'VRAI_FAUX', 'OUVERTE'),
+                          type          VARCHAR(255),
                           difficulte    ENUM('FACILE', 'MOYEN', 'DIFFICILE'),
                           professeur_id BIGINT       NOT NULL,
                           cours_id      BIGINT,

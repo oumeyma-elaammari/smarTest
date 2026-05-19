@@ -1,0 +1,48 @@
+<Window x:Class="smartest_desktop.Views.SuppressionExamenChoixDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Supprimer l'examen"
+        Width="520"
+        MinWidth="440"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#fafbfd"
+        FontFamily="Segoe UI">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Views/Styles/StylesGlobal.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Border Padding="24,20" BorderBrush="#e2e8f4">
+        <StackPanel>
+            <TextBlock x:Name="TxtTitre" FontSize="17" FontWeight="700" Foreground="{StaticResource NavyBrush}"
+                       TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <TextBlock Text="Choisissez le type de suppression :"
+                       FontSize="13" Foreground="#475569" Margin="0,0,0,16"/>
+            <Button x:Name="BtnBureauSeul" HorizontalContentAlignment="Left" Padding="14,12" Margin="0,0,0,10"
+                    Background="White" BorderBrush="#e2e8f4" BorderThickness="1" Cursor="Hand"
+                    Click="BtnBureauSeul_Click">
+                <StackPanel>
+                    <TextBlock Text="Supprimer du bureau uniquement" FontWeight="600" Foreground="#0f1e3d"/>
+                    <TextBlock x:Name="TxtBureauSeul" TextWrapping="Wrap" FontSize="12" Foreground="#64748b" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="BtnBureauEtWeb" HorizontalContentAlignment="Left" Padding="14,12" Margin="0,0,0,16"
+                    Background="White" BorderBrush="#e2e8f4" BorderThickness="1" Cursor="Hand"
+                    Click="BtnBureauEtWeb_Click">
+                <StackPanel>
+                    <TextBlock Text="Supprimer du bureau et du web" FontWeight="600" Foreground="#0f1e3d"/>
+                    <TextBlock x:Name="TxtBureauEtWeb" TextWrapping="Wrap" FontSize="12" Foreground="#64748b" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Button>
+            <TextBlock x:Name="TxtAvertissementWeb" TextWrapping="Wrap" FontSize="12" Foreground="#b45309"
+                       Margin="0,0,0,12" Visibility="Collapsed"/>
+            <Button Content="Annuler" HorizontalAlignment="Right" Padding="14,8" IsCancel="True"
+                    Background="#f8fafc" Foreground="#475569" BorderBrush="#e2e8f0" BorderThickness="1"
+                    FontWeight="600" Cursor="Hand" Click="BtnAnnuler_Click"/>
+        </StackPanel>
+    </Border>
+</Window>

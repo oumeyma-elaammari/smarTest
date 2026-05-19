@@ -177,7 +177,7 @@ namespace smartest_desktop.Views
                 TxtApercu.Text = "";
 
             bool termine = etat == "TERMINE" || etat == "ARRETE";
-            BtnDemarrer.Visibility = etat == "PLANIFIE" ? Visibility.Visible : Visibility.Collapsed;
+            BtnDemarrer.Visibility = etat == "PLANIFIE" && !termine ? Visibility.Visible : Visibility.Collapsed;
             BtnPause.Visibility = etat == "EN_COURS" ? Visibility.Visible : Visibility.Collapsed;
             BtnReprendre.Visibility = etat == "EN_PAUSE" ? Visibility.Visible : Visibility.Collapsed;
             BtnPrecedente.Visibility = etat == "EN_COURS" ? Visibility.Visible : Visibility.Collapsed;
@@ -253,7 +253,18 @@ namespace smartest_desktop.Views
             try
             {
                 string tok = RequireToken();
-                var snap = await _api.ControlerExamenAsync(tok, _examenId, "lancer").ConfigureAwait(false);
+                string? groqKey = null;
+                try
+                {
+                    groqKey = GroqKeyService.LireCle(App.LocalDb);
+                    if (!GroqKeyService.CleEstValide(groqKey ?? ""))
+                        groqKey = null;
+                }
+                catch
+                {
+                    groqKey = null;
+                }
+                var snap = await _api.ControlerExamenAsync(tok, _examenId, "lancer", groqKey).ConfigureAwait(false);
                 await Dispatcher.InvokeAsync(() =>
                 {
                     AppliquerSnapshot(snap);

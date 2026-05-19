@@ -1,21 +1,30 @@
 package com.smartest.backend.controller;
 
+import com.smartest.backend.dto.request.ExamenPassageReponseRequest;
 import com.smartest.backend.dto.request.PublicationExamenQuestionsRequest;
+import com.smartest.backend.dto.request.ValiderCorrectionsDetailRequest;
 import com.smartest.backend.dto.request.ValiderResultatExamenRequest;
+import com.smartest.backend.dto.response.ExamenCorrectionsEtudiantResponse;
+import com.smartest.backend.dto.response.ExamenEtudiantPassageResponse;
 import com.smartest.backend.dto.response.ExamenPublieMetadataResponse;
 import com.smartest.backend.dto.response.MessageResponse;
+import com.smartest.backend.dto.response.ResultatVisibleResponse;
 import com.smartest.backend.entity.Etudiant;
 import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.repository.EtudiantRepository;
 import com.smartest.backend.repository.ExamenPublieRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.service.ExamenCorrectionService;
 import com.smartest.backend.service.ExamenPublieService;
 import com.smartest.backend.service.ExamenSupervisionService;
+import com.smartest.backend.service.GroqApiKeyRegistry;
+import com.smartest.backend.service.GroqRedactionRepriseService;
 import com.smartest.backend.service.ExamenSupervisionService.NoteDraft;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +45,9 @@ public class ExamenPublieController {
 
     private final ExamenPublieService examenPublieService;
     private final ExamenSupervisionService supervisionService;
+    private final ExamenCorrectionService examenCorrectionService;
+    private final GroqApiKeyRegistry groqApiKeyRegistry;
+    private final GroqRedactionRepriseService groqRedactionRepriseService;
     private final ExamenPublieRepository examenPublieRepository;
     private final ProfesseurRepository professeurRepository;
     private final EtudiantRepository etudiantRepository;
@@ -125,8 +138,12 @@ public class ExamenPublieController {
     public ResponseEntity<MessageResponse> synchroniserQuestionsPublicationWeb(
             @PathVariable Long id,
             @Valid @RequestBody PublicationExamenQuestionsRequest body,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-Groq-Api-Key", required = false) String groqApiKey,
             @AuthenticationPrincipal UserDetails userDetails) {
         assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        if (groqApiKey != null && !groqApiKey.isBlank()) {
+            groqApiKeyRegistry.registerForExamen(id, groqApiKey);
+        }
         examenPublieService.synchroniserQuestionsPublicationWeb(
                 id, userDetails.getUsername(), body.getQuestions());
         return ResponseEntity.ok(new MessageResponse("Questions de l'examen enregistrées sur le serveur.", true, 200));
@@ -141,11 +158,10 @@ public class ExamenPublieController {
             @RequestParam String email,
             @AuthenticationPrincipal UserDetails userDetails) {
         Etudiant etu = requireEtudiant(userDetails);
-        if (!etu.getId().equals(etudiantId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Identité étudiant incohérente.");
-        }
-        examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername());
-        return ResponseEntity.ok(supervisionService.rejoindreSalleAttente(id, etudiantId, email));
+        long etuId = etu.getId();
+        String emailEffectif = normalize(userDetails.getUsername());
+        examenPublieService.getMetadataPourEtudiant(id, emailEffectif);
+        return ResponseEntity.ok(supervisionService.rejoindreSalleAttente(id, etuId, emailEffectif));
     }
 
     /**
@@ -164,62 +180,55 @@ public class ExamenPublieController {
         } else {
             examenPublieService.getMetadataPourEtudiant(id, email);
         }
+        supervisionService.synchroniserParticipantsVersBase(id);
         return ResponseEntity.ok(supervisionService.getSalleAttente(id));
     }
 
     @GetMapping("/{id}/passage/question-courante")
     public ResponseEntity<ExamenSupervisionService.ExamQuestionStateResponse> questionCourante(
             @PathVariable Long id,
-            @RequestParam Long etudiantId,
+            @RequestParam(required = false) Long etudiantId,
             @AuthenticationPrincipal UserDetails userDetails) {
         Etudiant etu = requireEtudiant(userDetails);
-        if (!etu.getId().equals(etudiantId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-        examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername());
-        return ResponseEntity.ok(
-                supervisionService.getQuestionCouranteEtudiant(id, etudiantId, userDetails.getUsername()));
+        long etuId = etu.getId();
+        String email = normalize(userDetails.getUsername());
+        examenPublieService.getMetadataPourEtudiant(id, email);
+        return ResponseEntity.ok(supervisionService.getQuestionCouranteEtudiant(id, etuId, email));
     }
 
-    @PostMapping("/{id}/passage/reponse")
+    @PostMapping(value = "/{id}/passage/reponse", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> enregistrerReponse(
             @PathVariable Long id,
-            @RequestParam Long etudiantId,
-            @RequestParam Long questionId,
-            @RequestParam Long reponseId,
+            @RequestParam(required = false) Long etudiantId,
+            @RequestBody ExamenPassageReponseRequest body,
             @AuthenticationPrincipal UserDetails userDetails) {
         Etudiant etu = requireEtudiant(userDetails);
-        if (!etu.getId().equals(etudiantId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-        examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername());
-        return ResponseEntity.ok(supervisionService.enregistrerReponseEtudiant(id, etudiantId, questionId, reponseId));
+        long etuId = etu.getId();
+        String email = normalize(userDetails.getUsername());
+        examenPublieService.getMetadataPourEtudiant(id, email);
+        return ResponseEntity.ok(supervisionService.enregistrerReponseEtudiant(id, etuId, email, body));
     }
 
     @PostMapping("/{id}/passage/soumettre-final")
     public ResponseEntity<Map<String, Object>> soumettreFinal(
             @PathVariable Long id,
-            @RequestParam Long etudiantId,
+            @RequestParam(required = false) Long etudiantId,
             @AuthenticationPrincipal UserDetails userDetails) {
         Etudiant etu = requireEtudiant(userDetails);
-        if (!etu.getId().equals(etudiantId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-        examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername());
-        return ResponseEntity.ok(supervisionService.soumettreExamenEtudiant(id, etudiantId));
+        long etuId = etu.getId();
+        examenPublieService.getMetadataPourEtudiant(id, normalize(userDetails.getUsername()));
+        return ResponseEntity.ok(supervisionService.soumettreExamenEtudiant(id, etuId));
     }
 
     @GetMapping("/{id}/passage/resultat-visible")
-    public ResponseEntity<NoteDraft> resultatVisible(
+    public ResponseEntity<ResultatVisibleResponse> resultatVisible(
             @PathVariable Long id,
-            @RequestParam Long etudiantId,
+            @RequestParam(required = false) Long etudiantId,
             @AuthenticationPrincipal UserDetails userDetails) {
         Etudiant etu = requireEtudiant(userDetails);
-        if (!etu.getId().equals(etudiantId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-        examenPublieService.getMetadataPourEtudiant(id, userDetails.getUsername());
-        return ResponseEntity.ok(supervisionService.getResultatVisibleEtudiant(id, etudiantId));
+        long etuId = etu.getId();
+        examenPublieService.getMetadataPourEtudiant(id, normalize(userDetails.getUsername()));
+        return ResponseEntity.ok(supervisionService.getResultatVisibleEtudiantResponse(id, etuId));
     }
 
     // --- Supervision professeur ---
@@ -232,8 +241,13 @@ public class ExamenPublieController {
     public ResponseEntity<ExamenSupervisionService.SnapshotResponse> controleSimple(
             @PathVariable Long id,
             @PathVariable String action,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-Groq-Api-Key", required = false) String groqApiKey,
             @AuthenticationPrincipal UserDetails userDetails) {
         assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        if (groqApiKey != null && !groqApiKey.isBlank()) {
+            groqApiKeyRegistry.registerForExamen(id, groqApiKey);
+            groqRedactionRepriseService.relancerCorrectionsRedactionExamen(id);
+        }
         String a = action == null ? "" : action.trim().toLowerCase(Locale.ROOT);
         return ResponseEntity.ok(switch (a) {
             case "lancer" -> supervisionService.lancer(id);
@@ -312,7 +326,27 @@ public class ExamenPublieController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
         assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        supervisionService.synchroniserParticipantsVersBase(id);
         return ResponseEntity.ok(supervisionService.snapshot(id));
+    }
+
+    @GetMapping({"/{id}/supervision/etudiants-passages", "/{id}/supervision/participants-soumis"})
+    public ResponseEntity<List<ExamenEtudiantPassageResponse>> etudiantsPassages(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        supervisionService.synchroniserParticipantsVersBase(id);
+        List<ExamenEtudiantPassageResponse> rows = new ArrayList<>(examenCorrectionService.listerEtudiantsAyantPasse(id));
+        for (ExamenEtudiantPassageResponse m : supervisionService.listerEtudiantsSoumisDepuisMemoire(id)) {
+            if (m.getEtudiantId() == null) {
+                continue;
+            }
+            boolean deja = rows.stream().anyMatch(r -> m.getEtudiantId().equals(r.getEtudiantId()));
+            if (!deja) {
+                rows.add(m);
+            }
+        }
+        return ResponseEntity.ok(rows);
     }
 
     @GetMapping("/{id}/supervision/resultats-en-attente")
@@ -336,16 +370,62 @@ public class ExamenPublieController {
                 id, body.getEtudiantId(), body.getNoteFinale(), body.getRemarque()));
     }
 
+    @GetMapping("/{id}/supervision/etudiants/{etudiantId}/corrections")
+    public ResponseEntity<ExamenCorrectionsEtudiantResponse> correctionsEtudiant(
+            @PathVariable Long id,
+            @PathVariable Long etudiantId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        double bareme = supervisionService.snapshot(id).baremeSur20();
+        return ResponseEntity.ok(examenCorrectionService.getCorrectionsPourProf(id, etudiantId, bareme));
+    }
+
+    @PostMapping("/{id}/supervision/etudiants/{etudiantId}/valider-corrections-detail")
+    public ResponseEntity<MessageResponse> validerCorrectionsDetail(
+            @PathVariable Long id,
+            @PathVariable Long etudiantId,
+            @Valid @RequestBody ValiderCorrectionsDetailRequest body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        examenCorrectionService.validerCorrectionsDetail(id, etudiantId, body);
+        supervisionService.synchroniserMemoireAvecResultatPersistant(id, etudiantId);
+        return ResponseEntity.ok(new MessageResponse(
+                "Correction enregistrée, note validée et publiée pour l'étudiant.", true, 200));
+    }
+
+    @PostMapping("/{id}/supervision/forcer-consolidation")
+    public ResponseEntity<MessageResponse> forcerConsolidation(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        supervisionService.synchroniserParticipantsVersBase(id);
+        supervisionService.finaliserSoumissionsAutomatiques(id, true);
+        return ResponseEntity.ok(new MessageResponse(
+                "Consolidation des copies effectuée (mémoire serveur + lignes déjà en base).", true, 200));
+    }
+
+    @PostMapping("/{id}/supervision/etudiants/{etudiantId}/synchroniser-note-workbench")
+    public ResponseEntity<MessageResponse> synchroniserNoteWorkbench(
+            @PathVariable Long id,
+            @PathVariable Long etudiantId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        examenCorrectionService.marquerSynchronisationWorkbench(id, etudiantId);
+        return ResponseEntity.ok(new MessageResponse("Synchronisation enregistrée ; la note est visible pour l'étudiant.", true, 200));
+    }
+
     // --- Anciens endpoints (compat) ---
 
     @PatchMapping("/{id}/demarrer")
-    public ExamenPublie demarrer(@PathVariable Long id) {
-        return examenPublieService.demarrer(id);
+    public ResponseEntity<ExamenSupervisionService.SnapshotResponse> demarrerLegacy(@PathVariable Long id) {
+        examenPublieService.demarrer(id);
+        return ResponseEntity.ok(supervisionService.snapshot(id));
     }
 
     @PatchMapping("/{id}/terminer")
-    public ExamenPublie terminer(@PathVariable Long id) {
-        return examenPublieService.terminer(id);
+    public ResponseEntity<Void> terminerLegacy(@PathVariable Long id) {
+        supervisionService.terminer(id);
+        return ResponseEntity.ok().build();
     }
 
     private static String normalize(String email) {
@@ -353,7 +433,7 @@ public class ExamenPublieController {
     }
 
     private Etudiant requireEtudiant(UserDetails userDetails) {
-        return etudiantRepository.findByEmail(normalize(userDetails.getUsername()))
+        return etudiantRepository.findByEmailIgnoreCase(normalize(userDetails.getUsername()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte étudiant requis."));
     }
 

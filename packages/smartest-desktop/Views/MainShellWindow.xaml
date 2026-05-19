@@ -99,7 +99,7 @@
                         </Border.InputBindings>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="&#xE7FC;" FontSize="13" Foreground="#6b7a99" FontFamily="Segoe MDL2 Assets" Margin="0,0,10,0"/>
-                            <TextBlock Text="Sessions actives" FontSize="13" Foreground="#0f1e3d"/>
+                            <TextBlock Text="Sessions examens" FontSize="13" Foreground="#0f1e3d"/>
                         </StackPanel>
                     </Border>
 
@@ -171,14 +171,15 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0">
+            <Grid Grid.Row="0" ClipToBounds="True">
                 <ContentControl x:Name="CentralHostedContent"
                                 Visibility="{Binding IsCentralHosted, Converter={StaticResource BoolToVis}}"/>
 
-                <StackPanel Margin="30" Visibility="{Binding IsSessions, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Sessions actives" FontSize="24" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,16"/>
-                    <TextBlock Text="Section en préparation pour intégration complète." FontSize="13" Foreground="#64748b"/>
-                </StackPanel>
+                <views:SessionsActivesView Margin="16,8,16,0"
+                                           VerticalAlignment="Stretch"
+                                           HorizontalAlignment="Stretch"
+                                           DataContext="{Binding SessionsActives}"
+                                           Visibility="{Binding DataContext.IsSessions, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}"/>
 
                 <views:SettingsAccountView Margin="30"
                                            DataContext="{Binding SettingsAccount}"
