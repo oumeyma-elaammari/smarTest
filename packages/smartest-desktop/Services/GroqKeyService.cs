@@ -38,6 +38,16 @@ namespace smartest_desktop.Services
             }
         }
 
+        /// <summary>Clé Groq locale valide pour l'envoi au serveur (correction rédaction des examens).</summary>
+        public static bool TryObtenirCleValide(LocalDbContext db, out string cle)
+        {
+            cle = string.Empty;
+            string? lue = LireCle(db);
+            if (!CleEstValide(lue ?? "")) return false;
+            cle = lue!.Trim();
+            return true;
+        }
+
         public static string? LireCle(LocalDbContext db)
         {
             try

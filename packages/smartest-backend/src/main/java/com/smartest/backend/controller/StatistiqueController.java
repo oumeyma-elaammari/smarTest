@@ -54,4 +54,16 @@ public class StatistiqueController {
         return ResponseEntity.ok(
                 statistiqueService.obtenirQuestionsAlertePourProfesseur(quizId, userDetails.getUsername()));
     }
+
+    /**
+     * Statistiques d’un examen publié (notes de passage, taux de réussite par question).
+     * Même forme JSON que {@link #getStatistiquesQuiz} ({@code quizId} = id examen publié).
+     */
+    @GetMapping("/examen/{examenId}")
+    public ResponseEntity<StatistiquesQuizResponse> getStatistiquesExamen(
+            @PathVariable Long examenId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                statistiqueService.obtenirStatistiquesExamenPourProfesseur(examenId, userDetails.getUsername()));
+    }
 }

@@ -16,7 +16,6 @@
     "@fontsource/dm-serif-display": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@stomp/stompjs": "^7.3.0",
-    "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.14.0",
     "lucide-react": "^1.7.0",
     "qrcode.react": "^4.2.0",
@@ -32,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

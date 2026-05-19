@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 
@@ -201,7 +202,8 @@ public class AuthService {
     //  LOGIN
     // ══════════════════════════════════════════════
     public AuthResponse login(LoginRequest request) {
-        var prof = professeurRepository.findByEmail(request.getEmail());
+        String emailLogin = request.getEmail() == null ? "" : request.getEmail().trim().toLowerCase(Locale.ROOT);
+        var prof = professeurRepository.findByEmailIgnoreCase(emailLogin);
         if (prof.isPresent()) {
             if (!prof.get().isEmailVerifie())
                 throw new EmailNotVerifiedException();
@@ -214,7 +216,7 @@ public class AuthService {
                     prof.get().getNom(), prof.get().getEmail(), pid);
         }
 
-        var etudiant = etudiantRepository.findByEmail(request.getEmail());
+        var etudiant = etudiantRepository.findByEmailIgnoreCase(emailLogin);
         if (etudiant.isPresent()) {
             if (!etudiant.get().isEmailVerifie())
                 throw new EmailNotVerifiedException();
@@ -228,6 +230,33 @@ public class AuthService {
         }
 
         throw new AccountNotFoundException(request.getEmail());
+    }
+
+    /**
+     * Émet un nouveau JWT à partir d'un token expiré mais toujours signé correctement.
+     */
+    public AuthResponse refreshAccessToken(String token) {
+        var parsed = jwtUtil.parseForRefresh(token)
+                .orElseThrow(InvalidTokenException::new);
+        if (parsed.email() == null || parsed.email().isBlank()) {
+            throw new InvalidTokenException();
+        }
+        String email = parsed.email().strip();
+        var prof = professeurRepository.findByEmailIgnoreCase(email);
+        if (prof.isPresent()) {
+            Long pid = prof.get().getId();
+            String newToken = jwtUtil.generateToken(prof.get().getEmail(), "PROFESSEUR", pid);
+            return new AuthResponse(newToken, "PROFESSEUR",
+                    prof.get().getNom(), prof.get().getEmail(), pid);
+        }
+        var etudiant = etudiantRepository.findByEmailIgnoreCase(email);
+        if (etudiant.isPresent()) {
+            Long eid = etudiant.get().getId();
+            String newToken = jwtUtil.generateToken(etudiant.get().getEmail(), "ETUDIANT", eid);
+            return new AuthResponse(newToken, "ETUDIANT",
+                    etudiant.get().getNom(), etudiant.get().getEmail(), eid);
+        }
+        throw new InvalidTokenException();
     }
 
     // ══════════════════════════════════════════════

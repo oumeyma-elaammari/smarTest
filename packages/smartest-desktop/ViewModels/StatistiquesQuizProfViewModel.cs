@@ -216,7 +216,7 @@ namespace smartest_desktop.ViewModels
             if (_refreshTickRunning || Chargement)
                 return;
             var sel = _evaluationChoisi;
-            if (sel?.Type != TypeEvalStat.Quiz)
+            if (sel == null)
                 return;
             _refreshTickRunning = true;
             try
@@ -500,8 +500,11 @@ namespace smartest_desktop.ViewModels
         private static long? IdPublicationWebPourStat(QuizLocal q) =>
             q.BackendQuizIdPublicationWeb ?? q.BackendQuizId;
 
-        private static bool EstExamenPublie(string? statut) =>
-            string.Equals(statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase);
+        private static bool EstExamenPourStatistiques(string? statut)
+        {
+            var s = statut?.Trim().ToUpperInvariant();
+            return s is "PUBLIE" or "EN_COURS" or "TERMINE";
+        }
 
         private async Task InitialiserFenetreAsync(long? preferQuizId, long? preferExamenId)
         {
@@ -516,7 +519,7 @@ namespace smartest_desktop.ViewModels
 
                 var examens = await _examenLocal.GetAllAsync();
                 var eRows = examens
-                    .Where(e => EstExamenPublie(e.Statut) && e.BackendId is long bid && bid > 0)
+                    .Where(e => EstExamenPourStatistiques(e.Statut) && e.BackendId is long bid && bid > 0)
                     .Select(e => new StatistiqueEvalItem(TypeEvalStat.Examen, e.BackendId!.Value, e.Titre));
 
                 var rows = qRows.Concat(eRows).OrderBy(x => x.LibelleListe, StringComparer.OrdinalIgnoreCase).ToList();
@@ -558,20 +561,6 @@ namespace smartest_desktop.ViewModels
             if (app == null)
                 return;
 
-            if (item.Type == TypeEvalStat.Examen)
-            {
-                await app.Dispatcher.InvokeAsync(() =>
-                {
-                    ViderTableauBord(item.Titre);
-                    Erreur =
-                        "Les statistiques détaillées des examens (sessions) ne sont pas encore disponibles via le serveur. " +
-                        "Sélectionnez un quiz publié pour afficher le tableau de bord.";
-                    DonneesChargees = false;
-                    Chargement = false;
-                });
-                return;
-            }
-
             string? token = app.Properties["Token"]?.ToString();
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -592,7 +581,9 @@ namespace smartest_desktop.ViewModels
             }
 
             var api = new QuizStatistiquesApiService();
-            var (data, err) = await api.GetStatistiquesQuizAsync(token, item.BackendId);
+            var (data, err) = item.Type == TypeEvalStat.Examen
+                ? await api.GetStatistiquesExamenAsync(token, item.BackendId)
+                : await api.GetStatistiquesQuizAsync(token, item.BackendId);
 
             await app.Dispatcher.InvokeAsync(() =>
             {

@@ -4,7 +4,10 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -35,12 +38,37 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                /* Sans JWT : 401 (pas 403) — l’utilisateur anonyme Spring possède ROLE_ANONYMOUS et déclenchait AccessDenied. */
+                .anonymous(AbstractHttpConfigurer::disable)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.getWriter().write(
+                                    "{\"error\":\"UNAUTHORIZED\",\"message\":\"Authentification requise\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            var auth = SecurityContextHolder.getContext().getAuthentication();
+                            if (auth == null || !auth.isAuthenticated()
+                                    || auth instanceof AnonymousAuthenticationToken) {
+                                response.setStatus(401);
+                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                response.getWriter().write(
+                                        "{\"error\":\"UNAUTHORIZED\",\"message\":\"Authentification requise\"}");
+                            } else {
+                                response.setStatus(403);
+                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                response.getWriter().write(
+                                        "{\"error\":\"FORBIDDEN\",\"message\":\"Accès refusé\"}");
+                            }
+                        }))
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/register",
                                 "/auth/register/etudiant",
                                 "/auth/login",
+                                "/auth/refresh",
                                 "/auth/verify-email",
                                 "/auth/verify-email/code",    // ✅ vérification par code (desktop)
                                 "/auth/verify-email/resend",          // ✅ renvoi du code (desktop)
@@ -59,6 +87,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/examens-publies/mes-publications-web")
                                 .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.GET, "/api/examens-publies/*/metadata")
+                                .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
+                        .requestMatchers("/api/examens-publies/*/passage/**")
+                                .hasRole(ROLE_ETUDIANT)
+                        .requestMatchers("/api/examens-publies/*/salle-attente/**")
                                 .hasAnyRole(ROLE_ETUDIANT, ROLE_PROFESSEUR)
                         .requestMatchers(HttpMethod.GET, "/api/quizs/*/passage-web").hasRole(ROLE_ETUDIANT)
                         .requestMatchers(HttpMethod.POST, "/api/qr-live/sessions").hasRole(ROLE_PROFESSEUR)

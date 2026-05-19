@@ -2,6 +2,7 @@ import { CalendarClock, Clock, User } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import type { ExamenListeItem } from '../../api/quizSchemas'
 import { formatDateTimeUnknown, formatStatutExamen } from '../../utils/examenDisplay'
+import { couleurNoteSur20 } from '../../utils/noteAffichage'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 
@@ -25,6 +26,8 @@ export type ExamenListeCardProps = {
     readonly onRejoindre: () => void
     /** Session terminée côté serveur : plus d'accès, message sur la note à venir. */
     readonly sessionTermineeEtudiant?: boolean
+    /** Si défini, affichage « Note : X / Y » à la place du message « session terminée ». */
+    readonly noteEtudiantPubliee?: { valeur: number; sur: number } | null
     /** Si défini : affichage superviseur avec pilotage dédié. */
     readonly superviseurProps?: {
         readonly onOuvrirPilotage: () => void
@@ -34,6 +37,9 @@ export type ExamenListeCardProps = {
         readonly lancementEnCours?: boolean
         /** Affiche « Démarrer » seulement tant que la session n'a pas été démarrée côté serveur (métadonnée). */
         readonly peutLancerSession: boolean
+        /** Supprime l'examen sur le serveur (prof + étudiants). */
+        readonly onSupprimer?: () => void | Promise<void>
+        readonly suppressionEnCours?: boolean
     }
 }
 
@@ -150,6 +156,32 @@ function SuperviseurBlock({
             >
                 Espace superviseur
             </button>
+            {superviseurProps.onSupprimer ? (
+                <button
+                    type="button"
+                    disabled={superviseurProps.suppressionEnCours}
+                    title="Supprimer cet examen pour vous et pour tous les étudiants"
+                    onClick={() => {
+                        if (superviseurProps.suppressionEnCours) return
+                        void superviseurProps.onSupprimer?.()
+                    }}
+                    style={{
+                        padding: '7px 14px',
+                        borderRadius: 8,
+                        border: '1px solid #fecaca',
+                        background: '#fff',
+                        color: '#dc2626',
+                        fontWeight: 600,
+                        fontFamily: sans,
+                        fontSize: 12,
+                        cursor: superviseurProps.suppressionEnCours ? 'not-allowed' : 'pointer',
+                        opacity: superviseurProps.suppressionEnCours ? 0.6 : 1,
+                        width: '100%',
+                    }}
+                >
+                    {superviseurProps.suppressionEnCours ? 'Suppression…' : "Supprimer l'examen"}
+                </button>
+            ) : null}
         </div>
     )
 }
@@ -194,6 +226,36 @@ function EtudiantRejoindreButton({ layoutTwoCol, creneauAtteint, onRejoindre }: 
     )
 }
 
+function NoteEtudiantPubliee({
+    note,
+    layoutTwoCol,
+}: {
+    readonly note: { valeur: number; sur: number }
+    readonly layoutTwoCol: boolean
+}) {
+    const v = Number.isFinite(note.valeur) ? note.valeur.toFixed(2) : String(note.valeur)
+    const s = Number.isFinite(note.sur) ? note.sur.toFixed(2) : String(note.sur)
+    const couleur =
+        typeof note.valeur === 'number' && Number.isFinite(note.valeur)
+            ? couleurNoteSur20(note.valeur, note.sur)
+            : '#0f1e3d'
+    return (
+        <p
+            style={{
+                margin: 0,
+                maxWidth: layoutTwoCol ? 260 : undefined,
+                fontSize: 14,
+                lineHeight: 1.5,
+                color: couleur,
+                fontWeight: 700,
+                textAlign: layoutTwoCol ? 'right' : 'left',
+            }}
+        >
+            Note : {v} / {s}
+        </p>
+    )
+}
+
 function TermineeMessageEtudiant({ layoutTwoCol }: Pick<EtudiantActionsProps, 'layoutTwoCol'>) {
     return (
         <p
@@ -214,6 +276,7 @@ function TermineeMessageEtudiant({ layoutTwoCol }: Pick<EtudiantActionsProps, 'l
 function renderColonDroiteActions(opts: {
     superviseurProps: ExamenListeCardProps['superviseurProps']
     sessionTermineeEtudiant: boolean
+    noteEtudiantPubliee: ExamenListeCardProps['noteEtudiantPubliee']
     layoutTwoCol: boolean
     creneauAtteint: boolean
     accentBleu: string
@@ -230,6 +293,9 @@ function renderColonDroiteActions(opts: {
         )
     }
     if (opts.sessionTermineeEtudiant) {
+        if (opts.noteEtudiantPubliee) {
+            return <NoteEtudiantPubliee note={opts.noteEtudiantPubliee} layoutTwoCol={opts.layoutTwoCol} />
+        }
         return <TermineeMessageEtudiant layoutTwoCol={opts.layoutTwoCol} />
     }
     return (
@@ -248,6 +314,7 @@ export function ExamenListeCard({
     creneauAtteint,
     onRejoindre,
     sessionTermineeEtudiant = false,
+    noteEtudiantPubliee = null,
     superviseurProps,
 }: ExamenListeCardProps) {
     const titreBrut = (e.titre ?? '').trim() || 'Examen'
@@ -263,6 +330,7 @@ export function ExamenListeCard({
     const colonActions = renderColonDroiteActions({
         superviseurProps,
         sessionTermineeEtudiant,
+        noteEtudiantPubliee,
         layoutTwoCol,
         creneauAtteint,
         accentBleu,

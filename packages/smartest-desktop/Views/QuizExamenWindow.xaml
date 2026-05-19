@@ -481,7 +481,7 @@
 									<ColumnDefinition Width="100"/>
 									<ColumnDefinition Width="90"/>
 									<ColumnDefinition Width="80"/>
-									<ColumnDefinition Width="250"/>
+									<ColumnDefinition Width="310"/>
 								</Grid.ColumnDefinitions>
 								<TextBlock Grid.Column="0" Text="Titre" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
 								<TextBlock Grid.Column="1" Text="Durée" FontSize="11" FontWeight="600" Foreground="#8899b8"/>
@@ -494,7 +494,8 @@
                                     Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}"/>
 
 							<!-- Liste examens (page courante) -->
-							<ItemsControl ItemsSource="{Binding ExamensPage}"
+							<ItemsControl x:Name="ListeExamensItems"
+                                          ItemsSource="{Binding ExamensPage}"
                                           Visibility="{Binding AfficherListeExamens, Converter={StaticResource BoolToVis}}">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate>
@@ -505,7 +506,7 @@
 													<ColumnDefinition Width="100"/>
 													<ColumnDefinition Width="90"/>
 													<ColumnDefinition Width="80"/>
-													<ColumnDefinition Width="250"/>
+													<ColumnDefinition Width="310"/>
 												</Grid.ColumnDefinitions>
 
 												<StackPanel Grid.Column="0" VerticalAlignment="Center">

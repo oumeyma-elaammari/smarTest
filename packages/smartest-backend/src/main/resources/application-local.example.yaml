@@ -1,5 +1,15 @@
 # Copier ce fichier vers application-local.yaml et renseigner le mot de passe MySQL.
 # application-local.yaml est ignoré par git.
+#
+# Correction rédaction (Groq) — au moins une des options :
+# 1) Variable d'environnement GROQ_API_KEY=gsk_...
+# 2) groq.api-key: gsk_... ci-dessous
+# 3) Lancer l'examen depuis le bureau (clé Groq déjà configurée dans Paramètres)
+# groq:
+#   api-key: gsk_votre_cle
+#
+# Optionnel — note étudiant web seulement après synchro Workbench :
+# examen.resultat.publier-note-immediatement-apres-validation=false
 spring:
   datasource:
-    password: REMPLACER_PAR_VOTRE_MOT_DE_PASSE_MYSQL
+    password: root

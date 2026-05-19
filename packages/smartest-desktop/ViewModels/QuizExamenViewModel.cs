@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -205,12 +206,26 @@ namespace smartest_desktop.ViewModels
             Examen.BackendId is long bk && bk > 0
             && string.Equals(Examen.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase);
 
-        public string LancerBoutonTexte => SessionSupervisionOuverte ? "Session en cours" : "Lancer";
+        public string LancerBoutonTexte =>
+            QuizExamenViewModel.EstExamenSessionTermineeOuAnnulee(Examen)
+                ? "Session terminée"
+                : SessionSupervisionOuverte
+                    ? "Session en cours"
+                    : "Lancer";
 
         public bool LancerBoutonActif =>
             !SessionSupervisionOuverte
             && QuizExamenViewModel.EstExamenPublieSurLeWebPourSupervision(Examen)
-            && QuizExamenViewModel.EstCreneauLancementExamenAtteint(Examen);
+            && QuizExamenViewModel.EstCreneauLancementExamenAtteint(Examen)
+            && !QuizExamenViewModel.EstExamenSessionTermineeOuAnnulee(Examen);
+
+        /// <summary>Copies soumises : correction détaillée après publication web.</summary>
+        public bool CorrigerCopiesBoutonVisible =>
+            Examen.BackendId is long bk && bk > 0
+            && (
+                string.Equals(Examen.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(Examen.Statut?.Trim(), "EN_COURS", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(Examen.Statut?.Trim(), "TERMINE", StringComparison.OrdinalIgnoreCase));
 
         private void NotifierEtatBoutonsWeb()
         {
@@ -225,6 +240,7 @@ namespace smartest_desktop.ViewModels
             OnPropertyChanged(nameof(SynchroniserBoutonVisible));
             OnPropertyChanged(nameof(LancerBoutonTexte));
             OnPropertyChanged(nameof(LancerBoutonActif));
+            OnPropertyChanged(nameof(CorrigerCopiesBoutonVisible));
         }
 
         private static bool EstExamenResynchronisableSurLeWeb(ExamenLocal e) =>
@@ -235,6 +251,12 @@ namespace smartest_desktop.ViewModels
 
     public class QuizExamenViewModel : BaseViewModel
     {
+        private SessionsActivesViewModel? _sessionsActives;
+
+        /// <summary>Permet de retirer l’examen de « Sessions examens » dès sa suppression ici.</summary>
+        public void LierSessionsActives(SessionsActivesViewModel sessionsActives) =>
+            _sessionsActives = sessionsActives;
+
         /// <summary>Libellé du statut d’examen pour l’interface (codes techniques → français correct).</summary>
         public static string FormaterStatutExamenPourAffichage(string? statut)
         {
@@ -429,6 +451,7 @@ namespace smartest_desktop.ViewModels
         public ICommand PublierExamenSurLeWebCommand { get; }
         public ICommand SynchroniserExamenSurLeWebCommand { get; }
         public ICommand LancerExamenCommand { get; }
+        public ICommand CorrigerCopiesExamenCommand { get; }
         public ICommand OuvrirQuizCommand { get; }
         public ICommand OuvrirCodeQrQuizCommand { get; }
         public ICommand OuvrirExamenCommand { get; }
@@ -490,7 +513,12 @@ namespace smartest_desktop.ViewModels
                 p => p is ExamenListeRow { Examen: var e } &&
                      EstExamenPublieSurLeWebPourSupervision(e) &&
                      EstCreneauLancementExamenAtteint(e) &&
+                     !EstExamenSessionTermineeOuAnnulee(e) &&
                      !_examenSessionLanceeIds.Contains(e.Id));
+
+            CorrigerCopiesExamenCommand = new RelayCommand(
+                p => _ = OuvrirCorrectionCopiesExamenAsync(p),
+                p => p is ExamenListeRow);
 
             OuvrirQuizCommand = new RelayCommand(
                 p =>
@@ -539,6 +567,7 @@ namespace smartest_desktop.ViewModels
             };
             _timerMiseAJourLancerExamen.Tick += (_, _) =>
             {
+                _ = SynchroniserStatutsExamensDepuisServeurAsync();
                 RafraichirCanExecutePublicationEtQr();
             };
             _timerMiseAJourLancerExamen.Start();
@@ -752,6 +781,8 @@ namespace smartest_desktop.ViewModels
                 _examensTous.Clear();
                 _examensTous.AddRange(examens.OrderByDescending(e => e.DateCreation));
 
+                await SynchroniserStatutsExamensDepuisServeurAsync();
+
                 _pageQuiz = 1;
                 _pageExamen = 1;
                 OnPropertyChanged(nameof(PageQuiz));
@@ -766,6 +797,8 @@ namespace smartest_desktop.ViewModels
                     rpe.RaiseCanExecuteChanged();
                 if (LancerExamenCommand is RelayCommand rle)
                     rle.RaiseCanExecuteChanged();
+                if (CorrigerCopiesExamenCommand is RelayCommand rce)
+                    rce.RaiseCanExecuteChanged();
             }
             catch (System.Exception ex)
             {
@@ -1135,6 +1168,8 @@ namespace smartest_desktop.ViewModels
                 rse.RaiseCanExecuteChanged();
             if (LancerExamenCommand is RelayCommand rle)
                 rle.RaiseCanExecuteChanged();
+            if (CorrigerCopiesExamenCommand is RelayCommand rce)
+                rce.RaiseCanExecuteChanged();
         }
 
         private bool PublicationExamenSyncSuccesCourtEncoreVisible(int examId) =>
@@ -1334,92 +1369,152 @@ namespace smartest_desktop.ViewModels
                 await Task.Delay((int)Math.Ceiling(restantMs));
         }
 
+        private SessionsActivesViewModel? ResoudreSessionsActives()
+        {
+            if (_sessionsActives != null)
+                return _sessionsActives;
+            if (WpfApp.Current.MainWindow is Views.MainShellWindow shell
+                && shell.DataContext is MainShellViewModel main)
+            {
+                _sessionsActives = main.SessionsActives;
+                return _sessionsActives;
+            }
+            return null;
+        }
+
         private async Task SupprimerExamenAsync(object? parameter)
         {
             if (parameter is not ExamenListeRow row) return;
             var examen = row.Examen;
 
-            var result = MessageBox.Show(
-                $"Supprimer l'examen « {row.TitreAffiche} » ?\n\n" +
-                "L'examen sera retiré de la plateforme pour tous les étudiants concernés " +
-                "(ils ne pourront plus y accéder sur le web). " +
-                "S'il a été synchronisé avec le serveur, la suppression côté serveur " +
-                "doit réussir avant la suppression locale.\n\n" +
-                "Cette action est définitive.",
-                "Confirmation de suppression",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result != MessageBoxResult.Yes) return;
-
             var titrePourCorrespondance = string.IsNullOrWhiteSpace(examen.Titre)
                 ? row.TitreAffiche
                 : examen.Titre;
 
-            var aBackendId = examen.BackendId is long bk && bk > 0;
-            var estLieAuServeurWeb = EstExamenLiePublicationOuServeur(examen);
+            bool lieAuWeb = EstExamenLiePublicationOuServeur(examen);
+            string detail = lieAuWeb
+                ? "L'examen sera retiré de votre ordinateur et ne sera plus visible par les étudiants sur le web."
+                : "L'examen sera retiré uniquement de votre ordinateur (non publié sur le web).";
 
-            if (estLieAuServeurWeb && string.IsNullOrWhiteSpace(WpfApp.Current.Properties["Token"]?.ToString()))
-            {
-                MessageBox.Show(
-                    "Cet examen est lié au serveur (publication web). Connectez-vous pour le supprimer aussi sur la plateforme.",
-                    "Suppression impossible",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+            var confirm = MessageBox.Show(
+                $"Supprimer « {row.TitreAffiche} » ?\n\n{detail}",
+                "Supprimer l'examen",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes)
                 return;
-            }
 
-            var token = WpfApp.Current.Properties["Token"]?.ToString();
-            var idsServeur = new HashSet<long>();
-            if (aBackendId)
-                idsServeur.Add(examen.BackendId!.Value);
-
-            var api = new ExamenWebPublicationApiService();
-            try
+            var idsServeur = await ResoudreIdsExamensServeurAsync(examen, titrePourCorrespondance);
+            if (idsServeur.Count > 0)
             {
-                if (!string.IsNullOrWhiteSpace(token))
+                try
                 {
-                    /* Dès que l'examen est synchronisé ou à un état web : retirer toutes les entrées serveur au même titre
-                       (doublons / republications), pas seulement BackendId — sinon des copies restent visibles côté élèves. */
-                    if (estLieAuServeurWeb)
-                    {
-                        var liste = await api.GetMesPublicationsWebAsync(token);
-                        foreach (var m in liste)
-                        {
-                            if (ExamenWebPublicationApiService.TitresExamenCorrespondentPourSuppression(titrePourCorrespondance, m.Titre))
-                                idsServeur.Add(m.Id);
-                        }
-                    }
-
-                    foreach (var id in idsServeur.OrderBy(x => x))
-                        await api.DeleteExamenPublieAsync(token, id);
+                    await SupprimerExamensSurServeurAsync(idsServeur);
                 }
-            }
-            catch (SmartestApiException ex)
-            {
-                MessageBox.Show(
-                    "La suppression sur le serveur a échoué. L'examen n'a pas été supprimé localement non plus.\n\n" +
-                    UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
-                    "Synchronisation serveur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
-            }
-            catch (SmartestNetworkException ex)
-            {
-                MessageBox.Show(
-                    "La suppression sur le serveur a échoué. L'examen n'a pas été supprimé localement non plus.\n\n" +
-                    UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu etre finalisee pour le moment."),
-                    "Synchronisation serveur",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                return;
+                catch (SmartestApiException ex)
+                {
+                    MessageBox.Show(
+                        "La suppression sur le serveur a échoué. L'examen n'a pas été supprimé localement.\n\n" +
+                        UserErrorMessage.FromText(ex.Message, "La suppression n'a pas pu être finalisée."),
+                        "Suppression",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+                catch (SmartestNetworkException ex)
+                {
+                    MessageBox.Show(
+                        "La suppression sur le serveur a échoué. L'examen n'a pas été supprimé localement.\n\n" +
+                        UserErrorMessage.FromText(ex.Message, "Vérifiez la connexion au serveur."),
+                        "Suppression",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        UserErrorMessage.FromException(ex, "Impossible de supprimer l'examen sur le serveur."),
+                        "Suppression",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
             }
 
             await _examenService.SupprimerAsync(examen.Id);
             _examensTous.RemoveAll(e => e.Id == examen.Id);
             RafraichirPaginationExamens();
             if (SelectedExamen?.Id == examen.Id) SelectedExamen = null;
+
+            var sessions = ResoudreSessionsActives();
+            if (idsServeur.Count > 0)
+                sessions?.RetirerExamensParBackendIds(idsServeur, masquerPourSessions: false);
+        }
+
+        private async Task<HashSet<long>> ResoudreIdsExamensServeurAsync(ExamenLocal examen, string titrePourCorrespondance)
+        {
+            var ids = new HashSet<long>();
+            if (examen.BackendId is long bk && bk > 0)
+                ids.Add(bk);
+
+            if (!EstExamenLiePublicationOuServeur(examen)
+                || !DesktopSessionTokenHelper.TryObtenir(out string? token))
+            {
+                return ids;
+            }
+
+            try
+            {
+                var api = new ExamenWebPublicationApiService();
+                var liste = await api.GetMesPublicationsWebAsync(token);
+                foreach (var m in liste)
+                {
+                    if (ExamenWebPublicationApiService.TitresExamenCorrespondentPourSuppression(
+                            titrePourCorrespondance, m.Titre))
+                        ids.Add(m.Id);
+                }
+            }
+            catch
+            {
+                /* BackendId suffit si la liste web est indisponible */
+            }
+
+            return ids;
+        }
+
+        private static async Task SupprimerExamensSurServeurAsync(IEnumerable<long> idsServeur)
+        {
+            var ids = idsServeur.Where(id => id > 0).Distinct().ToList();
+            if (ids.Count == 0)
+                return;
+
+            if (!DesktopSessionTokenHelper.TryObtenir(out string? token))
+                throw new SmartestApiException(HttpStatusCode.Unauthorized, "", "Reconnectez-vous pour supprimer l'examen.");
+
+            var api = new ExamenWebPublicationApiService();
+            var auth = new AuthService();
+
+            foreach (long id in ids)
+            {
+                for (int tentative = 0; tentative < 2; tentative++)
+                {
+                    try
+                    {
+                        await api.DeleteExamenPublieAsync(token!, id);
+                        break;
+                    }
+                    catch (SmartestApiException ex) when (
+                        ex.StatusCode == HttpStatusCode.Unauthorized && tentative == 0)
+                    {
+                        if (!await DesktopSessionTokenHelper.TryRafraichirDepuisApiAsync(auth)
+                            || !DesktopSessionTokenHelper.TryObtenir(out token))
+                        {
+                            throw;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>Examen présent ou ayant été présent sur la plateforme : suppression desktop doit suivre le serveur.</summary>
@@ -1446,6 +1541,14 @@ namespace smartest_desktop.ViewModels
             string.Equals(e.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase) &&
             e.BackendId.HasValue &&
             e.BackendId.Value > 0;
+
+        /// <summary>Session clôturée côté serveur : plus de lancement / relance.</summary>
+        public static bool EstExamenSessionTermineeOuAnnulee(ExamenLocal e)
+        {
+            var s = e.Statut?.Trim() ?? "";
+            return string.Equals(s, "TERMINE", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(s, "ANNULE", StringComparison.OrdinalIgnoreCase);
+        }
 
         private static DateTime NormaliserDatePrevueEnLocal(DateTime d)
         {
@@ -1702,10 +1805,150 @@ namespace smartest_desktop.ViewModels
             }
         }
 
+        private async Task OuvrirCorrectionCopiesExamenAsync(object? parameter)
+        {
+            if (parameter is not ExamenListeRow row) return;
+            var examen = row.Examen;
+
+            if (!row.CorrigerCopiesBoutonVisible)
+            {
+                MessageBox.Show(
+                    "La correction n'est disponible qu'après publication de l'examen sur le web.",
+                    "Correction",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (examen.BackendId is not long backendId || backendId <= 0)
+            {
+                MessageBox.Show(
+                    "Identifiant serveur de l'examen introuvable. Republiez ou synchronisez l'examen.",
+                    "Correction",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            string? token = WpfApp.Current.Properties["Token"]?.ToString();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                MessageBox.Show(
+                    "Session expirée. Reconnectez-vous.",
+                    "Correction",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var dlg = new Views.ExamenCopiesEnAttenteDialog(backendId, row.TitreAffiche, token);
+                dlg.Owner = WpfApp.Current.MainWindow
+                    ?? WpfApp.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive);
+                dlg.ShowDialog();
+                await ChargerDonneesAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Impossible d'ouvrir la correction.\n\n" + ex.Message,
+                    "Correction",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>Aligne le statut local sur la base serveur (ex. TERMINE après « Terminer » sur le web).</summary>
+        private static string? MapperStatutExamenServeurVersLocal(string? statutServeur)
+        {
+            var s = statutServeur?.Trim().ToUpperInvariant() ?? "";
+            return s switch
+            {
+                "TERMINE" => "TERMINE",
+                "ANNULE" => "ANNULE",
+                "EN_COURS" => "EN_COURS",
+                "EN_PAUSE" => "EN_COURS",
+                "PLANIFIE" => "PUBLIE",
+                _ => null,
+            };
+        }
+
+        private async Task SynchroniserStatutsExamensDepuisServeurAsync()
+        {
+            if (!DesktopSessionTokenHelper.TryObtenir(out var token))
+                return;
+
+            try
+            {
+                var api = new ExamenWebPublicationApiService();
+                var publications = await api.GetMesPublicationsWebAsync(token);
+                var parId = publications.ToDictionary(p => p.Id);
+                var modifie = false;
+
+                foreach (var examen in _examensTous)
+                {
+                    if (examen.BackendId is not long bid || bid <= 0)
+                        continue;
+                    if (!parId.TryGetValue(bid, out var pub))
+                        continue;
+
+                    var local = MapperStatutExamenServeurVersLocal(pub.Statut);
+                    if (string.IsNullOrEmpty(local))
+                        continue;
+                    if (string.Equals(examen.Statut?.Trim(), local, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    await _examenService.ChangerStatutAsync(examen.Id, local);
+                    examen.Statut = local;
+                    modifie = true;
+                }
+
+                if (modifie)
+                    RafraichirPaginationExamens();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Sync statuts examens web: {ex.Message}");
+            }
+        }
+
+        private async Task SynchroniserStatutExamenDepuisServeurAsync(ExamenLocal examen)
+        {
+            if (examen.BackendId is not long bid || bid <= 0)
+                return;
+            if (!DesktopSessionTokenHelper.TryObtenir(out var token))
+                return;
+
+            try
+            {
+                var api = new ExamenWebPublicationApiService();
+                var publications = await api.GetMesPublicationsWebAsync(token);
+                var pub = publications.FirstOrDefault(p => p.Id == bid);
+                if (pub == null)
+                    return;
+
+                var local = MapperStatutExamenServeurVersLocal(pub.Statut);
+                if (string.IsNullOrEmpty(local))
+                    return;
+                if (string.Equals(examen.Statut?.Trim(), local, StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                await _examenService.ChangerStatutAsync(examen.Id, local);
+                examen.Statut = local;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Sync statut examen {bid}: {ex.Message}");
+            }
+        }
+
         private async Task OuvrirSupervisionExamenAsync(object? parameter)
         {
             if (parameter is not ExamenListeRow row) return;
             var examen = row.Examen;
+
+            await SynchroniserStatutExamenDepuisServeurAsync(examen);
 
             if (!EstExamenPublieSurLeWebPourSupervision(examen))
             {
@@ -1713,6 +1956,16 @@ namespace smartest_desktop.ViewModels
                     "Vous devez d'abord publier cet examen sur le web (bouton « Publier » : emails autorisés + créneau). " +
                     "Sans publication, la supervision et le lancement côté élèves ne sont pas disponibles.",
                     "Lancement / supervision",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            if (EstExamenSessionTermineeOuAnnulee(examen))
+            {
+                MessageBox.Show(
+                    "Cet examen est terminé ou annulé : il ne peut plus être relancé depuis le bureau.",
+                    "Session terminée",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
                 return;

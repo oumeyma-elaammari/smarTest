@@ -1,27 +1,98 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react'
-import { getEtatSessionLabel as getEtatLabel } from '../utils/examenDisplay'
+import { getEtatSessionLabel as getEtatLabel, resolveExamenDisplayTitre } from '../utils/examenDisplay'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
 import type { ExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
-import { coerceEntityId } from './examenPassageWeb.shared'
+import { coerceEntityId, examPassQuestionKind } from './examenPassageWeb.shared'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
+
+type QuestionImageFields = {
+    imageBase64?: string | null
+    imageType?: string | null
+}
+
+function questionImageDataUrl(q: QuestionImageFields | null | undefined): string | null {
+    const raw = q?.imageBase64?.trim()
+    if (!raw) return null
+    const mime = q?.imageType?.trim() || 'image/jpeg'
+    return `data:${mime};base64,${raw}`
+}
+
+function QuestionImageBlock({ question }: { question: QuestionImageFields | null | undefined }): ReactElement | null {
+    const src = questionImageDataUrl(question)
+    if (!src) return null
+    return (
+        <img
+            src={src}
+            alt="Illustration de la question"
+            className="max-w-full rounded-lg my-3"
+            style={{ maxWidth: '100%', borderRadius: 12, margin: '12px 0', display: 'block' }}
+        />
+    )
+}
 
 export type ReponseLigne = { id?: number; contenu?: string }
 
 const card: CSSProperties = {
     background: '#fff',
-    border: '1px solid #e2e8f4',
-    borderRadius: 14,
-    padding: '1.25rem 1.35rem',
-    boxShadow: '0 1px 2px rgba(15, 30, 61, 0.04)',
+    border: '1px solid #e8edf5',
+    borderRadius: 12,
+    padding: '1rem 1.1rem',
+    boxShadow: '0 1px 2px rgba(15, 30, 61, 0.03)',
 }
 
 const metaTile: CSSProperties = {
     background: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: 10,
-    padding: '0.75rem 0.85rem',
+    border: '1px solid #e8edf5',
+    borderRadius: 8,
+    padding: '0.55rem 0.65rem',
+}
+
+const optionRowBase: CSSProperties = {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 8,
+    borderRadius: 8,
+    padding: '8px 10px',
+    fontSize: 14,
+    lineHeight: 1.45,
+}
+
+function ValiderReponseButton(props: {
+    onValider: () => void
+    submittingAnswer: boolean
+    reponseVerrouillee: boolean
+    submitDisabled: boolean
+}): ReactElement {
+    const { onValider, submittingAnswer, reponseVerrouillee, submitDisabled } = props
+    return (
+        <button
+            type="button"
+            onClick={onValider}
+            disabled={submitDisabled}
+            style={{
+                background: reponseVerrouillee ? '#166534' : '#0f1e3d',
+                color: '#fff',
+                border: `1px solid ${reponseVerrouillee ? '#166534' : '#0f1e3d'}`,
+                borderRadius: 999,
+                padding: '9px 18px',
+                fontWeight: 700,
+                fontSize: 13,
+                fontFamily: sans,
+                cursor: submitDisabled ? 'default' : 'pointer',
+                opacity: submitDisabled ? 0.65 : 1,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+            }}
+        >
+            {submittingAnswer
+                ? 'Validation…'
+                : reponseVerrouillee
+                  ? 'Réponse validée'
+                  : 'Valider ma réponse'}
+        </button>
+    )
 }
 
 function EtatBadge({ canStart, etat }: { canStart: boolean; etat: string }): ReactElement {
@@ -80,7 +151,7 @@ export function ExamenPassageTerminee(opts: {
     onDashboard: () => void
 }): ReactElement {
     const { shell, meta, id, onDashboard } = opts
-    const titre = meta?.titre?.trim() ? meta.titre : `Examen #${id}`
+    const titre = resolveExamenDisplayTitre(meta, null, id)
 
     return (
         <div style={shell}>
@@ -135,16 +206,24 @@ export function ExamenPassageTerminee(opts: {
     )
 }
 
+type ExamPassQuestionKind = ReturnType<typeof examPassQuestionKind>
+
 type BlocQuestionProps = {
     enPause: boolean
     canStart: boolean
     snap: ExamenSnapshot | null
     questionCourante: ExamenSnapshot['questionCourante']
+    questionKind: ExamPassQuestionKind
     reponses: ReponseLigne[]
     questionId: number | null
     selectedResponseId: number | null
     setSelectedResponseId: (v: number | null) => void
+    selectedResponseIds: number[]
+    setSelectedResponseIds: (v: number[]) => void
+    essayText: string
+    setEssayText: (v: string) => void
     submittingAnswer: boolean
+    reponseVerrouillee: boolean
     tempsQuestionExpire: boolean
     onValider: () => void
 }
@@ -152,11 +231,17 @@ type BlocQuestionProps = {
 type QuestionActiveBlockProps = {
     snap: ExamenSnapshot | null
     questionCourante: ExamenSnapshot['questionCourante']
+    questionKind: ExamPassQuestionKind
     reponses: ReponseLigne[]
     questionId: number | null
     selectedResponseId: number | null
     setSelectedResponseId: (v: number | null) => void
+    selectedResponseIds: number[]
+    setSelectedResponseIds: (v: number[]) => void
+    essayText: string
+    setEssayText: (v: string) => void
     submittingAnswer: boolean
+    reponseVerrouillee: boolean
     tempsQuestionExpire: boolean
     onValider: () => void
 }
@@ -164,9 +249,10 @@ type QuestionActiveBlockProps = {
 function PauseReadonlyBlock(props: {
     snap: ExamenSnapshot | null
     questionCourante: ExamenSnapshot['questionCourante']
+    questionKind: ExamPassQuestionKind
     reponses: ReponseLigne[]
 }): ReactElement {
-    const { snap, questionCourante, reponses } = props
+    const { snap, questionCourante, questionKind, reponses } = props
     return (
         <>
             <p style={{ margin: '0 0 12px', color: '#92400e', lineHeight: 1.5 }}>
@@ -182,13 +268,20 @@ function PauseReadonlyBlock(props: {
                     <p style={{ margin: '0 0 10px', fontWeight: 600, lineHeight: 1.55 }}>
                         {questionCourante.enonce || 'Question'}
                     </p>
-                    <ul style={{ margin: 0, paddingLeft: 18, color: '#475569' }}>
-                        {reponses.map((r, idx) => (
-                            <li key={coerceEntityId(r.id) ?? `r-${idx}`} style={{ marginBottom: 6 }}>
-                                {r.contenu || '—'}
-                            </li>
-                        ))}
-                    </ul>
+                    <QuestionImageBlock question={questionCourante} />
+                    {questionKind === 'essay' ? (
+                        <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>
+                            Type rédaction : les étudiants répondent dans une zone de texte libre (non modifiable pendant la pause).
+                        </p>
+                    ) : (
+                        <ul style={{ margin: 0, paddingLeft: 18, color: '#475569' }}>
+                            {reponses.map((r, idx) => (
+                                <li key={coerceEntityId(r.id) ?? `r-${idx}`} style={{ marginBottom: 6 }}>
+                                    {r.contenu || '—'}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </>
             ) : null}
         </>
@@ -199,16 +292,29 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
     const {
         snap,
         questionCourante,
+        questionKind,
         reponses,
         questionId,
         selectedResponseId,
         setSelectedResponseId,
-        submittingAnswer,
+        selectedResponseIds,
+        setSelectedResponseIds,
+        essayText,
+        setEssayText,
+        reponseVerrouillee,
         tempsQuestionExpire,
-        onValider,
     } = props
 
-    const submitDisabled = submittingAnswer || selectedResponseId == null || tempsQuestionExpire
+    const inputsLocked = reponseVerrouillee || tempsQuestionExpire
+
+    const toggleCheckbox = (rid: number) => {
+        if (inputsLocked) return
+        setSelectedResponseIds(
+            selectedResponseIds.includes(rid)
+                ? selectedResponseIds.filter((x) => x !== rid)
+                : [...selectedResponseIds, rid],
+        )
+    }
 
     return (
         <>
@@ -218,69 +324,120 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
             <p style={{ margin: '0 0 14px', fontWeight: 600, lineHeight: 1.55 }}>
                 {questionCourante?.enonce || 'Question en cours'}
             </p>
+            <QuestionImageBlock question={questionCourante} />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {reponses.map((r, idx) => {
-                    const rid = coerceEntityId(r.id)
-                    const checked = rid != null && selectedResponseId === rid
-                    return (
-                        <label
-                            key={rid ?? `opt-${idx}`}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: 10,
-                                border: `1px solid ${checked ? '#93c5fd' : '#e2e8f0'}`,
-                                borderRadius: 10,
-                                background: checked ? '#eff6ff' : '#fff',
-                                padding: '10px 12px',
-                                cursor: tempsQuestionExpire ? 'not-allowed' : 'pointer',
-                                opacity: tempsQuestionExpire ? 0.65 : 1,
-                            }}
-                        >
-                            <input
-                                type="radio"
-                                name={`question-${questionId ?? 'x'}`}
-                                checked={checked}
-                                disabled={tempsQuestionExpire}
-                                onChange={() => {
-                                    if (!tempsQuestionExpire && rid != null) setSelectedResponseId(rid)
+            {questionKind === 'essay' ? (
+                <textarea
+                    value={essayText}
+                    onChange={(e) => {
+                        if (!inputsLocked) setEssayText(e.target.value)
+                    }}
+                    disabled={inputsLocked}
+                    readOnly={reponseVerrouillee}
+                    rows={8}
+                    placeholder="Rédigez votre réponse ici…"
+                    style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        minHeight: 120,
+                        padding: '10px 12px',
+                        borderRadius: 8,
+                        border: '1px solid #e8edf5',
+                        fontFamily: sans,
+                        fontSize: 14,
+                        lineHeight: 1.5,
+                        resize: 'vertical',
+                        opacity: inputsLocked ? 0.65 : 1,
+                    }}
+                />
+            ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {reponses.map((r, idx) => {
+                        const rid = coerceEntityId(r.id)
+                        if (questionKind === 'checkbox') {
+                            const checked = rid != null && selectedResponseIds.includes(rid)
+                            return (
+                                <label
+                                    key={rid ?? `opt-${idx}`}
+                                    style={{
+                                        ...optionRowBase,
+                                        border: `1px solid ${checked ? '#93c5fd' : '#e8edf5'}`,
+                                        background: checked ? '#f0f7ff' : '#fafbfd',
+                                        cursor: inputsLocked ? 'not-allowed' : 'pointer',
+                                        opacity: inputsLocked ? 0.65 : 1,
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        disabled={inputsLocked}
+                                        onChange={() => {
+                                            if (!inputsLocked && rid != null) toggleCheckbox(rid)
+                                        }}
+                                    />
+                                    <span style={{ lineHeight: 1.5, color: '#0f1e3d' }}>{r.contenu || 'Réponse'}</span>
+                                </label>
+                            )
+                        }
+                        const checked = rid != null && selectedResponseId === rid
+                        return (
+                            <label
+                                key={rid ?? `opt-${idx}`}
+                                style={{
+                                    ...optionRowBase,
+                                    border: `1px solid ${checked ? '#93c5fd' : '#e8edf5'}`,
+                                    background: checked ? '#f0f7ff' : '#fafbfd',
+                                    cursor: inputsLocked ? 'not-allowed' : 'pointer',
+                                    opacity: inputsLocked ? 0.65 : 1,
                                 }}
-                            />
-                            <span style={{ lineHeight: 1.5, color: '#0f1e3d' }}>{r.contenu || 'Réponse'}</span>
-                        </label>
-                    )
-                })}
-            </div>
+                            >
+                                <input
+                                    type="radio"
+                                    name={`question-${questionId ?? 'x'}`}
+                                    checked={checked}
+                                    disabled={inputsLocked}
+                                    onChange={() => {
+                                        if (!inputsLocked && rid != null) setSelectedResponseId(rid)
+                                    }}
+                                />
+                                <span style={{ lineHeight: 1.5, color: '#0f1e3d' }}>{r.contenu || 'Réponse'}</span>
+                            </label>
+                        )
+                    })}
+                </div>
+            )}
 
-            {tempsQuestionExpire ? (
+            {reponseVerrouillee ? (
+                <p style={{ margin: '12px 0 0', color: '#166534', fontSize: 14, lineHeight: 1.5 }}>
+                    Réponse validée : vous ne pouvez plus la modifier pour cette question.
+                </p>
+            ) : tempsQuestionExpire ? (
                 <p style={{ margin: '12px 0 0', color: '#92400e', fontSize: 14, lineHeight: 1.5 }}>
-                    Temps écoulé pour cette question : vous ne pouvez plus modifier votre réponse. Si le professeur ajoute du
-                    temps au minuteur question, vous pourrez à nouveau sélectionner et valider.
+                    Temps écoulé pour cette question : vous ne pouvez plus modifier votre réponse tant que le professeur n’a pas
+                    ajouté du temps au minuteur.
                 </p>
             ) : null}
 
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-                <button
-                    type="button"
-                    onClick={onValider}
-                    disabled={submitDisabled}
+            {!reponseVerrouillee && !tempsQuestionExpire ? (
+                <p
                     style={{
-                        background: '#0f1e3d',
-                        color: '#fff',
-                        border: '1px solid #0f1e3d',
+                        margin: '12px 0 0',
+                        padding: '10px 12px',
                         borderRadius: 10,
-                        padding: '10px 14px',
-                        fontWeight: 700,
-                        cursor: submitDisabled ? 'default' : 'pointer',
-                        opacity: submitDisabled ? 0.65 : 1,
+                        background: '#fffbeb',
+                        border: '1px solid #fcd34d',
+                        color: '#92400e',
+                        fontSize: 14,
+                        lineHeight: 1.5,
                     }}
+                    role="note"
                 >
-                    {submittingAnswer ? 'Validation...' : 'Valider ma réponse'}
-                </button>
-            </div>
+                    <strong>Important :</strong> si vous ne cliquez pas sur « Valider ma réponse », votre choix ne sera pas
+                    compté pour cette question.
+                </p>
+            ) : null}
 
-            <p style={{ margin: '12px 0 0', color: '#64748b', fontSize: 13 }}>
+            <p style={{ margin: '10px 0 0', color: '#64748b', fontSize: 12 }}>
                 Le passage entre les questions est imposé par le professeur. Aucune correction ni score pendant l’épreuve.
             </p>
         </>
@@ -311,17 +468,30 @@ export function ExamenBlocQuestion(props: BlocQuestionProps): ReactElement {
         canStart,
         questionCourante,
         snap,
+        questionKind,
         reponses,
         questionId,
         selectedResponseId,
         setSelectedResponseId,
+        selectedResponseIds,
+        setSelectedResponseIds,
+        essayText,
+        setEssayText,
         submittingAnswer,
+        reponseVerrouillee,
         tempsQuestionExpire,
         onValider,
     } = props
 
     if (enPause) {
-        return <PauseReadonlyBlock snap={snap} questionCourante={questionCourante} reponses={reponses} />
+        return (
+            <PauseReadonlyBlock
+                snap={snap}
+                questionCourante={questionCourante}
+                questionKind={questionKind}
+                reponses={reponses}
+            />
+        )
     }
 
     if (canStart && questionCourante) {
@@ -329,11 +499,17 @@ export function ExamenBlocQuestion(props: BlocQuestionProps): ReactElement {
             <QuestionActiveBlock
                 snap={snap}
                 questionCourante={questionCourante}
+                questionKind={questionKind}
                 reponses={reponses}
                 questionId={questionId}
                 selectedResponseId={selectedResponseId}
                 setSelectedResponseId={setSelectedResponseId}
+                selectedResponseIds={selectedResponseIds}
+                setSelectedResponseIds={setSelectedResponseIds}
+                essayText={essayText}
+                setEssayText={setEssayText}
                 submittingAnswer={submittingAnswer}
+                reponseVerrouillee={reponseVerrouillee}
                 tempsQuestionExpire={tempsQuestionExpire}
                 onValider={onValider}
             />
@@ -349,12 +525,13 @@ export function ExamenBlocQuestion(props: BlocQuestionProps): ReactElement {
 
 type EpreuveHeaderProps = {
     meta: ExamenMeta | null
+    snap: ExamenSnapshot | null
     id: number
     canStart: boolean
     etat: string
 }
 
-function EpreuveHeader({ meta, id, canStart, etat }: EpreuveHeaderProps): ReactElement {
+function EpreuveHeader({ meta, snap, id, canStart, etat }: EpreuveHeaderProps): ReactElement {
     return (
         <div style={card}>
             <div
@@ -388,7 +565,7 @@ function EpreuveHeader({ meta, id, canStart, etat }: EpreuveHeaderProps): ReactE
                             lineHeight: 1.2,
                         }}
                     >
-                        {meta?.titre ?? `Examen #${id}`}
+                        {resolveExamenDisplayTitre(meta, snap, id)}
                     </h1>
                 </div>
                 <EtatBadge canStart={canStart} etat={etat} />
@@ -400,6 +577,7 @@ function EpreuveHeader({ meta, id, canStart, etat }: EpreuveHeaderProps): ReactE
 export function ExamenPassageEpreuveLayout(props: {
     shell: CSSProperties
     meta: ExamenMeta | null
+    snap: ExamenSnapshot | null
     id: number
     canStart: boolean
     etat: string
@@ -408,10 +586,16 @@ export function ExamenPassageEpreuveLayout(props: {
     questionHeading: string
     minuteurQuestion: ExamenMinuteurQuestionLive
     blocQuestion: ReactNode
+    afficherValider: boolean
+    onValider: () => void
+    submittingAnswer: boolean
+    reponseVerrouillee: boolean
+    submitDisabled: boolean
 }): ReactElement {
     const {
         shell,
         meta,
+        snap,
         id,
         canStart,
         etat,
@@ -420,25 +604,50 @@ export function ExamenPassageEpreuveLayout(props: {
         questionHeading,
         minuteurQuestion,
         blocQuestion,
+        afficherValider,
+        onValider,
+        submittingAnswer,
+        reponseVerrouillee,
+        submitDisabled,
     } = props
 
     return (
         <div style={shell}>
-            <EpreuveHeader meta={meta} id={id} canStart={canStart} etat={etat} />
+            <EpreuveHeader meta={meta} snap={snap} id={id} canStart={canStart} etat={etat} />
             <StatusWsNotices status={status} wsNotice={wsNotice} />
             <div style={card}>
-                <h2
+                <div
                     style={{
-                        margin: '0 0 10px',
-                        fontFamily: serif,
-                        fontSize: '1.25rem',
-                        fontWeight: 550,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                        flexWrap: 'wrap',
+                        marginBottom: 10,
                     }}
                 >
-                    {questionHeading}
-                </h2>
+                    <h2
+                        style={{
+                            margin: 0,
+                            fontFamily: serif,
+                            fontSize: '1.1rem',
+                            fontWeight: 550,
+                            flex: '1 1 200px',
+                        }}
+                    >
+                        {questionHeading}
+                    </h2>
+                    {afficherValider ? (
+                        <ValiderReponseButton
+                            onValider={onValider}
+                            submittingAnswer={submittingAnswer}
+                            reponseVerrouillee={reponseVerrouillee}
+                            submitDisabled={submitDisabled}
+                        />
+                    ) : null}
+                </div>
                 {minuteurQuestion.formatted != null ? (
-                    <p style={{ margin: '0 0 14px', color: '#64748b', fontSize: 13 }} aria-live="polite">
+                    <p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 13 }} aria-live="polite">
                         Décompte (indication) : <strong>{minuteurQuestion.formatted}</strong>
                         {minuteurQuestion.isExpired ? (
                             <span style={{ color: '#92400e', fontWeight: 600 }}>
@@ -522,7 +731,7 @@ export function ExamenPassageAttenteLayout(props: {
                                 lineHeight: 1.2,
                             }}
                         >
-                            {meta?.titre ?? `Examen #${id}`}
+                            {resolveExamenDisplayTitre(meta, null, id)}
                         </h1>
                         <p style={{ margin: '10px 0 0', color: '#475569', lineHeight: 1.55, fontSize: 15 }}>
                             {description}

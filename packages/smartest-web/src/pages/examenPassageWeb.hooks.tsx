@@ -13,7 +13,15 @@ import {
 import { parseDebutExamenMs } from '../utils/examenDisplay'
 import useAuth from '../hooks/useAuth'
 import { stompBrokerUrl } from '../config/runtimeBackend'
-import { joinedStorageKey, readEtudiantId, extractApiMessage } from './examenPassageWeb.shared'
+import {
+    joinedStorageKey,
+    readEtudiantEmail,
+    readEtudiantId,
+    resolveEtudiantId,
+    extractApiMessage,
+    isSessionPhaseTerminee,
+    soumettreExamenFinalAvecRetry,
+} from './examenPassageWeb.shared'
 
 export function useExamenMetaLoad(
     id: number,
@@ -33,8 +41,28 @@ export function useExamenMetaLoad(
                 if (parsed.success) {
                     setMeta(parsed.data)
                 } else {
-                    setMeta(null)
-                    setStatus('Métadonnées de l’examen invalides.')
+                    const raw = r.data as Record<string, unknown> | null
+                    const idRaw = raw?.id
+                    if (raw && typeof idRaw === 'number' && Number.isFinite(idRaw)) {
+                        const titreRaw = raw.titre
+                        setMeta({
+                            id: idRaw,
+                            titre: typeof titreRaw === 'string' ? titreRaw.trim() : '',
+                            description:
+                                typeof raw.description === 'string' ? raw.description : undefined,
+                            dateDebut: raw.dateDebut as ExamenMeta['dateDebut'],
+                            duree: typeof raw.duree === 'number' ? raw.duree : undefined,
+                            totalQuestions:
+                                typeof raw.totalQuestions === 'number' ? raw.totalQuestions : undefined,
+                            statut: typeof raw.statut === 'string' ? raw.statut : undefined,
+                            bareme: typeof raw.bareme === 'number' ? raw.bareme : undefined,
+                            professeurNom:
+                                typeof raw.professeurNom === 'string' ? raw.professeurNom : undefined,
+                        })
+                    } else {
+                        setMeta(null)
+                        setStatus('Métadonnées de l’examen invalides.')
+                    }
                 }
             })
             .catch(() => {
@@ -61,11 +89,13 @@ export function useExamenPolling(
     setJoined: (v: boolean) => void,
     setSnap: (v: ExamenSnapshot | null) => void,
 ): void {
+    const authUserId = useAuth((s) => s.userId)
+
     useEffect(() => {
         if (!Number.isFinite(id) || id <= 0 || !meta) return
 
         const syncPresence = (payload: unknown) => {
-            const etudiantId = readEtudiantId()
+            const etudiantId = resolveEtudiantId(authUserId)
             const connectes = (payload as { connectes?: unknown })?.connectes
             const inRoom =
                 Array.isArray(connectes) &&
@@ -97,12 +127,18 @@ export function useExamenPolling(
                 return
             }
 
-            const etudiantIdPoll = readEtudiantId()
+            const etudiantIdPoll = resolveEtudiantId(authUserId)
             examenApi
                 .getQuestionCourante(id, etudiantIdPoll)
                 .then((r) => {
                     const mapped = mapQuestionStateToSnapshot(r.data)
-                    if (mapped) setSnap(mapped)
+                    if (mapped) {
+                        setSnap(mapped)
+                        if (isSessionPhaseTerminee(mapped.etat, null)) {
+                            const etu = readEtudiantId()
+                            if (etu > 0) void soumettreExamenFinalAvecRetry(id, etu)
+                        }
+                    }
                 })
                 .catch(() => undefined)
             examenApi
@@ -120,7 +156,7 @@ export function useExamenPolling(
         runPolling()
         const t = globalThis.setInterval(runPolling, 2500)
         return () => globalThis.clearInterval(t)
-    }, [id, meta, setJoined, setSnap])
+    }, [id, meta, authUserId, setJoined, setSnap])
 }
 
 export function useExamenStomp(
@@ -130,10 +166,11 @@ export function useExamenStomp(
     setWsNotice: (v: string | null) => void,
 ): void {
     const authToken = useAuth((s) => s.token)
+    const authUserId = useAuth((s) => s.userId)
 
     useEffect(() => {
         if (!Number.isFinite(id) || id <= 0) return
-        const etudiantId = readEtudiantId()
+        const etudiantId = resolveEtudiantId(authUserId)
         let cancelled = false
 
         const client = new Client({
@@ -149,6 +186,10 @@ export function useExamenStomp(
                         if (parsed.success) {
                             setSnap(parsed.data)
                             setWsNotice(null)
+                            if (isSessionPhaseTerminee(parsed.data.etat, null)) {
+                                const etu = readEtudiantId()
+                                if (etu > 0) void soumettreExamenFinalAvecRetry(id, etu)
+                            }
                         } else if (!cancelled) {
                             setWsNotice('Message temps réel invalide.')
                         }
@@ -250,6 +291,40 @@ export function useRetourAttenteSiEpreuveTropTot(
     }, [snap, id, navigate, isEpreuve])
 }
 
+/** Envoie la copie au serveur dès que la session passe à TERMINE (persistance BDD pour Sessions actives). */
+export function useSoumettreFinalSiTermine(
+    id: number,
+    snapEtat: string | undefined,
+    metaStatut: string | undefined,
+    setStatus: (v: string) => void,
+): void {
+    const authUserId = useAuth((s) => s.userId)
+    const sessionTerminee = isSessionPhaseTerminee(snapEtat, metaStatut)
+
+    useEffect(() => {
+        if (!sessionTerminee || !Number.isFinite(id) || id <= 0) return
+        const etudiantId = resolveEtudiantId(authUserId)
+        if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
+            setStatus('Session terminée. Reconnectez-vous si votre copie doit être transmise au professeur.')
+            return
+        }
+        let cancelled = false
+        ;(async () => {
+            try {
+                const ok = await soumettreExamenFinalAvecRetry(id, etudiantId)
+                if (!cancelled && ok) setStatus('Copie transmise au professeur.')
+            } catch (e: unknown) {
+                if (!cancelled) {
+                    setStatus(extractApiMessage(e, 'Impossible de transmettre la copie finale au serveur.'))
+                }
+            }
+        })()
+        return () => {
+            cancelled = true
+        }
+    }, [id, sessionTerminee, snapEtat, metaStatut, authUserId, setStatus])
+}
+
 export function useRedirectDashboardSiArrete(snapEtat: string | undefined): void {
     const navigate = useNavigate()
 
@@ -272,6 +347,7 @@ export function useAutoJoinSalleAttente(opts: {
     setStatus: (v: string) => void
 }): void {
     const navigate = useNavigate()
+    const authUserId = useAuth((s) => s.userId)
     const { id, meta, creneauOkPourJoin, creneauTick, snapEtat, autoJoinReussi, setJoined, setStatus } = opts
 
     useEffect(() => {
@@ -283,11 +359,20 @@ export function useAutoJoinSalleAttente(opts: {
         if (phase === 'TERMINE' || phase === 'ARRETE') return
         if (metaStatut === 'TERMINE' || metaStatut === 'ANNULE') return
 
+        const etudiantId = resolveEtudiantId(authUserId)
+        if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
+            setStatus('Identifiant étudiant manquant : déconnectez-vous puis reconnectez-vous.')
+            return
+        }
+
         let cancelled = false
         ;(async () => {
             try {
-                const email = localStorage.getItem('email') || 'etudiant@smartest.local'
-                const etudiantId = readEtudiantId()
+                const email = readEtudiantEmail()
+                if (!email) {
+                    setStatus('Email de session manquant : reconnectez-vous.')
+                    return
+                }
                 const { data } = await examenApi.rejoindreSalleAttente(id, etudiantId, email)
                 if (cancelled) return
                 autoJoinReussi.current = true
@@ -317,6 +402,7 @@ export function useAutoJoinSalleAttente(opts: {
         creneauOkPourJoin,
         creneauTick,
         snapEtat,
+        authUserId,
         navigate,
         autoJoinReussi,
         setJoined,
@@ -333,28 +419,20 @@ export function useJoinedSiSessionActive(snapEtat: string | undefined, setJoined
     }, [snapEtat, setJoined])
 }
 
-/**
- * Remet la sélection à zéro quand la question affichée change (nouvelle question ou perte temporaire du snapshot).
- * L’ancienne logique comparait `lastAnsweredQuestionId !== questionId` : avec `lastAnswered` à null au départ,
- * cela effaçait la sélection à chaque synchro WS où `questionId` était recalculé — le bouton « Valider » appelait l’API sans choix.
- */
-export function useQuestionSelectionClear(
-    questionId: number | null,
-    setSelectedResponseId: (v: number | null) => void,
-): void {
+export function useExamAnswerReset(questionId: number | null, reset: () => void): void {
     const prevQuestionIdRef = useRef<number | null>(null)
     useEffect(() => {
         if (questionId == null) {
-            setSelectedResponseId(null)
+            reset()
             prevQuestionIdRef.current = null
             return
         }
         const prev = prevQuestionIdRef.current
         if (prev != null && prev !== questionId) {
-            setSelectedResponseId(null)
+            reset()
         }
         prevQuestionIdRef.current = questionId
-    }, [questionId, setSelectedResponseId])
+    }, [questionId, reset])
 }
 
 export function useCreneauTicker(setCreneauTick: Dispatch<SetStateAction<number>>): void {

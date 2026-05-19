@@ -17,10 +17,12 @@ import {
     Users,
 } from 'lucide-react'
 import { examenApi } from '../api/examenApi'
+import { ExamenCorrectionsProfPanel } from '../components/examen/ExamenCorrectionsProfPanel'
 import useAuth from '../hooks/useAuth'
 import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
 import { useExamenTempsRestantLive } from '../hooks/useExamenTempsRestantLive'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
+import { examPassQuestionKind } from '../pages/examenPassageWeb.shared'
 import { stompBrokerUrl } from '../config/runtimeBackend'
 
 const sans = "'DM Sans', system-ui, sans-serif"
@@ -102,6 +104,13 @@ function connectesLabelsFromSalleAttentePayload(raw: unknown): string[] {
         const mail = (p.email ?? '').trim()
         return mail || 'Étudiant'
     })
+}
+
+function nombreConnectesFromSalleAttentePayload(raw: unknown): number | null {
+    if (raw === null || typeof raw !== 'object') return null
+    const r = raw as { nombreConnectes?: unknown; NombreConnectes?: unknown }
+    const n = Number(r.nombreConnectes ?? r.NombreConnectes)
+    return Number.isFinite(n) && n >= 0 ? n : null
 }
 
 /** Réponse Axios (`status` + `data`), sans `axios.isAxiosResponse` (pas toujours exposé par le bundle). */
@@ -197,6 +206,17 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                 }
             }
         }
+        const rawPart = (incoming as { participantsEnAttente?: unknown }).participantsEnAttente
+        if (rawPart !== undefined && rawPart !== null) {
+            const nPart = Number(rawPart)
+            if (!Number.isNaN(nPart)) {
+                const prevPart = prev?.participantsEnAttente
+                merged.participantsEnAttente =
+                    typeof prevPart === 'number' && !Number.isNaN(prevPart)
+                        ? Math.max(prevPart, nPart)
+                        : nPart
+            }
+        }
         return merged
     }, [])
 
@@ -216,7 +236,12 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
             setSnap((prev) => mergeSnapshot(prev, sd))
         }
         if (rr.status === 'fulfilled') {
-            setConnectesLabels(connectesLabelsFromSalleAttentePayload(rr.value.data))
+            const roomPayload = rr.value.data
+            setConnectesLabels(connectesLabelsFromSalleAttentePayload(roomPayload))
+            const n = nombreConnectesFromSalleAttentePayload(roomPayload)
+            if (n != null) {
+                setSnap((prev) => mergeSnapshot(prev, { participantsEnAttente: n }))
+            }
         }
     }, [id, mergeSnapshot])
 
@@ -308,6 +333,10 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         const payload = JSON.parse(message.body) as unknown
                         if (cancelled) return
                         setConnectesLabels(connectesLabelsFromSalleAttentePayload(payload))
+                        const n = nombreConnectesFromSalleAttentePayload(payload)
+                        if (n != null) {
+                            setSnap((prev) => mergeSnapshot(prev, { participantsEnAttente: n }))
+                        }
                         setWsNotice(null)
                     } catch {
                         // ignoré : le polling GET salle-attente garde un fallback
@@ -338,6 +367,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
         snap?.tempsRestantMinutes,
         snap?.etat ?? meta?.statut ?? '',
         supervisionEnPause,
+        snap?.tempsRestantTotalSeconds,
     )
     const minuteurQuestionLive = useExamenMinuteurQuestionLive(
         snap?.tempsQuestionRestantSeconds,
@@ -353,8 +383,8 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                 setSnap((prev) => mergeSnapshot(prev, patchBody))
             }
             await refresh()
-            setFeedbackTone('success')
-            setFeedback('Action appliquée avec succès.')
+            setFeedback('')
+            setFeedbackTone('neutral')
         } catch (error: unknown) {
             setFeedbackTone('error')
             setFeedback(extractApiMessage(error, 'Action impossible. Vérifiez l’état actuel de l’examen.'))
@@ -398,18 +428,24 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
     /** Avant démarrage : liste d’attente. Pendant l’épreuve : participants actifs (même API, libellés différents). */
     const modeListeParticipants = modeListeParticipantsFromEtat(etat)
     const estEnCours = etat === 'EN_COURS'
-    const peutLancer = etat === 'PLANIFIE' || etat === 'EN_PAUSE'
+    const statutMeta = (meta?.statut ?? '').trim().toUpperCase()
+    const sessionCloturee =
+        etat === 'TERMINE' || etat === 'ARRETE' || statutMeta === 'TERMINE' || statutMeta === 'ANNULE'
+    const peutLancer = !sessionCloturee && (etat === 'PLANIFIE' || etat === 'EN_PAUSE')
     const peutPause = etat === 'EN_COURS'
     const peutReprendre = etat === 'EN_PAUSE'
     const peutTerminer = etat !== 'TERMINE' && etat !== 'ARRETE'
     /** Hors planifié : le même emplacement que « Démarrer » affiche « Terminer » (pas de second bouton). */
-    const lancerAuPremierPoste = etat === 'PLANIFIE'
+    const lancerAuPremierPoste = etat === 'PLANIFIE' && !sessionCloturee
     const terminerAuPremierPoste = !lancerAuPremierPoste && peutTerminer
     const questionPills = totalQuestions > 0 ? Array.from({ length: totalQuestions }, (_, i) => i + 1) : []
 
     const questionCouranteBloc = snap?.questionCourante as
-        | { id?: number; enonce?: string; reponses?: Array<{ id?: number; contenu?: string }> }
+        | { id?: number; enonce?: string; type?: string; reponses?: Array<{ id?: number; contenu?: string }> }
         | undefined
+    const questionKindSupervision = examPassQuestionKind(
+        typeof questionCouranteBloc?.type === 'string' ? questionCouranteBloc.type : undefined,
+    )
     const planListe = snap?.planQuestions ?? []
     /** Fallbacks : anciens snapshots / fusion WS partielle — évite de masquer le compteur. */
     const reponsesPourQuestionCouranteAffiche = (() => {
@@ -655,10 +691,10 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         aria-live="polite"
                     >
                         {modeListeParticipants === 'attente'
-                            ? `${connectesLabels.length} en attente`
+                            ? `${participantsActifsAffiche} en attente`
                             : modeListeParticipants === 'actifs'
-                              ? `${connectesLabels.length} actif${connectesLabels.length !== 1 ? 's' : ''}`
-                              : `${connectesLabels.length} participant${connectesLabels.length !== 1 ? 's' : ''}`}
+                              ? `${participantsActifsAffiche} actif${participantsActifsAffiche !== 1 ? 's' : ''}`
+                              : `${participantsActifsAffiche} participant${participantsActifsAffiche !== 1 ? 's' : ''}`}
                     </span>
                 </div>
                 {connectesLabels.length > 0 ? (
@@ -967,11 +1003,41 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     <div style={{ color: '#334155', lineHeight: 1.58, fontSize: 14, whiteSpace: 'pre-wrap' }}>
                         {questionCouranteBloc?.enonce?.trim() ||
                             (totalQuestions <= 0
-                                ? 'Aucune question liée à cet examen sur le serveur. Depuis SmarTest bureau : fermez puis rouvrez l’application si besoin, cliquez à nouveau « Publier sur le web » pour ré-envoyer les QCM (messages de confirmation avec le nombre de questions), puis actualisez cette page. Conditions : au moins 2 réponses renseignées parmi les options A–D par question. Si la situation continue, vérifiez que le backend a bien exécuté la migration Flyway (table examen_publie_question).'
+                                ? 'Aucune question liée à cet examen sur le serveur. Depuis SmarTest bureau : fermez puis rouvrez l’application si besoin, cliquez à nouveau « Publier sur le web » pour ré-envoyer le sujet (messages de confirmation avec le nombre de questions), puis actualisez cette page. Les types QCM, Vrai/Faux, cases à cocher et rédaction sont pris en charge. Si la situation continue, vérifiez que le backend a bien exécuté la migration Flyway (table examen_publie_question).'
                                 : estEnCours || etat === 'EN_PAUSE'
                                   ? 'Contenu non chargé ou indisponible pour cet index.'
                                   : 'Démarrez la session (« En cours ») pour voir l’énoncé comme les étudiants.')}
                     </div>
+                    {questionCouranteBloc?.enonce?.trim() && totalQuestions > 0 && (estEnCours || etat === 'EN_PAUSE') ? (
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e2e8f0' }}>
+                            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+                                Aperçu élève —{' '}
+                                {questionKindSupervision === 'vf'
+                                    ? 'Vrai / Faux (2 choix)'
+                                    : questionKindSupervision === 'checkbox'
+                                      ? 'Cases à cocher (plusieurs réponses possibles)'
+                                      : questionKindSupervision === 'essay'
+                                        ? 'Rédaction (zone de texte libre)'
+                                        : 'QCM (une seule réponse)'}
+                            </div>
+                            {questionKindSupervision === 'essay' ? (
+                                <p style={{ margin: 0, color: '#475569', fontSize: 13, lineHeight: 1.55 }}>
+                                    Les étudiants ne voient pas de liste de propositions. Le compteur « réponses » reflète ceux
+                                    qui ont validé un texte pour cette question.
+                                </p>
+                            ) : Array.isArray(questionCouranteBloc.reponses) && questionCouranteBloc.reponses.length > 0 ? (
+                                <ul style={{ margin: 0, paddingLeft: 18, color: '#475569', fontSize: 13 }}>
+                                    {questionCouranteBloc.reponses.map((r, idx) => (
+                                        <li key={typeof r.id === 'number' ? r.id : `sup-${idx}`} style={{ marginBottom: 4 }}>
+                                            {typeof r.contenu === 'string' && r.contenu.trim() ? r.contenu : '—'}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>Aucune option listée pour cette question.</p>
+                            )}
+                        </div>
+                    ) : null}
                 </div>
                 {planListe.length > 0 ? (
                     <details
@@ -1075,6 +1141,10 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     </div>
                 ) : null}
             </section>
+
+            {isProf && snap && snap.etat === 'TERMINE' ? (
+                <ExamenCorrectionsProfPanel examenId={id} accentBleu={accentBleu} />
+            ) : null}
 
             <button
                 type="button"

@@ -29,7 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     .roles("PROFESSEUR")
                     .build();
         }
-        var etudiant = etudiantRepository.findByEmail(email);
+        var etudiant = etudiantRepository.findByEmailIgnoreCase(email.strip());
         if (etudiant.isPresent()) {
             return User.builder()
                     .username(etudiant.get().getEmail())

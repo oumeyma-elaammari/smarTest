@@ -3,7 +3,14 @@ package com.smartest.backend.controller;
 import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.enumeration.StatutExamen;
+import com.smartest.backend.repository.EtudiantRepository;
+import com.smartest.backend.repository.ExamenPublieRepository;
+import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.service.ExamenCorrectionService;
 import com.smartest.backend.service.ExamenPublieService;
+import com.smartest.backend.service.ExamenSupervisionService;
+import com.smartest.backend.service.GroqApiKeyRegistry;
+import com.smartest.backend.service.GroqRedactionRepriseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +40,28 @@ class ExamenPublieControllerTest {
     private MockMvc mockMvc;
 
     @Mock
-    private ExamenPublieService service;
+    private ExamenPublieService examenPublieService;
+
+    @Mock
+    private ExamenSupervisionService supervisionService;
+
+    @Mock
+    private ExamenCorrectionService examenCorrectionService;
+
+    @Mock
+    private ExamenPublieRepository examenPublieRepository;
+
+    @Mock
+    private ProfesseurRepository professeurRepository;
+
+    @Mock
+    private EtudiantRepository etudiantRepository;
+
+    @Mock
+    private GroqApiKeyRegistry groqApiKeyRegistry;
+
+    @Mock
+    private GroqRedactionRepriseService groqRedactionRepriseService;
 
     @InjectMocks
     private ExamenPublieController examenPublieController;
@@ -49,7 +77,7 @@ class ExamenPublieControllerTest {
         ExamenPublie ex = new ExamenPublie();
         ex.setId(1L);
         ex.setTitre("Java");
-        when(service.findAll()).thenReturn(List.of(ex));
+        when(examenPublieService.findAll()).thenReturn(List.of(ex));
 
         mockMvc.perform(get("/api/examens-publies"))
                 .andExpect(status().isOk())
@@ -70,7 +98,7 @@ class ExamenPublieControllerTest {
         LocalDateTime debut = LocalDateTime.of(2026, 6, 1, 10, 0);
         LocalDateTime fin = debut.plusHours(2);
 
-        when(service.publier(eq(1L), eq("Examen"), eq(90), eq("Desc"),
+        when(examenPublieService.publier(eq(1L), eq("Examen"), eq(90), eq("Desc"),
                 eq(debut), eq(fin))).thenReturn(saved);
 
         mockMvc.perform(post("/api/examens-publies")
@@ -91,7 +119,7 @@ class ExamenPublieControllerTest {
         ExamenPublie ex = new ExamenPublie();
         ex.setId(3L);
         ex.setStatut(StatutExamen.EN_COURS);
-        when(service.demarrer(3L)).thenReturn(ex);
+        when(examenPublieService.demarrer(3L)).thenReturn(ex);
 
         mockMvc.perform(patch("/api/examens-publies/3/demarrer"))
                 .andExpect(status().isOk())
@@ -104,7 +132,7 @@ class ExamenPublieControllerTest {
         ExamenPublie ex = new ExamenPublie();
         ex.setId(3L);
         ex.setStatut(StatutExamen.TERMINE);
-        when(service.terminer(3L)).thenReturn(ex);
+        when(examenPublieService.terminer(3L)).thenReturn(ex);
 
         mockMvc.perform(patch("/api/examens-publies/3/terminer"))
                 .andExpect(status().isOk())

@@ -6,6 +6,8 @@ import java.util.Optional;
 
 public interface EtudiantRepository extends JpaRepository<Etudiant, Long> {
     Optional<Etudiant> findByEmail(String email);
+
+    Optional<Etudiant> findByEmailIgnoreCase(String email);
     boolean existsByEmail(String email);
     Optional<Etudiant> findByTokenVerification(String token);
     Optional<Etudiant> findByResetPasswordToken(String token);

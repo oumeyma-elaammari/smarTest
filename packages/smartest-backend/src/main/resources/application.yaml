@@ -60,3 +60,13 @@ app:
     # true = appelle flyway.repair() avant migrate (réaligne les checksums si un script
     # déjà appliqué a changé, ex. V7). Remettre à false après un démarrage réussi en dev.
     repair-before-migrate: true
+
+groq:
+  api-key: ${GROQ_API_KEY:}
+  model: llama-3.1-8b-instant
+  timeout-seconds: 45
+  max-retries: 2
+
+examen:
+  resultat:
+    publier-note-immediatement-apres-validation: true
