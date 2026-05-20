@@ -169,4 +169,29 @@ class EmailServiceTest {
             assertThat(msg.getText()).doesNotContain("localhost:5173");
         }
     }
+
+    @Nested
+    @DisplayName("sendExamenNoteValideeEmail")
+    class SendExamenNoteValideeEmailTests {
+
+        @Test
+        @DisplayName("✅ Email avec note et barème")
+        void sendExamenNoteValideeEmail_contientNote() {
+            emailService.sendExamenNoteValideeEmail(
+                    "etudiant@ump.ac.ma",
+                    "M. Dupont",
+                    "Mathématiques — Contrôle",
+                    14.5,
+                    20.0);
+
+            verify(mailSender).send(messageCaptor.capture());
+            SimpleMailMessage msg = messageCaptor.getValue();
+
+            assertThat(msg.getTo()).contains("etudiant@ump.ac.ma");
+            assertThat(msg.getSubject()).contains("Mathématiques");
+            assertThat(msg.getText()).contains("14,50");
+            assertThat(msg.getText()).contains("20");
+            assertThat(msg.getText()).contains("M. Dupont");
+        }
+    }
 }
