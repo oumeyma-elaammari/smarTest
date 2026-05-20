@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -55,6 +57,7 @@ public class ExamenCorrectionService {
     private final ObjectMapper objectMapper;
     private final GroqRedactionCorrectionWorker groqWorker;
     private final ExamenResultatPublicationProperties publicationProperties;
+    private final EmailService emailService;
 
     public static String extraireReponseModele(Question q) {
         if (q == null) {
@@ -622,6 +625,9 @@ public class ExamenCorrectionService {
         apresValidationPublication(passage);
         passageRepository.save(passage);
         publierNoteApresValidation(examenId, etudiantId, passage);
+        if (passage.isNoteVisibleEtudiant()) {
+            planifierEmailNoteValideeEtudiant(examenId, etudiantId);
+        }
     }
 
     private void publierNoteApresValidation(Long examenId, Long etudiantId, ExamenPassageResultat passage) {
@@ -676,6 +682,9 @@ public class ExamenCorrectionService {
         apresValidationPublication(passage);
         passageRepository.save(passage);
         publierNoteApresValidation(examenId, etudiantId, passage);
+        if (passage.isNoteVisibleEtudiant()) {
+            planifierEmailNoteValideeEtudiant(examenId, etudiantId);
+        }
     }
 
     private void apresValidationPublication(ExamenPassageResultat passage) {
@@ -694,6 +703,7 @@ public class ExamenCorrectionService {
         if (!passage.isValideeParProf()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validez d'abord la correction côté professeur.");
         }
+        boolean etaitDejaVisible = passage.isNoteVisibleEtudiant();
         passage.setDateSynchronisationWorkbench(LocalDateTime.now());
         passage.setNoteVisibleEtudiant(true);
         passage.setDatePublicationNoteEtudiant(
@@ -702,6 +712,63 @@ public class ExamenCorrectionService {
                         : LocalDateTime.now());
         passage.setDateMiseAJour(LocalDateTime.now());
         passageRepository.save(passage);
+        if (!etaitDejaVisible) {
+            planifierEmailNoteValideeEtudiant(examenId, etudiantId);
+        }
+    }
+
+    /** Envoi après commit : la validation ne doit pas échouer si la messagerie est indisponible. */
+    private void planifierEmailNoteValideeEtudiant(Long examenId, Long etudiantId) {
+        Runnable envoi = () -> envoyerEmailNoteValideeEtudiant(examenId, etudiantId);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    envoi.run();
+                }
+            });
+        } else {
+            envoi.run();
+        }
+    }
+
+    private void envoyerEmailNoteValideeEtudiant(Long examenId, Long etudiantId) {
+        try {
+            ExamenPassageResultat passage = passageRepository
+                    .findByExamenPublie_IdAndEtudiant_Id(examenId, etudiantId)
+                    .orElse(null);
+            if (passage == null || !passage.isNoteVisibleEtudiant()) {
+                return;
+            }
+            Etudiant etu = passage.getEtudiant();
+            if (etu == null || etu.getEmail() == null || etu.getEmail().isBlank()) {
+                etu = etudiantRepository.findById(etudiantId).orElse(null);
+            }
+            if (etu == null || etu.getEmail() == null || etu.getEmail().isBlank()) {
+                log.warn("Email note examen non envoyé : étudiant {} sans adresse", etudiantId);
+                return;
+            }
+            ExamenPublie exam = examenPublieRepository.findWithQuestionsAndProfesseurById(examenId).orElse(null);
+            if (exam == null) {
+                return;
+            }
+            String profNom = exam.getProfesseur() != null && exam.getProfesseur().getNom() != null
+                    ? exam.getProfesseur().getNom()
+                    : null;
+            String titre = exam.getTitre();
+            double note = passage.getNoteFinale() != null ? passage.getNoteFinale() : 0.0;
+            double bareme = passage.getBaremeReference() > 0 ? passage.getBaremeReference() : 20.0;
+            emailService.sendExamenNoteValideeEmail(
+                    etu.getEmail().trim(),
+                    profNom,
+                    titre,
+                    note,
+                    bareme);
+            log.info("Email note examen envoyé à {} pour examen {}", etu.getEmail(), examenId);
+        } catch (Exception ex) {
+            log.warn("Email note examen non envoyé examen={} etudiant={} : {}",
+                    examenId, etudiantId, ex.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)
