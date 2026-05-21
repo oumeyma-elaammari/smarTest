@@ -17,7 +17,11 @@ namespace smartest_desktop.Views
             var vm = new MainShellViewModel();
             vm.PropertyChanged += OnShellPropertyChanged;
             DataContext = vm;
-            Loaded += (_, __) => UpdateCentralContent(vm.SectionActive);
+            Loaded += (_, __) =>
+            {
+                UpdateCentralContent(vm.SectionActive);
+                LierQuizAuxSessionsActives(vm);
+            };
         }
 
         public MainShellWindow(MainShellSection initialSection)
@@ -59,18 +63,44 @@ namespace smartest_desktop.Views
                 };
 
                 _contentCache[section] = view;
+                if (section == MainShellSection.QuizExamens
+                    && view is FrameworkElement feInit
+                    && feInit.DataContext is QuizExamenViewModel qvmInit
+                    && DataContext is MainShellViewModel shellInit)
+                {
+                    qvmInit.LierSessionsActives(shellInit.SessionsActives);
+                }
             }
 
             CentralHostedContent.Content = view;
 
+            if (DataContext is not MainShellViewModel shellVm)
+                return;
+
             if (section == MainShellSection.QuizExamens && view is FrameworkElement fe && fe.DataContext is QuizExamenViewModel qvm)
+            {
+                qvm.LierSessionsActives(shellVm.SessionsActives);
                 _ = qvm.ChargerDonneesAsync();
+            }
+
+            if (section == MainShellSection.Sessions)
+                _ = shellVm.SessionsActives.RafraichirExamensAsync();
         }
 
         private static UIElement ExtractDashboardMainContent()
         {
             var source = new DashboardWindow();
             return ExtractWholeWindowContent(source);
+        }
+
+        private void LierQuizAuxSessionsActives(MainShellViewModel shellVm)
+        {
+            if (_contentCache.TryGetValue(MainShellSection.QuizExamens, out var view)
+                && view is FrameworkElement fe
+                && fe.DataContext is QuizExamenViewModel qvm)
+            {
+                qvm.LierSessionsActives(shellVm.SessionsActives);
+            }
         }
 
         private static UIElement ExtractQuizExamenMainContent()

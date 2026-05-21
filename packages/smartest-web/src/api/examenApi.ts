@@ -6,6 +6,10 @@ export const examenApi = {
     getMesPublicationsWeb(signal?: AbortSignal) {
         return api.get<unknown>('/api/examens-publies/mes-publications-web', { signal })
     },
+    /** Suppression par le professeur : retire l'examen pour le prof et les étudiants. */
+    supprimerExamen(examenId: number) {
+        return api.delete(`/api/examens-publies/${examenId}`)
+    },
     getMetadata(examenId: number, signal?: AbortSignal) {
         return api.get<ExamenMeta>(`/api/examens-publies/${examenId}/metadata`, { signal })
     },
@@ -23,12 +27,28 @@ export const examenApi = {
             params: { etudiantId },
         })
     },
-    repondreQuestionCourante(examenId: number, etudiantId: number, questionId: number, reponseId: number) {
-        return api.post(`/api/examens-publies/${examenId}/passage/reponse`, null, {
-            params: { etudiantId, questionId, reponseId },
+    repondreQuestionCourante(
+        examenId: number,
+        etudiantId: number,
+        body: {
+            questionId: number
+            reponseId?: number | null
+            reponseIds?: number[] | null
+            reponseTexte?: string | null
+        },
+    ) {
+        return api.post(`/api/examens-publies/${examenId}/passage/reponse`, body, {
+            params: { etudiantId },
+            headers: { 'Content-Type': 'application/json' },
         })
     },
     soumettreFinal(examenId: number, etudiantId: number) {
+        return api.post(`/api/examens-publies/${examenId}/passage/soumettre-final`, null, {
+            params: { etudiantId },
+        })
+    },
+    /** Alias explicite pour la soumission finale étudiant. */
+    soumettreExamenFinal(examenId: number, etudiantId: number) {
         return api.post(`/api/examens-publies/${examenId}/passage/soumettre-final`, null, {
             params: { etudiantId },
         })
@@ -79,5 +99,35 @@ export const examenApi = {
     },
     snapshot(examenId: number, signal?: AbortSignal) {
         return api.get<ExamenSnapshot>(`/api/examens-publies/${examenId}/supervision/snapshot`, { signal })
+    },
+    getResultatsEnAttente(examenId: number, signal?: AbortSignal) {
+        return api.get<unknown>(`/api/examens-publies/${examenId}/supervision/resultats-en-attente`, { signal })
+    },
+    getCorrectionsEtudiant(examenId: number, etudiantId: number, signal?: AbortSignal) {
+        return api.get<unknown>(
+            `/api/examens-publies/${examenId}/supervision/etudiants/${etudiantId}/corrections`,
+            { signal },
+        )
+    },
+    validerCorrectionsDetail(
+        examenId: number,
+        etudiantId: number,
+        body: { notesFinales: Record<string, number>; noteTotale: number; remarque?: string | null },
+    ) {
+        return api.post(`/api/examens-publies/${examenId}/supervision/etudiants/${etudiantId}/valider-corrections-detail`, body)
+    },
+    synchroniserNoteWorkbench(examenId: number, etudiantId: number) {
+        return api.post(
+            `/api/examens-publies/${examenId}/supervision/etudiants/${etudiantId}/synchroniser-note-workbench`,
+        )
+    },
+    getEtudiantsPassages(examenId: number, signal?: AbortSignal) {
+        return api.get<unknown>(`/api/examens-publies/${examenId}/supervision/etudiants-passages`, { signal })
+    },
+    getResultatVisible(examenId: number, etudiantId: number, signal?: AbortSignal) {
+        return api.get<{ visible: boolean; noteFinale?: number | null; bareme?: number | null }>(
+            `/api/examens-publies/${examenId}/passage/resultat-visible`,
+            { signal, params: { etudiantId } },
+        )
     },
 }

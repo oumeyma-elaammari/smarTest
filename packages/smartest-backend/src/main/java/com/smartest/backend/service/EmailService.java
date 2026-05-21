@@ -138,6 +138,42 @@ public class EmailService {
     /**
      * Notifie un étudiant autorisé qu’un quiz vient d’être publié sur le web.
      */
+    /**
+     * Notifie un étudiant que la correction de son examen a été validée et que sa note est disponible.
+     */
+    public void sendExamenNoteValideeEmail(
+            String toEmail,
+            String professeurNom,
+            String examenTitre,
+            double noteFinale,
+            double bareme) {
+        String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
+        String titre = examenTitre != null && !examenTitre.isBlank() ? examenTitre.trim() : "Examen";
+        String noteTxt = formatNoteAffichage(noteFinale);
+        String baremeTxt = formatNoteAffichage(bareme);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("SmarTest — Note disponible : " + titre);
+        message.setText(
+                BONJOUR +
+                        "Le professeur " + nom + " a validé la correction de l'examen « " + titre + " ».\n\n" +
+                        "Votre note : " + noteTxt + " / " + baremeTxt + "\n\n" +
+                        "Consultez le détail dans votre espace étudiant :\n" +
+                        webDashboardUrl + "\n\n" +
+                        SIGNATURE
+        );
+        envoyer(message);
+    }
+
+    private static String formatNoteAffichage(double valeur) {
+        if (Math.abs(valeur - Math.rint(valeur)) < 0.001) {
+            return String.valueOf((long) Math.rint(valeur));
+        }
+        return String.format(java.util.Locale.US, "%.2f", valeur).replace('.', ',');
+    }
+
     public void sendQuizWebPublishedEmail(String toEmail, String professeurNom, String quizTitre) {
         String nom = professeurNom != null && !professeurNom.isBlank() ? professeurNom.trim() : "Votre professeur";
         String titre = quizTitre != null && !quizTitre.isBlank() ? quizTitre.trim() : "Quiz";

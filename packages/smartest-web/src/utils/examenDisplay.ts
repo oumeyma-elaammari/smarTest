@@ -90,6 +90,19 @@ export function formatStatutExamen(s?: string): string {
     }
 }
 
+/** Libellé affiché pour l’étudiant : métadonnées, puis snapshot, sinon repli technique. */
+export function resolveExamenDisplayTitre(
+    meta: { titre?: string } | null | undefined,
+    snap: { titre?: string | null } | null | undefined,
+    examId: number,
+): string {
+    const fromMeta = meta?.titre?.trim() ?? ''
+    if (fromMeta.length > 0) return fromMeta
+    const fromSnap = typeof snap?.titre === 'string' ? snap.titre.trim() : ''
+    if (fromSnap.length > 0) return fromSnap
+    return `Examen #${examId}`
+}
+
 export function getEtatSessionLabel(etat?: string): string {
     switch ((etat || '').toUpperCase()) {
         case 'EN_ATTENTE':

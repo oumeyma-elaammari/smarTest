@@ -3,8 +3,8 @@ import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import toast from 'react-hot-toast'
 import api from '../../src/api/axiosConfig'
-import { API_BASE } from '../msw/handlers'
-import { server } from '../msw/server'
+import { API_BASE } from '../../src/mocks/handlers'
+import { server } from '../../src/mocks/server'
 
 vi.mock('react-hot-toast', () => ({
     default: {
@@ -47,11 +47,43 @@ describe('axiosConfig interceptors', () => {
         expect(data.value).toBe(42)
     })
 
-    it('response interceptor clears storage and redirects to login on 401 for protected routes', async () => {
-        server.use(http.get(`${API_BASE}/api/protected`, () => new HttpResponse(null, { status: 401 })))
+    it('response interceptor clears auth keys on 401 when refresh fails', async () => {
+        localStorage.setItem('token', 'expired-token')
+        localStorage.setItem('role', 'ETUDIANT')
+        server.use(
+            http.post(`${API_BASE}/auth/refresh`, () => new HttpResponse(null, { status: 401 })),
+            http.get(`${API_BASE}/api/protected`, () => new HttpResponse(null, { status: 401 })),
+        )
         await expect(api.get('/api/protected')).rejects.toBeDefined()
-        expect(localStorage.length).toBe(0)
-        /* jsdom ne permet pas de spy sur location.href ; la redirection est définie dans axiosConfig */
+        expect(localStorage.getItem('token')).toBeNull()
+        expect(localStorage.getItem('role')).toBeNull()
+    })
+
+    it('response interceptor retries once after successful token refresh on 401', async () => {
+        localStorage.setItem('token', 'old-token')
+        let protectedHits = 0
+        server.use(
+            http.post(`${API_BASE}/auth/refresh`, () =>
+                HttpResponse.json({
+                    token: 'new-token',
+                    role: 'ETUDIANT',
+                    nom: 'Test',
+                    email: 't@ump.ac.ma',
+                    userId: 1,
+                }),
+            ),
+            http.get(`${API_BASE}/api/protected`, () => {
+                protectedHits += 1
+                if (protectedHits === 1) {
+                    return new HttpResponse(null, { status: 401 })
+                }
+                return HttpResponse.json({ ok: true })
+            }),
+        )
+        const { data } = await api.get<{ ok: boolean }>('/api/protected')
+        expect(data.ok).toBe(true)
+        expect(localStorage.getItem('token')).toBe('new-token')
+        expect(protectedHits).toBe(2)
     })
 
     it('response interceptor rejects with AxiosError on 403', async () => {

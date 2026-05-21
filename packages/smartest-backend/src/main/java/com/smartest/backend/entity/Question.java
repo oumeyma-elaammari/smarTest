@@ -39,6 +39,18 @@ public class Question {
      */
     private Integer dureeSecondesIndicative;
 
+    /**
+     * Points attribués à la question dans le barème de l'examen (ex. 2.0 pour une question sur 2 pt).
+     */
+    @Column(name = "bareme_points")
+    private Double baremePoints;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String imageBase64;
+
+    @Column(length = 32)
+    private String imageType;
+
     // ===== RELATIONS =====
     @JsonIgnore
     @ToString.Exclude

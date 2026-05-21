@@ -60,6 +60,7 @@ namespace smartest_desktop.ViewModels
         public bool IsParametres => SectionActive == MainShellSection.Parametres;
 
         public SettingsAccountViewModel SettingsAccount { get; }
+        public SessionsActivesViewModel SessionsActives { get; }
 
         public ICommand GoHomeCommand { get; }
         public ICommand GoQuizExamensCommand { get; }
@@ -78,6 +79,7 @@ namespace smartest_desktop.ViewModels
         public MainShellViewModel()
         {
             SettingsAccount = new SettingsAccountViewModel();
+            SessionsActives = new SessionsActivesViewModel();
             GoHomeCommand = new RelayCommand(_ => SectionActive = MainShellSection.Home);
             GoQuizExamensCommand = new RelayCommand(_ => SectionActive = MainShellSection.QuizExamens);
             GoStatistiquesCommand = new RelayCommand(_ => SectionActive = MainShellSection.Statistiques);

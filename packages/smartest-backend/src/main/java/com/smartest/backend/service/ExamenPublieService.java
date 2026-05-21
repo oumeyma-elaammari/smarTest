@@ -8,6 +8,7 @@ import com.smartest.backend.entity.*;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import com.smartest.backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ExamenPublieService {
 
     private final ExamenPublieRepository examenPublieRepository;
@@ -33,6 +35,8 @@ public class ExamenPublieService {
     private final SessionExamenRepository sessionExamenRepository;
     private final ReponseEtudiantRepository reponseEtudiantRepository;
     private final StatistiqueQuestionRepository statistiqueQuestionRepository;
+    private final EtudiantRepository etudiantRepository;
+    private final ExamenPassageResultatRepository examenPassageResultatRepository;
     private final ExamenSupervisionService examenSupervisionService;
     private final EmailService emailService;
 
@@ -54,7 +58,7 @@ public class ExamenPublieService {
                     .toList();
         }
         return examenPublieRepository.findAutorisesPourEmail(email).stream()
-                .map(this::toMetadata)
+                .map(ex -> toMetadataAvecNoteEtudiant(ex, email))
                 .toList();
     }
 
@@ -63,7 +67,7 @@ public class ExamenPublieService {
         ExamenPublie ex = examenPublieRepository.findByIdFetchingEmailsAutorisesWeb(examenId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Examen introuvable"));
         verifierEmailAutorisePourExamen(ex, emailEtudiant);
-        return toMetadata(ex);
+        return toMetadataAvecNoteEtudiant(ex, emailEtudiant);
     }
 
     /** Métadonnées pour le professeur propriétaire (supervision web, sans contrainte publication web). */
@@ -197,6 +201,23 @@ public class ExamenPublieService {
         }
     }
 
+    private ExamenPublieMetadataResponse toMetadataAvecNoteEtudiant(ExamenPublie ex, String emailEtudiant) {
+        ExamenPublieMetadataResponse m = toMetadata(ex);
+        if (emailEtudiant == null || emailEtudiant.isBlank()) {
+            return m;
+        }
+        String em = emailEtudiant.trim().toLowerCase(Locale.ROOT);
+        etudiantRepository.findByEmailIgnoreCase(em).ifPresent(etu ->
+                examenPassageResultatRepository
+                        .findByExamenPublie_IdAndEtudiant_IdAndNoteVisibleEtudiantIsTrue(ex.getId(), etu.getId())
+                        .ifPresent(r -> {
+                            double n = r.getNoteFinale() != null ? r.getNoteFinale() : r.getNoteProposee();
+                            m.setNoteFinaleAffichee(n);
+                            m.setBaremeNoteFinale(r.getBaremeReference());
+                        }));
+        return m;
+    }
+
     private ExamenPublieMetadataResponse toMetadata(ExamenPublie ex) {
         long n = examenPublieRepository.countLinkedQuestions(ex.getId());
         int totalQuestions = n > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) n;
@@ -214,7 +235,9 @@ public class ExamenPublieService {
                 totalQuestions,
                 BAREME_DEFAUT_WEB,
                 false,
-                nomProf
+                nomProf,
+                null,
+                null
         );
     }
 
@@ -249,60 +272,15 @@ public class ExamenPublieService {
 
     @Transactional
     public ExamenPublie demarrer(Long id) {
-        ExamenPublie exam = examenPublieRepository.findById(id)
+        examenSupervisionService.lancer(id);
+        return examenPublieRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
-
-        if (exam.getStatut() != StatutExamen.PLANIFIE) {
-            throw new InvalidSessionStateException(
-                    "Impossible de démarrer cet examen dans son état actuel : " + exam.getStatut());
-        }
-
-        exam.setStatut(StatutExamen.EN_COURS);
-        examenPublieRepository.save(exam);
-
-        // Envoyer les notifications aux étudiants autorisés
-        if (exam.getEmailsAutorisesWeb() != null && !exam.getEmailsAutorisesWeb().isEmpty()) {
-            String nomProf = exam.getProfesseur() != null && exam.getProfesseur().getNom() != null
-                    ? exam.getProfesseur().getNom().trim()
-                    : "Votre professeur";
-            String titreExamen = exam.getTitre() != null ? exam.getTitre() : "";
-            List<String> destinataires = new ArrayList<>(exam.getEmailsAutorisesWeb());
-
-            Runnable envoyerNotifications = () -> {
-                for (String email : destinataires) {
-                    try {
-                        emailService.sendExamenLanceEmail(email, nomProf, titreExamen);
-                    } catch (Exception ex) {
-                        // Log silencieux comme dans QuizService
-                    }
-                }
-            };
-
-            if (TransactionSynchronizationManager.isSynchronizationActive()) {
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        envoyerNotifications.run();
-                    }
-                });
-            } else {
-                envoyerNotifications.run();
-            }
-        }
-
-        return exam;
     }
 
     public ExamenPublie terminer(Long id) {
-        ExamenPublie exam = examenPublieRepository.findById(id)
+        examenSupervisionService.terminer(id);
+        return examenPublieRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Examen non trouvé"));
-
-        if (exam.getStatut() != StatutExamen.EN_COURS) {
-            throw new InvalidSessionStateException("Impossible de terminer un examen qui n'est pas en cours.");
-        }
-
-        exam.setStatut(StatutExamen.TERMINE);
-        return examenPublieRepository.save(exam);
     }
 
     /**
@@ -346,13 +324,17 @@ public class ExamenPublieService {
         }
         sessionExamenRepository.deleteAll(sessions);
 
-        if (exam.getQuestions() != null) {
-            exam.getQuestions().clear();
-        }
-        examenPublieRepository.saveAndFlush(exam);
+        examenPublieRepository.deleteNativeCorrectionLignes(examenId);
+        examenPublieRepository.deleteNativePassageResultats(examenId);
+        examenPublieRepository.deleteNativeExamenPublieQuestionLinks(examenId);
+        examenPublieRepository.deleteNativeEmailWebRows(examenId);
+        examenPublieRepository.deleteNativeLegacyExamenQuestionLinks(examenId);
 
-        examenPublieRepository.delete(exam);
-        examenPublieRepository.flush();
+        int rows = examenPublieRepository.deleteNativeById(examenId);
+        if (rows != 1) {
+            log.warn("Suppression examen id={} : DELETE a affecté {} ligne(s) (attendu 1)", examenId, rows);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, EXAMEN_INTROUVABLE);
+        }
 
         for (Question q : questionsLiees) {
             if (quizRepository.countQuizzesWithQuestion(q.getId()) == 0
@@ -360,5 +342,8 @@ public class ExamenPublieService {
                 questionRepository.deleteById(q.getId());
             }
         }
+
+        log.info("Examen supprimé côté serveur (examenId={}, professeurEmail={})", examenId,
+                professeurEmail.trim().toLowerCase(Locale.ROOT));
     }
 }

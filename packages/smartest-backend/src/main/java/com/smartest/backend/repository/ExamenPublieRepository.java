@@ -3,6 +3,7 @@ package com.smartest.backend.repository;
 import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.entity.enumeration.StatutExamen;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -41,4 +42,36 @@ public interface ExamenPublieRepository extends JpaRepository<ExamenPublie, Long
      */
     @Query("SELECT DISTINCT e FROM ExamenPublie e LEFT JOIN FETCH e.emailsAutorisesWeb WHERE e.id = :id")
     Optional<ExamenPublie> findByIdFetchingEmailsAutorisesWeb(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT e FROM ExamenPublie e LEFT JOIN FETCH e.questions WHERE e.id = :id")
+    Optional<ExamenPublie> findByIdWithQuestions(@Param("id") Long id);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM examen_correction_ligne WHERE examen_publie_id = :examenId", nativeQuery = true)
+    void deleteNativeCorrectionLignes(@Param("examenId") Long examenId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM examen_passage_resultat WHERE examen_publie_id = :examenId", nativeQuery = true)
+    void deleteNativePassageResultats(@Param("examenId") Long examenId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM examen_publie_question WHERE examen_publie_id = :examenId", nativeQuery = true)
+    void deleteNativeExamenPublieQuestionLinks(@Param("examenId") Long examenId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM examen_email_web_autorise WHERE examen_id = :examenId", nativeQuery = true)
+    void deleteNativeEmailWebRows(@Param("examenId") Long examenId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM examen_question WHERE examen_id = :examenId", nativeQuery = true)
+    void deleteNativeLegacyExamenQuestionLinks(@Param("examenId") Long examenId);
+
+    /**
+     * Suppression physique de l'examen (après avoir vidé les dépendances FK).
+     *
+     * @return nombre de lignes supprimées (attendu : 1)
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM examen_publie WHERE id = :examenId", nativeQuery = true)
+    int deleteNativeById(@Param("examenId") Long examenId);
 }

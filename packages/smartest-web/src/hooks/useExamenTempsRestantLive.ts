@@ -16,6 +16,7 @@ export function useExamenTempsRestantLive(
     tempsRestantMinutes: number | undefined | null,
     etatPhase: string | undefined | null,
     enPause: boolean,
+    tempsRestantTotalSeconds?: number | null,
 ): string | null {
     const [tick, setTick] = useState(0)
     /** Date limite du décompte (timestamps absolus). */
@@ -29,6 +30,13 @@ export function useExamenTempsRestantLive(
 
     const phase = (etatPhase ?? '').trim().toUpperCase()
     const actif = phase === 'EN_COURS' && !enPause
+
+    const serverTotalSeconds =
+        typeof tempsRestantTotalSeconds === 'number' && Number.isFinite(tempsRestantTotalSeconds)
+            ? Math.max(0, Math.floor(tempsRestantTotalSeconds))
+            : typeof tempsRestantMinutes === 'number' && Number.isFinite(tempsRestantMinutes)
+              ? Math.max(0, Math.floor(tempsRestantMinutes * 60))
+              : null
 
     /** Pause → fige le restant réel ; reprise → réinjecte dans l'échéance locale (avant sync serveur). */
     useEffect(() => {
@@ -54,9 +62,9 @@ export function useExamenTempsRestantLive(
         }
     }, [actif, enPause, phase])
 
-    /** Sync échéance quand le serveur envoie une nouvelle valeur en minutes (lancement, ajustement prof). */
+    /** Sync échéance quand le serveur envoie une nouvelle durée (lancement, ajustement prof). */
     useEffect(() => {
-        if (typeof tempsRestantMinutes !== 'number' || !Number.isFinite(tempsRestantMinutes)) {
+        if (serverTotalSeconds == null) {
             deadlineMsRef.current = null
             frozenRemainingMsRef.current = null
             lastServerMinRef.current = undefined
@@ -65,39 +73,39 @@ export function useExamenTempsRestantLive(
 
         if (skipNextServerDeadlineSyncRef.current) {
             skipNextServerDeadlineSyncRef.current = false
-            lastServerMinRef.current = tempsRestantMinutes
+            lastServerMinRef.current = serverTotalSeconds
             return
         }
 
         const phaseSync = (etatPhase ?? '').trim().toUpperCase()
         const enPauseSync = enPause || phaseSync === 'EN_PAUSE'
-        /** Pendant la pause : ne pas réinjecter les minutes serveur (souvent la durée pleine). */
+        /** Pendant la pause : ne pas réinjecter le temps serveur (souvent la durée pleine). */
         if (enPauseSync && frozenRemainingMsRef.current != null) {
-            lastServerMinRef.current = tempsRestantMinutes
+            lastServerMinRef.current = serverTotalSeconds
             return
         }
 
-        if (lastServerMinRef.current !== tempsRestantMinutes) {
-            deadlineMsRef.current = Date.now() + tempsRestantMinutes * 60 * 1000
-            lastServerMinRef.current = tempsRestantMinutes
+        if (lastServerMinRef.current !== serverTotalSeconds) {
+            deadlineMsRef.current = Date.now() + serverTotalSeconds * 1000
+            lastServerMinRef.current = serverTotalSeconds
             if (!enPauseSync) {
                 frozenRemainingMsRef.current = null
             }
         }
-    }, [tempsRestantMinutes, enPause, etatPhase])
+    }, [serverTotalSeconds, enPause, etatPhase])
 
     useEffect(() => {
         if (!actif || deadlineMsRef.current == null) return
         const id = globalThis.setInterval(() => setTick((n) => n + 1), 1000)
         return () => globalThis.clearInterval(id)
-    }, [actif, tempsRestantMinutes])
+    }, [actif, serverTotalSeconds])
 
     const remainingSecPourActif = useMemo(() => {
         if (!actif || deadlineMsRef.current == null) return null
         return Math.max(0, (deadlineMsRef.current - Date.now()) / 1000)
-    }, [tick, actif, tempsRestantMinutes])
+    }, [tick, actif, serverTotalSeconds])
 
-    if (typeof tempsRestantMinutes !== 'number' || !Number.isFinite(tempsRestantMinutes)) {
+    if (serverTotalSeconds == null) {
         return null
     }
 
@@ -109,11 +117,11 @@ export function useExamenTempsRestantLive(
 
     if (actif) {
         if (deadlineMsRef.current == null) {
-            return `${tempsRestantMinutes} min`
+            return formatMmSs(serverTotalSeconds)
         }
         const sec = remainingSecPourActif ?? 0
         return formatMmSs(sec)
     }
 
-    return `${tempsRestantMinutes} min`
+    return formatMmSs(serverTotalSeconds)
 }

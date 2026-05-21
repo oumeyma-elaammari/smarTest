@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { examenApi } from '../api/examenApi'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
@@ -19,14 +19,22 @@ import {
     useJoinedSiSessionActive,
     useNavigateEpreuveSiMetaDejaEnCours,
     useNavigateVersEpreuveSurDemarrage,
-    useQuestionSelectionClear,
+    useExamAnswerReset,
     useRedirectDashboardSiArrete,
+    useSoumettreFinalSiTermine,
     useResetAutoJoinOnId,
     useRetourAttenteSiEpreuveTropTot,
     useSnapClearsJoinedOnArrete,
     deriveIsEpreuvePath,
 } from './examenPassageWeb.hooks'
-import { coerceEntityId, extractApiMessage, readEtudiantId } from './examenPassageWeb.shared'
+import useAuth from '../hooks/useAuth'
+import {
+    coerceEntityId,
+    examPassQuestionKind,
+    extractApiMessage,
+    reponseVerrouilleeStorageKey,
+    resolveEtudiantId,
+} from './examenPassageWeb.shared'
 import {
     ExamenBlocQuestion,
     ExamenPassageAttenteLayout,
@@ -42,7 +50,10 @@ async function soumettreReponseVersApi(opts: {
     id: number
     etudiantId: number
     questionId: number | null
+    questionKind: ReturnType<typeof examPassQuestionKind>
     selectedResponseId: number | null
+    selectedResponseIds: number[]
+    essayText: string
     canStart: boolean
     enPause: boolean
     setSubmittingAnswer: (v: boolean) => void
@@ -52,7 +63,10 @@ async function soumettreReponseVersApi(opts: {
         id,
         etudiantId,
         questionId,
+        questionKind,
         selectedResponseId,
+        selectedResponseIds,
+        essayText,
         canStart,
         enPause,
         setSubmittingAnswer,
@@ -61,21 +75,54 @@ async function soumettreReponseVersApi(opts: {
 
     if (!Number.isFinite(id) || id <= 0) return false
     if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
-        setStatus('Session incomplète : identifiant étudiant introuvable. Déconnectez-vous puis reconnectez-vous.')
+        const msg =
+            'Session incomplète : identifiant étudiant introuvable. Déconnectez-vous puis reconnectez-vous.'
+        console.error('REPONSE NON ENREGISTREE: etudiantId invalide', etudiantId)
+        setStatus(msg)
         return false
     }
-    if (!canStart || enPause) return false
-    if (questionId === null || selectedResponseId === null) {
-        setStatus('Sélectionnez une réponse avant de valider.')
+    if (!canStart || enPause) {
+        setStatus(
+            enPause
+                ? 'L’examen est en pause : vous ne pouvez pas valider de réponse pour le moment.'
+                : 'L’épreuve n’a pas encore démarré ou est terminée. Attendez que le professeur lance la session.',
+        )
         return false
+    }
+    if (questionId === null) {
+        setStatus('Question introuvable. Actualisez la page si le problème persiste.')
+        return false
+    }
+
+    let body: { questionId: number; reponseId?: number; reponseIds?: number[]; reponseTexte?: string }
+    if (questionKind === 'essay') {
+        const t = essayText.trim()
+        if (!t) {
+            setStatus('Rédigez une réponse avant de valider.')
+            return false
+        }
+        body = { questionId, reponseTexte: t }
+    } else if (questionKind === 'checkbox') {
+        if (selectedResponseIds.length === 0) {
+            setStatus('Cochez au moins une réponse avant de valider.')
+            return false
+        }
+        body = { questionId, reponseIds: [...selectedResponseIds] }
+    } else {
+        if (selectedResponseId === null) {
+            setStatus('Sélectionnez une réponse avant de valider.')
+            return false
+        }
+        body = { questionId, reponseId: selectedResponseId }
     }
 
     try {
         setSubmittingAnswer(true)
-        await examenApi.repondreQuestionCourante(id, etudiantId, questionId, selectedResponseId)
+        await examenApi.repondreQuestionCourante(id, etudiantId, body)
         setStatus('Réponse enregistrée. Aucune correction immédiate n’est affichée pendant l’examen.')
         return true
     } catch (e: unknown) {
+        console.error('REPONSE NON ENREGISTREE:', e)
         setStatus(extractApiMessage(e, 'Impossible d’enregistrer la réponse pour la question active.'))
         return false
     } finally {
@@ -96,7 +143,10 @@ export default function ExamenPassageWeb() {
     const [status, setStatus] = useState<string>('')
     const [loading, setLoading] = useState(true)
     const [selectedResponseId, setSelectedResponseId] = useState<number | null>(null)
+    const [selectedResponseIds, setSelectedResponseIds] = useState<number[]>([])
+    const [essayText, setEssayText] = useState('')
     const [submittingAnswer, setSubmittingAnswer] = useState(false)
+    const [reponseVerrouillee, setReponseVerrouillee] = useState(false)
     const [wsNotice, setWsNotice] = useState<string | null>(null)
     const [creneauTick, setCreneauTick] = useState(0)
     const autoJoinReussi = useRef(false)
@@ -147,25 +197,83 @@ export default function ExamenPassageWeb() {
     const sessionTerminee =
         phaseSession === 'TERMINE' || (meta?.statut ?? '').trim().toUpperCase() === 'TERMINE'
     const etat = snap?.etat ?? meta?.statut ?? 'PLANIFIE'
-    const etudiantId = readEtudiantId()
+    const authUserId = useAuth((s) => s.userId)
+    const etudiantId = resolveEtudiantId(authUserId)
+    useSoumettreFinalSiTermine(id, snap?.etat, meta?.statut, setStatus)
     const questionCourante = snap?.questionCourante
-    const questionCouranteAvecReponses = questionCourante as
-        | (typeof questionCourante & { reponses?: Array<{ id?: number; contenu?: string }> })
-        | undefined
     const questionId = coerceEntityId(questionCourante?.id)
-    const reponses = Array.isArray(questionCouranteAvecReponses?.reponses)
-        ? (questionCouranteAvecReponses.reponses as Array<{ id?: number; contenu?: string }>)
+    const questionCouranteAvecMeta = questionCourante as
+        | (typeof questionCourante & {
+              reponses?: Array<{ id?: number; contenu?: string }>
+              type?: string | null
+          })
+        | undefined
+    const questionKind = examPassQuestionKind(
+        typeof questionCouranteAvecMeta?.type === 'string' ? questionCouranteAvecMeta.type : undefined,
+    )
+    const reponses = Array.isArray(questionCouranteAvecMeta?.reponses)
+        ? (questionCouranteAvecMeta.reponses as Array<{ id?: number; contenu?: string }>)
         : []
 
-    useQuestionSelectionClear(questionId, setSelectedResponseId)
+    const resetAnswerState = useCallback(() => {
+        setSelectedResponseId(null)
+        setSelectedResponseIds([])
+        setEssayText('')
+        setReponseVerrouillee(false)
+    }, [])
+
+    useExamAnswerReset(questionId, resetAnswerState)
+
+    useEffect(() => {
+        if (questionId == null) {
+            setReponseVerrouillee(false)
+            return
+        }
+        let verrou = false
+        try {
+            verrou = sessionStorage.getItem(reponseVerrouilleeStorageKey(id, questionId)) === '1'
+        } catch {
+            /* ignore */
+        }
+        if (snap?.reponseVerrouillee === true) {
+            verrou = true
+        }
+        if (verrou || snap?.reponseVerrouillee === true) {
+            const rid = coerceEntityId(snap?.reponseIdSelectionnee)
+            if (rid != null) setSelectedResponseId(rid)
+            const ids = (snap?.reponseIdsSelectionnees ?? [])
+                .map((x) => coerceEntityId(x))
+                .filter((x): x is number => x != null)
+            if (ids.length > 0) setSelectedResponseIds(ids)
+            const txt = typeof snap?.reponseTexte === 'string' ? snap.reponseTexte : ''
+            if (txt.trim()) setEssayText(txt)
+        }
+        const locked = verrou || snap?.reponseVerrouillee === true
+        setReponseVerrouillee(locked)
+        if (locked) {
+            try {
+                sessionStorage.setItem(reponseVerrouilleeStorageKey(id, questionId), '1')
+            } catch {
+                /* ignore */
+            }
+        }
+    }, [id, questionId, snap?.reponseVerrouillee, snap?.reponseIdSelectionnee, snap?.reponseIdsSelectionnees, snap?.reponseTexte])
+
+    const { envoyerReponseWebSocket } = useExamenWebSocketReponse()
 
     if (!Number.isFinite(id) || id <= 0) {
         return <ExamenPassageInvalid />
     }
 
-    const { envoyerReponseWebSocket } = useExamenWebSocketReponse()
-
     const soumettreReponseCourante = async () => {
+        if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
+            setStatus('Identifiant étudiant manquant : déconnectez-vous puis reconnectez-vous.')
+            return
+        }
+        if (reponseVerrouillee) {
+            setStatus('Vous avez déjà validé votre réponse pour cette question.')
+            return
+        }
         if (minuteurQuestion.isExpired) {
             setStatus(
                 'Le temps pour cette question est écoulé. Vous ne pouvez plus enregistrer de réponse tant que le professeur n’a pas ajouté du temps au minuteur.',
@@ -173,35 +281,70 @@ export default function ExamenPassageWeb() {
             return
         }
         
-        // Envoyer via WebSocket pour mise à jour temps réel immédiate
-        if (questionId && selectedResponseId) {
-            envoyerReponseWebSocket({
-                examenId: id,
-                etudiantId,
-                questionId,
-                reponseId: selectedResponseId,
-            })
-        }
-
         const ok = await soumettreReponseVersApi({
             id,
             etudiantId,
             questionId,
+            questionKind,
             selectedResponseId,
+            selectedResponseIds,
+            essayText,
             canStart,
             enPause,
             setSubmittingAnswer,
             setStatus,
         })
-        if (ok) {
+        if (!ok) return
+
+        setReponseVerrouillee(true)
+        if (questionId != null) {
             try {
+                sessionStorage.setItem(reponseVerrouilleeStorageKey(id, questionId), '1')
+            } catch {
+                /* ignore */
+            }
+        }
+
+        // Diffusion temps réel après persistance serveur (compteurs supervision).
+        if (questionId) {
+            const email =
+                typeof globalThis.localStorage !== 'undefined'
+                    ? globalThis.localStorage.getItem('email')
+                    : null
+            if (questionKind === 'essay' && essayText.trim()) {
+                envoyerReponseWebSocket({
+                    examenId: id,
+                    etudiantId,
+                    questionId,
+                    email,
+                    reponseTexte: essayText.trim(),
+                })
+            } else if (questionKind === 'checkbox' && selectedResponseIds.length > 0) {
+                envoyerReponseWebSocket({
+                    examenId: id,
+                    etudiantId,
+                    questionId,
+                    email,
+                    reponseIds: selectedResponseIds,
+                })
+            } else if (selectedResponseId) {
+                envoyerReponseWebSocket({
+                    examenId: id,
+                    etudiantId,
+                    questionId,
+                    email,
+                    reponseId: selectedResponseId,
+                })
+            }
+        }
+
+        try {
                 const bc = new BroadcastChannel(`smartest.examen.${id}`)
                 bc.postMessage({ type: 'reponse-enregistree', examenId: id })
                 bc.close()
             } catch {
                 /* BroadcastChannel indisponible */
             }
-        }
     }
 
     const heureLancement = formatTime(meta?.dateDebut)
@@ -238,17 +381,32 @@ export default function ExamenPassageWeb() {
             ? `Question ${snap.questionCourante.numero}`
             : 'Question en cours'
 
+    const hasAnswer =
+        questionKind === 'checkbox'
+            ? selectedResponseIds.length > 0
+            : questionKind === 'essay'
+              ? essayText.trim().length > 0
+              : selectedResponseId != null
+    const inputsLocked = reponseVerrouillee || minuteurQuestion.isExpired
+    const submitDisabled = submittingAnswer || !hasAnswer || inputsLocked || !canStart || enPause
+
     const blocQuestionEl = (
         <ExamenBlocQuestion
             enPause={enPause}
             canStart={canStart}
             snap={snap}
             questionCourante={questionCourante}
+            questionKind={questionKind}
             reponses={reponses}
             questionId={questionId}
             selectedResponseId={selectedResponseId}
             setSelectedResponseId={setSelectedResponseId}
+            selectedResponseIds={selectedResponseIds}
+            setSelectedResponseIds={setSelectedResponseIds}
+            essayText={essayText}
+            setEssayText={setEssayText}
             submittingAnswer={submittingAnswer}
+            reponseVerrouillee={reponseVerrouillee}
             tempsQuestionExpire={minuteurQuestion.isExpired}
             onValider={soumettreReponseCourante}
         />
@@ -259,6 +417,7 @@ export default function ExamenPassageWeb() {
             <ExamenPassageEpreuveLayout
                 shell={shell}
                 meta={meta}
+                snap={snap}
                 id={id}
                 canStart={canStart}
                 etat={etat}
@@ -267,6 +426,11 @@ export default function ExamenPassageWeb() {
                 questionHeading={questionHeading}
                 minuteurQuestion={minuteurQuestion}
                 blocQuestion={blocQuestionEl}
+                afficherValider={canStart && Boolean(questionCourante) && !enPause}
+                onValider={soumettreReponseCourante}
+                submittingAnswer={submittingAnswer}
+                reponseVerrouillee={reponseVerrouillee}
+                submitDisabled={submitDisabled}
             />
         )
     }

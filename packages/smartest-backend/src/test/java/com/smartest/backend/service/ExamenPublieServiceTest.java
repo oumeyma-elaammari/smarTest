@@ -1,6 +1,5 @@
 package com.smartest.backend.service;
 
-import com.smartest.backend.exception.InvalidSessionStateException;
 import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.enumeration.StatutExamen;
@@ -28,6 +27,8 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -112,7 +113,10 @@ class ExamenPublieServiceTest {
         exam.setStatut(StatutExamen.PLANIFIE);
 
         when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(exam));
-        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> {
+            exam.setStatut(StatutExamen.EN_COURS);
+            return null;
+        }).when(examenSupervisionService).lancer(10L);
 
         ExamenPublie apres = examenPublieService.demarrer(10L);
 
@@ -120,20 +124,17 @@ class ExamenPublieServiceTest {
     }
 
     @Test
-    @DisplayName("demarrer : mauvais statut → InvalidSessionStateException")
+    @DisplayName("demarrer : déjà EN_COURS → supervision refuse (IllegalStateException)")
     void demarrerDejaEnCoursRefuse() {
-        ExamenPublie exam = new ExamenPublie();
-        exam.setId(10L);
-        exam.setStatut(StatutExamen.EN_COURS);
-
-        when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(exam));
+        doThrow(new IllegalStateException("Transition non autorisée"))
+                .when(examenSupervisionService).lancer(10L);
 
         assertThatThrownBy(() -> examenPublieService.demarrer(10L))
-                .isInstanceOf(InvalidSessionStateException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    @DisplayName("demarrer : examen avec étudiants autorisés → envoi des notifications")
+    @DisplayName("demarrer : délègue à la supervision (lancer)")
     void demarrerAvecEtudiantsAutorisesEnvoieNotifications() {
         ExamenPublie exam = new ExamenPublie();
         exam.setId(10L);
@@ -144,13 +145,15 @@ class ExamenPublieServiceTest {
         exam.setEmailsAutorisesWeb(Set.of("etudiant1@test.com", "etudiant2@test.com"));
 
         when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(exam));
-        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> {
+            exam.setStatut(StatutExamen.EN_COURS);
+            return null;
+        }).when(examenSupervisionService).lancer(10L);
 
         ExamenPublie apres = examenPublieService.demarrer(10L);
 
         assertThat(apres.getStatut()).isEqualTo(StatutExamen.EN_COURS);
-        verify(emailService).sendExamenLanceEmail("etudiant1@test.com", "Prof Test", "Examen Test");
-        verify(emailService).sendExamenLanceEmail("etudiant2@test.com", "Prof Test", "Examen Test");
+        verify(examenSupervisionService).lancer(10L);
     }
 
     @Test
@@ -162,7 +165,10 @@ class ExamenPublieServiceTest {
         exam.setEmailsAutorisesWeb(Set.of());
 
         when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(exam));
-        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> {
+            exam.setStatut(StatutExamen.EN_COURS);
+            return null;
+        }).when(examenSupervisionService).lancer(10L);
 
         ExamenPublie apres = examenPublieService.demarrer(10L);
 
@@ -217,7 +223,10 @@ class ExamenPublieServiceTest {
         exam.setStatut(StatutExamen.EN_COURS);
 
         when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(exam));
-        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> {
+            exam.setStatut(StatutExamen.TERMINE);
+            return null;
+        }).when(examenSupervisionService).terminer(10L);
 
         ExamenPublie apres = examenPublieService.terminer(10L);
 

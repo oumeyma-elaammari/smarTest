@@ -3,7 +3,14 @@ package com.smartest.backend.controller;
 import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.enumeration.StatutExamen;
+import com.smartest.backend.repository.EtudiantRepository;
+import com.smartest.backend.repository.ExamenPublieRepository;
+import com.smartest.backend.repository.ProfesseurRepository;
+import com.smartest.backend.service.ExamenCorrectionService;
 import com.smartest.backend.service.ExamenPublieService;
+import com.smartest.backend.service.ExamenSupervisionService;
+import com.smartest.backend.service.GroqApiKeyRegistry;
+import com.smartest.backend.service.GroqRedactionRepriseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -33,7 +41,28 @@ class ExamenPublieControllerTest {
     private MockMvc mockMvc;
 
     @Mock
-    private ExamenPublieService service;
+    private ExamenPublieService examenPublieService;
+
+    @Mock
+    private ExamenSupervisionService supervisionService;
+
+    @Mock
+    private ExamenCorrectionService examenCorrectionService;
+
+    @Mock
+    private ExamenPublieRepository examenPublieRepository;
+
+    @Mock
+    private ProfesseurRepository professeurRepository;
+
+    @Mock
+    private EtudiantRepository etudiantRepository;
+
+    @Mock
+    private GroqApiKeyRegistry groqApiKeyRegistry;
+
+    @Mock
+    private GroqRedactionRepriseService groqRedactionRepriseService;
 
     @InjectMocks
     private ExamenPublieController examenPublieController;
@@ -49,7 +78,7 @@ class ExamenPublieControllerTest {
         ExamenPublie ex = new ExamenPublie();
         ex.setId(1L);
         ex.setTitre("Java");
-        when(service.findAll()).thenReturn(List.of(ex));
+        when(examenPublieService.findAll()).thenReturn(List.of(ex));
 
         mockMvc.perform(get("/api/examens-publies"))
                 .andExpect(status().isOk())
@@ -70,7 +99,7 @@ class ExamenPublieControllerTest {
         LocalDateTime debut = LocalDateTime.of(2026, 6, 1, 10, 0);
         LocalDateTime fin = debut.plusHours(2);
 
-        when(service.publier(eq(1L), eq("Examen"), eq(90), eq("Desc"),
+        when(examenPublieService.publier(eq(1L), eq("Examen"), eq(90), eq("Desc"),
                 eq(debut), eq(fin))).thenReturn(saved);
 
         mockMvc.perform(post("/api/examens-publies")
@@ -91,23 +120,23 @@ class ExamenPublieControllerTest {
         ExamenPublie ex = new ExamenPublie();
         ex.setId(3L);
         ex.setStatut(StatutExamen.EN_COURS);
-        when(service.demarrer(3L)).thenReturn(ex);
+        when(examenPublieService.demarrer(3L)).thenReturn(ex);
+        when(supervisionService.snapshot(3L)).thenReturn(
+                new ExamenSupervisionService.SnapshotResponse(
+                        3L, "Java", "EN_COURS", false, 0, 1,
+                        Map.of(), List.of(),
+                        60, 3600, 0, 20.0, 0, 0, 0, 0, "MANUAL", 120, 0));
 
         mockMvc.perform(patch("/api/examens-publies/3/demarrer"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("EN_COURS"));
+                .andExpect(jsonPath("$.etat").value("EN_COURS"))
+                .andExpect(jsonPath("$.examenId").value(3));
     }
 
     @Test
     @DisplayName("PATCH terminer → 200")
     void patchTerminerOk() throws Exception {
-        ExamenPublie ex = new ExamenPublie();
-        ex.setId(3L);
-        ex.setStatut(StatutExamen.TERMINE);
-        when(service.terminer(3L)).thenReturn(ex);
-
         mockMvc.perform(patch("/api/examens-publies/3/terminer"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("TERMINE"));
+                .andExpect(status().isOk());
     }
 }

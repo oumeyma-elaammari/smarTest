@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Packaging;
 using smartest_desktop.Data.LocalEntities;
 using smartest_desktop.Services;
 using System;
@@ -13,6 +13,7 @@ namespace smartest_desktop.Services
     public class ImportService
     {
         private readonly LocalCoursService _coursService;
+        private readonly Func<string, string>? _extraireTextePdfOverride;
 
         // ══════════════════════════════════════════════════════════
         //  Formats acceptés
@@ -26,9 +27,10 @@ namespace smartest_desktop.Services
         {
         }
 
-        public ImportService(LocalCoursService coursService)
+        public ImportService(LocalCoursService coursService, Func<string, string>? extraireTextePdfOverride = null)
         {
             _coursService = coursService ?? throw new ArgumentNullException(nameof(coursService));
+            _extraireTextePdfOverride = extraireTextePdfOverride;
         }
 
         // ══════════════════════════════════════════════════════════
@@ -91,6 +93,9 @@ namespace smartest_desktop.Services
         /// </summary>
         private string ExtraireTextePdf(string cheminFichier)
         {
+            if (_extraireTextePdfOverride != null)
+                return _extraireTextePdfOverride(cheminFichier);
+
             try
             {
                 var sb = new StringBuilder();

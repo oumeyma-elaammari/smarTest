@@ -1,6 +1,5 @@
 package com.smartest.backend.controller;
 
-import com.smartest.backend.dto.request.LoginRequest;
 import com.smartest.backend.dto.request.*;
 import com.smartest.backend.dto.response.AuthResponse;
 import com.smartest.backend.exception.*;
@@ -326,6 +325,46 @@ class AuthControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isEqualTo("Mot de passe réinitialisé avec succès.");
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /auth/refresh")
+    class RefreshTests {
+
+        @Test
+        @DisplayName("✅ 200 — Refresh réussi")
+        void refresh_Returns200() {
+            // GIVEN
+            AuthResponse authResponse = new AuthResponse(
+                    "new-jwt", "PROFESSEUR", "Prof", "prof@ensa.ma", 9L);
+            when(authService.refreshAccessToken(anyString())).thenReturn(authResponse);
+            RefreshTokenRequest req = new RefreshTokenRequest();
+            req.setToken("expired-but-signed");
+
+            // WHEN
+            ResponseEntity<?> response = authController.refresh(req);
+
+            // THEN
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            AuthResponse body = (AuthResponse) response.getBody();
+            assertThat(body).isNotNull();
+            assertThat(body.getToken()).isEqualTo("new-jwt");
+        }
+
+        @Test
+        @DisplayName("❌ 401 — Token invalide")
+        void refresh_Returns401_InvalidToken() {
+            // GIVEN
+            when(authService.refreshAccessToken(anyString())).thenThrow(new InvalidTokenException());
+            RefreshTokenRequest req = new RefreshTokenRequest();
+            req.setToken("invalid");
+
+            // WHEN
+            ResponseEntity<?> response = authController.refresh(req);
+
+            // THEN
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         }
     }
 }

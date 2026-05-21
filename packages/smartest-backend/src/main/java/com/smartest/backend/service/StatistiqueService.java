@@ -5,15 +5,23 @@ import com.smartest.backend.dto.response.StatistiquesQuizResponse;
 import com.smartest.backend.exception.QuestionNotFoundException;
 import com.smartest.backend.exception.QuizNotFoundException;
 import com.smartest.backend.exception.UnauthorizedAccessException;
+import com.smartest.backend.entity.ExamenCorrectionLigne;
+import com.smartest.backend.entity.ExamenPassageResultat;
+import com.smartest.backend.entity.ExamenPublie;
 import com.smartest.backend.entity.Professeur;
 import com.smartest.backend.entity.Question;
 import com.smartest.backend.entity.Quiz;
 import com.smartest.backend.entity.StatistiqueQuestion;
+import com.smartest.backend.repository.ExamenCorrectionLigneRepository;
+import com.smartest.backend.repository.ExamenPassageResultatRepository;
+import com.smartest.backend.repository.ExamenPublieRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
 import com.smartest.backend.repository.QuestionRepository;
 import com.smartest.backend.repository.QuizRepository;
 import com.smartest.backend.repository.ResultatRepository;
 import com.smartest.backend.repository.StatistiqueQuestionRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +52,9 @@ public class StatistiqueService {
     private final QuizRepository quizRepository;
     private final QuestionRepository questionRepository;
     private final ProfesseurRepository professeurRepository;
+    private final ExamenPublieRepository examenPublieRepository;
+    private final ExamenPassageResultatRepository examenPassageResultatRepository;
+    private final ExamenCorrectionLigneRepository examenCorrectionLigneRepository;
 
     /**
      * Statistiques à jour pour un quiz ; vérifie que le quiz appartient au professeur connecté.
@@ -86,6 +97,31 @@ public class StatistiqueService {
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Statistiques agrégées d’un examen publié (passages + lignes de correction).
+     * Réutilise {@link StatistiquesQuizResponse} ({@code quizId} = id {@link ExamenPublie}).
+     */
+    @Transactional(readOnly = true)
+    public StatistiquesQuizResponse obtenirStatistiquesExamenPourProfesseur(Long examenId, String professeurEmail) {
+        ExamenPublie examen = verifierProprieteExamen(examenId, professeurEmail);
+        return construireStatistiquesExamen(examen);
+    }
+
+    private ExamenPublie verifierProprieteExamen(Long examenId, String professeurEmail) {
+        if (professeurEmail == null || professeurEmail.isBlank()) {
+            throw new UnauthorizedAccessException("Professeur introuvable");
+        }
+        String email = professeurEmail.trim().toLowerCase(Locale.ROOT);
+        Professeur prof = professeurRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedAccessException("Professeur introuvable"));
+        ExamenPublie examen = examenPublieRepository.findByIdWithQuestions(examenId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Examen introuvable"));
+        if (examen.getProfesseur() == null || !examen.getProfesseur().getId().equals(prof.getId())) {
+            throw new UnauthorizedAccessException("Cet examen n'appartient pas à votre compte");
+        }
+        return examen;
     }
 
     private Quiz verifierProprieteQuiz(Long quizId, String professeurEmail) {
@@ -238,6 +274,113 @@ public class StatistiqueService {
                 .pourcentageEchec(pourcentageEchec)
                 .alerteEchec(alerteEchec)
                 .build();
+    }
+
+    private StatistiquesQuizResponse construireStatistiquesExamen(ExamenPublie examen) {
+        Long examenId = examen.getId();
+        List<Question> questions = examen.getQuestions() != null ? examen.getQuestions() : List.of();
+        int nombreQuestions = Math.max(1, questions.size());
+
+        List<ExamenPassageResultat> passages =
+                examenPassageResultatRepository.findByExamenPublie_IdWithEtudiantOrderByEmail(examenId);
+        double baremeReference = passages.stream()
+                .mapToDouble(ExamenPassageResultat::getBaremeReference)
+                .filter(b -> b > 0)
+                .findFirst()
+                .orElse(20.0);
+
+        List<ExamenCorrectionLigne> lignes =
+                examenCorrectionLigneRepository.findAllByExamenPublie_IdWithQuestion(examenId);
+
+        List<StatistiqueQuestionResponse> statsParQuestion = new ArrayList<>();
+        for (Question question : questions) {
+            if (question == null || question.getId() == null) {
+                continue;
+            }
+            Long questionId = question.getId();
+            double pointsParQuestion = ExamenCorrectionService.pointsPourQuestion(
+                    question, baremeReference, nombreQuestions);
+            List<ExamenCorrectionLigne> lignesQuestion = lignes.stream()
+                    .filter(l -> l.getQuestion() != null && questionId.equals(l.getQuestion().getId()))
+                    .toList();
+            long total = lignesQuestion.size();
+            long correctes = lignesQuestion.stream()
+                    .filter(l -> estLigneReussie(l, pointsParQuestion))
+                    .count();
+            long incorrectes = total - correctes;
+            double pourcentageReussite = total > 0 ? (correctes * 100.0 / total) : 0;
+            double pourcentageEchec = total > 0 ? (incorrectes * 100.0 / total) : 0;
+            boolean alerteEchec = pourcentageEchec >= SEUIL_ALERTE_ECHEC_POURCENT;
+
+            statsParQuestion.add(StatistiqueQuestionResponse.builder()
+                    .questionId(questionId)
+                    .questionEnonce(question.getEnonce())
+                    .typeQuestion(String.valueOf(question.getType()))
+                    .nombreReponses((int) total)
+                    .nombreCorrectes((int) correctes)
+                    .nombreIncorrectes((int) incorrectes)
+                    .pourcentageReussite(pourcentageReussite)
+                    .pourcentageEchec(pourcentageEchec)
+                    .alerteEchec(alerteEchec)
+                    .build());
+        }
+
+        double moyenneQuestions = statsParQuestion.stream()
+                .mapToDouble(StatistiqueQuestionResponse::getPourcentageReussite)
+                .average()
+                .orElse(0);
+
+        long nbAlertes = statsParQuestion.stream()
+                .filter(s -> Boolean.TRUE.equals(s.getAlerteEchec()))
+                .count();
+
+        NotesPremiereTentative aggNotes = calculerNotesExamen(passages);
+
+        return StatistiquesQuizResponse.builder()
+                .quizId(examenId)
+                .quizTitre(examen.getTitre())
+                .nombreParticipants(passages.size())
+                .moyenneGenerale(moyenneQuestions)
+                .tauxReussiteGlobal(moyenneQuestions)
+                .moyenneNoteSur20(aggNotes.moyenneNoteSur20())
+                .repartitionParTranche(aggNotes.repartition())
+                .questionsAlerteCount(nbAlertes)
+                .statistiquesParQuestion(statsParQuestion)
+                .build();
+    }
+
+    private static double scoreEffectifLigne(ExamenCorrectionLigne ligne) {
+        if (ligne.getNoteFinaleLigne() != null) {
+            return ligne.getNoteFinaleLigne();
+        }
+        return ligne.getScorePartiel() != null ? ligne.getScorePartiel() : 0.0;
+    }
+
+    /** Réussite : au moins la moitié des points alloués à la question (prise en charge du partiel). */
+    private static boolean estLigneReussie(ExamenCorrectionLigne ligne, double pointsParQuestion) {
+        if (pointsParQuestion <= 0) {
+            return false;
+        }
+        return scoreEffectifLigne(ligne) >= pointsParQuestion * 0.5 - 1e-6;
+    }
+
+    private NotesPremiereTentative calculerNotesExamen(List<ExamenPassageResultat> passages) {
+        int[] buckets = new int[7];
+        double sumNotes = 0;
+        int nbEtudiants = 0;
+
+        for (ExamenPassageResultat passage : passages) {
+            double bareme = passage.getBaremeReference() > 0 ? passage.getBaremeReference() : 20.0;
+            double note = passage.getNoteFinale() != null ? passage.getNoteFinale() : passage.getNoteProposee();
+            double noteSur20 = bareme <= 0 ? 0.0 : (note * 20.0 / bareme);
+            sumNotes += noteSur20;
+            nbEtudiants++;
+            buckets[trancheIndexNoteSur20(noteSur20)]++;
+        }
+
+        double moyenne = nbEtudiants == 0 ? 0.0 : sumNotes / nbEtudiants;
+        List<Integer> repartition = Arrays.stream(buckets).boxed().map(Integer::intValue).toList();
+        return new NotesPremiereTentative(moyenne, repartition);
     }
 
     private StatistiqueQuestionResponse convertToDTO(StatistiqueQuestion stat) {

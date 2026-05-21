@@ -7,7 +7,11 @@ interface ReponseWebSocketPayload {
     examenId: number
     etudiantId: number
     questionId: number
-    reponseId: number
+    /** Aligné sur le REST : inscription implicite en salle si besoin. */
+    email?: string | null
+    reponseId?: number | null
+    reponseIds?: number[]
+    reponseTexte?: string | null
 }
 
 export function useExamenWebSocketReponse() {
@@ -48,7 +52,15 @@ export function useExamenWebSocketReponse() {
                 if (clientRef.current?.connected) {
                     clientRef.current.publish({
                         destination: '/app/examen/reponse',
-                        body: JSON.stringify(payload),
+                        body: JSON.stringify({
+                            ...payload,
+                            email:
+                                payload.email ??
+                                (typeof globalThis.localStorage !== 'undefined'
+                                    ? globalThis.localStorage.getItem('email')
+                                    : null) ??
+                                '',
+                        }),
                     })
                 }
             }, 1000)
@@ -58,7 +70,15 @@ export function useExamenWebSocketReponse() {
         try {
             clientRef.current.publish({
                 destination: '/app/examen/reponse',
-                body: JSON.stringify(payload),
+                body: JSON.stringify({
+                    ...payload,
+                    email:
+                        payload.email ??
+                        (typeof globalThis.localStorage !== 'undefined'
+                            ? globalThis.localStorage.getItem('email')
+                            : null) ??
+                        '',
+                }),
             })
             return true
         } catch (error) {

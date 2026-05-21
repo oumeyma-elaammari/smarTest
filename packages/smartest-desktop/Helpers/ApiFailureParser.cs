@@ -65,6 +65,10 @@ namespace smartest_desktop.Helpers
                     return "Ressource introuvable sur le serveur.";
                 case HttpStatusCode.BadRequest:
                     return "La requête a été refusée par le serveur.";
+                case (HttpStatusCode)429: // Too Many Requests
+                    return "Trop de requêtes. Réessayez dans quelques instants.";
+                case HttpStatusCode.ServiceUnavailable:
+                    return "Service temporairement indisponible. Réessayez plus tard.";
                 default:
                 {
                     int code = (int)status;

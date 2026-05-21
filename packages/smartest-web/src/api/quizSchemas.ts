@@ -54,7 +54,10 @@ const dateTimeLike = z.preprocess((val) => {
 
 export const examenMetaSchema = z.object({
     id: z.number(),
-    titre: z.string(),
+    titre: z
+        .union([z.string(), z.null()])
+        .optional()
+        .transform((v) => (typeof v === 'string' ? v.trim() : '')),
     description: z.string().optional(),
     dateDebut: dateTimeLike,
     duree: z.number().optional(),
@@ -63,6 +66,8 @@ export const examenMetaSchema = z.object({
     bareme: z.number().optional(),
     demarrageAutomatique: z.boolean().optional(),
     professeurNom: z.string().optional(),
+    noteFinaleAffichee: z.number().optional(),
+    baremeNoteFinale: z.number().optional(),
 })
 
 export const examenMetaListSchema = z.array(examenMetaSchema)
@@ -95,6 +100,8 @@ const questionCouranteSnapshotPart = z.looseObject({
     id: z.coerce.number().nullish(),
     numero: z.coerce.number().nullish(),
     enonce: z.string().nullish(),
+    imageBase64: z.string().nullish(),
+    imageType: z.string().nullish(),
     type: z.string().nullish(),
     reponses: z
         .array(
@@ -125,6 +132,8 @@ export const examenSnapshotSchema = z.object({
     /** Ordre et énoncés de toute l'épreuve (supervision prof). */
     planQuestions: z.array(planQuestionRowSchema).optional(),
     tempsRestantMinutes: z.number().nullish(),
+    /** Temps total restant de l'épreuve (secondes), prioritaire pour le décompte affiché. */
+    tempsRestantTotalSeconds: z.coerce.number().nullish(),
     /** Minuteur de la question courante (secondes), synchronisé serveur. */
     tempsQuestionRestantSeconds: z.coerce.number().nullish(),
     baremeSur20: z.coerce.number().optional(),
@@ -135,6 +144,11 @@ export const examenSnapshotSchema = z.object({
     questionDurationSeconds: z.coerce.number().optional(),
     /** Supervision : étudiants présents ayant déjà répondu à la question courante. */
     reponsesPourQuestionCourante: z.coerce.number().optional(),
+    /** Passage étudiant : réponse déjà validée pour la question courante. */
+    reponseVerrouillee: z.boolean().optional(),
+    reponseIdSelectionnee: z.coerce.number().nullish(),
+    reponseIdsSelectionnees: z.array(z.coerce.number()).optional(),
+    reponseTexte: z.string().nullish(),
 })
 
 export type ExamenMeta = z.infer<typeof examenMetaSchema>
@@ -150,9 +164,14 @@ export const examenQuestionStateSchema = z.object({
     questionCouranteIndex: z.number().nullable().optional(),
     questionCourante: questionCouranteSnapshotPart.nullish(),
     tempsRestantMinutes: z.number().nullish(),
+    tempsRestantTotalSeconds: z.coerce.number().nullish(),
     tempsQuestionRestantSeconds: z.coerce.number().nullish(),
     /** Durée indicative prévue pour répondre (secondes), même sens que le snapshot supervision. */
     questionDurationSeconds: z.coerce.number().optional(),
+    reponseVerrouillee: z.boolean().optional(),
+    reponseIdSelectionnee: z.coerce.number().nullish(),
+    reponseIdsSelectionnees: z.array(z.coerce.number()).optional(),
+    reponseTexte: z.string().nullish(),
 })
 
 export function mapQuestionStateToSnapshot(raw: unknown): ExamenSnapshot | null {
@@ -167,7 +186,12 @@ export function mapQuestionStateToSnapshot(raw: unknown): ExamenSnapshot | null 
         totalQuestions: q.totalQuestions,
         questionCourante: q.questionCourante ?? undefined,
         tempsRestantMinutes: q.tempsRestantMinutes ?? undefined,
+        tempsRestantTotalSeconds: q.tempsRestantTotalSeconds ?? undefined,
         tempsQuestionRestantSeconds: q.tempsQuestionRestantSeconds ?? undefined,
         questionDurationSeconds: q.questionDurationSeconds ?? undefined,
+        reponseVerrouillee: q.reponseVerrouillee ?? undefined,
+        reponseIdSelectionnee: q.reponseIdSelectionnee ?? undefined,
+        reponseIdsSelectionnees: q.reponseIdsSelectionnees ?? undefined,
+        reponseTexte: q.reponseTexte ?? undefined,
     }
 }

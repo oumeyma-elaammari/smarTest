@@ -202,6 +202,59 @@ namespace smartest_desktop.Services
         }
 
         // ══════════════════════════════════════════════
+        //  REFRESH JWT (token expiré mais signature valide)
+        // ══════════════════════════════════════════════
+        public async Task<(AuthResponse? auth, string? error)> RefreshAccessTokenAsync(
+            string token,
+            CancellationToken cancellationToken = default)
+        {
+            token = DesktopSessionTokenHelper.Normaliser(token);
+            if (string.IsNullOrEmpty(token))
+                return (null, "Jeton absent.");
+
+            try
+            {
+                var body = new { token };
+                var response = await _httpClient.PostAsync("/auth/refresh", ToJson(body), cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        var auth = JsonConvert.DeserializeObject<AuthResponse>(content);
+                        if (auth == null || string.IsNullOrWhiteSpace(auth.Token))
+                            return (null, "Réponse du serveur illisible après renouvellement.");
+                        return (auth, null);
+                    }
+                    catch (JsonException)
+                    {
+                        return (null, "Réponse du serveur illisible après renouvellement.");
+                    }
+                }
+
+                if ((int)response.StatusCode == 401)
+                    return (null, "Session expirée. Reconnectez-vous.");
+
+                return (null, $"Renouvellement de session impossible ({(int)response.StatusCode}).");
+            }
+            catch (OperationCanceledException ex)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                return (null, SmartestNetworkException.ServerUnreachable(ex).Message);
+            }
+            catch (HttpRequestException ex)
+            {
+                return (null, SmartestNetworkException.ServerUnreachable(ex).Message);
+            }
+            catch (Exception ex)
+            {
+                return (null, UserErrorMessage.FromException(ex, "Impossible de renouveler la session."));
+            }
+        }
+
+        // ══════════════════════════════════════════════
         //  FORGOT PASSWORD
         // ══════════════════════════════════════════════
         public async Task<string> ForgotPasswordAsync(string email, CancellationToken cancellationToken = default)

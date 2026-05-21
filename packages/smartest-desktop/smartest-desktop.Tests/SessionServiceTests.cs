@@ -10,7 +10,7 @@ public class SessionServiceTests
     [Fact]
     public void SauvegarderSession_puis_ChargerSession_retourne_token_en_clair()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var svc = new SessionService(db);
         var auth = new AuthResponse
         {
@@ -32,7 +32,7 @@ public class SessionServiceTests
     [Fact]
     public void ChargerSession_retour_null_si_aucune_session()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var svc = new SessionService(db);
 
         Assert.Null(svc.ChargerSession());
@@ -41,7 +41,7 @@ public class SessionServiceTests
     [Fact]
     public void ChargerSession_session_corrompue_supprime_et_retour_null()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         db.SessionsLocales.Add(new SessionLocale
         {
             TokenChiffre = "pas-un-chiffrement-valide",

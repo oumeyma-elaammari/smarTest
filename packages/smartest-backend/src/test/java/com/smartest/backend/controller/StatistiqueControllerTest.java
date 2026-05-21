@@ -105,6 +105,22 @@ class StatistiqueControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/statistiques/examen/{id} propriétaire → 200")
+    void getStatistiquesExamenProprietaireOk() throws Exception {
+        StatistiquesQuizResponse body = StatistiquesQuizResponse.builder()
+                .quizId(42L)
+                .quizTitre("Examen final")
+                .nombreParticipants(5)
+                .build();
+        when(statistiqueService.obtenirStatistiquesExamenPourProfesseur(eq(42L), eq(EMAIL_PROF))).thenReturn(body);
+
+        mockMvc.perform(get("/api/statistiques/examen/42").with(principal(profPrincipal)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quizId").value(42))
+                .andExpect(jsonPath("$.quizTitre").value("Examen final"));
+    }
+
+    @Test
     @DisplayName("GET alertes → 200 avec liste")
     void getAlertesOk() throws Exception {
         when(statistiqueService.obtenirQuestionsAlertePourProfesseur(1L, EMAIL_PROF))

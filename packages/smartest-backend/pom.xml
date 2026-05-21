@@ -111,8 +111,21 @@
 
         <!-- ── TEST ───────────────────────────────────── -->
         <dependency>
+            <groupId>io.gatling.highcharts</groupId>
+            <artifactId>gatling-charts-highcharts</artifactId>
+            <version>3.14.7</version>   <!-- Version stable récente, compatible Java 23 -->
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+        
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- MockMvc + @AutoConfigureMockMvc (hors spring-boot-starter-test en Boot 4) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
         <!--  Security test pour MockMvc avec auth -->
@@ -127,11 +140,24 @@
             <version>2.13.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>io.gatling</groupId>
+                <artifactId>gatling-maven-plugin</artifactId>
+                <version>4.20.16</version>
+                <configuration>
+                    <simulationClass>com.smartest.backend.gatling.SmartestBackendSimulation</simulationClass>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -187,5 +213,9 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        
+    </profiles>
 
 </project>

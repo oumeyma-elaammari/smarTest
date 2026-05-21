@@ -9,9 +9,9 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/api': { target: 'http://localhost:8082', changeOrigin: true },
-      '/auth': { target: 'http://localhost:8082', changeOrigin: true },
-      '/ws': { target: 'http://localhost:8082', ws: true },
+      '/api': { target: 'http://localhost:8081', changeOrigin: true },
+      '/auth': { target: 'http://localhost:8081', changeOrigin: true },
+      '/ws': { target: 'http://localhost:8081', ws: true },
     },
   },
 })

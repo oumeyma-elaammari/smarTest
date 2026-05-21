@@ -10,6 +10,9 @@ import com.smartest.backend.entity.Quiz;
 import com.smartest.backend.entity.StatistiqueQuestion;
 import com.smartest.backend.entity.enumeration.Difficulte;
 import com.smartest.backend.entity.enumeration.TypeQuestion;
+import com.smartest.backend.repository.ExamenCorrectionLigneRepository;
+import com.smartest.backend.repository.ExamenPassageResultatRepository;
+import com.smartest.backend.repository.ExamenPublieRepository;
 import com.smartest.backend.repository.ProfesseurRepository;
 import com.smartest.backend.repository.QuestionRepository;
 import com.smartest.backend.repository.QuizRepository;
@@ -50,6 +53,12 @@ class StatistiqueServiceTest {
     private QuestionRepository questionRepository;
     @Mock
     private ProfesseurRepository professeurRepository;
+    @Mock
+    private ExamenPublieRepository examenPublieRepository;
+    @Mock
+    private ExamenPassageResultatRepository examenPassageResultatRepository;
+    @Mock
+    private ExamenCorrectionLigneRepository examenCorrectionLigneRepository;
 
     @InjectMocks
     private StatistiqueService statistiqueService;

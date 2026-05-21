@@ -32,13 +32,16 @@ function fromAxiosData(data: unknown, fallback: string): string | null {
     const record = data as Record<string, unknown>
     const directMessage = record.message ?? record.error_description ?? record.detail
     if (typeof directMessage === 'string' && directMessage.trim()) {
-        return sanitizeUserMessage(directMessage, fallback)
+        const sanitized = sanitizeUserMessage(directMessage, fallback)
+        if (sanitized !== fallback || directMessage.length <= 220) {
+            return sanitized
+        }
     }
 
     const errorCode = record.error ?? record.code
     if (typeof errorCode === 'string' && errorCode.trim()) {
         const fromCode = fromErrorCode(errorCode)
-        if (fromCode) return fromCode
+        if (fromCode && fromCode !== 'Acces refuse.') return fromCode
     }
 
     for (const value of Object.values(record)) {

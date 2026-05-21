@@ -1,6 +1,7 @@
 package com.smartest.backend.controller;
 
 import com.smartest.backend.dto.request.ForgotPasswordRequest;
+import com.smartest.backend.dto.request.RefreshTokenRequest;
 import com.smartest.backend.dto.request.RegisterEtudiantRequest;
 import com.smartest.backend.dto.request.ResetPasswordRequest;
 import com.smartest.backend.dto.response.AuthResponse;
@@ -63,6 +64,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        try {
+            AuthResponse response = authService.refreshAccessToken(request.getToken());
+            return ResponseEntity.ok(response);
+        } catch (InvalidTokenException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token invalide ou expiré");
         }
     }
 

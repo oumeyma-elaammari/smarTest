@@ -5,7 +5,8 @@ namespace smartest_desktop.Tests;
 
 internal static class TestDbFactory
 {
-    public static LocalDbContext CreateInMemory(string? name = null)
+    /// <summary>Contexte EF Core InMemory isolé (nom de base unique par défaut).</summary>
+    public static LocalDbContext CreateInMemoryContext(string? name = null)
     {
         var opt = new DbContextOptionsBuilder<LocalDbContext>()
             .UseInMemoryDatabase(name ?? Guid.NewGuid().ToString())
@@ -14,4 +15,7 @@ internal static class TestDbFactory
         db.Database.EnsureCreated();
         return db;
     }
+
+    /// <summary>Alias historique.</summary>
+    public static LocalDbContext CreateInMemory(string? name = null) => CreateInMemoryContext(name);
 }

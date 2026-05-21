@@ -23,7 +23,7 @@ public class QuizGenerationViewModelTests
     [Fact]
     public void Etat_initial_cours_vide_pas_erreur()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var groq = new Mock<IGroqGenerationClient>(MockBehavior.Strict);
         var vm = new QuizGenerationViewModel(db, groq.Object);
 
@@ -35,7 +35,7 @@ public class QuizGenerationViewModelTests
     [Fact]
     public async Task Generation_declenchee_parse_questions_et_succes()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var groq = new Mock<IGroqGenerationClient>();
         groq.Setup(x => x.GenererAvecRetryAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<double>()))
             .ReturnsAsync(JsonTroisQuestions);
@@ -65,7 +65,7 @@ public class QuizGenerationViewModelTests
     [Fact]
     public async Task Erreur_reseau_Groq_remplit_ErrorMessage()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var groq = new Mock<IGroqGenerationClient>();
         groq.Setup(x => x.GenererAvecRetryAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<double>()))
             .ThrowsAsync(new HttpRequestException("timeout"));
@@ -89,7 +89,7 @@ public class QuizGenerationViewModelTests
     [Fact]
     public async Task Annulation_utilisateur_arrete_sans_erreur()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var tcs = new TaskCompletionSource<bool>();
         var groq = new Mock<IGroqGenerationClient>();
         groq.Setup(x => x.GenererAvecRetryAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<double>()))
@@ -128,7 +128,7 @@ public class QuizGenerationViewModelTests
     [Fact]
     public async Task Groq_json_vide_leve_message_erreur()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var groq = new Mock<IGroqGenerationClient>();
         groq.Setup(x => x.GenererAvecRetryAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<double>()))
             .ReturnsAsync("[]");

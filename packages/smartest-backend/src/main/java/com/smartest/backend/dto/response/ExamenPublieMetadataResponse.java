@@ -29,4 +29,7 @@ public class ExamenPublieMetadataResponse {
     private Double bareme;
     private Boolean demarrageAutomatique;
     private String professeurNom;
+    /** Renseigné pour l'étudiant lorsque la note est publiée (validation + synchro selon config). */
+    private Double noteFinaleAffichee;
+    private Double baremeNoteFinale;
 }
