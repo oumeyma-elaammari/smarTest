@@ -59,7 +59,7 @@ class UserDetailsServiceImplTest {
     void loadUserByUsername_Etudiant() {
         when(professeurRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma"))
             .thenReturn(Optional.empty());
-        when(etudiantRepository.findByEmail("nissrine@ump.ac.ma"))
+        when(etudiantRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma"))
             .thenReturn(Optional.of(etudiant));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername("nissrine@ump.ac.ma");
@@ -75,7 +75,7 @@ class UserDetailsServiceImplTest {
     void loadUserByUsername_UserNotFound() {
         when(professeurRepository.findByEmailIgnoreCase("inconnu@mail.com"))
             .thenReturn(Optional.empty());
-        when(etudiantRepository.findByEmail("inconnu@mail.com"))
+        when(etudiantRepository.findByEmailIgnoreCase("inconnu@mail.com"))
             .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
@@ -91,6 +91,6 @@ class UserDetailsServiceImplTest {
 
         userDetailsService.loadUserByUsername("ikram@ensa.ma");
 
-        verify(etudiantRepository, never()).findByEmail(any());
+        verify(etudiantRepository, never()).findByEmailIgnoreCase(any());
     }
 }

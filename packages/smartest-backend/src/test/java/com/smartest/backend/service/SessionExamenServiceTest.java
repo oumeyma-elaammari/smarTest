@@ -1,7 +1,14 @@
-/*package com.smartest.backend.service;
+package com.smartest.backend.service;
+
 import com.smartest.backend.dto.request.SessionExamenRequest;
 import com.smartest.backend.dto.response.SessionExamenResponse;
+import com.smartest.backend.entity.ExamenPublie;
+import com.smartest.backend.entity.Resultat;
 import com.smartest.backend.entity.SessionExamen;
+import com.smartest.backend.exception.InvalidSessionStateException;
+import com.smartest.backend.exception.SessionNotFoundException;
+import com.smartest.backend.repository.ExamenPublieRepository;
+import com.smartest.backend.repository.ResultatRepository;
 import com.smartest.backend.repository.SessionExamenRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,366 +21,176 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SessionExamenServiceTest {
 
-    @Mock private SessionExamenRepository sessionExamenRepository;
-    @Mock private ExamenRepository examenRepository;
+    @Mock
+    private SessionExamenRepository sessionExamenRepository;
+    @Mock
+    private ExamenPublieRepository examenPublieRepository;
+    @Mock
+    private ResultatRepository resultatRepository;
 
     @InjectMocks
     private SessionExamenService sessionExamenService;
 
-    private Examen examen;
+    private ExamenPublie examenPublie;
     private SessionExamen session;
-    private SessionExamenRequest request;
-
-    private final LocalDateTime dateDebut = LocalDateTime.now().plusHours(1);
-    private final LocalDateTime dateFin   = LocalDateTime.now().plusHours(3);
+    private LocalDateTime dateDebut;
+    private LocalDateTime dateFin;
 
     @BeforeEach
     void setUp() {
-        examen = new Examen();
-        examen.setId(1L);
-        examen.setTitre("Examen de Java");
-        examen.setDuree(120);
-
+        dateDebut = LocalDateTime.now().minusHours(1);
+        dateFin = LocalDateTime.now().plusHours(3);
+        examenPublie = new ExamenPublie();
+        examenPublie.setId(10L);
+        examenPublie.setTitre("Examen");
+        examenPublie.setDuree(60);
         session = new SessionExamen();
         session.setId(1L);
         session.setDateDebut(dateDebut);
         session.setDateFin(dateFin);
         session.setStatut("PLANIFIE");
-        session.setExamen(examen);
-
-        request = new SessionExamenRequest();
-        request.setExamenId(1L);
-        request.setDateDebut(dateDebut);
-        request.setDateFin(dateFin);
-        request.setStatut("PLANIFIE");
+        session.setExamenPublie(examenPublie);
     }
 
-    // ─── getAllSessions ───────────────────────────────────────────────────────
-
     @Test
-    void getAllSessions_returnsAllSessions() {
+    void getAllSessions_repositoryReturnsOne_returnsOneDto() {
+        // GIVEN
         when(sessionExamenRepository.findAll()).thenReturn(List.of(session));
 
+        // WHEN
         List<SessionExamenResponse> result = sessionExamenService.getAllSessions();
 
+        // THEN
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(0).getStatut()).isEqualTo("PLANIFIE");
-        assertThat(result.get(0).getExamenTitre()).isEqualTo("Examen de Java");
     }
 
     @Test
-    void getAllSessions_returnsEmptyList_whenNoSessions() {
-        when(sessionExamenRepository.findAll()).thenReturn(List.of());
-
-        List<SessionExamenResponse> result = sessionExamenService.getAllSessions();
-
-        assertThat(result).isEmpty();
-    }
-
-    // ─── getSessionById ───────────────────────────────────────────────────────
-
-    @Test
-    void getSessionById_returnsSession_whenExists() {
+    void getSessionById_exists_returnsDto() {
+        // GIVEN
         when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
 
-        SessionExamenResponse result = sessionExamenService.getSessionById(1L);
+        // WHEN
+        SessionExamenResponse r = sessionExamenService.getSessionById(1L);
 
-        assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getExamenId()).isEqualTo(1L);
-        assertThat(result.getDureeExamen()).isEqualTo(120);
+        // THEN
+        assertThat(r.getId()).isEqualTo(1L);
+        assertThat(r.getExamenTitre()).isEqualTo("Examen");
     }
 
     @Test
-    void getSessionById_throwsException_whenNotFound() {
+    void getSessionById_missing_throwsSessionNotFoundException() {
+        // GIVEN
         when(sessionExamenRepository.findById(99L)).thenReturn(Optional.empty());
 
+        // WHEN / THEN
         assertThatThrownBy(() -> sessionExamenService.getSessionById(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
-
-    // ─── getSessionsByExamen ──────────────────────────────────────────────────
-
-    @Test
-    void getSessionsByExamen_returnsSessions_whenExamenExists() {
-        when(examenRepository.existsById(1L)).thenReturn(true);
-        when(sessionExamenRepository.findByExamenId(1L)).thenReturn(List.of(session));
-
-        List<SessionExamenResponse> result = sessionExamenService.getSessionsByExamen(1L);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getExamenId()).isEqualTo(1L);
+                .isInstanceOf(SessionNotFoundException.class);
     }
 
     @Test
-    void getSessionsByExamen_throwsException_whenExamenNotFound() {
-        when(examenRepository.existsById(99L)).thenReturn(false);
+    void getSessionsByExamenPublie_examenMissing_throwsIllegalArgumentException() {
+        // GIVEN
+        when(examenPublieRepository.existsById(10L)).thenReturn(false);
 
-        assertThatThrownBy(() -> sessionExamenService.getSessionsByExamen(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
-
-    // ─── getSessionsEnCours ───────────────────────────────────────────────────
-
-    @Test
-    void getSessionsEnCours_returnsSessions() {
-        session.setStatut("EN_COURS");
-        when(sessionExamenRepository.findSessionsEnCours()).thenReturn(List.of(session));
-
-        List<SessionExamenResponse> result = sessionExamenService.getSessionsEnCours();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getStatut()).isEqualTo("EN_COURS");
+        // WHEN / THEN
+        assertThatThrownBy(() -> sessionExamenService.getSessionsByExamenPublie(10L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Examen publié introuvable");
     }
 
     @Test
-    void getSessionsEnCours_returnsEmptyList_whenNone() {
-        when(sessionExamenRepository.findSessionsEnCours()).thenReturn(List.of());
-
-        assertThat(sessionExamenService.getSessionsEnCours()).isEmpty();
-    }
-
-    // ─── getSessionsAFaire ────────────────────────────────────────────────────
-
-    @Test
-    void getSessionsAFaire_returnsFutureSessions() {
-        when(sessionExamenRepository.findSessionsAFaire(any(LocalDateTime.class)))
-                .thenReturn(List.of(session));
-
-        List<SessionExamenResponse> result = sessionExamenService.getSessionsAFaire();
-
-        assertThat(result).hasSize(1);
-    }
-
-    @Test
-    void getSessionsAFaire_returnsEmptyList_whenNone() {
-        when(sessionExamenRepository.findSessionsAFaire(any(LocalDateTime.class)))
-                .thenReturn(List.of());
-
-        assertThat(sessionExamenService.getSessionsAFaire()).isEmpty();
-    }
-
-    // ─── createSession ────────────────────────────────────────────────────────
-
-    @Test
-    void createSession_createsSession_withStatutFromRequest() {
-        when(examenRepository.findById(1L)).thenReturn(Optional.of(examen));
+    void createSession_validRequest_savesAndReturns() {
+        // GIVEN
+        SessionExamenRequest req = new SessionExamenRequest(dateDebut, dateFin, "PLANIFIE", 10L);
+        when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(examenPublie));
         when(sessionExamenRepository.save(any(SessionExamen.class))).thenAnswer(inv -> {
             SessionExamen s = inv.getArgument(0);
-            s.setId(2L);
+            s.setId(5L);
             return s;
         });
 
-        SessionExamenResponse result = sessionExamenService.createSession(request);
+        // WHEN
+        SessionExamenResponse r = sessionExamenService.createSession(req);
 
-        assertThat(result.getId()).isEqualTo(2L);
-        assertThat(result.getStatut()).isEqualTo("PLANIFIE");
-        assertThat(result.getExamenId()).isEqualTo(1L);
+        // THEN
+        assertThat(r.getId()).isEqualTo(5L);
+        verify(sessionExamenRepository).save(any(SessionExamen.class));
     }
 
     @Test
-    void createSession_setsStatutPlanifie_whenStatutIsNull() {
-        request.setStatut(null);
-        when(examenRepository.findById(1L)).thenReturn(Optional.of(examen));
-        when(sessionExamenRepository.save(any(SessionExamen.class))).thenAnswer(inv -> inv.getArgument(0));
+    void createSession_dateDebutAfterFin_throwsIllegalArgumentException() {
+        // GIVEN
+        SessionExamenRequest req = new SessionExamenRequest(dateFin, dateDebut, "PLANIFIE", 10L);
+        when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(examenPublie));
 
-        SessionExamenResponse result = sessionExamenService.createSession(request);
-
-        assertThat(result.getStatut()).isEqualTo("PLANIFIE");
+        // WHEN / THEN
+        assertThatThrownBy(() -> sessionExamenService.createSession(req))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Dates invalides");
     }
 
     @Test
-    void createSession_throwsException_whenDateDebutAfterDateFin() {
-        request.setDateDebut(dateFin);
-        request.setDateFin(dateDebut);
-        when(examenRepository.findById(1L)).thenReturn(Optional.of(examen));
-
-        assertThatThrownBy(() -> sessionExamenService.createSession(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("date de début");
-    }
-
-    @Test
-    void createSession_throwsException_whenExamenNotFound() {
-        when(examenRepository.findById(99L)).thenReturn(Optional.empty());
-        request.setExamenId(99L);
-
-        assertThatThrownBy(() -> sessionExamenService.createSession(request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
-
-    // ─── updateSession ────────────────────────────────────────────────────────
-
-    @Test
-    void updateSession_updatesSession_successfully() {
-        request.setStatut("EN_COURS");
-        when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
-        when(sessionExamenRepository.save(any(SessionExamen.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        SessionExamenResponse result = sessionExamenService.updateSession(1L, request);
-
-        assertThat(result.getStatut()).isEqualTo("EN_COURS");
-    }
-
-    @Test
-    void updateSession_throwsException_whenDateDebutAfterDateFin() {
-        request.setDateDebut(dateFin);
-        request.setDateFin(dateDebut);
-        when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
-
-        assertThatThrownBy(() -> sessionExamenService.updateSession(1L, request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("date de début");
-    }
-
-    @Test
-    void updateSession_throwsException_whenSessionNotFound() {
-        when(sessionExamenRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> sessionExamenService.updateSession(99L, request))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
-
-    @Test
-    void updateSession_changesExamen_whenExamenIdDifferent() {
-        Examen newExamen = new Examen();
-        newExamen.setId(2L);
-        newExamen.setTitre("Examen de Spring");
-        newExamen.setDuree(90);
-
-        request.setExamenId(2L);
-        when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
-        when(examenRepository.findById(2L)).thenReturn(Optional.of(newExamen));
-        when(sessionExamenRepository.save(any(SessionExamen.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        SessionExamenResponse result = sessionExamenService.updateSession(1L, request);
-
-        assertThat(result.getExamenId()).isEqualTo(2L);
-        assertThat(result.getExamenTitre()).isEqualTo("Examen de Spring");
-    }
-
-    // ─── demarrerSession ──────────────────────────────────────────────────────
-
-    @Test
-    void demarrerSession_setsStatutEnCours_whenDateDebutPassed() {
-        session.setDateDebut(LocalDateTime.now().minusHours(1));
-        when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
-        when(sessionExamenRepository.save(any(SessionExamen.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        SessionExamenResponse result = sessionExamenService.demarrerSession(1L);
-
-        assertThat(result.getStatut()).isEqualTo("EN_COURS");
-    }
-
-    @Test
-    void demarrerSession_throwsException_whenSessionNotStartedYet() {
+    void demarrerSession_futureStart_throwsInvalidSessionStateException() {
+        // GIVEN
         session.setDateDebut(LocalDateTime.now().plusHours(2));
+        session.setDateFin(LocalDateTime.now().plusHours(4));
         when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
 
+        // WHEN / THEN
         assertThatThrownBy(() -> sessionExamenService.demarrerSession(1L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(InvalidSessionStateException.class)
                 .hasMessageContaining("pas encore commencé");
     }
 
     @Test
-    void demarrerSession_throwsException_whenSessionNotFound() {
-        when(sessionExamenRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> sessionExamenService.demarrerSession(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
-
-    // ─── terminerSession ──────────────────────────────────────────────────────
-
-    @Test
     void terminerSession_setsStatutTermine() {
+        // GIVEN
         when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
         when(sessionExamenRepository.save(any(SessionExamen.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        SessionExamenResponse result = sessionExamenService.terminerSession(1L);
+        // WHEN
+        SessionExamenResponse r = sessionExamenService.terminerSession(1L);
 
-        assertThat(result.getStatut()).isEqualTo("TERMINE");
+        // THEN
+        assertThat(r.getStatut()).isEqualTo("TERMINE");
     }
 
     @Test
-    void terminerSession_throwsException_whenSessionNotFound() {
-        when(sessionExamenRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> sessionExamenService.terminerSession(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
-
-    // ─── annulerSession ───────────────────────────────────────────────────────
-
-    @Test
-    void annulerSession_setsStatutAnnule() {
+    void corrigerExamen_sessionNotTerminee_throwsInvalidSessionStateException() {
+        // GIVEN
         when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
-        when(sessionExamenRepository.save(any(SessionExamen.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        SessionExamenResponse result = sessionExamenService.annulerSession(1L);
-
-        assertThat(result.getStatut()).isEqualTo("ANNULE");
+        // WHEN / THEN
+        assertThatThrownBy(() -> sessionExamenService.corrigerExamen(1L))
+                .isInstanceOf(InvalidSessionStateException.class);
     }
 
     @Test
-    void annulerSession_throwsException_whenSessionNotFound() {
-        when(sessionExamenRepository.findById(99L)).thenReturn(Optional.empty());
+    void corrigerExamen_terminéeAvecResultats_retournePourcentage() {
+        // GIVEN
+        session.setStatut("TERMINE");
+        Resultat ok = new Resultat();
+        ok.setCorrecte(true);
+        Resultat ko = new Resultat();
+        ko.setCorrecte(false);
+        when(sessionExamenRepository.findById(1L)).thenReturn(Optional.of(session));
+        when(resultatRepository.findBySessionExamenId(1L)).thenReturn(List.of(ok, ko));
 
-        assertThatThrownBy(() -> sessionExamenService.annulerSession(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-    }
+        // WHEN
+        double score = sessionExamenService.corrigerExamen(1L);
 
-    // ─── deleteSession ────────────────────────────────────────────────────────
-
-    @Test
-    void deleteSession_deletesSession_whenExists() {
-        when(sessionExamenRepository.existsById(1L)).thenReturn(true);
-
-        sessionExamenService.deleteSession(1L);
-
-        verify(sessionExamenRepository, times(1)).deleteById(1L);
-    }
-
-    @Test
-    void deleteSession_throwsException_whenNotFound() {
-        when(sessionExamenRepository.existsById(99L)).thenReturn(false);
-
-        assertThatThrownBy(() -> sessionExamenService.deleteSession(99L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("99");
-
-        verify(sessionExamenRepository, never()).deleteById(any());
-    }
-
-    // ─── isExamenEnCours ──────────────────────────────────────────────────────
-
-    @Test
-    void isExamenEnCours_returnsTrue_whenExamenHasActiveSession() {
-        when(sessionExamenRepository.isExamenEnCours(1L)).thenReturn(true);
-
-        assertThat(sessionExamenService.isExamenEnCours(1L)).isTrue();
-    }
-
-    @Test
-    void isExamenEnCours_returnsFalse_whenNoActiveSession() {
-        when(sessionExamenRepository.isExamenEnCours(1L)).thenReturn(false);
-
-        assertThat(sessionExamenService.isExamenEnCours(1L)).isFalse();
+        // THEN
+        assertThat(score).isEqualTo(50.0);
     }
 }
-
- */

@@ -45,7 +45,7 @@ namespace smartest_desktop.ViewModels
     public class ExamenGenerationViewModel : BaseViewModel
     {
         private readonly LocalDbContext _db;
-        private GroqService? _groq;
+        private readonly IGroqGenerationClient? _groqClientOverride;
         private CancellationTokenSource? _cts;
 
         // ── Fichier importé ───────────────────────────────────────────────────
@@ -222,23 +222,23 @@ namespace smartest_desktop.ViewModels
 
         // ── Commandes ─────────────────────────────────────────────────────────
 
-        public ICommand GenererCommand { get; }
-        public ICommand AnnulerGenerationCommand { get; }
-        public ICommand AnnulerCommand { get; }
-        public ICommand SetDifficulteCommand { get; }
-        public ICommand ImporterFichierCommand { get; }
-        public ICommand EffacerContenuCommand { get; }
-        public ICommand IncrQCMCommand { get; }
-        public ICommand DecrQCMCommand { get; }
-        public ICommand IncrCheckboxCommand { get; }
-        public ICommand DecrCheckboxCommand { get; }
-        public ICommand IncrVFCommand { get; }
-        public ICommand DecrVFCommand { get; }
-        public ICommand IncrRedactionCommand { get; }
-        public ICommand DecrRedactionCommand { get; }
-        public ICommand RetourDashboardCommand { get; }
-        public ICommand LogoutCommand { get; }
-        public ICommand SupprimerFichierImporteCommand { get; }
+        public ICommand GenererCommand { get; private set; } = null!;
+        public ICommand AnnulerGenerationCommand { get; private set; } = null!;
+        public ICommand AnnulerCommand { get; private set; } = null!;
+        public ICommand SetDifficulteCommand { get; private set; } = null!;
+        public ICommand ImporterFichierCommand { get; private set; } = null!;
+        public ICommand EffacerContenuCommand { get; private set; } = null!;
+        public ICommand IncrQCMCommand { get; private set; } = null!;
+        public ICommand DecrQCMCommand { get; private set; } = null!;
+        public ICommand IncrCheckboxCommand { get; private set; } = null!;
+        public ICommand DecrCheckboxCommand { get; private set; } = null!;
+        public ICommand IncrVFCommand { get; private set; } = null!;
+        public ICommand DecrVFCommand { get; private set; } = null!;
+        public ICommand IncrRedactionCommand { get; private set; } = null!;
+        public ICommand DecrRedactionCommand { get; private set; } = null!;
+        public ICommand RetourDashboardCommand { get; private set; } = null!;
+        public ICommand LogoutCommand { get; private set; } = null!;
+        public ICommand SupprimerFichierImporteCommand { get; private set; } = null!;
 
         // ── Événements de navigation ──────────────────────────────────────────
 
@@ -252,7 +252,22 @@ namespace smartest_desktop.ViewModels
         public ExamenGenerationViewModel()
         {
             _db = App.LocalDb;
+            _groqClientOverride = null;
+            WireCommands();
+        }
 
+        /// <summary>Pour les tests : base injectée + client Groq simulé (sans dialogue de clé).</summary>
+        public ExamenGenerationViewModel(LocalDbContext db, IGroqGenerationClient groqClientOverride)
+        {
+            ArgumentNullException.ThrowIfNull(db);
+            ArgumentNullException.ThrowIfNull(groqClientOverride);
+            _db = db;
+            _groqClientOverride = groqClientOverride;
+            WireCommands();
+        }
+
+        private void WireCommands()
+        {
             SetDifficulteCommand = new RelayCommand(p =>
             {
                 if (p is string d) Difficulte = d;
@@ -556,20 +571,29 @@ namespace smartest_desktop.ViewModels
             _cts = new CancellationTokenSource();
             var ct = _cts.Token;
 
-            // Vérifier / demander la clé API avant de démarrer
-            string? apiKey = GroqKeyService.LireCle(App.LocalDb);
-            if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+            IGroqGenerationClient groqClient;
+            if (_groqClientOverride != null)
             {
-                var dialog = new GroqKeySetupWindow();
-                if (dialog.ShowDialog() != true) return;
-                apiKey = GroqKeyService.LireCle(App.LocalDb);
-                if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+                groqClient = _groqClientOverride;
+            }
+            else
+            {
+                // Vérifier / demander la clé API avant de démarrer
+                string? apiKey = GroqKeyService.LireCle(App.LocalDb);
+                if (!GroqKeyService.CleEstValide(apiKey ?? ""))
+                {
+                    var dialog = new GroqKeySetupWindow();
+                    if (dialog.ShowDialog() != true) return;
+                    apiKey = GroqKeyService.LireCle(App.LocalDb);
+                    if (!GroqKeyService.CleEstValide(apiKey ?? "")) return;
+                }
+
+                groqClient = new GroqService(apiKey!);
             }
 
             IsGenerating = true;
             ErrorMessage = string.Empty;
             StatusMessage = "🤖 Connexion à Groq...";
-            _groq = new GroqService(apiKey!);
 
             try
             {
@@ -616,7 +640,7 @@ namespace smartest_desktop.ViewModels
 
                     StatusMessage = $"🧠 Génération de {totalQuestions} questions ({Difficulte})...";
 
-                    var (texte, duree) = await _groq.GenererAsync(prompt, ct, GroqService.TemperaturePourDifficulte(Difficulte));
+                    var (texte, duree) = await groqClient.GenererAsync(prompt, ct, GroqService.TemperaturePourDifficulte(Difficulte));
 
                     if (string.IsNullOrWhiteSpace(texte))
                         throw new Exception("Groq n'a retourné aucun texte.");
@@ -681,7 +705,7 @@ namespace smartest_desktop.ViewModels
                             segmentsContenu[lotIdx], qcmLot, vfLot, cbkLot, redLot,
                             Difficulte, toutesQuestionsExamen.Count + 1, toutesEnonces);
 
-                        string texte = await _groq!.GenererAvecRetryAsync(prompt, ct, GroqService.TemperaturePourDifficulte(Difficulte));
+                        string texte = await groqClient.GenererAvecRetryAsync(prompt, ct, GroqService.TemperaturePourDifficulte(Difficulte));
 
                         var questionsLot = ParseQuestions(texte);
                         foreach (var q in questionsLot) q.Difficulte = Difficulte;

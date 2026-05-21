@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace smartest_desktop.Services
 {
+    public enum QuizListSort
+    {
+        DateCreation,
+        Titre,
+        NombreQuestions
+    }
+
     public class LocalQuizService
     {
         private readonly LocalDbContext _db;
@@ -51,6 +58,56 @@ namespace smartest_desktop.Services
             InvokeDbAsync(() => _db.Quiz
                 .OrderByDescending(q => q.DateCreation)
                 .ToListAsync(cancellationToken), "Liste des quiz");
+
+        /// <summary>Recherche texte (titre, cours source, description), tri et pagination.</summary>
+        public Task<List<QuizLocal>> QueryQuizzesAsync(
+            string? rechercheTexte,
+            QuizListSort tri,
+            bool ordreDescendant,
+            int skip,
+            int take,
+            CancellationToken cancellationToken = default) =>
+            InvokeDbAsync(async () =>
+            {
+                var query = _db.Quiz.AsQueryable();
+                if (!string.IsNullOrWhiteSpace(rechercheTexte))
+                {
+                    string t = rechercheTexte.Trim();
+                    query = query.Where(q =>
+                        (q.Titre != null && q.Titre.Contains(t))
+                        || (q.CoursSourceTitre != null && q.CoursSourceTitre.Contains(t))
+                        || (q.Description != null && q.Description.Contains(t)));
+                }
+
+                query = tri switch
+                {
+                    QuizListSort.Titre => ordreDescendant
+                        ? query.OrderByDescending(q => q.Titre)
+                        : query.OrderBy(q => q.Titre),
+                    QuizListSort.NombreQuestions => ordreDescendant
+                        ? query.OrderByDescending(q => q.NombreQuestions)
+                        : query.OrderBy(q => q.NombreQuestions),
+                    _ => ordreDescendant
+                        ? query.OrderByDescending(q => q.DateCreation)
+                        : query.OrderBy(q => q.DateCreation)
+                };
+
+                return await query.Skip(Math.Max(0, skip)).Take(Math.Max(0, take)).ToListAsync(cancellationToken);
+            }, "Recherche / pagination des quiz");
+
+        /// <summary>Réinitialise les identifiants serveur lorsque le quiz n’existe plus côté API.</summary>
+        public Task EffacerIdentifiantsServeurAsync(int quizLocalId, CancellationToken cancellationToken = default) =>
+            InvokeDbAsync(async () =>
+            {
+                var quiz = await _db.Quiz.FindAsync(new object[] { quizLocalId }, cancellationToken);
+                if (quiz == null)
+                    return;
+                quiz.BackendQuizId = null;
+                quiz.BackendQuizIdPublicationWeb = null;
+                quiz.BackendQuizIdQr = null;
+                quiz.QrLiveSessionToken = string.Empty;
+                await _db.SaveChangesAsync(cancellationToken);
+            }, "Effacement des liens serveur");
 
         public Task<QuizLocal?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
             InvokeDbAsync(() => _db.Quiz

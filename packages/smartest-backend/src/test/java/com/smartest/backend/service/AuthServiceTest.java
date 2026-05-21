@@ -335,7 +335,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Connexion réussie")
         void login_Professeur_Success() {
-            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
+            when(professeurRepository.findByEmailIgnoreCase("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(true);
             when(jwtUtil.generateToken("ikram@ensa.ma", "PROFESSEUR", 101L)).thenReturn("jwt-token-prof");
 
@@ -352,7 +352,7 @@ class AuthServiceTest {
         @DisplayName("❌ Email non vérifié")
         void login_Professeur_EmailNotVerified() {
             professeur.setEmailVerifie(false);
-            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
+            when(professeurRepository.findByEmailIgnoreCase("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
 
             assertThatThrownBy(() -> authService.login(loginProfRequest))
                     .isInstanceOf(EmailNotVerifiedException.class);
@@ -361,7 +361,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Mauvais mot de passe")
         void login_Professeur_WrongPassword() {
-            when(professeurRepository.findByEmail("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
+            when(professeurRepository.findByEmailIgnoreCase("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(loginProfRequest))
@@ -371,8 +371,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Compte introuvable")
         void login_Professeur_AccountNotFound() {
-            when(professeurRepository.findByEmail("inconnu@ensa.ma")).thenReturn(Optional.empty());
-            when(etudiantRepository.findByEmail("inconnu@ensa.ma")).thenReturn(Optional.empty());
+            when(professeurRepository.findByEmailIgnoreCase("inconnu@ensa.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmailIgnoreCase("inconnu@ensa.ma")).thenReturn(Optional.empty());
 
             LoginRequest req = new LoginRequest();
             req.setEmail("inconnu@ensa.ma");
@@ -393,8 +393,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("✅ Connexion réussie")
         void login_Etudiant_Success() {
-            when(professeurRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
-            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
+            when(professeurRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(true);
             when(jwtUtil.generateToken("nissrine@ump.ac.ma", "ETUDIANT", 202L)).thenReturn("jwt-token-etudiant");
 
@@ -411,8 +411,8 @@ class AuthServiceTest {
         @DisplayName("❌ Email non vérifié")
         void login_Etudiant_EmailNotVerified() {
             etudiant.setEmailVerifie(false);
-            when(professeurRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
-            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
+            when(professeurRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
 
             assertThatThrownBy(() -> authService.login(loginEtudiantRequest))
                     .isInstanceOf(EmailNotVerifiedException.class);
@@ -421,8 +421,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Mauvais mot de passe")
         void login_Etudiant_WrongPassword() {
-            when(professeurRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
-            when(etudiantRepository.findByEmail("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
+            when(professeurRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmailIgnoreCase("nissrine@ump.ac.ma")).thenReturn(Optional.of(etudiant));
             when(passwordEncoder.matches("Ensa2025@", "hashedPassword")).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(loginEtudiantRequest))
@@ -432,8 +432,8 @@ class AuthServiceTest {
         @Test
         @DisplayName("❌ Compte introuvable")
         void login_Etudiant_AccountNotFound() {
-            when(professeurRepository.findByEmail("inconnu@ump.ac.ma")).thenReturn(Optional.empty());
-            when(etudiantRepository.findByEmail("inconnu@ump.ac.ma")).thenReturn(Optional.empty());
+            when(professeurRepository.findByEmailIgnoreCase("inconnu@ump.ac.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmailIgnoreCase("inconnu@ump.ac.ma")).thenReturn(Optional.empty());
 
             LoginRequest req = new LoginRequest();
             req.setEmail("inconnu@ump.ac.ma");
@@ -713,6 +713,53 @@ class AuthServiceTest {
 
             assertThat(professeur.getResetPasswordToken()).isNull();
             assertThat(professeur.getResetPasswordExpiry()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Refresh access token")
+    class RefreshAccessTokenTests {
+
+        @Test
+        @DisplayName("✅ Refresh professeur")
+        void refreshAccessToken_professeur_returnsNewToken() {
+            // GIVEN
+            when(jwtUtil.parseForRefresh("old-token"))
+                    .thenReturn(Optional.of(new JwtUtil.ParsedToken("ikram@ensa.ma", "PROFESSEUR", 101L)));
+            when(professeurRepository.findByEmailIgnoreCase("ikram@ensa.ma")).thenReturn(Optional.of(professeur));
+            when(jwtUtil.generateToken("ikram@ensa.ma", "PROFESSEUR", 101L)).thenReturn("fresh-jwt");
+
+            // WHEN
+            AuthResponse r = authService.refreshAccessToken("old-token");
+
+            // THEN
+            assertThat(r.getToken()).isEqualTo("fresh-jwt");
+            assertThat(r.getRole()).isEqualTo("PROFESSEUR");
+        }
+
+        @Test
+        @DisplayName("❌ Parse vide → InvalidTokenException")
+        void refreshAccessToken_invalidParse_throws() {
+            // GIVEN
+            when(jwtUtil.parseForRefresh("bad")).thenReturn(Optional.empty());
+
+            // WHEN / THEN
+            assertThatThrownBy(() -> authService.refreshAccessToken("bad"))
+                    .isInstanceOf(InvalidTokenException.class);
+        }
+
+        @Test
+        @DisplayName("❌ Utilisateur inconnu → InvalidTokenException")
+        void refreshAccessToken_unknownUser_throws() {
+            // GIVEN
+            when(jwtUtil.parseForRefresh("tok"))
+                    .thenReturn(Optional.of(new JwtUtil.ParsedToken("ghost@test.ma", "ETUDIANT", 1L)));
+            when(professeurRepository.findByEmailIgnoreCase("ghost@test.ma")).thenReturn(Optional.empty());
+            when(etudiantRepository.findByEmailIgnoreCase("ghost@test.ma")).thenReturn(Optional.empty());
+
+            // WHEN / THEN
+            assertThatThrownBy(() -> authService.refreshAccessToken("tok"))
+                    .isInstanceOf(InvalidTokenException.class);
         }
     }
 }

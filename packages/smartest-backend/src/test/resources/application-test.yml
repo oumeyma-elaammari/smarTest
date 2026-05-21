@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:smartest_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+
+  mail:
+    host: localhost
+    port: 2525
+
+server:
+  port: 0
+
+app:
+  jwt:
+    secret: TestJwtSecretKeyForIntegrationTestsOnly_MustBeAtLeast256BitsLong_0123456789ABCDEF
+    expiration: 86400000
+  flyway:
+    repair-before-migrate: false
+  web:
+    dashboard-url: http://localhost:5173/dashboard
+
+groq:
+  api-key: ""
+
+examen:
+  resultat:
+    publier-note-immediatement-apres-validation: true

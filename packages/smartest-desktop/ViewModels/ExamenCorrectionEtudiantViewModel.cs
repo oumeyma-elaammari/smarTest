@@ -48,7 +48,7 @@ namespace smartest_desktop.ViewModels
 
     public sealed class ExamenCorrectionEtudiantViewModel : BaseViewModel
     {
-        private readonly ExamenWebPublicationApiService _api = new();
+        private readonly ExamenWebPublicationApiService _api;
         private readonly long _examenId;
         private readonly long _etudiantId;
         private readonly string _token;
@@ -94,8 +94,14 @@ namespace smartest_desktop.ViewModels
 
         public event Action? DemandeFermetureSucces;
 
-        public ExamenCorrectionEtudiantViewModel(long examenId, string titreExamen, long etudiantId, string bearerToken)
+        public ExamenCorrectionEtudiantViewModel(
+            long examenId,
+            string titreExamen,
+            long etudiantId,
+            string bearerToken,
+            ExamenWebPublicationApiService? api = null)
         {
+            _api = api ?? new ExamenWebPublicationApiService();
             _examenId = examenId;
             _etudiantId = etudiantId;
             _token = bearerToken;

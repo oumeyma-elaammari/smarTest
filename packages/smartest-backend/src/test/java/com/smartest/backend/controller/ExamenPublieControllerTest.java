@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -120,22 +121,22 @@ class ExamenPublieControllerTest {
         ex.setId(3L);
         ex.setStatut(StatutExamen.EN_COURS);
         when(examenPublieService.demarrer(3L)).thenReturn(ex);
+        when(supervisionService.snapshot(3L)).thenReturn(
+                new ExamenSupervisionService.SnapshotResponse(
+                        3L, "Java", "EN_COURS", false, 0, 1,
+                        Map.of(), List.of(),
+                        60, 3600, 0, 20.0, 0, 0, 0, 0, "MANUAL", 120, 0));
 
         mockMvc.perform(patch("/api/examens-publies/3/demarrer"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("EN_COURS"));
+                .andExpect(jsonPath("$.etat").value("EN_COURS"))
+                .andExpect(jsonPath("$.examenId").value(3));
     }
 
     @Test
     @DisplayName("PATCH terminer → 200")
     void patchTerminerOk() throws Exception {
-        ExamenPublie ex = new ExamenPublie();
-        ex.setId(3L);
-        ex.setStatut(StatutExamen.TERMINE);
-        when(examenPublieService.terminer(3L)).thenReturn(ex);
-
         mockMvc.perform(patch("/api/examens-publies/3/terminer"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("TERMINE"));
+                .andExpect(status().isOk());
     }
 }

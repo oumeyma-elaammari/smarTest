@@ -12,7 +12,11 @@ export function readAccessToken(): string | null {
 }
 
 export function writeAccessToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token)
+    try {
+        localStorage.setItem(TOKEN_KEY, token)
+    } catch {
+        /* quota / navigation privée : l’état mémoire (Zustand) peut continuer */
+    }
 }
 
 export function clearAuthStorage(): void {

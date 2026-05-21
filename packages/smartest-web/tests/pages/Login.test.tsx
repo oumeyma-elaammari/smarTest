@@ -4,8 +4,8 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Login from '../../src/pages/Login'
-import { API_BASE } from '../msw/handlers'
-import { server } from '../msw/server'
+import { API_BASE } from '../../src/mocks/handlers'
+import { server } from '../../src/mocks/server'
 
 const navigateMock = vi.fn()
 

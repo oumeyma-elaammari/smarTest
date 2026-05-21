@@ -9,7 +9,7 @@ public class LocalCoursServiceTests
     [Fact]
     public void GetAll_retourne_cours_ordonnes_par_date()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         db.Cours.Add(new CoursLocal { Titre = "A", Contenu = "c", DateImport = DateTime.UtcNow.AddDays(-1) });
         db.Cours.Add(new CoursLocal { Titre = "B", Contenu = "c", DateImport = DateTime.UtcNow });
         db.SaveChanges();
@@ -24,7 +24,7 @@ public class LocalCoursServiceTests
     [Fact]
     public void Ajouter_insere_et_retourne_id()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var svc = new LocalCoursService(db);
 
         var c = svc.Ajouter("Titre", "Contenu long");
@@ -36,7 +36,7 @@ public class LocalCoursServiceTests
     [Fact]
     public void Modifier_met_a_jour_titre()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         db.Cours.Add(new CoursLocal { Titre = "Old", Contenu = "x" });
         db.SaveChanges();
         var svc = new LocalCoursService(db);
@@ -49,7 +49,7 @@ public class LocalCoursServiceTests
     [Fact]
     public void Supprimer_retire_le_cours()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         db.Cours.Add(new CoursLocal { Titre = "X", Contenu = "y" });
         db.SaveChanges();
         var svc = new LocalCoursService(db);
@@ -62,7 +62,7 @@ public class LocalCoursServiceTests
     [Fact]
     public void Modifier_cours_introuvable_leve_KeyNotFoundException()
     {
-        using var db = TestDbFactory.CreateInMemory();
+        using var db = TestDbFactory.CreateInMemoryContext();
         var svc = new LocalCoursService(db);
 
         Assert.Throws<KeyNotFoundException>(() => svc.Modifier(99, "T", null));

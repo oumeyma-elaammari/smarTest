@@ -56,7 +56,13 @@ async function refreshAccessToken(): Promise<string | null> {
 
     if (!refreshInFlight) {
         refreshInFlight = axios
-            .post<{ token: string }>(`${resolveHttpApiBase()}/auth/refresh`, { token: current }, {
+            .post<{
+                token: string
+                role?: string
+                nom?: string
+                email?: string
+                userId?: number
+            }>(`${resolveHttpApiBase()}/auth/refresh`, { token: current }, {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: 15_000,
             })

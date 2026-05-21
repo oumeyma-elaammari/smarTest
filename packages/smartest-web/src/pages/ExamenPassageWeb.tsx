@@ -241,11 +241,11 @@ export default function ExamenPassageWeb() {
         if (verrou || snap?.reponseVerrouillee === true) {
             const rid = coerceEntityId(snap?.reponseIdSelectionnee)
             if (rid != null) setSelectedResponseId(rid)
-            const ids = (snap.reponseIdsSelectionnees ?? [])
+            const ids = (snap?.reponseIdsSelectionnees ?? [])
                 .map((x) => coerceEntityId(x))
                 .filter((x): x is number => x != null)
             if (ids.length > 0) setSelectedResponseIds(ids)
-            const txt = typeof snap.reponseTexte === 'string' ? snap.reponseTexte : ''
+            const txt = typeof snap?.reponseTexte === 'string' ? snap.reponseTexte : ''
             if (txt.trim()) setEssayText(txt)
         }
         const locked = verrou || snap?.reponseVerrouillee === true

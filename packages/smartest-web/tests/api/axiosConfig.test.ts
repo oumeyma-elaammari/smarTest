@@ -3,8 +3,8 @@ import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import toast from 'react-hot-toast'
 import api from '../../src/api/axiosConfig'
-import { API_BASE } from '../msw/handlers'
-import { server } from '../msw/server'
+import { API_BASE } from '../../src/mocks/handlers'
+import { server } from '../../src/mocks/server'
 
 vi.mock('react-hot-toast', () => ({
     default: {

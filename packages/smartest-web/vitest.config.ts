@@ -9,5 +9,6 @@ export default defineConfig({
         environment: 'jsdom',
         setupFiles: ['./tests/setupTests.ts'],
         css: true,
+        reporters: process.env.CI ? ['verbose', 'github-actions'] : ['default', 'verbose'],
     },
 })

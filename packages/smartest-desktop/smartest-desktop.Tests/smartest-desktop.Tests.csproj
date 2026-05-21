@@ -5,6 +5,7 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>smartest_desktop.Tests</RootNamespace>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj-build-out/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

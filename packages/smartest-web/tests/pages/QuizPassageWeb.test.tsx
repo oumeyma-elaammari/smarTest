@@ -4,8 +4,8 @@ import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import QuizPassageWeb, { getQuizWebDraftStorageKey } from '../../src/pages/QuizPassageWeb'
-import { API_BASE } from '../msw/handlers'
-import { server } from '../msw/server'
+import { API_BASE } from '../../src/mocks/handlers'
+import { server } from '../../src/mocks/server'
 
 /** Ordre des questions déterministe (la page mélange via `crypto.getRandomValues`). */
 vi.mock('../../src/utils/shuffle', () => ({
