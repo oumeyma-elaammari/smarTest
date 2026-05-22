@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:helpers="clr-namespace:smartest_desktop.Helpers"
              FontFamily="Segoe UI"
-             Background="#F8F9FC"
+             Background="{DynamicResource WindowBgBrush}"
              VerticalAlignment="Stretch"
              HorizontalAlignment="Stretch">
     <UserControl.Resources>
@@ -19,38 +19,28 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="#FFFFFF" Padding="20,10"
-                    BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource WindowBgBrush}" Padding="40,36,40,28">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Sessions examens" FontSize="18" FontWeight="SemiBold"
-                                   Foreground="#1A1D2E" VerticalAlignment="Center"/>
-                        <Border Background="#6C63FF" CornerRadius="10" Padding="6,2" Margin="10,0,0,0"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="{Binding ExamensTermines.Count}" Foreground="White"
-                                       FontSize="11" FontWeight="SemiBold"/>
-                        </Border>
+                        <TextBlock Text="Sessions examens" FontSize="22" FontWeight="700"
+                                   Foreground="{DynamicResource NavyBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button Content="Actualiser" HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Command="{Binding RafraichirCommand}"
-                            Background="Transparent" BorderBrush="#E5E7EB" BorderThickness="1"
-                            Foreground="#6C63FF" Padding="10,5" FontSize="12" Cursor="Hand"/>
                 </Grid>
             </Border>
 
-            <ScrollViewer Grid.Row="1" Padding="20,12,20,56" VerticalScrollBarVisibility="Auto"
+            <ScrollViewer Grid.Row="1" Padding="40,0,40,56" VerticalScrollBarVisibility="Auto"
                           ClipToBounds="True" VerticalAlignment="Stretch">
                 <StackPanel>
-                    <TextBlock Text="Chargement…" Foreground="#6B7280" FontSize="14" Margin="0,40,0,0"
+                    <TextBlock Text="Chargement…" Foreground="{DynamicResource GrayTextBrush}" FontSize="14" Margin="0,40,0,0"
                                HorizontalAlignment="Center"
                                Visibility="{Binding ChargementExamens, Converter={StaticResource BoolToVis}}"/>
-                    <TextBlock Foreground="#6B7280" FontSize="13" Margin="0,32,0,0"
+                    <TextBlock Foreground="{DynamicResource GrayTextBrush}" FontSize="13" Margin="0,32,0,0"
                                HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
                                MaxWidth="420" Visibility="{Binding AucunExamen, Converter={StaticResource BoolToVis}}">
                         <Run Text="Aucun examen terminé."/>
                         <LineBreak/>
                         <Run Text="Terminez une session depuis « Quiz et examens » (Lancer puis Terminer sur le web)."
-                             FontSize="12" Foreground="#9CA3AF"/>
+                             FontSize="12"/>
                     </TextBlock>
                     <ItemsControl ItemsSource="{Binding ExamensTermines}">
                         <ItemsControl.Style>
@@ -74,8 +64,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Width="280" Height="160" Margin="0,0,16,16"
-                                        Background="#FFFFFF" CornerRadius="16"
-                                        BorderBrush="#E5E7EB" BorderThickness="1">
+                                        Background="{DynamicResource ContentBgBrush}" CornerRadius="16"
+                                        BorderBrush="{DynamicResource ContentBorderBrush}" BorderThickness="1">
                                     <Border.Effect>
                                         <DropShadowEffect Color="#000000" Opacity="0.06"
                                                           BlurRadius="12" ShadowDepth="2"/>
@@ -86,9 +76,9 @@
                                             <RowDefinition Height="*"/>
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
-                                        <Border Grid.Row="0" Background="#ECFDF5" CornerRadius="6" Padding="8,4"
+                                        <Border Grid.Row="0" Background="{DynamicResource SuccessLightBgBrush}" CornerRadius="6" Padding="8,4"
                                                 HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding StatutAffiche}" Foreground="#10B981"
+                                            <TextBlock Text="{Binding StatutAffiche}" Foreground="{DynamicResource SuccessGreenBrush}"
                                                        FontSize="11" FontWeight="SemiBold"/>
                                         </Border>
                                         <Button Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -97,7 +87,7 @@
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Background="Transparent" BorderThickness="0"
-                                                Foreground="#9CA3AF" Cursor="Hand" Padding="4"
+                                                Foreground="{DynamicResource DangerBrush}" Cursor="Hand" Padding="4"
                                                 FontFamily="Segoe MDL2 Assets" FontSize="14" Content="&#xE74D;"/>
                                         <Grid Grid.Row="1" Grid.RowSpan="2" Cursor="Hand">
                                             <Grid.InputBindings>
@@ -111,15 +101,15 @@
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
                                             <TextBlock Grid.Row="0" Text="{Binding Titre}" FontSize="16"
-                                                       FontWeight="SemiBold" Foreground="#1A1D2E"
+                                                       FontWeight="SemiBold" Foreground="{DynamicResource ContentTextBrush}"
                                                        TextWrapping="Wrap" VerticalAlignment="Center"/>
                                             <Grid Grid.Row="1">
-                                                <TextBlock FontSize="12" Foreground="#6B7280">
+                                                <TextBlock FontSize="12" Foreground="{DynamicResource GrayTextBrush}">
                                                     <Run Text="{Binding NbParticipants, Mode=OneWay}"/>
                                                     <Run Text=" étudiant(s)"/>
                                                 </TextBlock>
                                                 <TextBlock Text="{Binding DateFormatee}" FontSize="12"
-                                                           Foreground="#6B7280" HorizontalAlignment="Right"/>
+                                                           Foreground="{DynamicResource GrayTextBrush}" HorizontalAlignment="Right"/>
                                             </Grid>
                                         </Grid>
                                     </Grid>
@@ -138,27 +128,27 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="#FFFFFF" Padding="20,10"
-                    BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ContentBgBrush}" Padding="20,10"
+                    BorderBrush="{DynamicResource ContentBorderBrush}" BorderThickness="0,0,0,1">
                 <StackPanel Orientation="Horizontal">
                     <Button Content="←" Command="{Binding RetourExamensCommand}"
                             ToolTip="Retour"
                             Background="Transparent" BorderThickness="0"
-                            Foreground="#6C63FF" FontSize="18" Cursor="Hand" Margin="0,0,20,0" Padding="4,0"/>
+                            Foreground="{DynamicResource SecondaryAccentBrush}" FontSize="18" Cursor="Hand" Margin="0,0,20,0" Padding="4,0"/>
                     <TextBlock Text="{Binding ExamenSelectionne.Titre}" FontSize="20"
-                               FontWeight="Bold" Foreground="#1A1D2E" VerticalAlignment="Center"/>
+                               FontWeight="Bold" Foreground="{DynamicResource ContentTextBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
             <ScrollViewer Grid.Row="1" Padding="20,12,20,56" VerticalScrollBarVisibility="Auto" ClipToBounds="True">
                 <StackPanel>
-                    <TextBlock Text="{Binding Message}" Foreground="#6B7280" FontSize="12" TextWrapping="Wrap"
+                    <TextBlock Text="{Binding Message}" Foreground="{DynamicResource GrayTextBrush}" FontSize="12" TextWrapping="Wrap"
                                Margin="0,0,0,12" Visibility="{Binding AfficherMessage, Converter={StaticResource BoolToVis}}"/>
-                    <TextBlock Text="Chargement des participants…" Foreground="#6B7280" FontSize="13"
+                    <TextBlock Text="Chargement des participants…" Foreground="{DynamicResource GrayTextBrush}" FontSize="13"
                                Margin="0,24,0,0" HorizontalAlignment="Center"
                                Visibility="{Binding ChargementEtudiants, Converter={StaticResource BoolToVis}}"/>
                     <TextBlock Text="Aucun participant enregistré pour cet examen."
-                               Foreground="#6B7280" FontSize="13" Margin="0,24,0,0"
+                               Foreground="{DynamicResource GrayTextBrush}" FontSize="13" Margin="0,24,0,0"
                                HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
                                Visibility="{Binding AucunEtudiant, Converter={StaticResource BoolToVis}}"/>
                     <ItemsControl ItemsSource="{Binding EtudiantsDuExamen}">
@@ -177,8 +167,8 @@
                         </ItemsControl.Style>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,12" Background="#FFFFFF" CornerRadius="12"
-                                        BorderBrush="#E5E7EB" BorderThickness="1" Cursor="Hand">
+                                <Border Margin="0,0,0,12" Background="{DynamicResource ContentBgBrush}" CornerRadius="12"
+                                        BorderBrush="{DynamicResource ContentBorderBrush}" BorderThickness="1" Cursor="Hand">
                                     <Border.Effect>
                                         <DropShadowEffect Color="#000000" Opacity="0.04"
                                                           BlurRadius="8" ShadowDepth="1"/>
@@ -197,27 +187,27 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <Border Grid.Column="0" Width="40" Height="40"
-                                                Background="#EDE9FE" CornerRadius="20">
-                                            <TextBlock Text="{Binding Initiale}" Foreground="#6C63FF"
+                                                Background="{DynamicResource AvatarBgBrush}" CornerRadius="20">
+                                            <TextBlock Text="{Binding Initiale}" Foreground="{DynamicResource AvatarFgBrush}"
                                                        FontSize="16" FontWeight="Bold"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                         <StackPanel Grid.Column="1" Margin="12,0">
                                             <TextBlock Text="{Binding Nom}" FontSize="15"
-                                                       FontWeight="SemiBold" Foreground="#1A1D2E"/>
-                                            <TextBlock Text="{Binding Email}" FontSize="12" Foreground="#6B7280"/>
+                                                       FontWeight="SemiBold" Foreground="{DynamicResource ContentTextBrush}"/>
+                                            <TextBlock Text="{Binding Email}" FontSize="12" Foreground="{DynamicResource GrayTextBrush}"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Margin="0,0,16,0" HorizontalAlignment="Right">
-                                            <TextBlock Text="{Binding LibelleNote}" FontSize="11" Foreground="#6B7280"
+                                            <TextBlock Text="{Binding LibelleNote}" FontSize="11" Foreground="{DynamicResource GrayTextBrush}"
                                                        HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding NoteAfficheeText}" FontSize="18" FontWeight="Bold"
                                                        HorizontalAlignment="Right">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#DC2626"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding EstNoteReussie}" Value="True">
-                                                                <Setter Property="Foreground" Value="#10B981"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource SuccessGreenBrush}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -227,10 +217,10 @@
                                         <Border Grid.Column="3" CornerRadius="8" Padding="10,6" VerticalAlignment="Center">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="#FEF3C7"/>
+                                                    <Setter Property="Background" Value="{DynamicResource WarnLightBgBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding ValideeParProf}" Value="True">
-                                                            <Setter Property="Background" Value="#ECFDF5"/>
+                                                            <Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -239,11 +229,11 @@
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="En attente"/>
-                                                        <Setter Property="Foreground" Value="#D97706"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource WarnBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding ValideeParProf}" Value="True">
                                                                 <Setter Property="Text" Value="Validé ✓"/>
-                                                                <Setter Property="Foreground" Value="#10B981"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource SuccessGreenBrush}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -266,29 +256,29 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="#FFFFFF" Padding="20,10"
-                    BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ContentBgBrush}" Padding="20,10"
+                    BorderBrush="{DynamicResource ContentBorderBrush}" BorderThickness="0,0,0,1">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="←" Command="{Binding RetourEtudiantsCommand}"
                                 ToolTip="Retour"
                                 Background="Transparent" BorderThickness="0"
-                                Foreground="#6C63FF" FontSize="18" Cursor="Hand" Margin="0,0,20,0" Padding="4,0"/>
-                        <TextBlock FontSize="20" FontWeight="Bold" Foreground="#1A1D2E" VerticalAlignment="Center">
+                                Foreground="{DynamicResource SecondaryAccentBrush}" FontSize="18" Cursor="Hand" Margin="0,0,20,0" Padding="4,0"/>
+                        <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ContentTextBrush}" VerticalAlignment="Center">
                             <Run Text="Correction — "/>
                             <Run Text="{Binding EtudiantSelectionne.Nom, Mode=OneWay}"/>
                         </TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <TextBlock VerticalAlignment="Center" Margin="0,0,16,0" Foreground="#6B7280" FontSize="14">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,16,0" Foreground="{DynamicResource GrayTextBrush}" FontSize="14">
                             <Run Text="Total : "/>
                             <Run Text="{Binding NoteTotale, Mode=OneWay}" FontWeight="Bold">
                                 <Run.Style>
                                     <Style TargetType="Run">
-                                        <Setter Property="Foreground" Value="#DC2626"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding EstNoteTotaleReussie}" Value="True">
-                                                <Setter Property="Foreground" Value="#10B981"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource SuccessGreenBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -298,14 +288,36 @@
                         </TextBlock>
                         <Button Content="Valider la correction"
                                 Command="{Binding ValiderCorrectionCommand}"
-                                Background="#6C63FF" Foreground="White" BorderThickness="0"
-                                Padding="20,10" FontSize="14" FontWeight="SemiBold" Cursor="Hand">
+                                Background="{DynamicResource PrimaryActionBgBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                Foreground="{DynamicResource PrimaryActionFgBrush}"
+                                BorderThickness="1"
+                                Padding="18,11" FontSize="12" FontWeight="600" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="22"
+                                    <Border x:Name="ButtonBorder"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="9"
                                             Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <ContentPresenter HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                                          TextElement.FontWeight="{TemplateBinding FontWeight}"/>
                                     </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
+                                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
+                                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource SecondaryBtnBorderBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+                                            <Setter Property="Cursor" Value="Arrow"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
@@ -315,61 +327,62 @@
 
             <ScrollViewer Grid.Row="1" Padding="20,12,20,16" VerticalScrollBarVisibility="Auto" ClipToBounds="True">
                 <StackPanel>
-                    <TextBlock Text="{Binding Message}" Foreground="#6B7280" FontSize="12" TextWrapping="Wrap"
+                    <TextBlock Text="{Binding Message}" Foreground="{DynamicResource GrayTextBrush}" FontSize="12" TextWrapping="Wrap"
                                Margin="0,0,0,12" Visibility="{Binding AfficherMessage, Converter={StaticResource BoolToVis}}"/>
-                <ItemsControl ItemsSource="{Binding LignesCorrection}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Margin="0,0,0,10" Background="#FFFFFF" CornerRadius="10"
-                                    BorderBrush="#E8ECF1" BorderThickness="1" Padding="14,12">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="{Binding Enonce}" FontSize="14"
-                                               FontWeight="SemiBold" Foreground="#1A1D2E"
-                                               TextWrapping="Wrap" Margin="0,0,0,8"/>
-                                    <Border Grid.Row="1" Background="#F8F9FC" CornerRadius="6"
-                                            Padding="10" Margin="0,0,0,8">
-                                        <TextBlock FontSize="14" Foreground="#374151" TextWrapping="Wrap">
-                                            <Run Text="Réponse : " Foreground="#6B7280"/>
-                                            <Run Text="{Binding ReponseEtudiantFormatee, Mode=OneWay}"/>
-                                        </TextBlock>
-                                    </Border>
-                                    <Grid Grid.Row="2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Grid.Column="0" Background="#EDE9FE" CornerRadius="6"
-                                                Padding="8,4" HorizontalAlignment="Left"
-                                                Visibility="{Binding CorrigeParIa, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="Corrigé par IA" Foreground="#6C63FF"
-                                                       FontSize="11" FontWeight="SemiBold"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                            <TextBlock Text="Note : " VerticalAlignment="Center"
-                                                       Foreground="#6B7280" FontSize="14" Margin="0,0,8,0"/>
-                                            <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Padding="2">
-                                                <TextBox Text="{Binding NoteFinale, UpdateSourceTrigger=PropertyChanged}"
-                                                         Width="60" FontSize="16" FontWeight="Bold"
-                                                         Foreground="#6C63FF" BorderThickness="0"
-                                                         TextAlignment="Center" VerticalContentAlignment="Center"/>
-                                            </Border>
-                                            <TextBlock VerticalAlignment="Center" Foreground="#6B7280"
-                                                       FontSize="14" Margin="8,0,0,0">
-                                                <Run Text="/ "/>
-                                                <Run Text="{Binding NoteMax, Mode=OneWay, StringFormat={}{0:0.##}}"/>
+                    <ItemsControl ItemsSource="{Binding LignesCorrection}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,10" Background="{DynamicResource ContentBgBrush}" CornerRadius="10"
+                                        BorderBrush="{DynamicResource ContentBorderBrush}" BorderThickness="1" Padding="14,12">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="{Binding Enonce}" FontSize="14"
+                                                   FontWeight="SemiBold" Foreground="{DynamicResource ContentTextBrush}"
+                                                   TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                        <Border Grid.Row="1" Background="{DynamicResource AnswerBgBrush}" CornerRadius="6"
+                                                Padding="10" Margin="0,0,0,8">
+                                            <TextBlock FontSize="14" Foreground="{DynamicResource AnswerFgBrush}" TextWrapping="Wrap">
+                                                <Run Text="Réponse : " Foreground="{DynamicResource GrayTextBrush}"/>
+                                                <Run Text="{Binding ReponseEtudiantFormatee, Mode=OneWay}"/>
                                             </TextBlock>
-                                        </StackPanel>
+                                        </Border>
+                                        <Grid Grid.Row="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="{DynamicResource PurpleLightBgBrush}" CornerRadius="6"
+                                                    Padding="8,4" HorizontalAlignment="Left"
+                                                    Visibility="{Binding CorrigeParIa, Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="Corrigé par IA" Foreground="{DynamicResource SecondaryAccentBrush}"
+                                                           FontSize="11" FontWeight="SemiBold"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <TextBlock Text="Note : " VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource GrayTextBrush}" FontSize="14" Margin="0,0,8,0"/>
+                                                <Border BorderBrush="{DynamicResource ContentBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="2">
+                                                    <TextBox Text="{Binding NoteFinale, UpdateSourceTrigger=PropertyChanged}"
+                                                             Width="60" FontSize="16" FontWeight="Bold"
+                                                             Foreground="{DynamicResource SecondaryAccentBrush}" BorderThickness="0"
+                                                             Background="Transparent"
+                                                             TextAlignment="Center" VerticalContentAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource GrayTextBrush}"
+                                                           FontSize="14" Margin="8,0,0,0">
+                                                    <Run Text="/ "/>
+                                                    <Run Text="{Binding NoteMax, Mode=OneWay, StringFormat={}{0:0.##}}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Grid>
                                     </Grid>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
 

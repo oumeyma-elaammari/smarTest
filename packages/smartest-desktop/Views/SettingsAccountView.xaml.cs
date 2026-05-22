@@ -37,6 +37,14 @@ namespace smartest_desktop.Views
             {
                 SyncPasswordBoxesFromViewModel();
             }
+            else if (e.PropertyName == nameof(SettingsAccountViewModel.CleGroq))
+            {
+                SyncGroqKeyFields();
+            }
+            else if (e.PropertyName == nameof(SettingsAccountViewModel.IsEditingGroqKey) && _vm != null && !_vm.IsEditingGroqKey)
+            {
+                ResetGroqKeyEyeToMasked();
+            }
         }
 
         private void SyncPasswordBoxesFromViewModel()
@@ -70,6 +78,37 @@ namespace smartest_desktop.Views
             {
                 _isSyncingUi = false;
             }
+
+            SyncGroqKeyFields();
+        }
+
+        private void SyncGroqKeyFields()
+        {
+            if (_vm == null) return;
+            var cle = _vm.CleGroq ?? string.Empty;
+            _isSyncingUi = true;
+            try
+            {
+                if (GroqPasswordBox.Password != cle)
+                    GroqPasswordBox.Password = cle;
+                if (GroqTextBox.Text != cle)
+                    GroqTextBox.Text = cle;
+            }
+            finally
+            {
+                _isSyncingUi = false;
+            }
+        }
+
+        private void ResetGroqKeyEyeToMasked()
+        {
+            if (GroqKeyMaskedBorder.Visibility == Visibility.Visible)
+                return;
+
+            GroqPasswordBox.Password = GroqTextBox.Text;
+            GroqKeyPlainBorder.Visibility = Visibility.Collapsed;
+            GroqKeyMaskedBorder.Visibility = Visibility.Visible;
+            EyeIconGroq.Text = "🔓";
         }
 
         private void OldPasswordBox_OnPasswordChanged(object sender, System.Windows.RoutedEventArgs e)
@@ -147,6 +186,36 @@ namespace smartest_desktop.Views
                 NewPasswordPlainBorder.Visibility = Visibility.Collapsed;
                 NewPasswordMaskedBorder.Visibility = Visibility.Visible;
                 EyeIconNew.Text = "🔓";
+            }
+        }
+
+        private void GroqPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (_isSyncingUi || _vm == null) return;
+            _vm.CleGroq = GroqPasswordBox.Password;
+        }
+
+        private void GroqTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isSyncingUi || _vm == null) return;
+            _vm.CleGroq = GroqTextBox.Text;
+        }
+
+        private void ToggleGroqKey_Click(object sender, RoutedEventArgs e)
+        {
+            if (GroqKeyMaskedBorder.Visibility == Visibility.Visible)
+            {
+                GroqTextBox.Text = GroqPasswordBox.Password;
+                GroqKeyMaskedBorder.Visibility = Visibility.Collapsed;
+                GroqKeyPlainBorder.Visibility = Visibility.Visible;
+                EyeIconGroq.Text = "🔒";
+            }
+            else
+            {
+                GroqPasswordBox.Password = GroqTextBox.Text;
+                GroqKeyPlainBorder.Visibility = Visibility.Collapsed;
+                GroqKeyMaskedBorder.Visibility = Visibility.Visible;
+                EyeIconGroq.Text = "🔓";
             }
         }
 

@@ -1,7 +1,11 @@
 using smartest_desktop.Data;
 using smartest_desktop.Data.LocalEntities;
+using smartest_desktop.Exceptions;
 using smartest_desktop.Helpers;
+using smartest_desktop.Services;
+using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -37,6 +41,13 @@ namespace smartest_desktop.ViewModels
         {
             get => _totalCours;
             set => SetProperty(ref _totalCours, value);
+        }
+
+        private int _totalExamensACorriger;
+        public int TotalExamensACorriger
+        {
+            get => _totalExamensACorriger;
+            set => SetProperty(ref _totalExamensACorriger, value);
         }
 
         private int _totalCategories;
@@ -154,6 +165,7 @@ namespace smartest_desktop.ViewModels
                 TotalCategories = categories.Count;
 
                 TotalExamens = await Task.Run(() => _db.Examens.Count());
+                TotalExamensACorriger = await CalculerExamensACorrigerAsync();
                 TotalQuiz = await Task.Run(() => _db.Quiz.Count());
 
                 var culture = CultureInfo.GetCultureInfo("fr-FR");
@@ -218,6 +230,40 @@ namespace smartest_desktop.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"Erreur chargement dashboard: {ex.Message}");
             }
+        }
+
+        private async Task<int> CalculerExamensACorrigerAsync()
+        {
+            if (!DesktopSessionTokenHelper.TryObtenir(out string token))
+                return 0;
+
+            var examensPublies = await Task.Run(() => _db.Examens
+                .Where(e => e.BackendId.HasValue && e.BackendId.Value > 0)
+                .Select(e => e.BackendId!.Value)
+                .ToList());
+
+            var api = new ExamenWebPublicationApiService();
+            int total = 0;
+
+            foreach (long backendId in examensPublies)
+            {
+                try
+                {
+                    var resultatsEnAttente = await api.GetResultatsEnAttenteAsync(token, backendId);
+                    if (resultatsEnAttente.Count > 0)
+                        total++;
+                }
+                catch (SmartestApiException ex)
+                {
+                    Debug.WriteLine($"Examen {backendId}: impossible de lire les résultats en attente ({ex.Message}).");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Examen {backendId}: erreur inattendue pendant le calcul des corrections ({ex.Message}).");
+                }
+            }
+
+            return total;
         }
         public bool HasNoCours => TotalCours == 0;
 

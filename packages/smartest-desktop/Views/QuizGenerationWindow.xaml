@@ -7,7 +7,7 @@
         MinHeight="600" MinWidth="960"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#fafbfd"
+        Background="{DynamicResource WindowBgBrush}"
         FontFamily="Segoe UI">
 
 	<Window.DataContext>
@@ -23,14 +23,14 @@
 		</ResourceDictionary>
 	</Window.Resources>
 
-	<Grid Background="#fafbfd">
+	<Grid Background="{DynamicResource WindowBgBrush}">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
 
 		<!-- ══ HEADER ══ -->
-		<Border Grid.Row="0" Background="White" Padding="14,10" Margin="0,0,0,0">
+		<Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" Padding="14,10" Margin="0,0,0,0">
 			<Border.Effect>
 				<DropShadowEffect BlurRadius="24" ShadowDepth="1" Direction="270"
 								  Opacity="0.04" Color="#0f1e3d"/>
@@ -43,18 +43,18 @@
 				</Grid.ColumnDefinitions>
 
 				<Border Grid.Column="0" Width="28" Height="28" CornerRadius="7"
-                        Background="#eef3fd" Cursor="Hand" Margin="0,0,8,0"
-						BorderBrush="#d0ddf5" BorderThickness="1">
+                        Background="{DynamicResource AccentLightBgBrush}" Cursor="Hand" Margin="0,0,8,0"
+						BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
 					<Border.InputBindings>
 						<MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerCommand}"/>
 					</Border.InputBindings>
 					<TextBlock Text="&#xE72B;" FontSize="15" FontFamily="Segoe MDL2 Assets"
-                               Foreground="#0f1e3d"
+                               Foreground="{DynamicResource NavyBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
 				</Border>
 
 				<StackPanel Grid.Column="1" VerticalAlignment="Center">
-					<TextBlock Text="Nouveau quiz" FontSize="20" FontWeight="700" Foreground="#0f1e3d"/>
+					<TextBlock Text="Nouveau quiz" FontSize="20" FontWeight="700" Foreground="{DynamicResource NavyBrush}"/>
 				</StackPanel>
 
 			</Grid>
@@ -68,29 +68,29 @@
 			</Grid.ColumnDefinitions>
 
 			<!-- ══ COLONNE GAUCHE — Paramètres ══ -->
-			<Border Grid.Column="0" Background="#f5f7fa"
-                    BorderBrush="#e8ecf5" BorderThickness="0,0,1,0">
+			<Border Grid.Column="0" Background="{DynamicResource WindowBgBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0">
 				<ScrollViewer VerticalScrollBarVisibility="Auto"
 							  HorizontalScrollBarVisibility="Disabled">
 					<StackPanel Margin="24,26,24,28">
 
 						<TextBlock Text="Paramètres"
-                                   FontSize="18" FontWeight="700" Foreground="#0f1e3d" Margin="0,0,0,24"/>
+                                   FontSize="18" FontWeight="700" Foreground="{DynamicResource NavyBrush}" Margin="0,0,0,24"/>
 
 						<!-- Titre du quiz -->
 						<TextBlock Text="TITRE DU QUIZ" FontSize="10" FontWeight="700"
-                                   Foreground="#6b7a99" Margin="0,0,0,8"/>
-						<Border Background="White" CornerRadius="10" BorderBrush="#e2e8f4"
+                                   Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,8"/>
+						<Border Background="{DynamicResource InputBgBrush}" CornerRadius="10" BorderBrush="{DynamicResource InputBorderBrush}"
                                 BorderThickness="1" Padding="14,12" Margin="0,0,0,24">
 							<TextBox Text="{Binding TitreQuiz, UpdateSourceTrigger=PropertyChanged}"
                                      BorderThickness="0" Background="Transparent"
-                                     FontSize="12" Foreground="#0f1e3d"
-                                     VerticalAlignment="Center" CaretBrush="#4f8ef7"/>
+                                     FontSize="12" Foreground="{DynamicResource NavyBrush}"
+                                     VerticalAlignment="Center" CaretBrush="{DynamicResource AccentBrush}"/>
 						</Border>
 
 						<!-- Nombre de questions -->
 						<TextBlock Text="NOMBRE DE QUESTIONS" FontSize="10" FontWeight="700"
-                                   Foreground="#6b7a99" Margin="0,0,0,8"/>
+                                   Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,8"/>
 						<ComboBox Style="{StaticResource StyledCombo}"
                                   ItemsSource="{Binding NombresQuestions}"
                                   SelectedItem="{Binding NombreQuestions}"
@@ -98,7 +98,7 @@
 
 						<!-- Difficulté -->
 						<TextBlock Text="NIVEAU DE DIFFICULTÉ" FontSize="10" FontWeight="700"
-                                   Foreground="#6b7a99" Margin="0,0,0,10"/>
+                                   Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,10"/>
 
 						<StackPanel Orientation="Horizontal" Margin="0,0,0,28">
 							<!-- Facile -->
@@ -108,21 +108,21 @@
 								</Border.InputBindings>
 								<Border.Style>
 									<Style TargetType="Border">
-										<Setter Property="Background" Value="#eef3fc"/>
-										<Setter Property="BorderBrush" Value="#e2e8f4"/>
+										<Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
+										<Setter Property="BorderBrush" Value="{DynamicResource SecondaryBtnBorderBrush}"/>
 										<Setter Property="BorderThickness" Value="1.5"/>
 										<Style.Triggers>
 											<DataTrigger Binding="{Binding Difficulte}" Value="Facile">
-												<Setter Property="Background" Value="#F0FDF4"/>
-												<Setter Property="BorderBrush" Value="#86EFAC"/>
+												<Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
 											</DataTrigger>
 										</Style.Triggers>
 									</Style>
 								</Border.Style>
 								<StackPanel HorizontalAlignment="Center">
-									<Ellipse Width="12" Height="12" Fill="#22c55e" HorizontalAlignment="Center"/>
+									<Ellipse Width="12" Height="12" Fill="{DynamicResource SuccessBrush}" HorizontalAlignment="Center"/>
 									<TextBlock Text="Facile" FontSize="11" FontWeight="600"
-                                               Foreground="#16A34A" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                               Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
 								</StackPanel>
 							</Border>
 
@@ -133,21 +133,21 @@
 								</Border.InputBindings>
 								<Border.Style>
 									<Style TargetType="Border">
-										<Setter Property="Background" Value="#eef3fc"/>
-										<Setter Property="BorderBrush" Value="#e2e8f4"/>
+										<Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
+										<Setter Property="BorderBrush" Value="{DynamicResource SecondaryBtnBorderBrush}"/>
 										<Setter Property="BorderThickness" Value="1.5"/>
 										<Style.Triggers>
 											<DataTrigger Binding="{Binding Difficulte}" Value="Moyen">
-												<Setter Property="Background" Value="#FFFBEB"/>
-												<Setter Property="BorderBrush" Value="#FCD34D"/>
+												<Setter Property="Background" Value="{DynamicResource WarnLightBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource WarnBrush}"/>
 											</DataTrigger>
 										</Style.Triggers>
 									</Style>
 								</Border.Style>
 								<StackPanel HorizontalAlignment="Center">
-									<Ellipse Width="12" Height="12" Fill="#f59e0b" HorizontalAlignment="Center"/>
+									<Ellipse Width="12" Height="12" Fill="{DynamicResource WarnBrush}" HorizontalAlignment="Center"/>
 									<TextBlock Text="Moyen" FontSize="11" FontWeight="600"
-                                               Foreground="#D97706" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                               Foreground="{DynamicResource WarnBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
 								</StackPanel>
 							</Border>
 
@@ -158,39 +158,39 @@
 								</Border.InputBindings>
 								<Border.Style>
 									<Style TargetType="Border">
-										<Setter Property="Background" Value="#eef3fc"/>
-										<Setter Property="BorderBrush" Value="#e2e8f4"/>
+										<Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
+										<Setter Property="BorderBrush" Value="{DynamicResource SecondaryBtnBorderBrush}"/>
 										<Setter Property="BorderThickness" Value="1.5"/>
 										<Style.Triggers>
 											<DataTrigger Binding="{Binding Difficulte}" Value="Difficile">
-												<Setter Property="Background" Value="#FFF1F2"/>
-												<Setter Property="BorderBrush" Value="#FCA5A5"/>
+												<Setter Property="Background" Value="{DynamicResource DangerZoneBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource DangerZoneBorderBrush}"/>
 											</DataTrigger>
 										</Style.Triggers>
 									</Style>
 								</Border.Style>
 								<StackPanel HorizontalAlignment="Center">
-									<Ellipse Width="12" Height="12" Fill="#dc2626" HorizontalAlignment="Center"/>
+									<Ellipse Width="12" Height="12" Fill="{DynamicResource DangerBrush}" HorizontalAlignment="Center"/>
 									<TextBlock Text="Difficile" FontSize="11" FontWeight="600"
-                                               Foreground="#DC2626" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                               Foreground="{DynamicResource DangerBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
 								</StackPanel>
 							</Border>
 						</StackPanel>
 
 						<!-- Statut -->
 						<Border CornerRadius="10" Padding="14,12" Margin="0,0,0,12"
-                                Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1"
+                                Background="{DynamicResource AccentLightBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                                 Visibility="{Binding HasStatus, Converter={StaticResource BoolToVis}}">
 							<TextBlock Text="{Binding StatusMessage}" FontSize="12"
-                                       Foreground="#1D4ED8" TextWrapping="Wrap"/>
+                                       Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap"/>
 						</Border>
 
 						<!-- Erreur -->
 						<Border CornerRadius="10" Padding="14,12" Margin="0,0,0,12"
-                                Background="#FDF0F0" BorderBrush="#F5C6C6" BorderThickness="1"
+                                Background="{DynamicResource AlertErrorBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                                 Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
 							<TextBlock Text="{Binding ErrorMessage}" FontSize="12"
-                                       Foreground="#C84B4B" TextWrapping="Wrap"/>
+                                       Foreground="{DynamicResource AlertErrorFgBrush}" TextWrapping="Wrap"/>
 						</Border>
 
 						<!-- Bouton Générer -->
@@ -198,14 +198,18 @@
                                 Visibility="{Binding IsNotGenerating, Converter={StaticResource BoolToVis}}">
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="Background" Value="#0f1e3d"/>
+                                    <Setter Property="Background" Value="{DynamicResource AccentLightBgBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
                                     <Setter Property="Cursor" Value="Hand"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#1a2e5a"/>
+                                            <Setter Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                         </Trigger>
                                         <DataTrigger Binding="{Binding HasCours}" Value="False">
-                                            <Setter Property="Background" Value="#B2C2DB"/>
+                                            <Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBtnBorderBrush}"/>
                                             <Setter Property="Cursor" Value="Arrow"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -216,26 +220,26 @@
                             </Border.InputBindings>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                           Foreground="White" Margin="0,0,5,0"
+                                           Foreground="{DynamicResource AccentTextBrush}" Margin="0,0,5,0"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Text="Générer le quiz"
-                                           FontSize="14" FontWeight="600" Foreground="White"
+                                           FontSize="14" FontWeight="700" Foreground="{DynamicResource AccentTextBrush}"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
 						<!-- Annuler génération -->
 						<Border CornerRadius="12" Padding="0,16" Cursor="Hand"
-                                Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1"
+                                Background="{DynamicResource DangerZoneBgBrush}" BorderBrush="{DynamicResource DangerZoneBorderBrush}" BorderThickness="1"
                                 Visibility="{Binding IsGenerating, Converter={StaticResource BoolToVis}}">
                             <Border.InputBindings>
                                 <MouseBinding MouseAction="LeftClick" Command="{Binding AnnulerGenerationCommand}"/>
                             </Border.InputBindings>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Text="&#xE71A;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                           Foreground="#DC2626" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                           Foreground="{DynamicResource DangerBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Annuler la génération"
-                                           FontSize="13" FontWeight="600" Foreground="#DC2626"
+                                           FontSize="13" FontWeight="600" Foreground="{DynamicResource DangerBrush}"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
@@ -253,8 +257,8 @@
 				</Grid.RowDefinitions>
 
 				<!-- Header colonne droite (aligné création examen) -->
-				<Border Grid.Row="0" Padding="28,22,28,18" Background="#fafbfd"
-                        BorderBrush="#e8ecf5" BorderThickness="0,0,0,1">
+				<Border Grid.Row="0" Padding="28,22,28,18" Background="{DynamicResource WindowBgBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
 					<Grid>
 						<Grid.ColumnDefinitions>
 							<ColumnDefinition Width="*"/>
@@ -262,9 +266,9 @@
 						</Grid.ColumnDefinitions>
 
 						<StackPanel Grid.Column="0" VerticalAlignment="Center">
-							<TextBlock Text="Cours importé" FontSize="17" FontWeight="700" Foreground="#0f1e3d"/>
+							<TextBlock Text="Cours importé" FontSize="17" FontWeight="700" Foreground="{DynamicResource NavyBrush}"/>
 							<TextBlock Text="Un seul fichier · texte modifiable ci-dessous."
-                                       FontSize="12" Foreground="#8899b8" Margin="0,4,0,0"/>
+                                       FontSize="12" Foreground="{DynamicResource MutedBrush}" Margin="0,4,0,0"/>
 						</StackPanel>
 
 						<Border Grid.Column="1" CornerRadius="10" Cursor="Hand" Padding="16,10" VerticalAlignment="Center">
@@ -273,20 +277,24 @@
 							</Border.InputBindings>
 							<Border.Style>
 								<Style TargetType="Border">
-									<Setter Property="Background" Value="#0f1e3d"/>
+									<Setter Property="Background" Value="{DynamicResource AccentLightBgBrush}"/>
+									<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+									<Setter Property="BorderThickness" Value="1"/>
 									<Style.Triggers>
 										<Trigger Property="IsMouseOver" Value="True">
-											<Setter Property="Background" Value="#1a2e5a"/>
+											<Setter Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
+											<Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
 										</Trigger>
 										<DataTrigger Binding="{Binding IsImporting}" Value="True">
-											<Setter Property="Background" Value="#6B7280"/>
+											<Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
+											<Setter Property="BorderBrush" Value="{DynamicResource SecondaryBtnBorderBrush}"/>
 										</DataTrigger>
 									</Style.Triggers>
 								</Style>
 							</Border.Style>
 							<StackPanel Orientation="Horizontal">
 						
-								<TextBlock FontSize="12" FontWeight="600" Foreground="White">
+								<TextBlock FontSize="12" FontWeight="700" Foreground="{DynamicResource AccentTextBrush}">
 									<TextBlock.Style>
 										<Style TargetType="TextBlock">
 											<Setter Property="Text" Value="Importer un cours"/>
@@ -307,7 +315,7 @@
 				</Border>
 
 				<!-- Corps colonne droite -->
-				<Grid Grid.Row="1">
+				<Grid Grid.Row="1" Background="{DynamicResource WindowBgBrush}">
 
 					<!-- État vide -->
 					<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,40">
@@ -323,8 +331,8 @@
 						</StackPanel.Style>
 
 						<Border Width="320" Height="220" CornerRadius="16"
-                                BorderBrush="#e2e8f4" BorderThickness="2"
-                                Background="White" Cursor="Hand">
+                                BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="2"
+                                Background="{DynamicResource CardBgBrush}" Cursor="Hand">
 							<Border.InputBindings>
 								<MouseBinding MouseAction="LeftClick" Command="{Binding ImporterFichierCommand}"/>
 							</Border.InputBindings>
@@ -332,20 +340,20 @@
 								<Style TargetType="Border">
 									<Style.Triggers>
 										<Trigger Property="IsMouseOver" Value="True">
-											<Setter Property="BorderBrush" Value="#4f8ef7"/>
-											<Setter Property="Background" Value="#f8fbff"/>
+											<Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+											<Setter Property="Background" Value="{DynamicResource AccentLightBgBrush}"/>
 										</Trigger>
 									</Style.Triggers>
 								</Style>
 							</Border.Style>
 							<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
 								<TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="44"
-										   Foreground="#4f8ef7" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+										   Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" Margin="0,0,0,16"/>
 								<TextBlock Text="Importer un cours"
-                                           FontSize="14" FontWeight="600" Foreground="#0f1e3d"
+                                           FontSize="14" FontWeight="600" Foreground="{DynamicResource NavyBrush}"
                                            HorizontalAlignment="Center"/>
 								<TextBlock Text="PDF · DOCX · TXT"
-                                           FontSize="12" Foreground="#ABABAB"
+                                           FontSize="12" Foreground="{DynamicResource MutedBrush}"
                                            HorizontalAlignment="Center" Margin="0,8,0,0"/>
 							</StackPanel>
 						</Border>
@@ -372,7 +380,7 @@
 
 						<!-- Fichier (pilule + corbeille, comme création examen) -->
 						<Border Grid.Row="0" Margin="20,16,20,0" CornerRadius="12"
-                                Background="#eef3fd" BorderBrush="#cfe0fc" BorderThickness="1" Padding="14,12">
+                                Background="{DynamicResource AccentLightBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="14,12">
 							<Grid>
 								<Grid.RowDefinitions>
 									<RowDefinition Height="Auto"/>
@@ -384,20 +392,20 @@
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
 									<Border Grid.Column="0" HorizontalAlignment="Left" MaxWidth="520"
-                                            Padding="10,6" CornerRadius="8" Background="White"
-                                            BorderBrush="#cfe0fc" BorderThickness="1">
+                                            Padding="10,6" CornerRadius="8" Background="{DynamicResource CardBgBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
 										<StackPanel Orientation="Horizontal">
 											<TextBlock Text="{Binding TitreCours}" FontWeight="600" FontSize="12"
-                                                       Foreground="#0f1e3d" TextTrimming="CharacterEllipsis"/>
+                                                       Foreground="{DynamicResource NavyBrush}" TextTrimming="CharacterEllipsis"/>
 											<Border CornerRadius="4" Padding="4,1" Margin="8,0,0,0"
-                                                    Background="#dfe8fb" VerticalAlignment="Center">
+                                                    Background="{DynamicResource AccentLightBgBrush}" VerticalAlignment="Center">
 												<TextBlock Text="{Binding TypeFichier}" FontSize="10"
-                                                           FontWeight="700" Foreground="#0f1e3d"/>
+                                                           FontWeight="700" Foreground="{DynamicResource NavyBrush}"/>
 											</Border>
 										</StackPanel>
 									</Border>
 									<Border Grid.Column="1" Width="36" Height="36" CornerRadius="8"
-                                            Background="#FEE2E2" Cursor="Hand" VerticalAlignment="Center"
+                                            Background="{DynamicResource AlertErrorBgBrush}" Cursor="Hand" VerticalAlignment="Center"
                                             Margin="12,0,0,0">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding EffacerContenuCommand}"/>
@@ -406,43 +414,43 @@
 											<Style TargetType="Border">
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
-														<Setter Property="Background" Value="#FECACA"/>
+														<Setter Property="Background" Value="{DynamicResource DangerZoneBorderBrush}"/>
 													</Trigger>
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
 										<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="#DC2626"
+                                                   Foreground="{DynamicResource DangerBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 									</Border>
 								</Grid>
 								<TextBlock Grid.Row="1" Text="{Binding NombreCaracteres}" FontSize="11"
-                                           Foreground="#6b7a99" Margin="0,8,0,0"/>
+                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,8,0,0"/>
 							</Grid>
 						</Border>
 
 						<!-- Texte extrait — toujours éditable -->
 						<Border Grid.Row="1" Margin="20,12,20,20" CornerRadius="12"
-                                Background="White" BorderBrush="#e2e8f4" BorderThickness="1.5">
+                                Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5">
 							<Grid>
 								<Grid.RowDefinitions>
 									<RowDefinition Height="Auto"/>
 									<RowDefinition Height="*"/>
 								</Grid.RowDefinitions>
-								<Border Grid.Row="0" Padding="14,10" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1"
-                                        Background="#fafbfd">
+								<Border Grid.Row="0" Padding="14,10" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1"
+                                        Background="{DynamicResource InputBgBrush}">
 									<TextBlock Text="Texte extrait (modifiable)"
-                                               FontSize="11" FontWeight="600" Foreground="#6b7a99"/>
+                                               FontSize="11" FontWeight="600" Foreground="{DynamicResource SubTextBrush}"/>
 								</Border>
 								<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
                                               HorizontalScrollBarVisibility="Disabled"
                                               Padding="14,12" MinHeight="240">
 									<TextBox Text="{Binding ContenuCours, UpdateSourceTrigger=PropertyChanged}"
-                                             FontSize="12" Foreground="#374151"
+                                             FontSize="12" Foreground="{DynamicResource AnswerFgBrush}"
                                              BorderThickness="0" Background="Transparent"
                                              TextWrapping="Wrap" AcceptsReturn="True"
                                              FontFamily="Consolas"
-                                             CaretBrush="#4f8ef7"/>
+                                             CaretBrush="{DynamicResource AccentBrush}"/>
 								</ScrollViewer>
 							</Grid>
 						</Border>
@@ -454,3 +462,5 @@
 
 	</Grid>
 </Window>
+
+

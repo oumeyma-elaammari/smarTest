@@ -7,82 +7,79 @@
         ResizeMode="CanResize"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#f0f3f9">
+        Background="{DynamicResource BgBrush}">
 
-	<Window.Resources>
-		<ResourceDictionary>
-			<ResourceDictionary.MergedDictionaries>
-				<ResourceDictionary Source="/Views/Styles/AuthStyles.xaml"/>
-			</ResourceDictionary.MergedDictionaries>
-			<BooleanToVisibilityConverter x:Key="BoolToVis"/>
-		</ResourceDictionary>
-	</Window.Resources>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Views/Styles/AuthStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </ResourceDictionary>
+    </Window.Resources>
 
-	<Grid Background="#f0f3f9">
+    <Grid Background="{DynamicResource BgBrush}">
 
-		<!-- Flèche retour accueil -->
-		<Button Background="Transparent" BorderThickness="0"
+        <!-- Flèche retour accueil -->
+        <Button Background="Transparent" BorderThickness="0"
                 Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top"
                 Margin="24,16,0,0" Click="BackToWelcome_Click"
                 ToolTip="Retour à l'accueil">
-			<StackPanel Orientation="Horizontal">
-				<TextBlock Text="←" FontSize="16" Foreground="#8899b8" Margin="0,0,6,0"/>
-				<TextBlock Text="Accueil" FontSize="12" Foreground="#8899b8" VerticalAlignment="Center"/>
-			</StackPanel>
-		</Button>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="←" FontSize="16" Foreground="{DynamicResource MutedBrush}" Margin="0,0,6,0"/>
+                <TextBlock Text="Accueil" FontSize="12" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
 
-		<!-- Glow décoratif -->
-		<Ellipse Width="400" Height="400" HorizontalAlignment="Right"
+        <!-- Glow décoratif -->
+        <Ellipse Width="400" Height="400" HorizontalAlignment="Right"
                  VerticalAlignment="Top" Margin="0,-150,-150,0"
-                 Fill="#084f8ef7" Opacity="0.06"/>
+                 Fill="{DynamicResource AccentBrush}" Opacity="0.03"/>
 
-		<Border Style="{StaticResource MainCard}"
+        <Border Style="{StaticResource MainCard}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center">
-			<Border.Effect>
-				<DropShadowEffect Color="#000000" Opacity="0.07"
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" Opacity="0.07"
                                   BlurRadius="24" ShadowDepth="3"/>
-			</Border.Effect>
+            </Border.Effect>
 
-			<StackPanel>
+            <StackPanel>
 
-				<!-- Brand (couleurs comme sidebar, sans pastille) -->
-				<TextBlock Style="{StaticResource BrandTitleSplit}">
-					Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
-				</TextBlock>
-				<TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
+                <TextBlock Style="{StaticResource BrandTitleSplit}">
+                    Smar<Run Foreground="{DynamicResource AccentBrush}">Test</Run>
+                </TextBlock>
+                <TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
 
-				<TextBlock Text="Bon retour !" FontFamily="Georgia" FontSize="22"
-                           Foreground="#0f1e3d" HorizontalAlignment="Center" Margin="0,0,0,0"/>
-				<Border Style="{StaticResource AccentLine}"/>
+                <TextBlock Text="Bon retour !" FontFamily="Georgia" FontSize="22"
+                           Foreground="{DynamicResource NavyBrush}" HorizontalAlignment="Center" Margin="0,0,0,0"/>
+                <Border Style="{StaticResource AccentLine}"/>
 
-				<!-- Erreur -->
-				<Border Style="{StaticResource AlertError}"
+                <!-- Erreur -->
+                <Border Style="{StaticResource AlertError}"
                         Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-					<TextBlock Text="{Binding ErrorMessage}" Foreground="#791f1f"
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource AlertErrorFgBrush}"
                                FontSize="12" TextWrapping="Wrap"/>
-				</Border>
+                </Border>
 
-				<!-- Email -->
-				<TextBlock Text="Email" Style="{StaticResource FieldLabel}"/>
-				<TextBox Style="{StaticResource InputBox}"
+                <!-- Email -->
+                <TextBlock Text="Email" Style="{StaticResource FieldLabel}"/>
+                <TextBox Style="{StaticResource InputBox}"
                          Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0,0,0,12"/>
 
-				<!-- Mot de passe avec œil -->
-				<TextBlock Text="Mot de passe" Style="{StaticResource FieldLabel}"/>
-				<Grid Margin="0,0,0,6">
-					<PasswordBox x:Name="PasswordBox"
+                <!-- Mot de passe avec œil -->
+                <TextBlock Text="Mot de passe" Style="{StaticResource FieldLabel}"/>
+                <Grid Margin="0,0,0,6">
+                    <PasswordBox x:Name="PasswordBox"
                                  Style="{StaticResource InputPassword}"
                                  PasswordChanged="PasswordBox_PasswordChanged"/>
-					<!-- TextBox visible quand ShowPassword = True -->
-					<TextBox x:Name="PasswordTextBox"
+                    <TextBox x:Name="PasswordTextBox"
                              Style="{StaticResource InputBox}"
                              Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                              Visibility="Collapsed"
                              Padding="10,0,36,0"/>
-					<!-- Bouton œil -->
-					<Button x:Name="TogglePasswordBtn"
+                    <Button x:Name="TogglePasswordBtn"
                             Width="30" Height="30"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
@@ -92,53 +89,53 @@
                             Cursor="Hand"
                             Click="TogglePassword_Click"
                             ToolTip="Afficher / masquer le mot de passe">
-						<TextBlock x:Name="EyeIcon" Text="🔓" FontSize="15" Foreground="#0f1e3d"/>
-					</Button>
-				</Grid>
+                        <TextBlock x:Name="EyeIcon" Text="🔓" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
+                    </Button>
+                </Grid>
 
-				<!-- Mot de passe oublié -->
-				<TextBlock HorizontalAlignment="Right" Margin="0,0,0,18">
-					<Hyperlink Command="{Binding ForgotPasswordCommand}"
-                               Foreground="#1a2e5a" TextDecorations="None">
-						Mot de passe oublié ?
-					</Hyperlink>
-				</TextBlock>
+                <!-- Mot de passe oublié -->
+                <TextBlock HorizontalAlignment="Right" Margin="0,0,0,18">
+                    <Hyperlink Command="{Binding ForgotPasswordCommand}"
+                               Foreground="{DynamicResource NavyLightBrush}" TextDecorations="None">
+                        Mot de passe oublié ?
+                    </Hyperlink>
+                </TextBlock>
 
-				<!-- Bouton Se connecter -->
-				<Button Style="{StaticResource PrimaryBtn}"
+                <!-- Bouton Se connecter -->
+                <Button Style="{StaticResource PrimaryBtn}"
                         Command="{Binding LoginCommand}"
                         Margin="0,0,0,12">
-					<TextBlock>
-						<TextBlock.Style>
-							<Style TargetType="TextBlock">
-								<Setter Property="Text" Value="Se connecter"/>
-								<Style.Triggers>
-									<DataTrigger Binding="{Binding IsLoading}" Value="True">
-										<Setter Property="Text" Value="Connexion en cours..."/>
-									</DataTrigger>
-								</Style.Triggers>
-							</Style>
-						</TextBlock.Style>
-					</TextBlock>
-				</Button>
+                    <TextBlock>
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Se connecter"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                        <Setter Property="Text" Value="Connexion en cours..."/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Button>
 
-				<!-- Séparateur -->
-				<Grid Margin="0,0,0,12">
-					<Separator/>
-					<TextBlock Text="ou" Background="White" Foreground="#8899b8"
+                <!-- Séparateur -->
+                <Grid Margin="0,0,0,12">
+                    <Separator/>
+                    <TextBlock Text="ou" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource MutedBrush}"
                                FontSize="11" HorizontalAlignment="Center" Padding="10,0"/>
-				</Grid>
+                </Grid>
 
-				<!-- Bouton Créer un compte -->
-				<Button Style="{StaticResource SecondaryBtn}"
+                <!-- Bouton Créer un compte -->
+                <Button Style="{StaticResource SecondaryBtn}"
                         Command="{Binding RegisterCommand}">
-					<TextBlock Text="Créer un compte professeur"/>
-				</Button>
+                    <TextBlock Text="Créer un compte professeur"/>
+                </Button>
 
-				<!-- Footer -->
-				<TextBlock Text="SmarTest — ENSA Oujda" Style="{StaticResource FooterText}"/>
+                <!-- Footer -->
+                <TextBlock Text="SmarTest — ENSA Oujda" Style="{StaticResource FooterText}"/>
 
-			</StackPanel>
-		</Border>
-	</Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
 </Window>

@@ -7,7 +7,7 @@
         MinHeight="600" MinWidth="960"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#fafbfd"
+        Background="{DynamicResource WindowBgBrush}"
         FontFamily="Segoe UI">
 
 
@@ -26,7 +26,7 @@
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
 
-			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="#fafbfd">
+			<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Background="{DynamicResource WindowBgBrush}">
 				<views:StatistiquesDashboardView x:Name="Dashboard" Margin="40,36,40,40"/>
 			</ScrollViewer>
 		</Grid>

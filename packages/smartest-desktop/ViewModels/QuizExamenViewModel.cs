@@ -172,6 +172,7 @@ namespace smartest_desktop.ViewModels
         /// <summary>Masqué dès que l’examen n’est plus un brouillon non publié — l’état « publié » est porté par la colonne Statut uniquement.</summary>
         public bool PublierBoutonVisible =>
             IsPublicationEnCours
+            || QuizExamenViewModel.EstExamenSessionTermineeOuAnnulee(Examen)
             || (
                 !(Examen.BackendId is long bid && bid > 0)
                 && string.Equals(Examen.Statut?.Trim(), "BROUILLON", StringComparison.OrdinalIgnoreCase)
@@ -207,17 +208,18 @@ namespace smartest_desktop.ViewModels
             && string.Equals(Examen.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase);
 
         public string LancerBoutonTexte =>
-            QuizExamenViewModel.EstExamenSessionTermineeOuAnnulee(Examen)
-                ? "Session terminée"
-                : SessionSupervisionOuverte
-                    ? "Session en cours"
-                    : "Lancer";
+            SessionSupervisionOuverte
+                ? "Session en cours"
+                : "Lancer";
 
         public bool LancerBoutonActif =>
             !SessionSupervisionOuverte
             && QuizExamenViewModel.EstExamenPublieSurLeWebPourSupervision(Examen)
             && QuizExamenViewModel.EstCreneauLancementExamenAtteint(Examen)
             && !QuizExamenViewModel.EstExamenSessionTermineeOuAnnulee(Examen);
+
+        public bool LancerBoutonVisible =>
+            true;
 
         /// <summary>Copies soumises : correction détaillée après publication web.</summary>
         public bool CorrigerCopiesBoutonVisible =>
@@ -240,6 +242,7 @@ namespace smartest_desktop.ViewModels
             OnPropertyChanged(nameof(SynchroniserBoutonVisible));
             OnPropertyChanged(nameof(LancerBoutonTexte));
             OnPropertyChanged(nameof(LancerBoutonActif));
+            OnPropertyChanged(nameof(LancerBoutonVisible));
             OnPropertyChanged(nameof(CorrigerCopiesBoutonVisible));
         }
 

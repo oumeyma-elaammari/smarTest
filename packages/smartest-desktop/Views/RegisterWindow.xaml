@@ -7,88 +7,87 @@
         ResizeMode="CanResize"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#f0f3f9">
+        Background="{DynamicResource BgBrush}">
 
-	<Window.Resources>
-		<ResourceDictionary>
-			<ResourceDictionary.MergedDictionaries>
-				<ResourceDictionary Source="/Views/Styles/AuthStyles.xaml"/>
-			</ResourceDictionary.MergedDictionaries>
-			<BooleanToVisibilityConverter x:Key="BoolToVis"/>
-		</ResourceDictionary>
-	</Window.Resources>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Views/Styles/AuthStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </ResourceDictionary>
+    </Window.Resources>
 
-	<Grid Background="#f0f3f9">
+    <Grid Background="{DynamicResource BgBrush}">
 
-		<!-- Flèche retour accueil -->
-		<Button Background="Transparent" BorderThickness="0"
+        <!-- Flèche retour accueil -->
+        <Button Background="Transparent" BorderThickness="0"
                 Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top"
                 Margin="24,16,0,0" Click="BackToWelcome_Click"
                 ToolTip="Retour à l'accueil">
-			<StackPanel Orientation="Horizontal">
-				<TextBlock Text="←" FontSize="16" Foreground="#8899b8" Margin="0,0,6,0"/>
-				<TextBlock Text="Accueil" FontSize="12" Foreground="#8899b8" VerticalAlignment="Center"/>
-			</StackPanel>
-		</Button>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="←" FontSize="16" Foreground="{DynamicResource MutedBrush}" Margin="0,0,6,0"/>
+                <TextBlock Text="Accueil" FontSize="12" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
 
-		<ScrollViewer HorizontalAlignment="Center" VerticalAlignment="Center"
+        <ScrollViewer HorizontalAlignment="Center" VerticalAlignment="Center"
                       VerticalScrollBarVisibility="Auto" MaxHeight="780">
-			<Border Style="{StaticResource MainCard}">
-				<Border.Effect>
-					<DropShadowEffect Color="#000000" Opacity="0.07"
+            <Border Style="{StaticResource MainCard}">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" Opacity="0.07"
                                       BlurRadius="24" ShadowDepth="3"/>
-				</Border.Effect>
+                </Border.Effect>
 
-				<StackPanel>
+                <StackPanel>
 
-					<!-- Brand (couleurs comme sidebar, sans pastille) -->
-					<TextBlock Style="{StaticResource BrandTitleSplit}">
-						Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
-					</TextBlock>
-					<TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
+                    <TextBlock Style="{StaticResource BrandTitleSplit}">
+                        Smar<Run Foreground="{DynamicResource AccentBrush}">Test</Run>
+                    </TextBlock>
+                    <TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
 
-					<TextBlock Text="Créer un compte" FontFamily="Georgia" FontSize="22"
-                               Foreground="#0f1e3d" HorizontalAlignment="Center"/>
-					<Border Style="{StaticResource AccentLine}"/>
+                    <TextBlock Text="Créer un compte" FontFamily="Georgia" FontSize="22"
+                               Foreground="{DynamicResource NavyBrush}" HorizontalAlignment="Center"/>
+                    <Border Style="{StaticResource AccentLine}"/>
 
-					<!-- Succès -->
-					<Border Style="{StaticResource AlertSuccess}"
+                    <!-- Succès -->
+                    <Border Style="{StaticResource AlertSuccess}"
                             Visibility="{Binding HasSuccess, Converter={StaticResource BoolToVis}}">
-						<TextBlock Text="{Binding SuccessMessage}" Foreground="#27500a"
+                        <TextBlock Text="{Binding SuccessMessage}" Foreground="{DynamicResource AlertSuccessFgBrush}"
                                    FontSize="12" TextWrapping="Wrap"/>
-					</Border>
+                    </Border>
 
-					<!-- Erreur -->
-					<Border Style="{StaticResource AlertError}"
+                    <!-- Erreur -->
+                    <Border Style="{StaticResource AlertError}"
                             Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-						<TextBlock Text="{Binding ErrorMessage}" Foreground="#791f1f"
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource AlertErrorFgBrush}"
                                    FontSize="12" TextWrapping="Wrap"/>
-					</Border>
+                    </Border>
 
-					<!-- Nom -->
-					<TextBlock Text="Nom complet" Style="{StaticResource FieldLabel}"/>
-					<TextBox Style="{StaticResource InputBox}"
+                    <!-- Nom -->
+                    <TextBlock Text="Nom complet" Style="{StaticResource FieldLabel}"/>
+                    <TextBox Style="{StaticResource InputBox}"
                              Text="{Binding Nom, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,0,0,12"/>
 
-					<!-- Email -->
-					<TextBlock Text="Email" Style="{StaticResource FieldLabel}"/>
-					<TextBox Style="{StaticResource InputBox}"
+                    <!-- Email -->
+                    <TextBlock Text="Email" Style="{StaticResource FieldLabel}"/>
+                    <TextBox Style="{StaticResource InputBox}"
                              Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,0,0,12"/>
 
-					<!-- Mot de passe avec œil -->
-					<TextBlock Text="Mot de passe" Style="{StaticResource FieldLabel}"/>
-					<Grid Margin="0,0,0,4">
-						<PasswordBox x:Name="PasswordBox"
+                    <!-- Mot de passe avec œil -->
+                    <TextBlock Text="Mot de passe" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,4">
+                        <PasswordBox x:Name="PasswordBox"
                                      Style="{StaticResource InputPassword}"
                                      PasswordChanged="PasswordBox_Changed"/>
-						<TextBox x:Name="PasswordTextBox"
+                        <TextBox x:Name="PasswordTextBox"
                                  Style="{StaticResource InputBox}"
                                  Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                                  Visibility="Collapsed"
                                  Padding="10,0,36,0"/>
-						<Button x:Name="TogglePasswordBtn"
+                        <Button x:Name="TogglePasswordBtn"
                                 Width="30" Height="30"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
@@ -98,24 +97,24 @@
                                 Cursor="Hand"
                                 Click="TogglePassword_Click"
                                 ToolTip="Afficher / masquer le mot de passe">
-							<TextBlock x:Name="EyeIcon1" Text="🔓" FontSize="15" Foreground="#0f1e3d"/>
-						</Button>
-					</Grid>
-					<TextBlock Text="Min. 8 car. · 1 majuscule · 1 chiffre · 1 spécial"
-                               FontSize="11" Foreground="#8899b8" Margin="0,0,0,12"/>
+                            <TextBlock x:Name="EyeIcon1" Text="🔓" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
+                        </Button>
+                    </Grid>
+                    <TextBlock Text="Min. 8 car. · 1 majuscule · 1 chiffre · 1 spécial"
+                               FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,12"/>
 
-					<!-- Confirmer mot de passe avec œil -->
-					<TextBlock Text="Confirmer le mot de passe" Style="{StaticResource FieldLabel}"/>
-					<Grid Margin="0,0,0,20">
-						<PasswordBox x:Name="ConfirmPasswordBox"
+                    <!-- Confirmer mot de passe avec œil -->
+                    <TextBlock Text="Confirmer le mot de passe" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,20">
+                        <PasswordBox x:Name="ConfirmPasswordBox"
                                      Style="{StaticResource InputPassword}"
                                      PasswordChanged="ConfirmPasswordBox_Changed"/>
-						<TextBox x:Name="ConfirmPasswordTextBox"
+                        <TextBox x:Name="ConfirmPasswordTextBox"
                                  Style="{StaticResource InputBox}"
                                  Text="{Binding ConfirmPassword, UpdateSourceTrigger=PropertyChanged}"
                                  Visibility="Collapsed"
                                  Padding="10,0,36,0"/>
-						<Button x:Name="ToggleConfirmPasswordBtn"
+                        <Button x:Name="ToggleConfirmPasswordBtn"
                                 Width="30" Height="30"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
@@ -125,39 +124,39 @@
                                 Cursor="Hand"
                                 Click="ToggleConfirmPassword_Click"
                                 ToolTip="Afficher / masquer le mot de passe">
-							<TextBlock x:Name="EyeIcon2" Text="🔓" FontSize="15" Foreground="#0f1e3d"/>
-						</Button>
-					</Grid>
+                            <TextBlock x:Name="EyeIcon2" Text="🔓" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
+                        </Button>
+                    </Grid>
 
-					<!-- Bouton S'inscrire -->
-					<Button Style="{StaticResource PrimaryBtn}"
+                    <!-- Bouton S'inscrire -->
+                    <Button Style="{StaticResource PrimaryBtn}"
                             Command="{Binding RegisterCommand}"
                             Margin="0,0,0,10">
-						<TextBlock>
-							<TextBlock.Style>
-								<Style TargetType="TextBlock">
-									<Setter Property="Text" Value="S'inscrire"/>
-									<Style.Triggers>
-										<DataTrigger Binding="{Binding IsLoading}" Value="True">
-											<Setter Property="Text" Value="Inscription..."/>
-										</DataTrigger>
-									</Style.Triggers>
-								</Style>
-							</TextBlock.Style>
-						</TextBlock>
-					</Button>
+                        <TextBlock>
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="S'inscrire"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                            <Setter Property="Text" Value="Inscription..."/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button>
 
-					<!-- Bouton Retour -->
-					<Button Style="{StaticResource SecondaryBtn}"
+                    <!-- Bouton Retour -->
+                    <Button Style="{StaticResource SecondaryBtn}"
                             Command="{Binding BackToLoginCommand}">
-						<TextBlock Text="Retour à la connexion"/>
-					</Button>
+                        <TextBlock Text="Retour à la connexion"/>
+                    </Button>
 
-					<!-- Footer -->
-					<TextBlock Text="SmarTest — ENSA Oujda" Style="{StaticResource FooterText}"/>
+                    <!-- Footer -->
+                    <TextBlock Text="SmarTest — ENSA Oujda" Style="{StaticResource FooterText}"/>
 
-				</StackPanel>
-			</Border>
-		</ScrollViewer>
-	</Grid>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </Grid>
 </Window>

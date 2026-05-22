@@ -7,7 +7,7 @@
         ResizeMode="CanResize"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="#f0f3f9">
+        Background="{DynamicResource BgBrush}">
 
 	<Window.Resources>
 		<ResourceDictionary>
@@ -17,7 +17,7 @@
 		</ResourceDictionary>
 	</Window.Resources>
 
-	<Grid Background="#f0f3f9">
+	<Grid Background="{DynamicResource BgBrush}">
 
 		<Border Style="{StaticResource MainCard}"
                 HorizontalAlignment="Center"
@@ -30,7 +30,7 @@
 			<StackPanel>
 
 				<TextBlock Style="{StaticResource BrandTitleSplit}">
-					Smar<Run Foreground="{StaticResource AccentBrush}">Test</Run>
+					Smar<Run Foreground="{DynamicResource AccentBrush}">Test</Run>
 				</TextBlock>
 				<TextBlock Text="PLATEFORME D'ÉVALUATION" Style="{StaticResource BrandSub}"/>
 
@@ -38,18 +38,18 @@
 					<TextBlock Text="✉" FontSize="30"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
-                               Foreground="#1a2e5a"/>
+                               Foreground="{DynamicResource NavyLightBrush}"/>
 				</Border>
 
 				<TextBlock Text="Code de vérification envoyé !" FontFamily="Georgia" FontSize="18"
-                           Foreground="#0f1e3d" HorizontalAlignment="Center"/>
+                           Foreground="{DynamicResource NavyBrush}" HorizontalAlignment="Center"/>
 				<Border Style="{StaticResource AccentLine}"/>
 
-				<TextBlock FontSize="12" Foreground="#6b7a99" TextWrapping="Wrap"
+				<TextBlock FontSize="12" Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap"
                            TextAlignment="Center" HorizontalAlignment="Center"
                            Margin="0,0,0,20">
 					Un code à 6 chiffres a été envoyé à
-					<Run Text="{Binding Email}" FontWeight="SemiBold" Foreground="#1a2e5a"/>.
+					<Run Text="{Binding Email}" FontWeight="SemiBold" Foreground="{DynamicResource NavyLightBrush}"/>.
 					Saisissez-le ci-dessous pour activer votre compte.
 				</TextBlock>
 
@@ -60,18 +60,18 @@
                          Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0,0,0,4"/>
 				<TextBlock Text="Entrez le code à 6 chiffres reçu par email"
-                           FontSize="11" Foreground="#8899b8"
+                           FontSize="11" Foreground="{DynamicResource MutedBrush}"
                            HorizontalAlignment="Center" Margin="0,0,0,16"/>
 
 				<Border Style="{StaticResource AlertSuccess}"
                         Visibility="{Binding HasSuccess, Converter={StaticResource BoolToVis}}">
-					<TextBlock Text="{Binding SuccessMessage}" Foreground="#27500a"
+					<TextBlock Text="{Binding SuccessMessage}" Foreground="{DynamicResource AlertSuccessFgBrush}"
                                FontSize="12" TextWrapping="Wrap"/>
 				</Border>
 
 				<Border Style="{StaticResource AlertError}"
                         Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-					<TextBlock Text="{Binding ErrorMessage}" Foreground="#791f1f"
+					<TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource AlertErrorFgBrush}"
                                FontSize="12" TextWrapping="Wrap"/>
 				</Border>
 

@@ -1,4 +1,4 @@
-<Window x:Class="smartest_desktop.Views.ExamenCorrectionEtudiantDialog"
+﻿<Window x:Class="smartest_desktop.Views.ExamenCorrectionEtudiantDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Correction"
@@ -6,7 +6,7 @@
         MinWidth="520"
         Height="560"
         WindowStartupLocation="CenterOwner"
-        Background="#fafbfd"
+        Background="{DynamicResource BgBrush}"
         FontFamily="Segoe UI"
         Loaded="Window_Loaded">
     <Window.Resources>
@@ -17,7 +17,7 @@
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </ResourceDictionary>
     </Window.Resources>
-    <Border Padding="20,18" BorderBrush="#e2e8f4">
+    <Border Padding="20,18" BorderBrush="{DynamicResource CardBorderBrush}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -25,27 +25,27 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Margin="0,0,0,12">
-                <TextBlock Text="{Binding TitreFenetre}" FontSize="16" FontWeight="700" Foreground="#0f1e3d" TextWrapping="Wrap"/>
-                <TextBlock Text="{Binding Erreur}" Foreground="#b91c1c" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"
+                <TextBlock Text="{Binding TitreFenetre}" FontSize="16" FontWeight="700" Foreground="{DynamicResource NavyBrush}" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding Erreur}" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"
                            Visibility="{Binding AfficherErreur, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Lignes}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="White" BorderBrush="#e2e8f0" BorderThickness="1" CornerRadius="10"
+                            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10"
                                     Padding="12,10" Margin="0,0,0,10">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding SousTitre}" FontSize="11" Foreground="#64748b" Margin="0,0,0,4"/>
-                                    <TextBlock Text="{Binding Enonce}" FontSize="13" Foreground="#0f1e3d" TextWrapping="Wrap" Margin="0,0,0,6"/>
-                                    <TextBlock FontSize="12" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,8">
+                                    <TextBlock Text="{Binding SousTitre}" FontSize="11" Foreground="{DynamicResource LabelBrush}" Margin="0,0,0,4"/>
+                                    <TextBlock Text="{Binding Enonce}" FontSize="13" Foreground="{DynamicResource NavyBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8">
                                         <Run Text="Réponse : " FontWeight="SemiBold"/>
                                         <Run Text="{Binding ReponseLibelle}"/>
                                     </TextBlock>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Note" VerticalAlignment="Center" FontSize="12" Foreground="#64748b" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Note" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource LabelBrush}" Margin="0,0,8,0"/>
                                         <TextBox Width="80" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" Padding="6,4"/>
-                                        <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="#94a3b8" Margin="8,0,0,0">
+                                        <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource MutedBrush}" Margin="8,0,0,0">
                                             <Run Text="/ max "/>
                                             <Run Text="{Binding PointsMax, StringFormat={}{0:0.##}}"/>
                                         </TextBlock>
@@ -61,7 +61,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock VerticalAlignment="Center" FontSize="14" FontWeight="700" Foreground="#0f1e3d">
+                <TextBlock VerticalAlignment="Center" FontSize="14" FontWeight="700" Foreground="{DynamicResource NavyBrush}">
                     <Run Text="Total : "/>
                     <Run Text="{Binding NoteTotale, Mode=OneWay, StringFormat={}{0:0.##}}"/>
                     <Run Text=" / "/>
@@ -73,3 +73,4 @@
         </Grid>
     </Border>
 </Window>
+
