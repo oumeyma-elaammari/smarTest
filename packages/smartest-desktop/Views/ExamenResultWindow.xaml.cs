@@ -131,17 +131,6 @@ namespace smartest_desktop.Views
 
                         Dispatcher.Invoke(() =>
                         {
-                            MessageBox.Show(
-                                $"L'examen « {titreExamen} » a été validé et sauvegardé.\n\n" +
-                                $"• {questionsValidees.Count} questions\n" +
-                                $"• Difficulté : {difficulteExamen}\n" +
-                                $"• Durée : {dureeExamen} min\n" +
-                                $"• Cours : {coursTitreExamen}\n\n" +
-                                "Renseignez la publication web et le créneau dans l'écran de révision, puis utilisez « Publier sur le web » dans la liste des examens.",
-                                "Examen enregistré",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information);
-
                             OuvrirHubEtFermer();
                         });
                     }

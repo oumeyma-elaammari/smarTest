@@ -18,6 +18,8 @@ namespace smartest_desktop
     public partial class App : Application
     {
         public static event Action<string, string>? ProfilMisAJour;
+        public static event Action<bool>? ThemeMisAJour;
+        public static bool EstThemeSombre { get; private set; }
 
         /// <summary>
         /// PDFsharp 6 (build Core) : résolution des polices système Windows (Arial, etc.).
@@ -122,6 +124,8 @@ namespace smartest_desktop
             LocalDb = InitialiserBase();
             Directory.CreateDirectory(DossierApp);
             File.WriteAllText(FichierDernierEmail, email.Trim().ToLowerInvariant(), Encoding.UTF8);
+            EstThemeSombre = ChargerThemeDepuisBd();
+            ThemeMisAJour?.Invoke(EstThemeSombre);
         }
 
         /// <remarks>
@@ -222,6 +226,63 @@ namespace smartest_desktop
             ProfilMisAJour?.Invoke(nom, email);
         }
 
+        public static void AppliquerTheme(bool sombre)
+        {
+            EstThemeSombre = sombre;
+            AppliquerThemeDictionnaire(sombre);
+            try
+            {
+                if (LocalDb != null)
+                {
+                    var existing = LocalDb.AppSettings.FirstOrDefault(s => s.Cle == "theme");
+                    if (existing != null)
+                        existing.Valeur = sombre ? "dark" : "light";
+                    else
+                        LocalDb.AppSettings.Add(new Data.LocalEntities.AppSetting { Cle = "theme", Valeur = sombre ? "dark" : "light" });
+                    LocalDb.SaveChanges();
+                }
+            }
+            catch { }
+            ThemeMisAJour?.Invoke(sombre);
+        }
+
+        private static void AppliquerThemeDictionnaire(bool sombre)
+        {
+            var uri = new Uri(
+                sombre ? "/Views/Styles/DarkTheme.xaml" : "/Views/Styles/LightTheme.xaml",
+                UriKind.Relative);
+            var dicts = Current.Resources.MergedDictionaries;
+            var ancien = dicts.FirstOrDefault(d =>
+                d.Source != null &&
+                (d.Source.OriginalString.Contains("DarkTheme") ||
+                 d.Source.OriginalString.Contains("LightTheme")));
+            var nouv = new ResourceDictionary { Source = uri };
+            if (ancien != null)
+            {
+                int idx = dicts.IndexOf(ancien);
+                dicts.Remove(ancien);
+                dicts.Insert(idx, nouv);
+            }
+            else
+            {
+                dicts.Insert(0, nouv);
+            }
+        }
+
+        private static bool ChargerThemeDepuisBd()
+        {
+            try
+            {
+                if (LocalDb != null)
+                {
+                    var setting = LocalDb.AppSettings.FirstOrDefault(s => s.Cle == "theme");
+                    return setting?.Valeur == "dark";
+                }
+            }
+            catch { }
+            return false;
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
@@ -255,6 +316,9 @@ namespace smartest_desktop
                     MigrerSqliteRacineVersCompteSiAbsent(dernierEmail);
                     LocalDbContext.CheminBase = CheminDbPourEmail(dernierEmail);
                     LocalDb = InitialiserBase();
+                    EstThemeSombre = ChargerThemeDepuisBd();
+                    if (EstThemeSombre)
+                        AppliquerThemeDictionnaire(true);
 
                     var session = new SessionService(LocalDb).ChargerSession();
                     if (session != null)
@@ -507,7 +571,11 @@ namespace smartest_desktop
 
             string emailNorm = email.Trim().ToLowerInvariant();
             try { LocalDb?.Dispose(); }
-            catch { /* libérer le fichier SQLite */ }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SupprimerDonneesLocales] Dispose LocalDb : {ex.Message}");
+            }
 
             string dossierCompte = CheminDossierDonneesPourEmail(emailNorm);
             try
@@ -523,23 +591,35 @@ namespace smartest_desktop
                             ctx.Database.EnsureDeleted();
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(
+                            $"[SupprimerDonneesLocales] EnsureDeleted : {ex.Message}");
+                    }
                     foreach (var suf in new[] { string.Empty, "-shm", "-wal" })
                     {
+                        var p = fichiersDb + suf;
                         try
                         {
-                            var p = fichiersDb + suf;
                             if (File.Exists(p))
                                 File.Delete(p);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine(
+                                $"[SupprimerDonneesLocales] Suppression {p} : {ex.Message}");
+                        }
                     }
                 }
 
                 if (!string.IsNullOrEmpty(dossierCompte) && Directory.Exists(dossierCompte))
                     Directory.Delete(dossierCompte, recursive: true);
             }
-            catch { /* dossier verrouillé ou autre — la déconnexion reste prioritaire */ }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SupprimerDonneesLocales] Suppression dossier {dossierCompte} : {ex.Message}");
+            }
 
             try
             {
@@ -550,7 +630,11 @@ namespace smartest_desktop
                         File.Delete(FichierDernierEmail);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SupprimerDonneesLocales] Suppression last_user.txt : {ex.Message}");
+            }
 
             try
             {
@@ -568,7 +652,11 @@ namespace smartest_desktop
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SupprimerDonneesLocales] Suppression profile_prefs legacy : {ex.Message}");
+            }
 
             string placeholderDir = Path.Combine(DossierApp, "_placeholder");
             Directory.CreateDirectory(placeholderDir);

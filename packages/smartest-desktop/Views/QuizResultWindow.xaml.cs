@@ -276,17 +276,6 @@ namespace smartest_desktop.Views
 
             await Dispatcher.InvokeAsync(() =>
             {
-                MessageBox.Show(
-                    $"Le quiz « {context.TitreQuiz} » a été validé et sauvegardé.\n\n" +
-                    $"• {context.QuestionsValidees.Count} questions\n" +
-                    $"• Liste d’emails (publication web) : enregistrée en local — la publication sur le serveur se fait avec « Publier » dans Mes évaluations.\n" +
-                    $"• Difficulté : {context.DifficulteQuiz}\n" +
-                    $"• Cours : {context.CoursTitreQuiz}\n" +
-                    $"• Statut : {context.StatutQuiz}",
-                    "Quiz enregistré",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-
                 OuvrirHubEtFermer();
             });
         }

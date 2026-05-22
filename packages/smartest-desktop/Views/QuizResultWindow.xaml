@@ -1,4 +1,4 @@
-<Window x:Class="smartest_desktop.Views.QuizResultWindow"
+﻿<Window x:Class="smartest_desktop.Views.QuizResultWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
@@ -8,7 +8,7 @@
         MinHeight="650" MinWidth="1000"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource BgBrush}"
+        Background="{DynamicResource WindowBgBrush}"
         FontFamily="Segoe UI">
 
 	<Window.Resources>
@@ -18,9 +18,9 @@
 			</ResourceDictionary.MergedDictionaries>
 
 			<Style x:Key="QRCard" TargetType="Border">
-				<Setter Property="Background" Value="White"/>
+				<Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
 				<Setter Property="CornerRadius" Value="12"/>
-				<Setter Property="BorderBrush" Value="#e2e8f4"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 				<Setter Property="BorderThickness" Value="1"/>
 			</Style>
 
@@ -29,10 +29,13 @@
 				<Setter Property="CornerRadius" Value="9"/>
 				<Setter Property="Padding" Value="18,11"/>
 				<Setter Property="Cursor" Value="Hand"/>
-				<Setter Property="Background" Value="#0f1e3d"/>
+				<Setter Property="Background" Value="{DynamicResource PrimaryActionBgBrush}"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+				<Setter Property="BorderThickness" Value="1"/>
 				<Style.Triggers>
 					<Trigger Property="IsMouseOver" Value="True">
-						<Setter Property="Background" Value="#1a2e5a"/>
+						<Setter Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
+						<Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
 					</Trigger>
 				</Style.Triggers>
 			</Style>
@@ -41,12 +44,12 @@
 				<Setter Property="CornerRadius" Value="9"/>
 				<Setter Property="Padding" Value="14,9"/>
 				<Setter Property="Cursor" Value="Hand"/>
-				<Setter Property="Background" Value="#f0f3f9"/>
-				<Setter Property="BorderBrush" Value="#e2e8f4"/>
+				<Setter Property="Background" Value="{DynamicResource BgBrush}"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 				<Setter Property="BorderThickness" Value="1"/>
 				<Style.Triggers>
 					<Trigger Property="IsMouseOver" Value="True">
-						<Setter Property="Background" Value="#e8eef8"/>
+						<Setter Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
 					</Trigger>
 				</Style.Triggers>
 			</Style>
@@ -57,10 +60,10 @@
 				<Setter Property="BorderThickness" Value="0"/>
 				<Setter Property="Padding" Value="0"/>
 				<Setter Property="FontSize" Value="12"/>
-				<Setter Property="Foreground" Value="#0f1e3d"/>
+				<Setter Property="Foreground" Value="{DynamicResource NavyBrush}"/>
 				<Setter Property="TextWrapping" Value="Wrap"/>
 				<Setter Property="AcceptsReturn" Value="True"/>
-				<Setter Property="CaretBrush" Value="#0f1e3d"/>
+				<Setter Property="CaretBrush" Value="{DynamicResource NavyBrush}"/>
 			</Style>
 
 			<conv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -76,7 +79,7 @@
 		</Grid.RowDefinitions>
 
 		<!-- ══ HEADER ══ -->
-		<Border Grid.Row="0" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1" Padding="28,16">
+		<Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="28,16">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"/>
@@ -86,19 +89,19 @@
 
 				<!-- Retour -->
 				<Border Grid.Column="0" Width="38" Height="38" CornerRadius="9"
-                        Background="#eef3fd" Cursor="Hand" Margin="0,0,20,0">
+                        Background="{DynamicResource AccentLightBgBrush}" Cursor="Hand" Margin="0,0,20,0">
 					<Border.InputBindings>
 						<MouseBinding MouseAction="LeftClick" Command="{Binding RetourCommand}"/>
 					</Border.InputBindings>
 					<TextBlock Text="&#xE72B;" FontSize="14" FontFamily="Segoe MDL2 Assets"
-                               Foreground="#0f1e3d"
+                               Foreground="{DynamicResource NavyBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
 				</Border>
 
 				<!-- Info quiz -->
 				<StackPanel Grid.Column="1" VerticalAlignment="Center">
 					<StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-						<Border Width="8" Height="8" CornerRadius="4" Background="#16A34A"
+						<Border Width="8" Height="8" CornerRadius="4" Background="{DynamicResource SuccessBrush}"
                                 VerticalAlignment="Center" Margin="0,0,8,0"/>
 						<TextBox Text="{Binding TitreQuiz, UpdateSourceTrigger=PropertyChanged}"
                                  MinWidth="320"
@@ -107,15 +110,15 @@
                                  Padding="0"
                                  FontSize="16"
                                  FontWeight="700"
-                                 Foreground="#0f1e3d"
+                                 Foreground="{DynamicResource NavyBrush}"
                                  VerticalContentAlignment="Center"/>
 					</StackPanel>
 					<StackPanel Orientation="Horizontal">
-						<TextBlock FontSize="11" Foreground="#8899b8"
+						<TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}"
                                    Text="{Binding SousTitreCompteur}"/>
-						<TextBlock Text=" · " FontSize="11" Foreground="#ABABAB"/>
+						<TextBlock Text=" · " FontSize="11" Foreground="{DynamicResource MutedBrush}"/>
 						<TextBlock Text="{Binding SousTitreEtape}"
-                                   FontSize="11" Foreground="#ABABAB"/>
+                                   FontSize="11" Foreground="{DynamicResource MutedBrush}"/>
 					</StackPanel>
 				</StackPanel>
 
@@ -137,8 +140,8 @@
 						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal">
 							<TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                                       Foreground="#444444" Margin="0,0,6,0" VerticalAlignment="Center"/>
-							<TextBlock Text="Regénérer" FontSize="12" FontWeight="500" Foreground="#444444"
+                                       Foreground="{DynamicResource SubTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+							<TextBlock Text="Regénérer" FontSize="12" FontWeight="500" Foreground="{DynamicResource SubTextBrush}"
                                        VerticalAlignment="Center"/>
 						</StackPanel>
 					</Border>
@@ -159,8 +162,8 @@
 						</Border.InputBindings>
 						<StackPanel Orientation="Horizontal">
 							<TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                       Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
-							<TextBlock Text="{Binding LibelleBoutonValider}" FontSize="12" FontWeight="600" Foreground="White"
+                                       Foreground="{DynamicResource PrimaryActionFgBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+							<TextBlock Text="{Binding LibelleBoutonValider}" FontSize="12" FontWeight="700" Foreground="{DynamicResource PrimaryActionFgBrush}"
                                        VerticalAlignment="Center"/>
 						</StackPanel>
 					</Border>
@@ -176,22 +179,22 @@
 			</Grid.ColumnDefinitions>
 
 			<!-- ══ LISTE DES QUESTIONS ══ -->
-			<Border Grid.Column="0" Background="#FAFAF9" BorderBrush="#e2e8f4" BorderThickness="0,0,1,0">
+			<Border Grid.Column="0" Background="{DynamicResource WindowBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0">
 				<Grid>
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
 
-					<Border Grid.Row="0" Padding="20,18,20,14" BorderBrush="#e2e8f4" BorderThickness="0,0,0,1">
+					<Border Grid.Row="0" Padding="20,18,20,14" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
 						<StackPanel>
-							<TextBlock Text="Questions du quiz" FontSize="14" FontWeight="700" Foreground="#0f1e3d"/>
-							<TextBlock FontSize="11" Foreground="#ABABAB" Margin="0,3,0,0"
+							<TextBlock Text="Questions du quiz" FontSize="14" FontWeight="700" Foreground="{DynamicResource NavyBrush}"/>
+							<TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,3,0,0"
 									   Text="{Binding SousTitreQuestionsListe}"/>
 							<Button Margin="0,14,0,0" HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Padding="14,9" Cursor="Hand"
-                                    Background="#f0f3f9" BorderBrush="#e2e8f4" BorderThickness="1"
+                                    Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                                     Command="{Binding AjouterQuestionCommand}"
                                     FocusVisualStyle="{x:Null}">
 								<Button.Style>
@@ -207,8 +210,8 @@
 								</Button.Style>
 								<StackPanel Orientation="Horizontal">
 									<TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                               Foreground="#0f1e3d" Margin="0,0,8,0" VerticalAlignment="Center"/>
-									<TextBlock Text="Ajouter une question" FontSize="12" FontWeight="600" Foreground="#444444"
+                                               Foreground="{DynamicResource NavyBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+									<TextBlock Text="Ajouter une question" FontSize="12" FontWeight="600" Foreground="{DynamicResource SubTextBrush}"
                                                VerticalAlignment="Center"/>
 								</StackPanel>
 							</Button>
@@ -217,13 +220,13 @@
 							<Button Margin="0,10,0,0" HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Padding="14,9" Cursor="Hand"
-                                    Background="#eef3fd" BorderBrush="#cfe0fc" BorderThickness="1"
+                                    Background="{DynamicResource AccentLightBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                                     Command="{Binding VoirListeEtudiantsCommand}"
                                     FocusVisualStyle="{x:Null}">
 								<StackPanel Orientation="Horizontal">
 									<TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                               Foreground="#4f8ef7" Margin="0,0,8,0" VerticalAlignment="Center"/>
-									<TextBlock Text="Liste des étudiants" FontSize="12" FontWeight="600" Foreground="#1a2e5a"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+									<TextBlock Text="Liste des étudiants" FontSize="12" FontWeight="600" Foreground="{DynamicResource InputFocusBorderBrush}"
                                                VerticalAlignment="Center"/>
 								</StackPanel>
 							</Button>
@@ -245,16 +248,16 @@
 										</Border.InputBindings>
 										<Border.Style>
 											<Style TargetType="Border">
-												<Setter Property="Background" Value="White"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
-														<Setter Property="Background" Value="#F5F4F0"/>
-														<Setter Property="BorderBrush" Value="#C8C7C3"/>
+														<Setter Property="Background" Value="{DynamicResource BgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 													</Trigger>
 													<DataTrigger Binding="{Binding IsSelected}" Value="True">
-														<Setter Property="Background" Value="#EFF6FF"/>
-														<Setter Property="BorderBrush" Value="#3B82F6"/>
+														<Setter Property="Background" Value="{DynamicResource AccentLightBgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
 													</DataTrigger>
 												</Style.Triggers>
 											</Style>
@@ -268,10 +271,13 @@
 
 											<!-- Numéro -->
 											<Border Grid.Column="0" Width="30" Height="30"
-                                                    CornerRadius="8" Background="#0f1e3d"
+                                                    CornerRadius="8"
+                                                    Background="{DynamicResource AccentLightBgBrush}"
+                                                    BorderBrush="{DynamicResource AccentBrush}"
+                                                    BorderThickness="1"
                                                     Margin="0,0,10,0" VerticalAlignment="Top">
 												<TextBlock Text="{Binding Numero}" FontSize="11"
-                                                           FontWeight="700" Foreground="White"
+                                                           FontWeight="700" Foreground="{DynamicResource AccentTextBrush}"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
 											</Border>
@@ -279,7 +285,7 @@
 											<!-- Énoncé (pas de réponse dans la liste) -->
 											<StackPanel Grid.Column="1" VerticalAlignment="Top">
 												<TextBlock Text="{Binding Enonce}" FontSize="11"
-                                                           Foreground="#0f1e3d" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource NavyBrush}" TextWrapping="Wrap"
                                                            FontWeight="500" MaxHeight="48"
                                                            TextTrimming="CharacterEllipsis"/>
 											</StackPanel>
@@ -300,7 +306,7 @@
 														<Setter Property="Background" Value="Transparent"/>
 														<Style.Triggers>
 															<Trigger Property="IsMouseOver" Value="True">
-																<Setter Property="Background" Value="#FDE8E8"/>
+																<Setter Property="Background" Value="{DynamicResource AlertErrorBgBrush}"/>
 															</Trigger>
 															<DataTrigger Binding="{Binding DataContext.QuestionsVerrouilleesParPublication, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
 																<Setter Property="Visibility" Value="Collapsed"/>
@@ -309,7 +315,7 @@
 													</Style>
 												</Border.Style>
 												<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
-                                                           Foreground="#DC2626"
+                                                           Foreground="{DynamicResource DangerBrush}"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
 											</Border>
@@ -324,17 +330,17 @@
 			</Border>
 
 			<!-- ══ DÉTAIL / ÉDITION ══ -->
-			<Grid Grid.Column="1" Background="#FBFBFB">
+			<Grid Grid.Column="1" Background="{DynamicResource WindowBgBrush}">
 
 				<!-- Aucune question sélectionnée (pan droit — mode questions) -->
 				<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                             Visibility="{Binding AfficherEtatSansQuestion, Converter={StaticResource BoolToVis}}">
-					<TextBlock Text="&#xE762;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#e2e8f4"
+					<TextBlock Text="&#xE762;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{DynamicResource CardBorderBrush}"
                                HorizontalAlignment="Center" Margin="0,0,0,16"/>
 					<TextBlock Text="Sélectionnez une question" FontSize="15" FontWeight="600"
-                               Foreground="#0f1e3d" HorizontalAlignment="Center"/>
+                               Foreground="{DynamicResource NavyBrush}" HorizontalAlignment="Center"/>
 					<TextBlock Text="{Binding SousTitreSelectionQuestion}"
-                               FontSize="12" Foreground="#ABABAB" HorizontalAlignment="Center"
+                               FontSize="12" Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center"
                                TextWrapping="Wrap" MaxWidth="320" TextAlignment="Center" Margin="0,8,0,0"/>
 				</StackPanel>
 
@@ -343,27 +349,31 @@
                               Visibility="{Binding AfficherListeEtudiantsDroite, Converter={StaticResource BoolToVis}}">
 					<StackPanel>
 						<Border Margin="12,12,12,16" Padding="14,12" CornerRadius="10"
-                                Background="White" BorderBrush="#e2e8f4" BorderThickness="1">
+                                Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
 							<StackPanel>
-								<TextBlock Text="Publication vers la plateforme web" FontSize="13" FontWeight="700" Foreground="#0f1e3d"  Margin="0,0,0,8"/>
+								<TextBlock Text="Publication vers la plateforme web" FontSize="13" FontWeight="700" Foreground="{DynamicResource NavyBrush}"  Margin="0,0,0,8"/>
 								<StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-									<Border CornerRadius="8" Padding="12,8" Margin="0,0,8,0" Cursor="Hand" Background="#0f1e3d">
+									<Border CornerRadius="8" Padding="12,8" Margin="0,0,8,0" Cursor="Hand">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding ImporterEmailsWebCommand}"/>
 										</Border.InputBindings>
 										<Border.Style>
 											<Style TargetType="Border">
+												<Setter Property="Background" Value="{DynamicResource AccentLightBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+												<Setter Property="BorderThickness" Value="1"/>
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
-														<Setter Property="Background" Value="#1a2e5a"/>
+														<Setter Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
 													</Trigger>
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
-										<TextBlock Text="Importer fichier" FontSize="11" FontWeight="600" Foreground="White"/>
+										<TextBlock Text="Importer fichier" FontSize="11" FontWeight="700" Foreground="{DynamicResource AccentTextBrush}"/>
 									</Border>
 									<Border CornerRadius="8" Padding="12,8" Cursor="Hand"
-                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1"
+                                            Background="{DynamicResource DangerZoneBgBrush}" BorderBrush="{DynamicResource DangerZoneBorderBrush}" BorderThickness="1"
                                             ToolTip="Effacer la liste">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding EffacerEmailsWebCommand}"/>
@@ -372,46 +382,50 @@
 											<Style TargetType="Border">
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
-														<Setter Property="Background" Value="#FEE2E2"/>
+														<Setter Property="Background" Value="{DynamicResource AlertErrorBgBrush}"/>
 													</Trigger>
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
 										<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="#DC2626"
+                                                   Foreground="{DynamicResource DangerBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 									</Border>
 								</StackPanel>
-								<TextBlock Text="{Binding LibelleEmailsPublicationWeb}" FontSize="10" Foreground="#64748b"
+								<TextBlock Text="{Binding LibelleEmailsPublicationWeb}" FontSize="10" Foreground="{DynamicResource LabelBrush}"
                                            Margin="0,0,0,10"/>
-								<TextBlock Text="Ajouter un email" FontSize="10" FontWeight="600" Foreground="#64748b" Margin="0,0,0,4"/>
+								<TextBlock Text="Ajouter un email" FontSize="10" FontWeight="600" Foreground="{DynamicResource LabelBrush}" Margin="0,0,0,4"/>
 								<Grid Margin="0,0,0,12">
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="*"/>
 										<ColumnDefinition Width="8"/>
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
-									<Border Grid.Column="0" CornerRadius="8" BorderBrush="#e2e8f4" BorderThickness="1" Background="#fafbfd" Padding="8,4">
+									<Border Grid.Column="0" CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Background="{DynamicResource InputBgBrush}" Padding="8,4">
 										<TextBox Text="{Binding NouvelEmailWeb, UpdateSourceTrigger=PropertyChanged}"
-                                                 FontSize="11" Foreground="#0f1e3d" BorderThickness="0" Background="Transparent"
-                                                 VerticalContentAlignment="Center" CaretBrush="#4f8ef7"
+                                                 FontSize="11" Foreground="{DynamicResource NavyBrush}" BorderThickness="0" Background="Transparent"
+                                                 VerticalContentAlignment="Center" CaretBrush="{DynamicResource AccentBrush}"
                                                  ToolTip="Saisissez une adresse puis cliquez sur Ajouter"/>
 									</Border>
-									<Border Grid.Column="2" CornerRadius="8" Padding="12,8" Cursor="Hand" Background="#0f1e3d"
+									<Border Grid.Column="2" CornerRadius="8" Padding="12,8" Cursor="Hand"
                                             VerticalAlignment="Center">
 										<Border.InputBindings>
 											<MouseBinding MouseAction="LeftClick" Command="{Binding AjouterEmailUnitaireWebCommand}"/>
 										</Border.InputBindings>
 										<Border.Style>
 											<Style TargetType="Border">
+												<Setter Property="Background" Value="{DynamicResource AccentLightBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+												<Setter Property="BorderThickness" Value="1"/>
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
-														<Setter Property="Background" Value="#1a2e5a"/>
+														<Setter Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
 													</Trigger>
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
-										<TextBlock Text="Ajouter" FontSize="11" FontWeight="600" Foreground="White"/>
+										<TextBlock Text="Ajouter" FontSize="11" FontWeight="700" Foreground="{DynamicResource AccentTextBrush}"/>
 									</Border>
 								</Grid>
 								<Grid Margin="0,0,0,6">
@@ -419,9 +433,9 @@
 										<ColumnDefinition Width="*"/>
 										<ColumnDefinition Width="Auto"/>
 									</Grid.ColumnDefinitions>
-									<TextBlock Grid.Column="0" Text="Liste des emails" FontSize="10" FontWeight="700" Foreground="#0f1e3d" VerticalAlignment="Center"/>
+									<TextBlock Grid.Column="0" Text="Liste des emails" FontSize="10" FontWeight="700" Foreground="{DynamicResource NavyBrush}" VerticalAlignment="Center"/>
 									<Border Grid.Column="1" Width="28" Height="28" CornerRadius="7" Cursor="Hand"
-                                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1"
+                                            Background="{DynamicResource DangerZoneBgBrush}" BorderBrush="{DynamicResource DangerZoneBorderBrush}" BorderThickness="1"
                                             ToolTip="Supprimer les emails sélectionnés"
                                             Visibility="{Binding AEmailsSelectionnes, Converter={StaticResource BoolToVis}}">
 										<Border.InputBindings>
@@ -431,18 +445,18 @@
 											<Style TargetType="Border">
 												<Style.Triggers>
 													<Trigger Property="IsMouseOver" Value="True">
-														<Setter Property="Background" Value="#FEE2E2"/>
+														<Setter Property="Background" Value="{DynamicResource AlertErrorBgBrush}"/>
 													</Trigger>
 												</Style.Triggers>
 											</Style>
 										</Border.Style>
 										<TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                                   Foreground="#DC2626"
+                                                   Foreground="{DynamicResource DangerBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 									</Border>
 								</Grid>
 								<TextBlock Text="Aucun email pour l'instant. Importez un fichier ou ajoutez une adresse ci-dessus."
-                                           FontSize="11" Foreground="#94a3b8" TextWrapping="Wrap"
+                                           FontSize="11" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"
                                            Visibility="{Binding AucunEmailListeApercu, Converter={StaticResource BoolToVis}}"/>
 								<ItemsControl ItemsSource="{Binding EmailsListeApercu}" Margin="0,0,0,0">
 									<ItemsControl.Style>
@@ -457,10 +471,10 @@
 									</ItemsControl.Style>
 									<ItemsControl.ItemTemplate>
 										<DataTemplate>
-											<Border Margin="0,0,0,4" Padding="8,6" CornerRadius="6" Background="#f1f5f9" BorderBrush="#e2e8f4" BorderThickness="1">
+											<Border Margin="0,0,0,4" Padding="8,6" CornerRadius="6" Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
 												<StackPanel Orientation="Horizontal">
 													<CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-													<TextBox Text="{Binding Email, Mode=TwoWay}" FontSize="11" Foreground="#0f1e3d" FontFamily="Consolas" VerticalAlignment="Center"
+													<TextBox Text="{Binding Email, Mode=TwoWay}" FontSize="11" Foreground="{DynamicResource NavyBrush}" FontFamily="Consolas" VerticalAlignment="Center"
                                                              BorderThickness="0" Background="Transparent" MinWidth="220"
                                                              ToolTip="Email modifiable"/>
 												</StackPanel>
@@ -486,20 +500,20 @@
 
 						<!-- Header -->
 						<StackPanel Grid.Row="0" Margin="0,0,0,20">
-							<TextBlock FontSize="11" Foreground="#ABABAB" FontWeight="600"
+							<TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}" FontWeight="600"
                                        Text="{Binding Numero, StringFormat='QUESTION {0}'}"/>
 							<TextBlock Text="Détail de la question "
-                                       FontSize="15" FontWeight="700" Foreground="#0f1e3d" Margin="0,4,0,0"/>
+                                       FontSize="15" FontWeight="700" Foreground="{DynamicResource NavyBrush}" Margin="0,4,0,0"/>
 						</StackPanel>
 
 						<!-- Énoncé -->
 						<Border Grid.Row="1" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
 							<StackPanel>
 								<TextBlock Text="ÉNONCÉ" FontSize="10" FontWeight="700"
-                                           Foreground="#9CA3AF" Margin="0,0,0,8"/>
+                                           Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,8"/>
 								<!-- Border arrondi qui entoure le TextBox -->
-								<Border CornerRadius="8" BorderBrush="#e2e8f4" BorderThickness="1"
-                                        Background="#FBFBFB">
+								<Border CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                                        Background="{DynamicResource InputBgBrush}">
 									<TextBox Style="{StaticResource QREditField}"
                                              Padding="10,8"
                                              Text="{Binding Enonce, UpdateSourceTrigger=PropertyChanged}"
@@ -513,7 +527,7 @@
 						<Border Grid.Row="2" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
 							<StackPanel>
 								<TextBlock Text="OPTIONS" FontSize="10" FontWeight="700"
-                                           Foreground="#9CA3AF" Margin="0,0,0,12"/>
+                                           Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,12"/>
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="*"/>
@@ -530,13 +544,13 @@
 									<Border Grid.Row="0" Grid.Column="0" CornerRadius="8" Padding="12,10">
 										<Border.Style>
 											<Style TargetType="Border">
-												<Setter Property="Background" Value="#FBFBFB"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 												<Setter Property="BorderThickness" Value="1.5"/>
 												<Style.Triggers>
 													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="A">
-														<Setter Property="Background" Value="#F0FDF4"/>
-														<Setter Property="BorderBrush" Value="#86EFAC"/>
+														<Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
 													</DataTrigger>
 												</Style.Triggers>
 											</Style>
@@ -548,7 +562,7 @@
 											</Grid.ColumnDefinitions>
 											<StackPanel Grid.Column="0">
 												<TextBlock Text="A" FontSize="10" FontWeight="700"
-                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+                                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
 												<TextBox Style="{StaticResource QREditField}"
                                                          Text="{Binding OptionA, UpdateSourceTrigger=PropertyChanged}"
                                                          IsReadOnly="{Binding DataContext.QuestionsVerrouilleesParPublication, RelativeSource={RelativeSource AncestorType=Window}}"/>
@@ -576,11 +590,11 @@
 													<TextBlock.Style>
 														<Style TargetType="TextBlock">
 															<Setter Property="Text" Value="&#xE719;"/>
-															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
 															<Style.Triggers>
 																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="A">
 																	<Setter Property="Text" Value="&#xE73E;"/>
-																	<Setter Property="Foreground" Value="#16A34A"/>
+																	<Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
 																</DataTrigger>
 															</Style.Triggers>
 														</Style>
@@ -594,13 +608,13 @@
 									<Border Grid.Row="0" Grid.Column="2" CornerRadius="8" Padding="12,10">
 										<Border.Style>
 											<Style TargetType="Border">
-												<Setter Property="Background" Value="#FBFBFB"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 												<Setter Property="BorderThickness" Value="1.5"/>
 												<Style.Triggers>
 													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="B">
-														<Setter Property="Background" Value="#F0FDF4"/>
-														<Setter Property="BorderBrush" Value="#86EFAC"/>
+														<Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
 													</DataTrigger>
 												</Style.Triggers>
 											</Style>
@@ -612,7 +626,7 @@
 											</Grid.ColumnDefinitions>
 											<StackPanel Grid.Column="0">
 												<TextBlock Text="B" FontSize="10" FontWeight="700"
-                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+                                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
 												<TextBox Style="{StaticResource QREditField}"
                                                          Text="{Binding OptionB, UpdateSourceTrigger=PropertyChanged}"
                                                          IsReadOnly="{Binding DataContext.QuestionsVerrouilleesParPublication, RelativeSource={RelativeSource AncestorType=Window}}"/>
@@ -640,11 +654,11 @@
 													<TextBlock.Style>
 														<Style TargetType="TextBlock">
 															<Setter Property="Text" Value="&#xE719;"/>
-															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
 															<Style.Triggers>
 																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="B">
 																	<Setter Property="Text" Value="&#xE73E;"/>
-																	<Setter Property="Foreground" Value="#16A34A"/>
+																	<Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
 																</DataTrigger>
 															</Style.Triggers>
 														</Style>
@@ -658,13 +672,13 @@
 									<Border Grid.Row="2" Grid.Column="0" CornerRadius="8" Padding="12,10">
 										<Border.Style>
 											<Style TargetType="Border">
-												<Setter Property="Background" Value="#FBFBFB"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 												<Setter Property="BorderThickness" Value="1.5"/>
 												<Style.Triggers>
 													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="C">
-														<Setter Property="Background" Value="#F0FDF4"/>
-														<Setter Property="BorderBrush" Value="#86EFAC"/>
+														<Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
 													</DataTrigger>
 												</Style.Triggers>
 											</Style>
@@ -676,7 +690,7 @@
 											</Grid.ColumnDefinitions>
 											<StackPanel Grid.Column="0">
 												<TextBlock Text="C" FontSize="10" FontWeight="700"
-                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+                                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
 												<TextBox Style="{StaticResource QREditField}"
                                                          Text="{Binding OptionC, UpdateSourceTrigger=PropertyChanged}"
                                                          IsReadOnly="{Binding DataContext.QuestionsVerrouilleesParPublication, RelativeSource={RelativeSource AncestorType=Window}}"/>
@@ -704,11 +718,11 @@
 													<TextBlock.Style>
 														<Style TargetType="TextBlock">
 															<Setter Property="Text" Value="&#xE719;"/>
-															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
 															<Style.Triggers>
 																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="C">
 																	<Setter Property="Text" Value="&#xE73E;"/>
-																	<Setter Property="Foreground" Value="#16A34A"/>
+																	<Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
 																</DataTrigger>
 															</Style.Triggers>
 														</Style>
@@ -722,13 +736,13 @@
 									<Border Grid.Row="2" Grid.Column="2" CornerRadius="8" Padding="12,10">
 										<Border.Style>
 											<Style TargetType="Border">
-												<Setter Property="Background" Value="#FBFBFB"/>
-												<Setter Property="BorderBrush" Value="#e2e8f4"/>
+												<Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+												<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
 												<Setter Property="BorderThickness" Value="1.5"/>
 												<Style.Triggers>
 													<DataTrigger Binding="{Binding ReponseCorrecte}" Value="D">
-														<Setter Property="Background" Value="#F0FDF4"/>
-														<Setter Property="BorderBrush" Value="#86EFAC"/>
+														<Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
+														<Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
 													</DataTrigger>
 												</Style.Triggers>
 											</Style>
@@ -740,7 +754,7 @@
 											</Grid.ColumnDefinitions>
 											<StackPanel Grid.Column="0">
 												<TextBlock Text="D" FontSize="10" FontWeight="700"
-                                                           Foreground="#6B6B6B" Margin="0,0,0,4"/>
+                                                           Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
 												<TextBox Style="{StaticResource QREditField}"
                                                          Text="{Binding OptionD, UpdateSourceTrigger=PropertyChanged}"
                                                          IsReadOnly="{Binding DataContext.QuestionsVerrouilleesParPublication, RelativeSource={RelativeSource AncestorType=Window}}"/>
@@ -768,11 +782,11 @@
 													<TextBlock.Style>
 														<Style TargetType="TextBlock">
 															<Setter Property="Text" Value="&#xE719;"/>
-															<Setter Property="Foreground" Value="#CBD5E1"/>
+															<Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
 															<Style.Triggers>
 																<DataTrigger Binding="{Binding ReponseCorrecte}" Value="D">
 																	<Setter Property="Text" Value="&#xE73E;"/>
-																	<Setter Property="Foreground" Value="#16A34A"/>
+																	<Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
 																</DataTrigger>
 															</Style.Triggers>
 														</Style>
@@ -789,10 +803,10 @@
 						<Border Grid.Row="3" Style="{StaticResource QRCard}" Padding="20,16" Margin="0,0,0,16">
 							<StackPanel>
 								<TextBlock Text="EXPLICATION" FontSize="10" FontWeight="700"
-                                           Foreground="#9CA3AF" Margin="0,0,0,8"/>
+                                           Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,8"/>
 								<!-- Border arrondi qui entoure le TextBox -->
-								<Border CornerRadius="8" BorderBrush="#e2e8f4" BorderThickness="1"
-                                        Background="#FBFBFB">
+								<Border CornerRadius="8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                                        Background="{DynamicResource InputBgBrush}">
 									<TextBox Style="{StaticResource QREditField}"
                                              Padding="10,8"
                                              Text="{Binding Explication, UpdateSourceTrigger=PropertyChanged}"
@@ -808,16 +822,18 @@
 		</Grid>
 
 		<!-- ══ FOOTER ══ -->
-		<Border Grid.Row="2" Background="White" BorderBrush="#e2e8f4" BorderThickness="0,1,0,0" Padding="28,12">
+		<Border Grid.Row="2" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="28,12">
 			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 				<TextBlock Text="&#xE9F3;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                           Foreground="#6B6B6B" Margin="0,0,6,0" VerticalAlignment="Center"/>
-				<TextBlock FontSize="12" Foreground="#6B6B6B" VerticalAlignment="Center"
+                           Foreground="{DynamicResource SubTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+				<TextBlock FontSize="12" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center"
                            Text="{Binding NombreQuestions, StringFormat='{}{0} questions dans ce quiz'}"/>
-				<TextBlock Text=" · " FontSize="12" Foreground="#CACACA"/>
+				<TextBlock Text=" · " FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
 				<TextBlock Text="{Binding MessagePiedPage}"
-                           FontSize="12" Foreground="#ABABAB" TextWrapping="Wrap"/>
+                           FontSize="12" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
 			</StackPanel>
 		</Border>
 	</Grid>
 </Window>
+
+

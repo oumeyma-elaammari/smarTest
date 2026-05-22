@@ -2,28 +2,6 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ══════════════════════════════════════════
-         COULEURS
-    ══════════════════════════════════════════ -->
-    <Color x:Key="NavyColor">#0f1e3d</Color>
-    <Color x:Key="NavyLightColor">#1a2e5a</Color>
-    <Color x:Key="AccentColor">#4f8ef7</Color>
-    <Color x:Key="BgColor">#f0f3f9</Color>
-    <Color x:Key="BorderColor">#e2e8f4</Color>
-    <Color x:Key="MutedColor">#8899b8</Color>
-    <Color x:Key="TextColor">#0f1e3d</Color>
-    <Color x:Key="SubTextColor">#6b7a99</Color>
-
-    <SolidColorBrush x:Key="NavyBrush"       Color="{StaticResource NavyColor}"/>
-    <SolidColorBrush x:Key="NavyLightBrush"  Color="{StaticResource NavyLightColor}"/>
-    <SolidColorBrush x:Key="AccentBrush"     Color="{StaticResource AccentColor}"/>
-    <SolidColorBrush x:Key="BgBrush"         Color="{StaticResource BgColor}"/>
-    <SolidColorBrush x:Key="BorderBrush"     Color="{StaticResource BorderColor}"/>
-    <SolidColorBrush x:Key="MutedBrush"      Color="{StaticResource MutedColor}"/>
-    <SolidColorBrush x:Key="TextBrush"       Color="{StaticResource TextColor}"/>
-    <SolidColorBrush x:Key="SubTextBrush"    Color="{StaticResource SubTextColor}"/>
-    <SolidColorBrush x:Key="WhiteBrush"      Color="White"/>
-
-    <!-- ══════════════════════════════════════════
          CONVERTISSEURS
     ══════════════════════════════════════════ -->
     <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -33,7 +11,7 @@
     ══════════════════════════════════════════ -->
     <Style x:Key="PrimaryBtn" TargetType="Button">
         <Setter Property="Height" Value="42"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryActionFgBrush}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -48,7 +26,8 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Opacity" Value="0.88"/>
+                            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.6"/>
@@ -57,7 +36,7 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="Background" Value="{StaticResource NavyBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryActionBgBrush}"/>
     </Style>
 
     <!-- ══════════════════════════════════════════
@@ -65,7 +44,7 @@
     ══════════════════════════════════════════ -->
     <Style x:Key="SecondaryBtn" TargetType="Button">
         <Setter Property="Height" Value="42"/>
-        <Setter Property="Foreground" Value="{StaticResource NavyLightBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NavyLightBrush}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Cursor" Value="Hand"/>
@@ -74,14 +53,14 @@
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}"
                             CornerRadius="9"
-                            BorderBrush="#d4dce8"
+                            BorderBrush="{DynamicResource SecondaryBtnBorderBrush}"
                             BorderThickness="1">
                         <ContentPresenter HorizontalAlignment="Center"
                                           VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#f0f3f9"/>
+                            <Setter Property="Background" Value="{DynamicResource MenuHoverBgBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.6"/>
@@ -90,7 +69,7 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="Background" Value="White"/>
+        <Setter Property="Background" Value="{DynamicResource SecondaryBtnBgBrush}"/>
     </Style>
 
     <!-- ══════════════════════════════════════════
@@ -100,11 +79,11 @@
         <Setter Property="Height" Value="42"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="BorderBrush" Value="#d8e0f0"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1.5"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -118,7 +97,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="BorderBrush" Value="{StaticResource NavyLightBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource InputFocusBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -133,11 +112,11 @@
         <Setter Property="Height" Value="42"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="BorderBrush" Value="#d8e0f0"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource InputBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1.5"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Background" Value="White"/>
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="PasswordBox">
@@ -160,7 +139,7 @@
     <Style x:Key="FieldLabel" TargetType="TextBlock">
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
 
@@ -168,8 +147,8 @@
          ALERTE ERREUR
     ══════════════════════════════════════════ -->
     <Style x:Key="AlertError" TargetType="Border">
-        <Setter Property="Background" Value="#fcebeb"/>
-        <Setter Property="BorderBrush" Value="#f7c1c1"/>
+        <Setter Property="Background" Value="{DynamicResource AlertErrorBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AlertErrorBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="12,8"/>
@@ -180,8 +159,8 @@
          ALERTE SUCCÈS
     ══════════════════════════════════════════ -->
     <Style x:Key="AlertSuccess" TargetType="Border">
-        <Setter Property="Background" Value="#eaf3de"/>
-        <Setter Property="BorderBrush" Value="#c0dd97"/>
+        <Setter Property="Background" Value="{DynamicResource AlertSuccessBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AlertSuccessBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="12,8"/>
@@ -192,7 +171,7 @@
          CARTE PRINCIPALE
     ══════════════════════════════════════════ -->
     <Style x:Key="MainCard" TargetType="Border">
-        <Setter Property="Background" Value="White"/>
+        <Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
         <Setter Property="CornerRadius" Value="20"/>
         <Setter Property="Padding" Value="40"/>
         <Setter Property="Width" Value="420"/>
@@ -205,17 +184,16 @@
         <Setter Property="FontFamily" Value="Georgia"/>
         <Setter Property="FontSize" Value="26"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Foreground" Value="{StaticResource NavyBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NavyBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
 
-    <!-- Logo « Smar » + « Test » : mêmes couleurs que la sidebar (sans pastille à gauche) -->
     <Style x:Key="BrandTitleSplit" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Georgia"/>
         <Setter Property="FontSize" Value="26"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Foreground" Value="{StaticResource NavyBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NavyBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
@@ -225,7 +203,7 @@
     ══════════════════════════════════════════ -->
     <Style x:Key="BrandSub" TargetType="TextBlock">
         <Setter Property="FontSize" Value="10"/>
-        <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,0,0,20"/>
         <Setter Property="FontWeight" Value="Normal"/>
@@ -235,7 +213,7 @@
          PAGE LABEL BADGE
     ══════════════════════════════════════════ -->
     <Style x:Key="PageLabel" TargetType="Border">
-        <Setter Property="Background" Value="#F8FAFC"/>
+        <Setter Property="Background" Value="{DynamicResource PageLabelBgBrush}"/>
         <Setter Property="CornerRadius" Value="20"/>
         <Setter Property="Padding" Value="10,3"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -248,7 +226,7 @@
     <Style x:Key="AccentLine" TargetType="Border">
         <Setter Property="Width" Value="36"/>
         <Setter Property="Height" Value="2"/>
-        <Setter Property="Background" Value="{StaticResource NavyBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource NavyBrush}"/>
         <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,6,0,16"/>
@@ -261,7 +239,7 @@
         <Setter Property="Width" Value="68"/>
         <Setter Property="Height" Value="68"/>
         <Setter Property="CornerRadius" Value="34"/>
-        <Setter Property="Background" Value="#e8eef8"/>
+        <Setter Property="Background" Value="{DynamicResource IconRingBgBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,0,0,16"/>
     </Style>
@@ -271,7 +249,7 @@
     ══════════════════════════════════════════ -->
     <Style x:Key="FooterText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="#aab4cc"/>
+        <Setter Property="Foreground" Value="{DynamicResource FooterBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,16,0,0"/>
     </Style>

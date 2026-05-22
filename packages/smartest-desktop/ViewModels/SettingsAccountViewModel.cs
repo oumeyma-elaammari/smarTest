@@ -1,5 +1,4 @@
 using smartest_desktop.Helpers;
-using Microsoft.VisualBasic;
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -174,16 +173,116 @@ namespace smartest_desktop.ViewModels
         public RelayCommand ToggleMotDePasseFormCommand => _toggleMotDePasseFormCommand;
         public RelayCommand AnnulerMotDePasseFormCommand => _annulerMotDePasseFormCommand;
         public RelayCommand SupprimerCompteCommand => _supprimerCompteCommand;
+        public RelayCommand TesterCleGroqCommand => _testerCleGroqCommand;
+        public RelayCommand EnregistrerCleGroqCommand => _enregistrerCleGroqCommand;
+        public RelayCommand ModifierCleGroqCommand => _modifierCleGroqCommand;
+        public RelayCommand AnnulerCleGroqCommand => _annulerCleGroqCommand;
+        public RelayCommand AppliquerThemeClairCommand => _appliquerThemeClairCommand;
+        public RelayCommand AppliquerThemeSombreCommand => _appliquerThemeSombreCommand;
         private readonly RelayCommand _enregistrerCommand;
         private readonly RelayCommand _enregistrerMotDePasseCommand;
         private readonly RelayCommand _toggleMotDePasseFormCommand;
         private readonly RelayCommand _annulerMotDePasseFormCommand;
         private readonly RelayCommand _supprimerCompteCommand;
+        private readonly RelayCommand _testerCleGroqCommand;
+        private readonly RelayCommand _enregistrerCleGroqCommand;
+        private readonly RelayCommand _modifierCleGroqCommand;
+        private readonly RelayCommand _annulerCleGroqCommand;
+        private readonly RelayCommand _appliquerThemeClairCommand;
+        private readonly RelayCommand _appliquerThemeSombreCommand;
         private readonly Services.AuthService _authService;
         private bool _isSaving;
         private bool _isSavingPassword;
         private bool _isDeletingAccount;
         private bool _afficherFormulaireMotDePasse;
+
+        // ── Clé API Groq ──────────────────────────────────────────────────────
+        private string _cleGroq = string.Empty;
+        private string _cleGroqSnapshot = string.Empty;
+
+        public string CleGroq
+        {
+            get => _cleGroq;
+            set
+            {
+                if (!SetProperty(ref _cleGroq, value)) return;
+                _testerCleGroqCommand?.RaiseCanExecuteChanged();
+                _enregistrerCleGroqCommand?.RaiseCanExecuteChanged();
+            }
+        }
+
+        private bool _isEditingGroqKey;
+        public bool IsEditingGroqKey
+        {
+            get => _isEditingGroqKey;
+            private set
+            {
+                if (!SetProperty(ref _isEditingGroqKey, value)) return;
+                _modifierCleGroqCommand?.RaiseCanExecuteChanged();
+                _annulerCleGroqCommand?.RaiseCanExecuteChanged();
+                _enregistrerCleGroqCommand?.RaiseCanExecuteChanged();
+            }
+        }
+
+        private string _statutGroq = string.Empty;
+        public string StatutGroq
+        {
+            get => _statutGroq;
+            private set => SetProperty(ref _statutGroq, value);
+        }
+
+        private Brush _statutGroqBrush = Brushes.Transparent;
+        public Brush StatutGroqBrush
+        {
+            get => _statutGroqBrush;
+            private set => SetProperty(ref _statutGroqBrush, value);
+        }
+
+        public bool HasStatutGroq => !string.IsNullOrWhiteSpace(StatutGroq);
+
+        private bool _isTestingGroq;
+        public bool IsTestingGroq
+        {
+            get => _isTestingGroq;
+            private set
+            {
+                if (!SetProperty(ref _isTestingGroq, value)) return;
+                _testerCleGroqCommand?.RaiseCanExecuteChanged();
+                _enregistrerCleGroqCommand?.RaiseCanExecuteChanged();
+                _modifierCleGroqCommand?.RaiseCanExecuteChanged();
+                _annulerCleGroqCommand?.RaiseCanExecuteChanged();
+            }
+        }
+
+        private bool _isSavingGroq;
+        public bool IsSavingGroq
+        {
+            get => _isSavingGroq;
+            private set
+            {
+                if (!SetProperty(ref _isSavingGroq, value)) return;
+                _enregistrerCleGroqCommand?.RaiseCanExecuteChanged();
+                _testerCleGroqCommand?.RaiseCanExecuteChanged();
+                _modifierCleGroqCommand?.RaiseCanExecuteChanged();
+                _annulerCleGroqCommand?.RaiseCanExecuteChanged();
+            }
+        }
+
+        // ── Thème ─────────────────────────────────────────────────────────────
+        private bool _themeSombre = App.EstThemeSombre;
+        public bool ThemeSombre
+        {
+            get => _themeSombre;
+            private set
+            {
+                if (_themeSombre == value) return;
+                _themeSombre = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ThemeClair));
+                App.AppliquerTheme(value);
+            }
+        }
+        public bool ThemeClair => !_themeSombre;
 
         private static readonly Brush RuleOkBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#16a34a"));
         private static readonly Brush RulePendingBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94a3b8"));
@@ -236,8 +335,28 @@ namespace smartest_desktop.ViewModels
                 _ => { _ = SupprimerCompteAsync(); },
                 _ => !IsDeletingAccount && !IsSaving && !IsSavingPassword);
 
+            _testerCleGroqCommand = new RelayCommand(
+                async _ => await TesterCleGroqAsync(),
+                _ => !string.IsNullOrWhiteSpace(CleGroq) && !IsTestingGroq && !IsSavingGroq);
+
+            _enregistrerCleGroqCommand = new RelayCommand(
+                _ => EnregistrerCleGroq(),
+                _ => IsEditingGroqKey && !string.IsNullOrWhiteSpace(CleGroq) && !IsSavingGroq && !IsTestingGroq);
+
+            _modifierCleGroqCommand = new RelayCommand(
+                _ => ModifierCleGroq(),
+                _ => !IsEditingGroqKey && !IsTestingGroq && !IsSavingGroq);
+
+            _annulerCleGroqCommand = new RelayCommand(
+                _ => AnnulerModificationCleGroq(),
+                _ => IsEditingGroqKey && !IsTestingGroq && !IsSavingGroq);
+
+            _appliquerThemeClairCommand = new RelayCommand(_ => ThemeSombre = false);
+            _appliquerThemeSombreCommand = new RelayCommand(_ => ThemeSombre = true);
+
             ChargerProfilLocal();
             RefreshNewPasswordRulesUI();
+            ChargerCleGroq();
         }
 
         public void ResetDraft()
@@ -248,6 +367,13 @@ namespace smartest_desktop.ViewModels
             MessageSecurite = string.Empty;
             MessageSecuriteBrush = Brushes.Transparent;
             ViderChampsMotDePasse();
+            ChargerCleGroq();
+            StatutGroq = string.Empty;
+            IsEditingGroqKey = false;
+            OnPropertyChanged(nameof(HasStatutGroq));
+            _themeSombre = App.EstThemeSombre;
+            OnPropertyChanged(nameof(ThemeSombre));
+            OnPropertyChanged(nameof(ThemeClair));
             OnPropertyChanged(nameof(HasMessageCompte));
             OnPropertyChanged(nameof(HasMessageSecurite));
             OnPropertyChanged(nameof(HasCompteChanges));
@@ -255,6 +381,10 @@ namespace smartest_desktop.ViewModels
             _enregistrerCommand.RaiseCanExecuteChanged();
             _enregistrerMotDePasseCommand.RaiseCanExecuteChanged();
             _supprimerCompteCommand.RaiseCanExecuteChanged();
+            _testerCleGroqCommand.RaiseCanExecuteChanged();
+            _enregistrerCleGroqCommand.RaiseCanExecuteChanged();
+            _modifierCleGroqCommand.RaiseCanExecuteChanged();
+            _annulerCleGroqCommand.RaiseCanExecuteChanged();
         }
 
         private void OuvrirFormMotDePasse()
@@ -488,38 +618,119 @@ namespace smartest_desktop.ViewModels
             OnPropertyChanged(nameof(PasswordConfirmRuleBrush));
         }
 
-        private async Task SupprimerCompteAsync()
+        private void ChargerCleGroq()
         {
-            var warn = MessageBox.Show(
-                "La suppression de votre compte est définitive. Vous perdrez l'accès à SmarTest avec cet email. " +
-                "Les données liées sur le serveur seront traitées conformément aux règles du service.\n\n" +
-                "Voulez-vous continuer ?",
-                "Supprimer le compte",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning,
-                MessageBoxResult.No);
-
-            if (warn != MessageBoxResult.Yes)
-                return;
-
-            var typed = Interaction.InputBox(
-                "Pour confirmer, tapez exactement :\nSUPPRIMER",
-                "Confirmation finale",
-                string.Empty)?.Trim();
-
-            if (!string.Equals(typed, "SUPPRIMER", StringComparison.Ordinal))
+            try
             {
-                if (!string.IsNullOrEmpty(typed))
-                {
-                    MessageBox.Show(
-                        "Texte de confirmation incorrect. La suppression a été annulée.",
-                        "Annulée",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
+                var cle = Services.GroqKeyService.LireCle(App.LocalDb);
+                _cleGroq = cle ?? string.Empty;
+                _cleGroqSnapshot = _cleGroq;
+                IsEditingGroqKey = false;
+                OnPropertyChanged(nameof(CleGroq));
+                _testerCleGroqCommand?.RaiseCanExecuteChanged();
+                _enregistrerCleGroqCommand?.RaiseCanExecuteChanged();
+                _modifierCleGroqCommand?.RaiseCanExecuteChanged();
+                _annulerCleGroqCommand?.RaiseCanExecuteChanged();
+            }
+            catch { }
+        }
 
+        private void ModifierCleGroq()
+        {
+            _cleGroqSnapshot = CleGroq;
+            StatutGroq = string.Empty;
+            OnPropertyChanged(nameof(HasStatutGroq));
+            IsEditingGroqKey = true;
+        }
+
+        private void AnnulerModificationCleGroq()
+        {
+            CleGroq = _cleGroqSnapshot;
+            StatutGroq = string.Empty;
+            OnPropertyChanged(nameof(HasStatutGroq));
+            IsEditingGroqKey = false;
+        }
+
+        private async Task TesterCleGroqAsync()
+        {
+            IsTestingGroq = true;
+            SetStatutGroq("Test de la connexion en cours...", null);
+            try
+            {
+                var (valide, message) = await Services.GroqKeyService.TesterCleAsync(CleGroq.Trim());
+                SetStatutGroq(valide ? $"\u2705 Clé valide — {message}" : $"\u274C {message}", valide);
+            }
+            catch (Exception ex)
+            {
+                SetStatutGroq($"\u274C Erreur : {ex.Message}", false);
+            }
+            finally
+            {
+                IsTestingGroq = false;
+            }
+        }
+
+        private void EnregistrerCleGroq()
+        {
+            var cle = CleGroq?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(cle))
+            {
+                SetStatutGroq("\u274C La clé ne peut pas être vide.", false);
                 return;
             }
+
+            if (!Services.GroqKeyService.CleEstValide(cle))
+            {
+                SetStatutGroq("\u274C Format invalide (doit commencer par gsk_ et faire au moins 20 caractères).", false);
+                return;
+            }
+
+            IsSavingGroq = true;
+            try
+            {
+                Services.GroqKeyService.SauvegarderCle(App.LocalDb, cle);
+                _cleGroqSnapshot = cle;
+                IsEditingGroqKey = false;
+                SetStatutGroq("\u2705 Clé enregistrée avec succès.", true);
+                _ = MasquerStatutGroqApresDelaiAsync();
+            }
+            catch (Exception ex)
+            {
+                SetStatutGroq($"\u274C Erreur : {ex.Message}", false);
+            }
+            finally
+            {
+                IsSavingGroq = false;
+            }
+        }
+
+        private void SetStatutGroq(string message, bool? success)
+        {
+            StatutGroq = message;
+            if (success == null)
+                StatutGroqBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6b7a99"));
+            else if (success.Value)
+                StatutGroqBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#16a34a"));
+            else
+                StatutGroqBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#dc2626"));
+            OnPropertyChanged(nameof(HasStatutGroq));
+        }
+
+        private async Task MasquerStatutGroqApresDelaiAsync()
+        {
+            await Task.Delay(3000);
+            if (StatutGroq.StartsWith("\u2705 Clé enregistrée", StringComparison.Ordinal))
+            {
+                StatutGroq = string.Empty;
+                OnPropertyChanged(nameof(HasStatutGroq));
+            }
+        }
+
+        private async Task SupprimerCompteAsync()
+        {
+            if (!Views.SuppressionCompteDialog.DemanderConfirmation(
+                    WpfApp.Current.MainWindow))
+                return;
 
             var token = WpfApp.Current.Properties["Token"]?.ToString();
             if (string.IsNullOrWhiteSpace(token))
@@ -546,10 +757,6 @@ namespace smartest_desktop.ViewModels
                 if (!string.IsNullOrWhiteSpace(emailCompte))
                     smartest_desktop.App.SupprimerDonneesLocalesPourEmail(emailCompte);
 
-                MessageBox.Show("Votre compte professeur a été supprimé. L'application va revenir à l'écran de connexion.",
-                    "Compte supprimé",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
                 smartest_desktop.App.Deconnecter();
             }
             finally
