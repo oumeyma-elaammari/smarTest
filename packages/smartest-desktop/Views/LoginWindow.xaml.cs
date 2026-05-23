@@ -26,14 +26,14 @@ namespace smartest_desktop.Views
                 PasswordTextBox.Text = PasswordBox.Password;
                 PasswordBox.Visibility = Visibility.Collapsed;
                 PasswordTextBox.Visibility = Visibility.Visible;
-                EyeIcon.Text = "🔒";
+                EyeIcon.Text = "🔓";
             }
             else
             {
                 PasswordBox.Password = PasswordTextBox.Text;
                 PasswordTextBox.Visibility = Visibility.Collapsed;
                 PasswordBox.Visibility = Visibility.Visible;
-                EyeIcon.Text = "🔓";
+                EyeIcon.Text = "🔒";
             }
         }
 

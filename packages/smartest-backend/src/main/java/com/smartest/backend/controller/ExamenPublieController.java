@@ -2,6 +2,7 @@ package com.smartest.backend.controller;
 
 import com.smartest.backend.dto.request.ExamenPassageReponseRequest;
 import com.smartest.backend.dto.request.PublicationExamenQuestionsRequest;
+import com.smartest.backend.dto.request.UpdateExamenCreneauRequest;
 import com.smartest.backend.dto.request.ValiderCorrectionsDetailRequest;
 import com.smartest.backend.dto.request.ValiderResultatExamenRequest;
 import com.smartest.backend.dto.response.ExamenCorrectionsEtudiantResponse;
@@ -147,6 +148,20 @@ public class ExamenPublieController {
         examenPublieService.synchroniserQuestionsPublicationWeb(
                 id, userDetails.getUsername(), body.getQuestions());
         return ResponseEntity.ok(new MessageResponse("Questions de l'examen enregistrées sur le serveur.", true, 200));
+    }
+
+    /** Modification du créneau (desktop) avant démarrage : persistance MySQL + diffusion WebSocket. */
+    @PatchMapping("/{id}/creneau")
+    public ResponseEntity<ExamenPublieMetadataResponse> modifierCreneau(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateExamenCreneauRequest body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        assertProfOwnsExamenByEmail(id, userDetails.getUsername());
+        return ResponseEntity.ok(examenPublieService.modifierCreneauPublicationWeb(
+                id,
+                userDetails.getUsername(),
+                body.getDateDebut(),
+                body.getDuree()));
     }
 
     // --- Salle d'attente & passage étudiant ---

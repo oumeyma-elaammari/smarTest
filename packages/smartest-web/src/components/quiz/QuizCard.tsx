@@ -102,17 +102,19 @@ export function QuizCard({ item: q, accentBleu, onStart }: QuizCardProps) {
                 onClick={() => onStart(q.id)}
                 style={{
                     marginTop: 12,
-                    alignSelf: 'flex-start',
-                    padding: '4px 7px',
-                    borderRadius: 5,
+                    alignSelf: 'stretch',
+                    width: '100%',
+                    maxWidth: 220,
+                    padding: '10px 16px',
+                    borderRadius: 8,
                     border: 'none',
                     cursor: 'pointer',
                     background: '#0f1e3d',
                     color: '#fff',
-                    fontWeight: 400,
+                    fontWeight: 600,
                     fontSize: 13,
                     fontFamily: sans,
-                    width: '30%',
+                    boxSizing: 'border-box',
                 }}
             >
                 Commencer

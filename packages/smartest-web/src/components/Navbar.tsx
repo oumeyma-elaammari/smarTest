@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
+import { useMatchMedia } from '../hooks/useMatchMedia'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const serif = "'DM Serif Display', Georgia, serif"
@@ -13,6 +14,7 @@ type NavbarProps = {
 export default function Navbar({ authenticated = true }: NavbarProps) {
     const navigate = useNavigate()
     const { nom, logout } = useAuth()
+    const compact = useMatchMedia('(max-width: 520px)')
 
     const handleLogout = () => {
         try {
@@ -35,12 +37,14 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 12,
-        padding: '8px 25px',
+        padding: compact ? '8px 12px' : '8px clamp(16px, 4vw, 25px)',
         fontFamily: sans,
         background: 'rgba(255,255,255,0.92)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid #e2e8f4',
         boxShadow: '0 1px 0 rgba(15, 30, 61, 0.04)',
+        boxSizing: 'border-box',
+        width: '100%',
     }
 
     const logoBtn: CSSProperties = {
@@ -88,11 +92,12 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
                             display: 'flex',
                             alignItems: 'center',
                             gap: 6,
-                            padding: '2px 8px',
+                            padding: compact ? '2px 6px' : '2px 8px',
                             borderRadius: 999,
                             background: '#f4f7fc',
                             border: '1px solid #e2e8f4',
-                            maxWidth: 'min(100%, 240px)',
+                            maxWidth: compact ? 'min(100%, 160px)' : 'min(100%, 240px)',
+                            minWidth: 0,
                         }}
                     >
                         <span
@@ -104,9 +109,11 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
                                 flexShrink: 0,
                             }}
                         />
-                        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>
-                            Connecté
-                        </span>
+                        {!compact ? (
+                            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500, flexShrink: 0 }}>
+                                Connecté
+                            </span>
+                        ) : null}
                         <span
                             style={{
                                 fontSize: 11,
@@ -131,14 +138,15 @@ export default function Navbar({ authenticated = true }: NavbarProps) {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 5,
-                            padding: '0 10px',
+                            padding: compact ? '0 8px' : '0 10px',
                             color: '#64748b',
                             background: '#fff',
                             border: '1px solid #e2e8f4',
+                            flexShrink: 0,
                         }}
                     >
                         <LogOut size={14} strokeWidth={2} />
-                        Déconnexion
+                        {compact ? null : 'Déconnexion'}
                     </button>
                 </div>
             </nav>

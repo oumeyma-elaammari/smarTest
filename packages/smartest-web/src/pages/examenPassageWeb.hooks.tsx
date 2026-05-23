@@ -61,7 +61,7 @@ export function useExamenMetaLoad(
                         })
                     } else {
                         setMeta(null)
-                        setStatus('Métadonnées de l’examen invalides.')
+                        setStatus('Informations de l’examen invalides.')
                     }
                 }
             })
@@ -305,17 +305,17 @@ export function useSoumettreFinalSiTermine(
         if (!sessionTerminee || !Number.isFinite(id) || id <= 0) return
         const etudiantId = resolveEtudiantId(authUserId)
         if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
-            setStatus('Session terminée. Reconnectez-vous si votre copie doit être transmise au professeur.')
+            setStatus('Examen terminé.')
             return
         }
         let cancelled = false
         ;(async () => {
             try {
                 const ok = await soumettreExamenFinalAvecRetry(id, etudiantId)
-                if (!cancelled && ok) setStatus('Copie transmise au professeur.')
+                if (!cancelled && ok) setStatus('Copie envoyée.')
             } catch (e: unknown) {
                 if (!cancelled) {
-                    setStatus(extractApiMessage(e, 'Impossible de transmettre la copie finale au serveur.'))
+                    setStatus(extractApiMessage(e, 'Impossible d’envoyer votre copie.'))
                 }
             }
         })()
@@ -361,7 +361,7 @@ export function useAutoJoinSalleAttente(opts: {
 
         const etudiantId = resolveEtudiantId(authUserId)
         if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
-            setStatus('Identifiant étudiant manquant : déconnectez-vous puis reconnectez-vous.')
+            setStatus('Connexion incomplète. Déconnectez-vous puis reconnectez-vous.')
             return
         }
 
@@ -370,7 +370,7 @@ export function useAutoJoinSalleAttente(opts: {
             try {
                 const email = readEtudiantEmail()
                 if (!email) {
-                    setStatus('Email de session manquant : reconnectez-vous.')
+                    setStatus('Reconnectez-vous pour continuer.')
                     return
                 }
                 const { data } = await examenApi.rejoindreSalleAttente(id, etudiantId, email)

@@ -108,7 +108,7 @@ namespace smartest_desktop.Views
             GroqPasswordBox.Password = GroqTextBox.Text;
             GroqKeyPlainBorder.Visibility = Visibility.Collapsed;
             GroqKeyMaskedBorder.Visibility = Visibility.Visible;
-            EyeIconGroq.Text = "🔓";
+            EyeIconGroq.Text = "🔒";
         }
 
         private void OldPasswordBox_OnPasswordChanged(object sender, System.Windows.RoutedEventArgs e)
@@ -160,14 +160,14 @@ namespace smartest_desktop.Views
                 OldPasswordTextBox.Text = OldPasswordBox.Password;
                 OldPasswordMaskedBorder.Visibility = Visibility.Collapsed;
                 OldPasswordPlainBorder.Visibility = Visibility.Visible;
-                EyeIconOld.Text = "🔒";
+                EyeIconOld.Text = "🔓";
             }
             else
             {
                 OldPasswordBox.Password = OldPasswordTextBox.Text;
                 OldPasswordPlainBorder.Visibility = Visibility.Collapsed;
                 OldPasswordMaskedBorder.Visibility = Visibility.Visible;
-                EyeIconOld.Text = "🔓";
+                EyeIconOld.Text = "🔒";
             }
         }
 
@@ -178,14 +178,14 @@ namespace smartest_desktop.Views
                 NewPasswordTextBox.Text = NewPasswordBox.Password;
                 NewPasswordMaskedBorder.Visibility = Visibility.Collapsed;
                 NewPasswordPlainBorder.Visibility = Visibility.Visible;
-                EyeIconNew.Text = "🔒";
+                EyeIconNew.Text = "🔓";
             }
             else
             {
                 NewPasswordBox.Password = NewPasswordTextBox.Text;
                 NewPasswordPlainBorder.Visibility = Visibility.Collapsed;
                 NewPasswordMaskedBorder.Visibility = Visibility.Visible;
-                EyeIconNew.Text = "🔓";
+                EyeIconNew.Text = "🔒";
             }
         }
 
@@ -208,14 +208,14 @@ namespace smartest_desktop.Views
                 GroqTextBox.Text = GroqPasswordBox.Password;
                 GroqKeyMaskedBorder.Visibility = Visibility.Collapsed;
                 GroqKeyPlainBorder.Visibility = Visibility.Visible;
-                EyeIconGroq.Text = "🔒";
+                EyeIconGroq.Text = "🔓";
             }
             else
             {
                 GroqPasswordBox.Password = GroqTextBox.Text;
                 GroqKeyPlainBorder.Visibility = Visibility.Collapsed;
                 GroqKeyMaskedBorder.Visibility = Visibility.Visible;
-                EyeIconGroq.Text = "🔓";
+                EyeIconGroq.Text = "🔒";
             }
         }
 
@@ -226,14 +226,14 @@ namespace smartest_desktop.Views
                 ConfirmPasswordTextBox.Text = ConfirmPasswordBox.Password;
                 ConfirmPasswordMaskedBorder.Visibility = Visibility.Collapsed;
                 ConfirmPasswordPlainBorder.Visibility = Visibility.Visible;
-                EyeIconConfirm.Text = "🔒";
+                EyeIconConfirm.Text = "🔓";
             }
             else
             {
                 ConfirmPasswordBox.Password = ConfirmPasswordTextBox.Text;
                 ConfirmPasswordPlainBorder.Visibility = Visibility.Collapsed;
                 ConfirmPasswordMaskedBorder.Visibility = Visibility.Visible;
-                EyeIconConfirm.Text = "🔓";
+                EyeIconConfirm.Text = "🔒";
             }
         }
     }

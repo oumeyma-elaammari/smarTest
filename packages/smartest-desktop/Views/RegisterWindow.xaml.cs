@@ -32,14 +32,14 @@ namespace smartest_desktop.Views
                 PasswordTextBox.Text = PasswordBox.Password;
                 PasswordBox.Visibility = Visibility.Collapsed;
                 PasswordTextBox.Visibility = Visibility.Visible;
-                EyeIcon1.Text = "🔒";
+                EyeIcon1.Text = "🔓";
             }
             else
             {
                 PasswordBox.Password = PasswordTextBox.Text;
                 PasswordTextBox.Visibility = Visibility.Collapsed;
                 PasswordBox.Visibility = Visibility.Visible;
-                EyeIcon1.Text = "🔓";
+                EyeIcon1.Text = "🔒";
             }
         }
 
@@ -50,14 +50,14 @@ namespace smartest_desktop.Views
                 ConfirmPasswordTextBox.Text = ConfirmPasswordBox.Password;
                 ConfirmPasswordBox.Visibility = Visibility.Collapsed;
                 ConfirmPasswordTextBox.Visibility = Visibility.Visible;
-                EyeIcon2.Text = "🔒";
+                EyeIcon2.Text = "🔓";
             }
             else
             {
                 ConfirmPasswordBox.Password = ConfirmPasswordTextBox.Text;
                 ConfirmPasswordTextBox.Visibility = Visibility.Collapsed;
                 ConfirmPasswordBox.Visibility = Visibility.Visible;
-                EyeIcon2.Text = "🔓";
+                EyeIcon2.Text = "🔒";
             }
         }
 

@@ -218,6 +218,39 @@ namespace smartest_desktop.Services
             }
         }
 
+        /// <summary>Met à jour le créneau côté serveur (examen PLANIFIE publié sur le web).</summary>
+        public async Task ModifierCreneauAsync(
+            string bearerToken,
+            long examenId,
+            DateTime dateDebut,
+            int dureeMinutes,
+            CancellationToken cancellationToken = default)
+        {
+            using var http = CreateHttp(bearerToken);
+            try
+            {
+                var payload = JsonConvert.SerializeObject(new
+                {
+                    dateDebut = dateDebut.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture),
+                    duree = Math.Max(1, dureeMinutes),
+                });
+                var content = new StringContent(payload, Encoding.UTF8, "application/json");
+                var response = await http.PatchAsync($"/api/examens-publies/{examenId}/creneau", content, cancellationToken);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                    throw SmartestApiException.FromHttpFailure(response.StatusCode, body, "Mise à jour du créneau examen");
+            }
+            catch (SmartestApiException) { throw; }
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw SmartestNetworkException.ServerUnreachable(ex);
+            }
+        }
+
         /// <summary>Envoie les questions QCM au serveur (obligationaire pour supervision / élèves). Même schéma que la publication quiz web.</summary>
         public async Task SynchroniserQuestionsPublicationWebAsync(
             string bearerToken,

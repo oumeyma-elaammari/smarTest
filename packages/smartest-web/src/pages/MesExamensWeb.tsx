@@ -9,6 +9,8 @@ import { ExamenListeCard } from '../components/examen/ExamenListeCard'
 import { examenListeItemSchema, type ExamenListeItem, type ExamenMeta } from '../api/quizSchemas'
 import { parseDebutExamenMs } from '../utils/examenDisplay'
 import useAuth from '../hooks/useAuth'
+import { useDashboardTwoColumn } from '../hooks/useMatchMedia'
+import { useExamensListePolling } from '../hooks/useExamenMetaRealtime'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 const RECENTS_COUNT = 5
@@ -100,16 +102,11 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
     const [items, setItems] = useState<ExamenMeta[]>([])
     const [loading, setLoading] = useState(true)
     const [err, setErr] = useState<string | null>(null)
-    const [twoCol, setTwoCol] = useState(() =>
-        typeof globalThis.window !== 'undefined'
-            ? globalThis.window.matchMedia('(min-width: 700px)').matches
-            : true,
-    )
-    const [lancementExamenId, setLancementExamenId] = useState<number | null>(null)
     const [suppressionExamenId, setSuppressionExamenId] = useState<number | null>(null)
     const [actionErr, setActionErr] = useState<string | null>(null)
     const [notesVisibles, setNotesVisibles] = useState<Record<number, { note: number; bareme: number }>>({})
     const [filtreExamen, setFiltreExamen] = useState<ExamenFiltre>('recents')
+    const twoCol = useDashboardTwoColumn()
     const userId = useAuth((s) => s.userId)
 
     const examensAffiches = useMemo(
@@ -123,22 +120,16 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
         fontFamily: sans,
         fontSize: 13,
         fontWeight: actif ? 600 : 500,
-        padding: '8px 14px',
+        padding: '8px 12px',
         borderRadius: 999,
         border: actif ? `1px solid ${accentBleu}` : '1px solid #e2e8f4',
         background: actif ? '#eff6ff' : '#fff',
         color: actif ? '#1e40af' : '#64748b',
         cursor: 'pointer',
         transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
     })
-
-    useEffect(() => {
-        const mq = globalThis.window.matchMedia('(min-width: 700px)')
-        const apply = () => setTwoCol(mq.matches)
-        apply()
-        mq.addEventListener('change', apply)
-        return () => mq.removeEventListener('change', apply)
-    }, [])
 
     const chargerExamens = useCallback(async () => {
         setErr(null)
@@ -179,6 +170,8 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
             cancelled = true
         }
     }, [chargerExamens])
+
+    useExamensListePolling(chargerExamens, !loading && !err)
 
     useEffect(() => {
         if (isProfesseurWeb || loading) return
@@ -232,29 +225,6 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
             toast.error(msg)
         } finally {
             setSuppressionExamenId(null)
-        }
-    }
-
-    const lancerEtPiloter = async (m: ExamenMeta) => {
-        const statut = (m.statut ?? '').trim().toUpperCase()
-        if (statut === 'TERMINE' || statut === 'ANNULE') {
-            toast.error('Cet examen est terminé : il ne peut plus être relancé.')
-            return
-        }
-        setActionErr(null)
-        setLancementExamenId(m.id)
-        try {
-            await examenApi.lancer(m.id)
-            navigate(`/supervision/examen/${m.id}?started=1`, { replace: true })
-        } catch (e: unknown) {
-            setActionErr(
-                extractActionError(
-                    e,
-                    'Impossible de démarrer la session. Vérifiez le créneau ou ouvrez l’espace superviseur pour plus de détails.',
-                ),
-            )
-        } finally {
-            setLancementExamenId(null)
         }
     }
 
@@ -437,7 +407,6 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
                     const debutMs = parseDebutExamenMs(m.dateDebut)
                     const creneauAtteint = debutMs == null ? true : Date.now() >= debutMs
                     const statutDb = (m.statut ?? '').trim().toUpperCase()
-                    const peutLancerListe = statutDb === 'PLANIFIE'
                     const sessionTermineeEtudiant = !isProfesseurWeb && statutDb === 'TERMINE'
                     const noteApi = notesVisibles[m.id]
                     const noteFin =
@@ -473,9 +442,6 @@ export default function MesExamensWeb({ accentBleu = '#4f8ef7' }: MesExamensWebP
                                 isProfesseurWeb
                                     ? {
                                           onOuvrirPilotage: () => navigate(`/supervision/examen/${m.id}`),
-                                          onLancerSession: () => lancerEtPiloter(m),
-                                          lancementEnCours: lancementExamenId === m.id,
-                                          peutLancerSession: peutLancerListe,
                                           onSupprimer: () => supprimerExamen(m),
                                           suppressionEnCours: suppressionExamenId === m.id,
                                       }

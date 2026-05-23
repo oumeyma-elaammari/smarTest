@@ -346,4 +346,55 @@ public class ExamenPublieService {
         log.info("Examen supprimé côté serveur (examenId={}, professeurEmail={})", examenId,
                 professeurEmail.trim().toLowerCase(Locale.ROOT));
     }
+
+    /**
+     * Met à jour le créneau d'un examen déjà publié sur le web, avant son démarrage (statut PLANIFIE).
+     * Diffuse la métadonnée mise à jour via WebSocket pour les clients étudiants.
+     */
+    @Transactional
+    public ExamenPublieMetadataResponse modifierCreneauPublicationWeb(
+            Long examenId,
+            String emailProf,
+            LocalDateTime dateDebut,
+            Integer dureeMinutesOptional) {
+        if (emailProf == null || emailProf.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email requis");
+        }
+        if (dateDebut == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "dateDebut requise");
+        }
+
+        String email = emailProf.trim().toLowerCase(Locale.ROOT);
+        Professeur prof = professeurRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, PROFESSEUR_INTROUVABLE));
+
+        ExamenPublie ex = examenPublieRepository.findById(examenId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, EXAMEN_INTROUVABLE));
+
+        if (ex.getProfesseur() == null || !ex.getProfesseur().getId().equals(prof.getId())) {
+            throw new UnauthorizedAccessException(EXAMEN_HORS_PROPRIETE);
+        }
+        if (ex.getPublieSurWebLe() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cet examen n'est pas publié sur le web.");
+        }
+        if (ex.getStatut() != StatutExamen.PLANIFIE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Le créneau ne peut être modifié qu'avant le démarrage de l'examen.");
+        }
+
+        int duree = dureeMinutesOptional != null && dureeMinutesOptional > 0
+                ? dureeMinutesOptional
+                : (ex.getDuree() != null && ex.getDuree() > 0 ? ex.getDuree() : 60);
+        LocalDateTime fin = dateDebut.plusMinutes(Math.max(1, duree));
+
+        ex.setDuree(duree);
+        ex.setDateDebut(dateDebut);
+        ex.setDateFin(fin);
+        examenPublieRepository.save(ex);
+
+        ExamenPublieMetadataResponse metadata = toMetadata(ex);
+        examenSupervisionService.publierMetadata(examenId, metadata);
+        return metadata;
+    }
 }

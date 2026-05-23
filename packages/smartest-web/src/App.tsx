@@ -20,6 +20,8 @@ import MesExamensWeb from './pages/MesExamensWeb'
 import QuizPassageWeb from './pages/QuizPassageWeb'
 import ExamenPassageWeb from './pages/ExamenPassageWeb'
 import ExamenSupervisionPage from './pages/ExamenSupervisionPage'
+import { useMatchMedia } from './hooks/useMatchMedia'
+import useAuth from './hooks/useAuth'
 
 const serif = "'DM Serif Display', Georgia, serif"
 const bleuTest = '#4f8ef7'
@@ -54,10 +56,10 @@ export function DashboardLayout({
                         flexDirection: 'column',
                         alignItems: 'center',
                         overflowY: 'auto',
-                        paddingTop: 28,
-                        paddingBottom: 40,
-                        paddingLeft: 'clamp(1rem, 3vw, 2rem)',
-                        paddingRight: 'clamp(1rem, 3vw, 2rem)',
+                        paddingTop: 'clamp(16px, 4vw, 28px)',
+                        paddingBottom: 'clamp(24px, 5vw, 40px)',
+                        paddingLeft: 'clamp(12px, 4vw, 2rem)',
+                        paddingRight: 'clamp(12px, 4vw, 2rem)',
                         boxSizing: 'border-box',
                     }}
                 >
@@ -72,27 +74,35 @@ export function DashboardLayout({
 function Dashboard() {
     const [searchParams] = useSearchParams()
     const tabParam = searchParams.get('tab')
+    const role = useAuth((s) => s.role)
+    const isProfesseurWeb = (role ?? '').trim().toUpperCase() === 'PROFESSEUR'
+    const wideTabs = useMatchMedia('(min-width: 480px)')
     const [onglet, setOnglet] = useState<'quiz' | 'examens'>(() =>
-        tabParam === 'examens' ? 'examens' : 'quiz',
+        tabParam === 'examens' || isProfesseurWeb ? 'examens' : 'quiz',
     )
 
     useEffect(() => {
+        if (isProfesseurWeb) {
+            setOnglet('examens')
+            return
+        }
         if (tabParam === 'examens') setOnglet('examens')
         if (tabParam === 'quiz') setOnglet('quiz')
-    }, [tabParam])
+    }, [tabParam, isProfesseurWeb])
 
     const filtreBtn = (actif: boolean): CSSProperties => ({
         border: 'none',
         background: 'none',
-        padding: '0 10px 0 0',
+        padding: wideTabs ? '0 10px 0 0' : '0 8px 0 0',
         margin: 0,
         fontFamily: serif,
-        fontSize: '1.5rem',
+        fontSize: wideTabs ? 'clamp(1.15rem, 4vw, 1.5rem)' : '1.15rem',
         fontWeight: actif ? 550 : 350,
         cursor: 'pointer',
         color: actif ? '#0f1e3d' : '#94a3b8',
         lineHeight: 1.2,
         transition: 'color 0.15s, font-weight 0.15s',
+        whiteSpace: 'nowrap',
     })
 
     return (
@@ -110,54 +120,71 @@ function Dashboard() {
             <div
                 style={{
                     display: 'flex',
-                    justifyContent: 'left',
+                    justifyContent: 'flex-start',
                     alignItems: 'baseline',
                     flexWrap: 'wrap',
-                    gap: '4px 0',
+                    gap: wideTabs ? '4px 0' : '2px 12px',
                     width: '100%',
-                    marginBottom: 22,
+                    marginBottom: 'clamp(14px, 3vw, 22px)',
                 }}
-                role="tablist"
-                aria-label="Filtrer le contenu"
+                role={isProfesseurWeb ? undefined : 'tablist'}
+                aria-label={isProfesseurWeb ? undefined : 'Filtrer le contenu'}
             >
-                <button
-                    type="button"
-                    role="tab"
-                    aria-selected={onglet === 'quiz'}
-                    style={filtreBtn(onglet === 'quiz')}
-                    onClick={() => setOnglet('quiz')}
-                >
-                    Mes quiz
-                </button>
-                <span
-                    style={{
-                        color: '#cbd5e1',
-                        fontFamily: serif,
-                        fontSize: '1.35rem',
-                        userSelect: 'none',
-                        padding: '0 6px',
-                        lineHeight: 1,
-                    }}
-                    aria-hidden
-                >
-                    |
-                </span>
-                <button
-                    type="button"
-                    role="tab"
-                    aria-selected={onglet === 'examens'}
-                    style={filtreBtn(onglet === 'examens')}
-                    onClick={() => setOnglet('examens')}
-                >
-                    Mes examens
-                </button>
+                {isProfesseurWeb ? (
+                    <h1
+                        style={{
+                            margin: 0,
+                            fontFamily: serif,
+                            fontSize: wideTabs ? 'clamp(1.15rem, 4vw, 1.5rem)' : '1.15rem',
+                            fontWeight: 550,
+                            color: '#0f1e3d',
+                            lineHeight: 1.2,
+                        }}
+                    >
+                        Liste des examens
+                    </h1>
+                ) : (
+                    <>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={onglet === 'quiz'}
+                            style={filtreBtn(onglet === 'quiz')}
+                            onClick={() => setOnglet('quiz')}
+                        >
+                            Mes quiz
+                        </button>
+                        <span
+                            style={{
+                                color: '#cbd5e1',
+                                fontFamily: serif,
+                                fontSize: '1.35rem',
+                                userSelect: 'none',
+                                padding: '0 6px',
+                                lineHeight: 1,
+                            }}
+                            aria-hidden
+                        >
+                            |
+                        </span>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={onglet === 'examens'}
+                            style={filtreBtn(onglet === 'examens')}
+                            onClick={() => setOnglet('examens')}
+                        >
+                            Mes examens
+                        </button>
+                    </>
+                )}
             </div>
 
             <div style={{ width: '100%', flex: 1 }}>
-                {onglet === 'quiz' ? (
-                    <MesQuizWeb accentBleu={bleuTest} />
-                ) : (
+                {isProfesseurWeb || onglet === 'examens' ? (
                     <MesExamensWeb accentBleu={bleuTest} />
+                ) : (
+                    <MesQuizWeb accentBleu={bleuTest} />
                 )}
             </div>
         </div>
