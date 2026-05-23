@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { quizApi, type QuizWebItem } from '../api/quizApi'
 import { quizWebListSchema } from '../api/quizSchemas'
 import { QuizCard } from '../components/quiz/QuizCard'
+import { useDashboardTwoColumn } from '../hooks/useMatchMedia'
 
 const sans = "'DM Sans', system-ui, sans-serif"
 
@@ -35,21 +36,6 @@ function mesPublicationsWebErrorMessage(e: unknown): string {
     return 'Impossible de charger vos quiz.'
 }
 
-function useTwoColumnGrid() {
-    const [twoCol, setTwoCol] = useState(() =>
-        typeof globalThis.window !== 'undefined'
-            ? globalThis.window.matchMedia('(min-width: 700px)').matches
-            : true,
-    )
-    useEffect(() => {
-        const mq = globalThis.window.matchMedia('(min-width: 700px)')
-        const apply = () => setTwoCol(mq.matches)
-        apply()
-        mq.addEventListener('change', apply)
-        return () => mq.removeEventListener('change', apply)
-    }, [])
-    return twoCol
-}
 
 export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) {
     const navigate = useNavigate()
@@ -58,7 +44,7 @@ export default function MesQuizWeb({ accentBleu = '#4f8ef7' }: MesQuizWebProps) 
     const [err, setErr] = useState<string | null>(null)
     const [search, setSearch] = useState('')
     const [page, setPage] = useState(1)
-    const twoCol = useTwoColumnGrid()
+    const twoCol = useDashboardTwoColumn()
 
     const filteredItems = useMemo(() => {
         const q = search.trim().toLowerCase()

@@ -97,6 +97,22 @@ namespace smartest_desktop.Views
                             emailsJson,
                             datePrevuePassage);
 
+                        string? avertissementSync = null;
+                        try
+                        {
+                            var syncCreneau = new ExamenCreneauBackendSyncService(App.LocalDb);
+                            await syncCreneau.SynchroniserSiPublieAsync(
+                                idExistant,
+                                datePrevuePassage,
+                                dureeExamen);
+                        }
+                        catch (Exception syncEx)
+                        {
+                            avertissementSync =
+                                "\n\nAttention : le créneau n'a pas pu être synchronisé avec le serveur web.\n" +
+                                UserErrorMessage.FromException(syncEx, "Vérifiez votre connexion et réessayez.");
+                        }
+
                         Dispatcher.Invoke(() =>
                         {
                             MessageBox.Show(
@@ -104,10 +120,11 @@ namespace smartest_desktop.Views
                                 $"• {questionsValidees.Count} questions\n" +
                                 $"• Difficulté : {difficulteExamen}\n" +
                                 $"• Durée : {dureeExamen} min\n" +
-                                $"• Cours : {coursTitreExamen}",
+                                $"• Cours : {coursTitreExamen}" +
+                                (avertissementSync ?? string.Empty),
                                 "Modifications enregistrées",
                                 MessageBoxButton.OK,
-                                MessageBoxImage.Information);
+                                avertissementSync == null ? MessageBoxImage.Information : MessageBoxImage.Warning);
 
                             OuvrirHubEtFermer();
                         });

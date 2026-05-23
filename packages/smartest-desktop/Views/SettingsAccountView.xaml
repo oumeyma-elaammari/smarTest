@@ -145,7 +145,7 @@
                         <Button Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center"
                                 Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
                                 Click="ToggleGroqKey_Click" ToolTip="Afficher / masquer la clé">
-                            <TextBlock x:Name="EyeIconGroq" Text="🔓" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock x:Name="EyeIconGroq" Text="🔒" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
                         </Button>
                     </Grid>
 
@@ -290,7 +290,7 @@
                             <Button Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center"
                                     Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
                                     Click="ToggleOldPassword_Click" ToolTip="Afficher / masquer le mot de passe">
-                                <TextBlock x:Name="EyeIconOld" Text="&#xE8F4;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock x:Name="EyeIconOld" Text="🔒" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
                             </Button>
                         </Grid>
 
@@ -311,7 +311,7 @@
                             <Button Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center"
                                     Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
                                     Click="ToggleNewPassword_Click" ToolTip="Afficher / masquer le mot de passe">
-                                <TextBlock x:Name="EyeIconNew" Text="&#xE8F4;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock x:Name="EyeIconNew" Text="🔒" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
                             </Button>
                         </Grid>
 
@@ -357,7 +357,7 @@
                             <Button Width="30" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center"
                                     Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Cursor="Hand"
                                     Click="ToggleConfirmPassword_Click" ToolTip="Afficher / masquer le mot de passe">
-                                <TextBlock x:Name="EyeIconConfirm" Text="&#xE8F4;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock x:Name="EyeIconConfirm" Text="🔒" FontSize="15" Foreground="{DynamicResource AccentBrush}"/>
                             </Button>
                         </Grid>
 

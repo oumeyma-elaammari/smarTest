@@ -89,7 +89,7 @@
                             Cursor="Hand"
                             Click="TogglePassword_Click"
                             ToolTip="Afficher / masquer le mot de passe">
-                        <TextBlock x:Name="EyeIcon" Text="🔓" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
+                        <TextBlock x:Name="EyeIcon" Text="🔒" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
                     </Button>
                 </Grid>
 

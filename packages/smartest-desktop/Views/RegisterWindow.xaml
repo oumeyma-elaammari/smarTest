@@ -97,7 +97,7 @@
                                 Cursor="Hand"
                                 Click="TogglePassword_Click"
                                 ToolTip="Afficher / masquer le mot de passe">
-                            <TextBlock x:Name="EyeIcon1" Text="🔓" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
+                            <TextBlock x:Name="EyeIcon1" Text="🔒" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
                         </Button>
                     </Grid>
                     <TextBlock Text="Min. 8 car. · 1 majuscule · 1 chiffre · 1 spécial"
@@ -124,7 +124,7 @@
                                 Cursor="Hand"
                                 Click="ToggleConfirmPassword_Click"
                                 ToolTip="Afficher / masquer le mot de passe">
-                            <TextBlock x:Name="EyeIcon2" Text="🔓" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
+                            <TextBlock x:Name="EyeIcon2" Text="🔒" FontSize="15" Foreground="{DynamicResource NavyBrush}"/>
                         </Button>
                     </Grid>
 

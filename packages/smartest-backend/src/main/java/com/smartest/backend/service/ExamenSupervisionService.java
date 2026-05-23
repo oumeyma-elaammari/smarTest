@@ -3,6 +3,7 @@ package com.smartest.backend.service;
 import com.smartest.backend.dto.examen.StudentAnswerSnapshot;
 import com.smartest.backend.dto.request.ExamenPassageReponseRequest;
 import com.smartest.backend.dto.response.ExamenEtudiantPassageResponse;
+import com.smartest.backend.dto.response.ExamenPublieMetadataResponse;
 import com.smartest.backend.dto.response.NoteAttenteResponse;
 import com.smartest.backend.dto.response.ResultatVisibleResponse;
 import com.smartest.backend.entity.ExamenPassageResultat;
@@ -1258,6 +1259,14 @@ public class ExamenSupervisionService {
 
     private void publish(Long examenId, String channel, Object payload) {
         messagingTemplate.convertAndSend("/topic/examen/" + examenId + "/" + channel, payload);
+    }
+
+    /** Diffusion WebSocket des métadonnées (créneau, durée…) vers les clients web connectés. */
+    public void publierMetadata(Long examenId, ExamenPublieMetadataResponse metadata) {
+        if (examenId == null || metadata == null) {
+            return;
+        }
+        publish(examenId, "metadata", metadata);
     }
 
     /** Payload Map (comme /etat) pour que le front lise toujours connectes + nombreConnectes. */

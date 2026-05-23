@@ -180,8 +180,7 @@ export function ExamenPassageTerminee(opts: {
                     {titre}
                 </h1>
                 <p style={{ margin: '14px 0 0', color: '#475569', lineHeight: 1.6, fontSize: 15 }}>
-                    Cette session est close : vous ne pouvez plus ouvrir l’épreuve ni modifier vos réponses. Votre note sera
-                    communiquée ultérieurement par votre professeur (validation des résultats sur la plateforme).
+                    L’examen est terminé. Votre note vous sera communiquée par votre professeur.
                 </p>
                 <button
                     type="button"
@@ -256,22 +255,20 @@ function PauseReadonlyBlock(props: {
     return (
         <>
             <p style={{ margin: '0 0 12px', color: '#92400e', lineHeight: 1.5 }}>
-                Examen en pause. Attendez la reprise par le professeur — vous ne pouvez pas modifier vos réponses pendant la
-                pause.
+                Examen en pause — vos réponses ne sont pas modifiables pour le moment.
             </p>
             {questionCourante ? (
                 <>
                     <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: 13 }}>
-                        Question {(snap?.questionCouranteIndex ?? 0) + 1} / {snap?.totalQuestions ?? '—'}{' '}
-                        <span style={{ color: '#94a3b8' }}>(affichage seul)</span>
+                        Question {(snap?.questionCouranteIndex ?? 0) + 1} / {snap?.totalQuestions ?? '—'}
                     </p>
                     <p style={{ margin: '0 0 10px', fontWeight: 600, lineHeight: 1.55 }}>
                         {questionCourante.enonce || 'Question'}
                     </p>
                     <QuestionImageBlock question={questionCourante} />
                     {questionKind === 'essay' ? (
-                        <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>
-                            Type rédaction : les étudiants répondent dans une zone de texte libre (non modifiable pendant la pause).
+                        <p style={{ margin: 0, color: '#64748b', fontSize: 14, fontStyle: 'italic' }}>
+                            Réponse en rédaction (lecture seule).
                         </p>
                     ) : (
                         <ul style={{ margin: 0, paddingLeft: 18, color: '#475569' }}>
@@ -409,12 +406,13 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
 
             {reponseVerrouillee ? (
                 <p style={{ margin: '12px 0 0', color: '#166534', fontSize: 14, lineHeight: 1.5 }}>
-                    Réponse validée : vous ne pouvez plus la modifier pour cette question.
+                    Réponse enregistrée.
                 </p>
             ) : tempsQuestionExpire ? (
                 <p style={{ margin: '12px 0 0', color: '#92400e', fontSize: 14, lineHeight: 1.5 }}>
-                    Temps écoulé pour cette question : vous ne pouvez plus modifier votre réponse tant que le professeur n’a pas
-                    ajouté du temps au minuteur.
+                    Temps écoulé pour cette question, vous ne pouvez plus répondre.
+                     <br />
+                     (Si votre professeur ajoute du temps, vous pourrez à nouveau répondre.)
                 </p>
             ) : null}
 
@@ -422,24 +420,21 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
                 <p
                     style={{
                         margin: '12px 0 0',
-                        padding: '10px 12px',
+                        padding: '8px 10px',
                         borderRadius: 10,
                         background: '#fffbeb',
                         border: '1px solid #fcd34d',
                         color: '#92400e',
-                        fontSize: 14,
+                        fontSize: 12,
                         lineHeight: 1.5,
                     }}
                     role="note"
                 >
-                    <strong>Important :</strong> si vous ne cliquez pas sur « Valider ma réponse », votre choix ne sera pas
-                    compté pour cette question.
+                                       Cliquez sur « Valider ma réponse » pour enregistrer votre choix.
+                                       <br />
+                                       Votre réponse n’est prise en compte qu’une fois validée.
                 </p>
             ) : null}
-
-            <p style={{ margin: '10px 0 0', color: '#64748b', fontSize: 12 }}>
-                Le passage entre les questions est imposé par le professeur. Aucune correction ni score pendant l’épreuve.
-            </p>
         </>
     )
 }
@@ -447,8 +442,7 @@ function QuestionActiveBlock(props: QuestionActiveBlockProps): ReactElement {
 function EnAttenteQuestionContenu(): ReactElement {
     return (
         <p style={{ margin: 0, color: '#64748b', lineHeight: 1.5 }}>
-            En attente du contenu de la question… Si cela dure, vérifiez votre connexion. Le professeur pilote l’épreuve : une
-            seule question à la fois s’affiche pour toute la classe, comme un quiz guidé.
+            En attente de la question… Si l’attente est longue, vérifiez votre connexion.
         </p>
     )
 }
@@ -456,8 +450,7 @@ function EnAttenteQuestionContenu(): ReactElement {
 function AvantDemarrageMessage(): ReactElement {
     return (
         <p style={{ margin: 0, color: '#64748b', lineHeight: 1.5 }}>
-            Les questions apparaîtront une par une dès que le professeur lance l’examen ; la question affichée est la même pour tout
-            le monde, contrôlée par le professeur.
+            Les questions s’afficheront ici une par une dès le début de l’examen.
         </p>
     )
 }
@@ -648,13 +641,7 @@ export function ExamenPassageEpreuveLayout(props: {
                 </div>
                 {minuteurQuestion.formatted != null ? (
                     <p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 13 }} aria-live="polite">
-                        Décompte (indication) : <strong>{minuteurQuestion.formatted}</strong>
-                        {minuteurQuestion.isExpired ? (
-                            <span style={{ color: '#92400e', fontWeight: 600 }}>
-                                {' '}
-                                — temps écoulé ; vos réponses sont verrouillées jusqu’à ajout de temps par le professeur.
-                            </span>
-                        ) : null}
+                        Temps restant : <strong>{minuteurQuestion.formatted}</strong>
                     </p>
                 ) : null}
                 {blocQuestion}
@@ -672,7 +659,6 @@ export function ExamenPassageAttenteLayout(props: {
     dateExamen: string
     creneauAtteint: boolean
     joined: boolean
-    heureLancement: string
     status: string
     wsNotice: string | null
 }): ReactElement {
@@ -685,17 +671,27 @@ export function ExamenPassageAttenteLayout(props: {
         dateExamen,
         creneauAtteint,
         joined,
-        heureLancement,
         status,
         wsNotice,
     } = props
 
-    const description = meta?.description?.trim()
-        ? meta.description
-        : 'Votre professeur a publié cet examen sur la plateforme. Les questions ne sont visibles qu’une fois la session lancée.'
-
     const dureeTxt = meta?.duree != null ? `${meta.duree} min` : '—'
     const enseignantNom = meta?.professeurNom?.trim() || '—'
+    const profDescription = meta?.description?.trim() ?? ''
+    const enAttenteConnecte = joined && !canStart && creneauAtteint
+
+    const headerDescription = (() => {
+        if (profDescription) return profDescription
+        if (!creneauAtteint) {
+            return dateExamen !== '—'
+                ? `Cet examen ouvre le ${dateExamen}. Revenez à l’heure indiquée.`
+                : 'Cet examen n’est pas encore ouvert. Consultez la date ci-dessous.'
+        }
+        if (enAttenteConnecte) return null
+        return 'L’examen va commencer. Patientez quelques instants.'
+    })()
+
+    const enseignantLabel = enseignantNom !== '—' ? enseignantNom : 'votre professeur'
 
     return (
         <div style={shell}>
@@ -733,9 +729,11 @@ export function ExamenPassageAttenteLayout(props: {
                         >
                             {resolveExamenDisplayTitre(meta, null, id)}
                         </h1>
-                        <p style={{ margin: '10px 0 0', color: '#475569', lineHeight: 1.55, fontSize: 15 }}>
-                            {description}
-                        </p>
+                        {headerDescription ? (
+                            <p style={{ margin: '10px 0 0', color: '#475569', lineHeight: 1.55, fontSize: 15 }}>
+                                {headerDescription}
+                            </p>
+                        ) : null}
                     </div>
                     <EtatBadge canStart={canStart} etat={etat} />
                 </div>
@@ -761,7 +759,7 @@ export function ExamenPassageAttenteLayout(props: {
                 >
                     <div style={metaTile}>
                         <div style={{ color: '#64748b', fontSize: 12, marginBottom: 4 }}>
-                            Date et heure de lancement (créneau saisi pour l’épreuve)
+                            Date et heure de lancement 
                         </div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{dateExamen}</div>
                     </div>
@@ -785,28 +783,12 @@ export function ExamenPassageAttenteLayout(props: {
                         fontWeight: 550,
                     }}
                 >
-                    Salle d’attente
+                    En attente du début
                 </h2>
-                <p style={{ color: '#64748b', margin: '0 0 16px', lineHeight: 1.55, fontSize: 15 }}>
-                    {creneauAtteint ? (
-                        <>
-                            Votre inscription à la salle d’attente est automatique sur cette page. Lorsque le professeur
-                            démarre l’examen depuis l’application enseignant, vous êtes redirigé vers la page d’épreuve pour
-                            répondre aux questions.
-                        </>
-                    ) : (
-                        <>
-                            L’examen devient accessible lorsque l’heure prévue du créneau est atteinte : vous pourrez alors rejoindre
-                            la salle d’attente sur cette page. En attendant, consultez les informations ci-dessus ; les questions ne
-                            sont pas disponibles avant le lancement par le professeur.
-                        </>
-                    )}
-                </p>
 
-                {joined && !canStart && creneauAtteint ? (
+                {enAttenteConnecte ? (
                     <div
                         style={{
-                            marginTop: 4,
                             color: '#92400e',
                             background: '#fffbeb',
                             border: '1px solid #fde68a',
@@ -815,17 +797,17 @@ export function ExamenPassageAttenteLayout(props: {
                             lineHeight: 1.5,
                         }}
                     >
-                        <strong>L’examen va bientôt commencer, veuillez patienter.</strong>
+                        <strong>L’examen va bientôt commencer.</strong>
                         <span style={{ display: 'block', marginTop: 8 }}>
-                            Vous êtes bien connecté à la salle d’attente (créneau prévu vers <strong>{heureLancement}</strong>).
-                            Dès que le professeur clique sur « Démarrer l’examen », vous passerez automatiquement à la page
-                            d’épreuve.
+                            Dès que {enseignantLabel} lancera l’épreuve, cette page passera automatiquement aux questions.
                         </span>
                     </div>
                 ) : null}
 
                 {status ? (
-                    <p style={{ marginTop: 14, marginBottom: 0, color: '#64748b', fontSize: 14 }}>{status}</p>
+                    <p style={{ marginTop: enAttenteConnecte ? 14 : 0, marginBottom: 0, color: '#64748b', fontSize: 14 }}>
+                        {status}
+                    </p>
                 ) : null}
                 {wsNotice ? (
                     <p style={{ marginTop: 10, marginBottom: 0, color: '#9a3412', fontSize: 13 }}>{wsNotice}</p>

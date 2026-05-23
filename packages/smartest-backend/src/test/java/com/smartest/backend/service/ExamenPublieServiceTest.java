@@ -27,6 +27,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -244,5 +245,54 @@ class ExamenPublieServiceTest {
         List<ExamenPublie> list = examenPublieService.getDisponibles();
 
         assertThat(list).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("modifierCreneauPublicationWeb : examen PLANIFIE publié → met à jour dates et diffuse")
+    void modifierCreneauPlanifieOk() {
+        LocalDateTime nouveauDebut = LocalDateTime.of(2026, 6, 15, 10, 0);
+        ExamenPublie ex = new ExamenPublie();
+        ex.setId(10L);
+        ex.setTitre("Examen");
+        ex.setDuree(90);
+        ex.setStatut(StatutExamen.PLANIFIE);
+        ex.setPublieSurWebLe(LocalDateTime.now().minusDays(1));
+        ex.setProfesseur(professeur);
+        ex.setDateDebut(LocalDateTime.of(2026, 6, 10, 9, 0));
+        ex.setDateFin(LocalDateTime.of(2026, 6, 10, 10, 30));
+
+        when(professeurRepository.findByEmailIgnoreCase("prof@test.com")).thenReturn(Optional.of(professeur));
+        when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(ex));
+        when(examenPublieRepository.countLinkedQuestions(10L)).thenReturn(5L);
+        when(examenPublieRepository.save(any(ExamenPublie.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var meta = examenPublieService.modifierCreneauPublicationWeb(
+                10L, "prof@test.com", nouveauDebut, 120);
+
+        assertThat(ex.getDateDebut()).isEqualTo(nouveauDebut);
+        assertThat(ex.getDateFin()).isEqualTo(nouveauDebut.plusMinutes(120));
+        assertThat(ex.getDuree()).isEqualTo(120);
+        assertThat(meta.getDateDebut()).isEqualTo(nouveauDebut);
+        verify(examenSupervisionService).publierMetadata(eq(10L), any());
+    }
+
+    @Test
+    @DisplayName("modifierCreneauPublicationWeb : examen EN_COURS → refus")
+    void modifierCreneauEnCoursRefuse() {
+        ExamenPublie ex = new ExamenPublie();
+        ex.setId(10L);
+        ex.setStatut(StatutExamen.EN_COURS);
+        ex.setPublieSurWebLe(LocalDateTime.now().minusDays(1));
+        ex.setProfesseur(professeur);
+
+        when(professeurRepository.findByEmailIgnoreCase("prof@test.com")).thenReturn(Optional.of(professeur));
+        when(examenPublieRepository.findById(10L)).thenReturn(Optional.of(ex));
+
+        assertThatThrownBy(() -> examenPublieService.modifierCreneauPublicationWeb(
+                10L, "prof@test.com", LocalDateTime.now().plusDays(1), null))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+
+        verify(examenPublieRepository, never()).save(any());
+        verify(examenSupervisionService, never()).publierMetadata(any(), any());
     }
 }

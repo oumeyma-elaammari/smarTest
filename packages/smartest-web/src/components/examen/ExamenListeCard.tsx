@@ -1,5 +1,5 @@
-import { CalendarClock, Clock, User } from 'lucide-react'
-import type { CSSProperties, ReactNode } from 'react'
+import { CalendarClock, Clock, Loader2, Trash2, User } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ExamenListeItem } from '../../api/quizSchemas'
 import { formatDateTimeUnknown, formatStatutExamen } from '../../utils/examenDisplay'
 import { couleurNoteSur20 } from '../../utils/noteAffichage'
@@ -11,10 +11,19 @@ function statutPillStyle(statut?: string | null): { background: string; color: s
     if (u === 'EN_COURS') {
         return { background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }
     }
+    if (u === 'EN_PAUSE') {
+        return { background: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe' }
+    }
     if (u === 'TERMINE') {
         return { background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }
     }
-    return { background: '#fff7ed', color: '#b45309', border: '1px solid #fed7aa' }
+    if (u === 'ANNULE') {
+        return { background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca' }
+    }
+    if (u === 'PLANIFIE') {
+        return { background: '#fff7ed', color: '#b45309', border: '1px solid #fed7aa' }
+    }
+    return { background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }
 }
 
 export type ExamenListeCardProps = {
@@ -31,21 +40,10 @@ export type ExamenListeCardProps = {
     /** Si défini : affichage superviseur avec pilotage dédié. */
     readonly superviseurProps?: {
         readonly onOuvrirPilotage: () => void
-        /** Démarrer la session sur le serveur puis redirection (ex. vers /supervision/...). */
-        readonly onLancerSession?: () => void | Promise<void>
-        /** Désactive le bouton pendant l'appel API. */
-        readonly lancementEnCours?: boolean
-        /** Affiche « Démarrer » seulement tant que la session n'a pas été démarrée côté serveur (métadonnée). */
-        readonly peutLancerSession: boolean
         /** Supprime l'examen sur le serveur (prof + étudiants). */
         readonly onSupprimer?: () => void | Promise<void>
         readonly suppressionEnCours?: boolean
     }
-}
-
-function fireSessionLaunch(handler: (() => void | Promise<void>) | undefined): void {
-    const h = handler
-    if (h) Promise.resolve(h()).catch(() => {})
 }
 
 type CreneauHintProps = { readonly creneauAtteint: boolean }
@@ -63,9 +61,6 @@ function CreneauHint({ creneauAtteint }: CreneauHintProps) {
                 fontWeight: 400,
                 lineHeight: 1.2,
                 maxWidth: '100%',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
             }}
         >
             L'examen doit être accessible lorsque l'heure prévue du créneau est atteinte.
@@ -75,114 +70,135 @@ function CreneauHint({ creneauAtteint }: CreneauHintProps) {
 
 type SuperviseurBlockProps = {
     readonly superviseurProps: NonNullable<ExamenListeCardProps['superviseurProps']>
-    readonly layoutTwoCol: boolean
     readonly creneauAtteint: boolean
-    readonly accentBleu: string
 }
 
-function SuperviseurBlock({
-    superviseurProps,
-    layoutTwoCol,
-    creneauAtteint,
-    accentBleu,
-}: SuperviseurBlockProps) {
-    const titreLancer = creneauAtteint
-        ? 'Démarre la session pour les étudiants et ouvre votre espace de pilotage'
-        : 'Disponible à partir du créneau affiché'
-    const lancerEnabledVisuel = creneauAtteint && !superviseurProps.lancementEnCours
-    const styleLancerBtn: CSSProperties = {
-        padding: '8px 18px',
-        borderRadius: 8,
-        border: 'none',
-        background: lancerEnabledVisuel ? accentBleu : '#94a3b8',
-        color: '#fff',
-        fontWeight: 600,
-        fontFamily: sans,
-        fontSize: 13,
-        cursor: lancerEnabledVisuel ? 'pointer' : 'not-allowed',
-        width: '100%',
-        transition: 'background 0.15s, opacity 0.15s',
-    }
+function SuperviseurBlock({ superviseurProps, creneauAtteint }: SuperviseurBlockProps) {
+    return (
+        <button
+            type="button"
+            disabled={!creneauAtteint}
+            title={
+                creneauAtteint
+                    ? 'Piloter l’examen en temps réel (questions, pause, fin)'
+                    : "Disponible uniquement à partir de l'heure prévue du créneau"
+            }
+            onClick={() => {
+                if (creneauAtteint) superviseurProps.onOuvrirPilotage()
+            }}
+            style={{
+                padding: '7px 16px',
+                borderRadius: 8,
+                border: '1px solid #dbe3f1',
+                background: creneauAtteint ? '#0f1e3d' : '#94a3b8',
+                color: '#fff',
+                fontWeight: 600,
+                fontFamily: sans,
+                fontSize: 13,
+                cursor: creneauAtteint ? 'pointer' : 'not-allowed',
+                opacity: creneauAtteint ? 1 : 0.88,
+                width: 'auto',
+                minWidth: 120,
+                transition: 'background 0.15s, opacity 0.15s',
+            }}
+        >
+            Superviser
+        </button>
+    )
+}
 
+type ProfStatutRowProps = {
+    readonly statutAffichable: boolean
+    readonly statut?: string | null
+    readonly pill: { background: string; color: string; border: string }
+    readonly superviseurProps: NonNullable<ExamenListeCardProps['superviseurProps']>
+}
+
+function ProfStatutRow({ statutAffichable, statut, pill, superviseurProps }: ProfStatutRowProps) {
+    if (!statutAffichable && !superviseurProps.onSupprimer) return null
     return (
         <div
             style={{
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                width: layoutTwoCol ? 'auto' : '100%',
-                minWidth: layoutTwoCol ? 150 : undefined,
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: 4,
+                flexShrink: 0,
             }}
         >
-            {superviseurProps.peutLancerSession && superviseurProps.onLancerSession ? (
-                <button
-                    type="button"
-                    disabled={!creneauAtteint || superviseurProps.lancementEnCours}
-                    title={titreLancer}
-                    onClick={() => {
-                        if (!creneauAtteint || superviseurProps.lancementEnCours) return
-                        fireSessionLaunch(superviseurProps.onLancerSession)
-                    }}
-                    style={styleLancerBtn}
-                >
-                    {superviseurProps.lancementEnCours ? 'Démarrage…' : 'Démarrer et piloter'}
-                </button>
-            ) : null}
-            <button
-                type="button"
-                disabled={!creneauAtteint}
-                title={
-                    creneauAtteint
-                        ? 'Contrôles en temps réel (questions, pause, fin) — même vue que les étudiants'
-                        : "Disponible uniquement à partir de l'heure prévue du créneau"
-                }
-                onClick={() => {
-                    if (creneauAtteint) superviseurProps.onOuvrirPilotage()
-                }}
-                style={{
-                    padding: '8px 18px',
-                    borderRadius: 8,
-                    border: '1px solid #dbe3f1',
-                    background: creneauAtteint ? '#0f1e3d' : '#94a3b8',
-                    color: '#fff',
-                    fontWeight: 600,
-                    fontFamily: sans,
-                    fontSize: 13,
-                    cursor: creneauAtteint ? 'pointer' : 'not-allowed',
-                    opacity: creneauAtteint ? 1 : 0.88,
-                    width: '100%',
-                    transition: 'background 0.15s, opacity 0.15s',
-                }}
-            >
-                Espace superviseur
-            </button>
-            {superviseurProps.onSupprimer ? (
-                <button
-                    type="button"
-                    disabled={superviseurProps.suppressionEnCours}
-                    title="Supprimer cet examen pour vous et pour tous les étudiants"
-                    onClick={() => {
-                        if (superviseurProps.suppressionEnCours) return
-                        void superviseurProps.onSupprimer?.()
-                    }}
+            {statutAffichable ? (
+                <span
                     style={{
-                        padding: '7px 14px',
-                        borderRadius: 8,
-                        border: '1px solid #fecaca',
-                        background: '#fff',
-                        color: '#dc2626',
+                        fontSize: 11,
                         fontWeight: 600,
-                        fontFamily: sans,
-                        fontSize: 12,
-                        cursor: superviseurProps.suppressionEnCours ? 'not-allowed' : 'pointer',
-                        opacity: superviseurProps.suppressionEnCours ? 0.6 : 1,
-                        width: '100%',
+                        padding: '5px 11px',
+                        borderRadius: 999,
+                        whiteSpace: 'nowrap',
+                        ...pill,
                     }}
                 >
-                    {superviseurProps.suppressionEnCours ? 'Suppression…' : "Supprimer l'examen"}
-                </button>
+                    {formatStatutExamen(statut)}
+                </span>
+            ) : null}
+            {superviseurProps.onSupprimer ? (
+                <SuppressionIconButton
+                    onSupprimer={superviseurProps.onSupprimer}
+                    suppressionEnCours={superviseurProps.suppressionEnCours}
+                />
             ) : null}
         </div>
+    )
+}
+
+type SuppressionIconProps = {
+    readonly onSupprimer: () => void | Promise<void>
+    readonly suppressionEnCours?: boolean
+}
+
+function SuppressionIconButton({ onSupprimer, suppressionEnCours }: SuppressionIconProps) {
+    return (
+        <button
+            type="button"
+            disabled={suppressionEnCours}
+            title="Supprimer cet examen pour vous et pour tous les étudiants"
+            aria-label="Supprimer l'examen"
+            onClick={() => {
+                if (suppressionEnCours) return
+                void onSupprimer()
+            }}
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                padding: 0,
+                borderRadius: 6,
+                border: '1px solid transparent',
+                background: 'transparent',
+                color: suppressionEnCours ? '#cbd5e1' : '#dc2626',
+                cursor: suppressionEnCours ? 'not-allowed' : 'pointer',
+                flexShrink: 0,
+                transition: 'color 0.15s, background 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={(ev) => {
+                if (suppressionEnCours) return
+                ev.currentTarget.style.color = '#b91c1c'
+                ev.currentTarget.style.background = '#fef2f2'
+                ev.currentTarget.style.borderColor = '#fecaca'
+            }}
+            onMouseLeave={(ev) => {
+                ev.currentTarget.style.color = suppressionEnCours ? '#cbd5e1' : '#dc2626'
+                ev.currentTarget.style.background = 'transparent'
+                ev.currentTarget.style.borderColor = 'transparent'
+            }}
+        >
+            {suppressionEnCours ? (
+                <Loader2 size={15} strokeWidth={2} className="animate-spin" aria-hidden />
+            ) : (
+                <Trash2 size={15} strokeWidth={2} aria-hidden />
+            )}
+        </button>
     )
 }
 
@@ -192,7 +208,7 @@ type EtudiantActionsProps = {
     readonly onRejoindre: () => void
 }
 
-function EtudiantRejoindreButton({ layoutTwoCol, creneauAtteint, onRejoindre }: EtudiantActionsProps) {
+function EtudiantRejoindreButton({ creneauAtteint, onRejoindre }: Omit<EtudiantActionsProps, 'layoutTwoCol'>) {
     return (
         <button
             type="button"
@@ -206,9 +222,9 @@ function EtudiantRejoindreButton({ layoutTwoCol, creneauAtteint, onRejoindre }: 
                 if (creneauAtteint) onRejoindre()
             }}
             style={{
-                padding: '8px 18px',
+                padding: '7px 16px',
                 borderRadius: 8,
-                border: 'none',
+                border: '1px solid #dbe3f1',
                 background: creneauAtteint ? '#0f1e3d' : '#94a3b8',
                 color: '#fff',
                 fontWeight: 600,
@@ -216,8 +232,8 @@ function EtudiantRejoindreButton({ layoutTwoCol, creneauAtteint, onRejoindre }: 
                 fontSize: 13,
                 cursor: creneauAtteint ? 'pointer' : 'not-allowed',
                 opacity: creneauAtteint ? 1 : 0.88,
-                width: layoutTwoCol ? 'auto' : '100%',
-                minWidth: layoutTwoCol ? 120 : undefined,
+                width: 'auto',
+                minWidth: 120,
                 transition: 'background 0.15s, opacity 0.15s',
             }}
         >
@@ -226,13 +242,24 @@ function EtudiantRejoindreButton({ layoutTwoCol, creneauAtteint, onRejoindre }: 
     )
 }
 
-function NoteEtudiantPubliee({
-    note,
-    layoutTwoCol,
-}: {
-    readonly note: { valeur: number; sur: number }
-    readonly layoutTwoCol: boolean
-}) {
+function StatutPill({ statut, pill }: { readonly statut?: string | null; readonly pill: { background: string; color: string; border: string } }) {
+    return (
+        <span
+            style={{
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '5px 11px',
+                borderRadius: 999,
+                whiteSpace: 'nowrap',
+                ...pill,
+            }}
+        >
+            {formatStatutExamen(statut)}
+        </span>
+    )
+}
+
+function NoteEtudiantPubliee({ note }: { readonly note: { valeur: number; sur: number } }) {
     const v = Number.isFinite(note.valeur) ? note.valeur.toFixed(2) : String(note.valeur)
     const s = Number.isFinite(note.sur) ? note.sur.toFixed(2) : String(note.sur)
     const couleur =
@@ -243,12 +270,12 @@ function NoteEtudiantPubliee({
         <p
             style={{
                 margin: 0,
-                maxWidth: layoutTwoCol ? 260 : undefined,
                 fontSize: 14,
                 lineHeight: 1.5,
                 color: couleur,
                 fontWeight: 700,
-                textAlign: layoutTwoCol ? 'right' : 'left',
+                textAlign: 'right',
+                whiteSpace: 'nowrap',
             }}
         >
             Note : {v} / {s}
@@ -256,16 +283,14 @@ function NoteEtudiantPubliee({
     )
 }
 
-function TermineeMessageEtudiant({ layoutTwoCol }: Pick<EtudiantActionsProps, 'layoutTwoCol'>) {
+function TermineeMessageEtudiant() {
     return (
         <p
             style={{
-                margin: 0,
-                maxWidth: layoutTwoCol ? 260 : undefined,
+                margin: '4px 0 0',
                 fontSize: 13,
                 lineHeight: 1.5,
                 color: '#64748b',
-                textAlign: layoutTwoCol ? 'right' : 'left',
             }}
         >
             Session terminée. Votre note sera communiquée ultérieurement par votre professeur.
@@ -273,44 +298,26 @@ function TermineeMessageEtudiant({ layoutTwoCol }: Pick<EtudiantActionsProps, 'l
     )
 }
 
-function renderColonDroiteActions(opts: {
-    superviseurProps: ExamenListeCardProps['superviseurProps']
+function renderActionEtudiant(opts: {
     sessionTermineeEtudiant: boolean
     noteEtudiantPubliee: ExamenListeCardProps['noteEtudiantPubliee']
-    layoutTwoCol: boolean
     creneauAtteint: boolean
-    accentBleu: string
     onRejoindre: () => void
 }): ReactNode {
-    if (opts.superviseurProps) {
-        return (
-            <SuperviseurBlock
-                superviseurProps={opts.superviseurProps}
-                layoutTwoCol={opts.layoutTwoCol}
-                creneauAtteint={opts.creneauAtteint}
-                accentBleu={opts.accentBleu}
-            />
-        )
-    }
     if (opts.sessionTermineeEtudiant) {
         if (opts.noteEtudiantPubliee) {
-            return <NoteEtudiantPubliee note={opts.noteEtudiantPubliee} layoutTwoCol={opts.layoutTwoCol} />
+            return <NoteEtudiantPubliee note={opts.noteEtudiantPubliee} />
         }
-        return <TermineeMessageEtudiant layoutTwoCol={opts.layoutTwoCol} />
+        return null
     }
     return (
-        <EtudiantRejoindreButton
-            layoutTwoCol={opts.layoutTwoCol}
-            creneauAtteint={opts.creneauAtteint}
-            onRejoindre={opts.onRejoindre}
-        />
+        <EtudiantRejoindreButton creneauAtteint={opts.creneauAtteint} onRejoindre={opts.onRejoindre} />
     )
 }
 
 export function ExamenListeCard({
     examen: e,
     accentBleu,
-    layoutTwoCol,
     creneauAtteint,
     onRejoindre,
     sessionTermineeEtudiant = false,
@@ -325,15 +332,12 @@ export function ExamenListeCard({
     const dateLigne = formatDateTimeUnknown(e.dateDebut)
     const pill = statutPillStyle(e.statut)
     const statutCode = (e.statut ?? '').trim().toUpperCase()
-    const statutAffichable = statutCode !== '' && statutCode !== 'PLANIFIE'
+    const statutAffichable = statutCode !== ''
 
-    const colonActions = renderColonDroiteActions({
-        superviseurProps,
+    const actionEtudiant = renderActionEtudiant({
         sessionTermineeEtudiant,
         noteEtudiantPubliee,
-        layoutTwoCol,
         creneauAtteint,
-        accentBleu,
         onRejoindre,
     })
 
@@ -343,7 +347,7 @@ export function ExamenListeCard({
                 fontFamily: sans,
                 border: '1px solid #e2e8f4',
                 borderRadius: 12,
-                padding: '18px 18px',
+                padding: 'clamp(14px, 3vw, 18px)',
                 background: '#fff',
                 boxShadow: '0 1px 2px rgba(15, 30, 61, 0.04)',
                 textAlign: 'left',
@@ -366,54 +370,56 @@ export function ExamenListeCard({
                     borderRadius: '12px 0 0 12px',
                 }}
             />
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: layoutTwoCol ? 'row' : 'column',
-                    alignItems: layoutTwoCol ? 'flex-start' : 'stretch',
-                    justifyContent: 'space-between',
-                    gap: 16,
-                    paddingLeft: 6,
-                }}
-            >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
-                        style={{
-                            margin: 0,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            letterSpacing: '0.06em',
-                            textTransform: 'uppercase',
-                            color: '#64748b',
-                        }}
-                    >
-                        {superviseurProps ? 'Votre épreuve (pilotage web)' : 'Épreuve supervisée'}
-                    </p>
+            {superviseurProps ? (
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        width: '100%',
+                        paddingLeft: 6,
+                    }}
+                >
                     <div
                         style={{
-                            fontWeight: 700,
-                            color: '#0f1e3d',
-                            fontSize: '1.05rem',
-                            marginTop: 6,
-                            marginBottom: 10,
-                            lineHeight: 1.35,
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                            marginBottom: 4,
                         }}
                     >
-                        {titreAffiche}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                                style={{
+                                    fontWeight: 700,
+                                    color: '#0f1e3d',
+                                    fontSize: 'clamp(1rem, 2.8vw, 1.05rem)',
+                                    lineHeight: 1.35,
+                                }}
+                            >
+                                {titreAffiche}
+                            </div>
+                        </div>
+                        <ProfStatutRow
+                            statutAffichable={statutAffichable}
+                            statut={e.statut}
+                            pill={pill}
+                            superviseurProps={superviseurProps}
+                        />
                     </div>
 
-                    <div
-                        style={{
-                            fontSize: 13,
-                            color: '#64748b',
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '6px 10px',
-                            alignItems: 'center',
-                            marginBottom: 10,
-                        }}
-                    >
-                        {profNom ? (
+                    {profNom ? (
+                        <div
+                            style={{
+                                fontSize: 13,
+                                color: '#64748b',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '6px 10px',
+                                alignItems: 'center',
+                                marginBottom: 4,
+                            }}
+                        >
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                                 <User size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
                                 <span>
@@ -421,78 +427,194 @@ export function ExamenListeCard({
                                     <span style={{ fontWeight: 600, color: '#475569' }}>{profNom}</span>
                                 </span>
                             </span>
-                        ) : null}
-                        {profNom && afficheDuree ? (
-                            <span style={{ color: '#cbd5e1', userSelect: 'none' }} aria-hidden>
-                                ·
-                            </span>
-                        ) : null}
-                        {afficheDuree ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                                <Clock size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
-                                <span>{e.duree} min</span>
-                            </span>
-                        ) : null}
-                    </div>
-
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: 10,
-                            fontSize: 13,
-                            color: '#475569',
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: 10,
-                            padding: '10px 12px',
-                            maxWidth: '100%',
-                            boxSizing: 'border-box',
-                        }}
-                    >
-                        <CalendarClock
-                            size={18}
-                            strokeWidth={2}
-                            aria-hidden
-                            style={{ color: accentBleu, flexShrink: 0, marginTop: 2 }}
-                        />
-                        <div>
-                            <span style={{ display: 'block', color: '#64748b', fontSize: 12, marginBottom: 2 }}>
-                                Créneau de démarrage
-                            </span>
-                            <span style={{ fontWeight: 600, color: '#0f1e3d', lineHeight: 1.45 }}>{dateLigne}</span>
                         </div>
-                    </div>
+                    ) : null}
+
+                    {(dateLigne !== '—' || afficheDuree) ? (
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                gap: 4,
+                                width: '100%',
+                            }}
+                        >
+                            {dateLigne !== '—' ? (
+                                <p
+                                    style={{
+                                        margin: 0,
+                                        fontSize: 13,
+                                        color: '#64748b',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 5,
+                                    }}
+                                >
+                                    <CalendarClock size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
+                                    <span style={{ fontWeight: 600, color: '#475569' }}>{dateLigne}</span>
+                                </p>
+                            ) : null}
+
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 8,
+                                    width: '100%',
+                                }}
+                            >
+                                {afficheDuree ? (
+                                    <p
+                                        style={{
+                                            margin: 0,
+                                            fontSize: 13,
+                                            color: '#64748b',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 5,
+                                        }}
+                                    >
+                                        <Clock size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
+                                        <span style={{ fontWeight: 600, color: '#475569' }}>{e.duree} min</span>
+                                    </p>
+                                ) : (
+                                    <span aria-hidden />
+                                )}
+                                <SuperviseurBlock
+                                    superviseurProps={superviseurProps}
+                                    creneauAtteint={creneauAtteint}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: 2 }}>
+                            <SuperviseurBlock superviseurProps={superviseurProps} creneauAtteint={creneauAtteint} />
+                        </div>
+                    )}
 
                     <CreneauHint creneauAtteint={creneauAtteint} />
                 </div>
-
+            ) : (
                 <div
                     style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: layoutTwoCol ? 'flex-end' : 'stretch',
-                        gap: 10,
-                        flexShrink: 0,
-                        alignSelf: layoutTwoCol ? 'center' : 'stretch',
+                        width: '100%',
+                        paddingLeft: 6,
                     }}
                 >
-                    {statutAffichable ? (
-                        <span
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                            marginBottom: 4,
+                        }}
+                    >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                                style={{
+                                    fontWeight: 700,
+                                    color: '#0f1e3d',
+                                    fontSize: 'clamp(1rem, 2.8vw, 1.05rem)',
+                                    lineHeight: 1.35,
+                                }}
+                            >
+                                {titreAffiche}
+                            </div>
+                        </div>
+                        {statutAffichable ? <StatutPill statut={e.statut} pill={pill} /> : null}
+                    </div>
+
+                    {profNom ? (
+                        <div
                             style={{
-                                fontSize: 11,
-                                fontWeight: 600,
-                                padding: '5px 11px',
-                                borderRadius: 999,
-                                ...pill,
+                                fontSize: 13,
+                                color: '#64748b',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '6px 10px',
+                                alignItems: 'center',
+                                marginBottom: 4,
                             }}
                         >
-                            {formatStatutExamen(e.statut)}
-                        </span>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                <User size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
+                                <span>
+                                    <span style={{ color: '#94a3b8' }}>Prof. </span>
+                                    <span style={{ fontWeight: 600, color: '#475569' }}>{profNom}</span>
+                                </span>
+                            </span>
+                        </div>
                     ) : null}
-                    {colonActions}
+
+                    {(dateLigne !== '—' || afficheDuree || actionEtudiant) ? (
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                gap: 4,
+                                width: '100%',
+                            }}
+                        >
+                            {dateLigne !== '—' ? (
+                                <p
+                                    style={{
+                                        margin: 0,
+                                        fontSize: 13,
+                                        color: '#64748b',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 5,
+                                    }}
+                                >
+                                    <CalendarClock size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
+                                    <span style={{ fontWeight: 600, color: '#475569' }}>{dateLigne}</span>
+                                </p>
+                            ) : null}
+
+                            {(afficheDuree || actionEtudiant) ? (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: 8,
+                                        width: '100%',
+                                    }}
+                                >
+                                    {afficheDuree ? (
+                                        <p
+                                            style={{
+                                                margin: 0,
+                                                fontSize: 13,
+                                                color: '#64748b',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 5,
+                                            }}
+                                        >
+                                            <Clock size={15} strokeWidth={2} aria-hidden style={{ color: '#94a3b8' }} />
+                                            <span style={{ fontWeight: 600, color: '#475569' }}>{e.duree} min</span>
+                                        </p>
+                                    ) : (
+                                        <span aria-hidden />
+                                    )}
+                                    {actionEtudiant}
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
+
+                    {sessionTermineeEtudiant && !noteEtudiantPubliee ? <TermineeMessageEtudiant /> : null}
+
+                    <CreneauHint creneauAtteint={creneauAtteint} />
                 </div>
-            </div>
+            )}
         </li>
     )
 }

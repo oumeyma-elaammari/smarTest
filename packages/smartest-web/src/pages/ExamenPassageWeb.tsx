@@ -5,10 +5,10 @@ import { examenApi } from '../api/examenApi'
 import type { ExamenMeta, ExamenSnapshot } from '../api/quizSchemas'
 import {
     formatDateTime,
-    formatTime,
     parseDebutExamenMs,
 } from '../utils/examenDisplay'
 import { useExamenMinuteurQuestionLive } from '../hooks/useExamenMinuteurQuestionLive'
+import { useExamenMetaPoll, useExamenMetaStomp } from '../hooks/useExamenMetaRealtime'
 import { useExamenWebSocketReponse } from '../hooks/useExamenWebSocketReponse'
 import {
     useAutoJoinSalleAttente,
@@ -75,18 +75,13 @@ async function soumettreReponseVersApi(opts: {
 
     if (!Number.isFinite(id) || id <= 0) return false
     if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
-        const msg =
-            'Session incomplète : identifiant étudiant introuvable. Déconnectez-vous puis reconnectez-vous.'
+        const msg = 'Reconnectez-vous pour continuer.'
         console.error('REPONSE NON ENREGISTREE: etudiantId invalide', etudiantId)
         setStatus(msg)
         return false
     }
     if (!canStart || enPause) {
-        setStatus(
-            enPause
-                ? 'L’examen est en pause : vous ne pouvez pas valider de réponse pour le moment.'
-                : 'L’épreuve n’a pas encore démarré ou est terminée. Attendez que le professeur lance la session.',
-        )
+        setStatus(enPause ? 'Examen en pause.' : 'L’examen n’a pas encore commencé.')
         return false
     }
     if (questionId === null) {
@@ -119,11 +114,11 @@ async function soumettreReponseVersApi(opts: {
     try {
         setSubmittingAnswer(true)
         await examenApi.repondreQuestionCourante(id, etudiantId, body)
-        setStatus('Réponse enregistrée. Aucune correction immédiate n’est affichée pendant l’examen.')
+        setStatus('')
         return true
     } catch (e: unknown) {
         console.error('REPONSE NON ENREGISTREE:', e)
-        setStatus(extractApiMessage(e, 'Impossible d’enregistrer la réponse pour la question active.'))
+        setStatus(extractApiMessage(e, 'Impossible d’enregistrer votre réponse.'))
         return false
     } finally {
         setSubmittingAnswer(false)
@@ -153,6 +148,8 @@ export default function ExamenPassageWeb() {
 
     useCreneauTicker(setCreneauTick)
     useExamenMetaLoad(id, setMeta, setLoading, setStatus)
+    useExamenMetaStomp(id, setMeta)
+    useExamenMetaPoll(id, setMeta)
     useResetAutoJoinOnId(id, autoJoinReussi)
     useExamenPolling(id, meta, setJoined, setSnap)
     useExamenStomp(id, setSnap, setJoined, setWsNotice)
@@ -267,20 +264,10 @@ export default function ExamenPassageWeb() {
 
     const soumettreReponseCourante = async () => {
         if (!Number.isFinite(etudiantId) || etudiantId <= 0) {
-            setStatus('Identifiant étudiant manquant : déconnectez-vous puis reconnectez-vous.')
+            setStatus('Reconnectez-vous pour continuer.')
             return
         }
-        if (reponseVerrouillee) {
-            setStatus('Vous avez déjà validé votre réponse pour cette question.')
-            return
-        }
-        if (minuteurQuestion.isExpired) {
-            setStatus(
-                'Le temps pour cette question est écoulé. Vous ne pouvez plus enregistrer de réponse tant que le professeur n’a pas ajouté du temps au minuteur.',
-            )
-            return
-        }
-        
+        if (reponseVerrouillee || minuteurQuestion.isExpired) return
         const ok = await soumettreReponseVersApi({
             id,
             etudiantId,
@@ -347,7 +334,6 @@ export default function ExamenPassageWeb() {
             }
     }
 
-    const heureLancement = formatTime(meta?.dateDebut)
     const dateExamen = formatDateTime(meta?.dateDebut)
 
     if (loading) {
@@ -445,7 +431,6 @@ export default function ExamenPassageWeb() {
             dateExamen={dateExamen}
             creneauAtteint={creneauAtteint}
             joined={joined}
-            heureLancement={heureLancement}
             status={status}
             wsNotice={wsNotice}
         />

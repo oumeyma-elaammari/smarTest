@@ -574,7 +574,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     }}
                 >
                     <ChevronLeft size={18} strokeWidth={2} aria-hidden style={{ color: accentBleu }} />
-                    Mes examens / tableau de bord
+                    Liste des examens
                 </button>
             </nav>
 
@@ -582,18 +582,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                 <div aria-hidden style={stripeLeft} />
                 <div style={{ position: 'relative', paddingLeft: 8 }}>
                     <div style={{ minWidth: 0 }}>
-                        <p
-                            style={{
-                                margin: 0,
-                                color: '#64748b',
-                                fontSize: 11,
-                                fontWeight: 600,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.06em',
-                            }}
-                        >
-                            Pilotage web — superviseur
-                        </p>
+                       
                         <h1
                             style={{
                                 margin: '6px 0 0',
@@ -663,14 +652,9 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                             </h2>
                             {modeListeParticipants === 'attente' ? (
                                 <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.5, maxWidth: 560 }}>
-                                    Liste d’attente avant le démarrage : les élèves connectés (après le créneau) apparaissent ici ;
-                                    vous pouvez démarrer l’épreuve quand vous le décidez (mise à jour automatique).
+                                    Les élèves qui sont en attente s’affichent ici. Démarrez quand vous êtes prêt.
                                 </p>
-                            ) : modeListeParticipants === 'actifs' ? (
-                                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.5, maxWidth: 560 }}>
-                                    Étudiants qui suivent l’examen en temps réel pendant la session.
-                                </p>
-                            ) : (
+                            ) : modeListeParticipants === 'actifs' ? null : (
                                 <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, lineHeight: 1.45 }}>
                                     Session terminée ou arrêtée — la liste reflète le dernier état connu si disponible.
                                 </p>
@@ -714,7 +698,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         }}
                     >
                         {modeListeParticipants === 'attente'
-                            ? 'Aucun étudiant en salle d’attente pour le moment. Les élèves qui ouvrent la page de l’examen (après le créneau) s’affichent ici.'
+                            ? 'Aucun étudiant attente pour le moment.'
                             : modeListeParticipants === 'actifs'
                               ? 'Aucun étudiant connecté à l’épreuve pour le moment.'
                               : 'Aucun participant listé.'}
@@ -824,11 +808,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     </button>
                 </div>
 
-                <p style={{ margin: '0 0 12px', fontSize: 13, color: '#64748b', lineHeight: 1.55, maxWidth: 720 }}>
-                    Pour changer de question affichée aux étudiants, utilisez <strong>Question précédente</strong> /{' '}
-                    <strong>Question suivante</strong> ou les pastilles numérotées (pas de saut automatique).
-                </p>
-
+          
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 12 }}>
                     <button
                         type="button"
@@ -873,7 +853,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                     }}
                 >
                     <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b', flex: '1 1 100%' }}>
-                        Ajustements — temps question (courante)
+                        Ajustements — temps de la question courante
                     </span>
                     <button
                         type="button"
@@ -958,15 +938,12 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         boxSizing: 'border-box',
                     }}
                 >
-                    <div style={{ color: accentBleu, fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
-                        Question active (copie écran élève)
-                    </div>
                     <div
                         style={{
                             display: 'flex',
-                            flexWrap: 'wrap',
-                            alignItems: 'baseline',
-                            gap: '6px 18px',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            gap: 6,
                             fontWeight: 700,
                             marginBottom: 8,
                             fontSize: '1rem',
@@ -974,11 +951,13 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         }}
                     >
                         <span>
-                            {totalQuestions > 0 ? `Question ${questionNumero} / ${totalQuestions}` : 'Aucune question disponible'}
+                            {totalQuestions > 0
+                                ? `Question active : ${questionNumero}/${totalQuestions}`
+                                : 'Aucune question disponible'}
                         </span>
                         {totalQuestions > 0 && minuteurQuestionLive.formatted != null ? (
                             <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#475569' }} aria-live="polite">
-                                Décompte (indication) :{' '}
+                                Décompte :{' '}
                                 <strong style={{ color: '#0f1e3d' }}>{minuteurQuestionLive.formatted}</strong>
                                 {snap?.tempsQuestionRestantSeconds === 0 && estEnCours ? (
                                     <span style={{ color: '#92400e', fontWeight: 600 }}>
@@ -990,11 +969,11 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                         ) : null}
                         {totalQuestions > 0 && (estEnCours || etat === 'EN_PAUSE') ? (
                             <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#475569' }} aria-live="polite">
-                                Réponses (temps réel) :{' '}
+                                Réponses soumises :{' '}
                                 <strong style={{ color: '#0f1e3d' }}>{reponsesPourQuestionCouranteAffiche}</strong>
-                                <span style={{ color: '#94a3b8', margin: '0 5px' }}>/</span>
+                                <span style={{ color: '#94a3b8', margin: '0 4px' }}>/</span>
                                 <strong style={{ color: '#0f1e3d' }}>{participantsActifsAffiche}</strong>
-                                <span style={{ fontWeight: 600, color: '#64748b', marginLeft: 6 }}>
+                                <span style={{ fontWeight: 600, color: '#64748b', marginLeft: 4 }}>
                                     étudiants actifs
                                 </span>
                             </span>
@@ -1013,12 +992,12 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
                                 Aperçu élève —{' '}
                                 {questionKindSupervision === 'vf'
-                                    ? 'Vrai / Faux (2 choix)'
+                                    ? 'Vrai / Faux'
                                     : questionKindSupervision === 'checkbox'
-                                      ? 'Cases à cocher (plusieurs réponses possibles)'
+                                      ? 'Cases à cocher'
                                       : questionKindSupervision === 'essay'
-                                        ? 'Rédaction (zone de texte libre)'
-                                        : 'QCM (une seule réponse)'}
+                                        ? 'Rédaction'
+                                        : 'QCU '}
                             </div>
                             {questionKindSupervision === 'essay' ? (
                                 <p style={{ margin: 0, color: '#475569', fontSize: 13, lineHeight: 1.55 }}>
@@ -1059,7 +1038,7 @@ export default function ExamenSupervisionPage({ accentBleu = '#4f8ef7' }: Examen
                                 listStyle: 'none',
                             }}
                         >
-                            Vue d’ensemble du sujet ({planListe.length} question{planListe.length > 1 ? 's' : ''}) — optionnel
+                            Vue d’ensemble du sujet ({planListe.length} question{planListe.length > 1 ? 's' : ''}) 
                         </summary>
                         <div
                             style={{

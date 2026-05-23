@@ -195,7 +195,7 @@
 									<ColumnDefinition Width="*"/>
 									<ColumnDefinition Width="Auto"/>
 								</Grid.ColumnDefinitions>
-								<TextBlock Text="Choix multiple (QCM)"
+								<TextBlock Text="Choix unique (QCU)"
                                            FontSize="13" FontWeight="600" Foreground="{DynamicResource NavyBrush}"
                                            VerticalAlignment="Center"/>
 								<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
