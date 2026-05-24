@@ -78,8 +78,8 @@ namespace smartest_desktop.ViewModels
 
         public string NoteAfficheeText =>
             NoteAffichee.HasValue
-                ? $"{NoteAffichee.Value.ToString("0.##", CultureInfo.InvariantCulture)} pts"
-                : "— pts";
+                ? $"{NoteAffichee.Value.ToString("0.##", CultureInfo.InvariantCulture)}/20"
+                : "—/20";
 
         public bool EstNoteReussie => NoteAffichee is >= SeuilNoteReussite;
 

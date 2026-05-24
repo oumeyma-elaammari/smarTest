@@ -68,7 +68,8 @@ namespace smartest_desktop.Views
                             ReponseCorrecte = string.Equals(q.Type, "VF", System.StringComparison.OrdinalIgnoreCase)
                                 ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
                                 : q.ReponseCorrecte,
-                            Explication = q.Explication
+                            Explication = q.Explication,
+                            Difficulte = string.IsNullOrWhiteSpace(q.Difficulte) ? quizComplet.Difficulte : q.Difficulte
                         })
                         .ToList();
 
@@ -125,10 +126,13 @@ namespace smartest_desktop.Views
                     }
 
                     string coursTitre = examenComplet.Cours.FirstOrDefault()?.Titre ?? "Cours local";
-                    string difficulte = examenComplet.Questions
-                        .OrderBy(q => q.Numero)
-                        .Select(q => q.Difficulte)
-                        .FirstOrDefault(d => !string.IsNullOrWhiteSpace(d)) ?? "Moyen";
+                    var niveauxExamen = new HashSet<string>(StringComparer.Ordinal);
+                    foreach (var q in examenComplet.Questions)
+                    {
+                        foreach (var n in DifficulteMultiSelectHelper.ParserLibelle(q.Difficulte))
+                            niveauxExamen.Add(n);
+                    }
+                    string difficulte = DifficulteMultiSelectHelper.FormaterLibelle(niveauxExamen);
 
                     var resultWindow = new ExamenResultWindow(
                         questions,

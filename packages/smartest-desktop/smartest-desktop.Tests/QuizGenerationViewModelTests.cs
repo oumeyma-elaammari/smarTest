@@ -21,6 +21,18 @@ public class QuizGenerationViewModelTests
         """;
 
     [Fact]
+    public void Toggle_difficulte_combine_deux_niveaux()
+    {
+        using var db = TestDbFactory.CreateInMemoryContext();
+        var vm = new QuizGenerationViewModel(db, new Mock<IGroqGenerationClient>().Object);
+
+        ((RelayCommand)vm.SetDifficulteCommand).Execute("Facile");
+        Assert.Equal("Facile + Moyen", vm.Difficulte);
+        Assert.True(vm.IsDifficulteFacileSelected);
+        Assert.True(vm.IsDifficulteMoyenSelected);
+    }
+
+    [Fact]
     public void Etat_initial_cours_vide_pas_erreur()
     {
         using var db = TestDbFactory.CreateInMemoryContext();

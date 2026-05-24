@@ -272,7 +272,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,16,0" Foreground="{DynamicResource GrayTextBrush}" FontSize="14">
                             <Run Text="Total : "/>
-                            <Run Text="{Binding NoteTotale, Mode=OneWay}" FontWeight="Bold">
+                            <Run Text="{Binding NoteTotale, Mode=OneWay, StringFormat={}{0:0.##}}" FontWeight="Bold">
                                 <Run.Style>
                                     <Style TargetType="Run">
                                         <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
@@ -284,7 +284,8 @@
                                     </Style>
                                 </Run.Style>
                             </Run>
-                            <Run Text=" pts"/>
+                            <Run Text="/"/>
+                            <Run Text="{Binding BaremeTotal, Mode=OneWay, StringFormat={}{0:0.##}}"/>
                         </TextBlock>
                         <Button Content="Valider la correction"
                                 Command="{Binding ValiderCorrectionCommand}"

@@ -244,6 +244,8 @@ public class ExamenPublieService {
     public ExamenPublie publier(Long professeurId, String titre, Integer duree, String description,
                                 LocalDateTime debut, LocalDateTime fin) {
 
+        verifierDateDebutFuture(debut);
+
         Professeur prof = professeurRepository.findById(professeurId)
                 .orElseThrow(() -> new IllegalArgumentException("Professeur introuvable"));
 
@@ -363,6 +365,7 @@ public class ExamenPublieService {
         if (dateDebut == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "dateDebut requise");
         }
+        verifierDateDebutFuture(dateDebut);
 
         String email = emailProf.trim().toLowerCase(Locale.ROOT);
         Professeur prof = professeurRepository.findByEmailIgnoreCase(email)
@@ -396,5 +399,12 @@ public class ExamenPublieService {
         ExamenPublieMetadataResponse metadata = toMetadata(ex);
         examenSupervisionService.publierMetadata(examenId, metadata);
         return metadata;
+    }
+
+    private void verifierDateDebutFuture(LocalDateTime dateDebut) {
+        if (!dateDebut.isAfter(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La date de début doit être dans le futur");
+        }
     }
 }

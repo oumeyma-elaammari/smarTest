@@ -135,7 +135,7 @@ namespace smartest_desktop.Views
                     ? (q.ReponseCorrecte?.Trim().ToUpperInvariant() is "B" or "FAUX" or "FALSE" or "2" ? "B" : "A")
                     : q.ReponseCorrecte,
                 Explication = q.Explication,
-                Difficulte = difficulteQuiz
+                Difficulte = string.IsNullOrWhiteSpace(q.Difficulte) ? difficulteQuiz : q.Difficulte
             }).ToList();
             var context = new QuizSaveContext
             {

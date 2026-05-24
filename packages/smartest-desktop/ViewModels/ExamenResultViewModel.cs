@@ -182,6 +182,16 @@ namespace smartest_desktop.ViewModels
         public IReadOnlyList<string> ItemsMinutes { get; }
 
         private DateTime _dateExamen;
+        private string _messageErreurCreneau = string.Empty;
+
+        /// <summary>Date minimale sélectionnable dans le calendrier (aujourd'hui).</summary>
+        public DateTime DateMinimaleCreneau => DateTime.Today;
+
+        public bool CreneauEstValide => string.IsNullOrEmpty(_messageErreurCreneau);
+
+        public bool AfficherErreurCreneau => !CreneauEstValide;
+
+        public string MessageErreurCreneau => _messageErreurCreneau;
 
         /// <summary>Date du jour de passage (sans composante heure significative pour le picker).</summary>
         public DateTime DateExamen
@@ -192,6 +202,7 @@ namespace smartest_desktop.ViewModels
                 if (!SetProperty(ref _dateExamen, value.Date))
                     return;
                 OnPropertyChanged(nameof(LibelleCreneauResume));
+                ActualiserValidationCreneau();
             }
         }
 
@@ -205,6 +216,7 @@ namespace smartest_desktop.ViewModels
                 if (!SetProperty(ref _heureSelectionnee, value ?? "09"))
                     return;
                 OnPropertyChanged(nameof(LibelleCreneauResume));
+                ActualiserValidationCreneau();
             }
         }
 
@@ -218,6 +230,7 @@ namespace smartest_desktop.ViewModels
                 if (!SetProperty(ref _minuteSelectionnee, value ?? "00"))
                     return;
                 OnPropertyChanged(nameof(LibelleCreneauResume));
+                ActualiserValidationCreneau();
             }
         }
 
@@ -567,6 +580,9 @@ namespace smartest_desktop.ViewModels
                         return;
                     }
 
+                    if (!CreneauEstValide)
+                        return;
+
                     int nbEmails = CompterEmailsValides(TexteEmailsWeb);
                     string ligneEmails =
                         $"• Publication web : {nbEmails} email(s) autorisé(s) (max {QuizPublicationLimits.MaxAuthorizedStudentEmails})\n";
@@ -617,8 +633,9 @@ namespace smartest_desktop.ViewModels
                         SerialiserEmailsPourBase(TexteEmailsWeb),
                         ObtenirDatePassageLocal());
                 },
-                _ => Questions.Count > 0);
+                _ => Questions.Count > 0 && CreneauEstValide);
             ValiderExamenCommand = _validerExamenCommand;
+            ActualiserValidationCreneau();
 
             Questions.CollectionChanged += (_, __) =>
             {
@@ -729,6 +746,38 @@ namespace smartest_desktop.ViewModels
             {
                 return null;
             }
+        }
+
+        private void ActualiserValidationCreneau()
+        {
+            string nouvelleErreur = EvaluerMessageErreurCreneau();
+            bool etatInchange = _messageErreurCreneau == nouvelleErreur;
+
+            _messageErreurCreneau = nouvelleErreur;
+            if (!etatInchange)
+            {
+                OnPropertyChanged(nameof(MessageErreurCreneau));
+                OnPropertyChanged(nameof(CreneauEstValide));
+                OnPropertyChanged(nameof(AfficherErreurCreneau));
+            }
+
+            _validerExamenCommand?.RaiseCanExecuteChanged();
+        }
+
+        private string EvaluerMessageErreurCreneau()
+        {
+            if (DateExamen.Date < DateTime.Today)
+            {
+                return "La date sélectionnée est déjà passée. Choisissez une date valide dans le futur.";
+            }
+
+            var passage = ObtenirDatePassageLocal();
+            if (passage is DateTime dt && dt <= DateTime.Now)
+            {
+                return "La date et l'heure du créneau doivent être dans le futur. Choisissez une date et une heure valides.";
+            }
+
+            return string.Empty;
         }
 
         private bool TryParseHeure(out int h, out int m)

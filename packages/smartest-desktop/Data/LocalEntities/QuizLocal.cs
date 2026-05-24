@@ -17,7 +17,7 @@ namespace smartest_desktop.Data.LocalEntities
         [Required]
         public string Titre { get; set; } = string.Empty;
 
-        /// <summary>"Facile", "Moyen" ou "Difficile"</summary>
+        /// <summary>Niveau(x) : « Moyen », « Facile + Difficile », etc.</summary>
         public string Difficulte { get; set; } = "Moyen";
 
         public DateTime DateCreation { get; set; } = DateTime.Now;

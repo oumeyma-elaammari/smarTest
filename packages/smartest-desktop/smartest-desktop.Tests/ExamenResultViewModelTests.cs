@@ -79,6 +79,26 @@ public class ExamenResultViewModelTests
     }
 
     [Fact]
+    public void Date_passee_affiche_erreur_et_bloque_la_validation()
+    {
+        var questions = new[]
+        {
+            new QuestionExamen { Type = "QCM", Enonce = "Q1" },
+        }.ToList();
+
+        var vm = new ExamenResultViewModel(questions, "Ex", 60, "Moyen", "Cours");
+        Assert.True(vm.CreneauEstValide);
+        Assert.True(vm.ValiderExamenCommand.CanExecute(null));
+
+        vm.DateExamen = DateTime.Today.AddDays(-1);
+
+        Assert.False(vm.CreneauEstValide);
+        Assert.True(vm.AfficherErreurCreneau);
+        Assert.Contains("passée", vm.MessageErreurCreneau, StringComparison.Ordinal);
+        Assert.False(vm.ValiderExamenCommand.CanExecute(null));
+    }
+
+    [Fact]
     public void Changement_duree_d_une_question_reequilibre_les_autres()
     {
         var questions = new[]

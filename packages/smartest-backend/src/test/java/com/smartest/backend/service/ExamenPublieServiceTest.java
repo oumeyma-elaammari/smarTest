@@ -99,11 +99,23 @@ class ExamenPublieServiceTest {
     void publierProfesseurInconnu() {
         when(professeurRepository.findById(99L)).thenReturn(Optional.empty());
 
-        LocalDateTime debut = LocalDateTime.now();
+        LocalDateTime debut = LocalDateTime.now().plusDays(1);
         assertThatThrownBy(() ->
                 examenPublieService.publier(99L, "X", 60, "d", debut, debut.plusHours(1)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Professeur");
+    }
+
+    @Test
+    @DisplayName("publier : date passée → BAD_REQUEST")
+    void publierDatePasseeRefuse() {
+        LocalDateTime debut = LocalDateTime.now().minusHours(1);
+        assertThatThrownBy(() ->
+                examenPublieService.publier(1L, "X", 60, "d", debut, debut.plusHours(1)))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("futur");
+
+        verify(professeurRepository, never()).findById(any());
     }
 
     @Test
@@ -294,5 +306,16 @@ class ExamenPublieServiceTest {
 
         verify(examenPublieRepository, never()).save(any());
         verify(examenSupervisionService, never()).publierMetadata(any(), any());
+    }
+
+    @Test
+    @DisplayName("modifierCreneauPublicationWeb : date passée → BAD_REQUEST")
+    void modifierCreneauDatePasseeRefuse() {
+        assertThatThrownBy(() -> examenPublieService.modifierCreneauPublicationWeb(
+                10L, "prof@test.com", LocalDateTime.now().minusHours(1), null))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("futur");
+
+        verify(professeurRepository, never()).findByEmailIgnoreCase(any());
     }
 }

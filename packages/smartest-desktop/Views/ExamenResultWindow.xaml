@@ -41,6 +41,10 @@
 						<Setter Property="Background" Value="{DynamicResource ActiveMenuBgBrush}"/>
 						<Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
 					</Trigger>
+					<DataTrigger Binding="{Binding CreneauEstValide}" Value="False">
+						<Setter Property="Opacity" Value="0.45"/>
+						<Setter Property="Cursor" Value="Arrow"/>
+					</DataTrigger>
 				</Style.Triggers>
 			</Style>
 
@@ -803,10 +807,17 @@
 								<TextBlock Text="Jour" FontSize="11" FontWeight="600" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,6"/>
 								<DatePicker Style="{StaticResource ResultDatePicker}"
 											SelectedDate="{Binding DateExamen, Mode=TwoWay}"
+											DisplayDateStart="{Binding DateMinimaleCreneau, Mode=OneWay}"
 											FontSize="13"
 											Padding="8,4"
 											HorizontalAlignment="Stretch"
-											Margin="0,0,0,12"/>
+											Margin="0,0,0,6"/>
+								<TextBlock Text="{Binding MessageErreurCreneau}"
+										   FontSize="11"
+										   Foreground="{DynamicResource DangerBrush}"
+										   TextWrapping="Wrap"
+										   Margin="0,0,0,12"
+										   Visibility="{Binding AfficherErreurCreneau, Converter={StaticResource BoolToVis}}"/>
 								<StackPanel Orientation="Horizontal" Margin="0,0,0,12">
 									<TextBlock Text="Heure" FontSize="11" FontWeight="600" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,14,0"/>
 									<ComboBox Style="{StaticResource ResultComboBox}" ItemsSource="{Binding ItemsHeures}" SelectedItem="{Binding HeureSelectionnee, Mode=TwoWay}" Width="76" Height="32" Padding="8,4" VerticalContentAlignment="Center" Margin="0,0,8,0"/>

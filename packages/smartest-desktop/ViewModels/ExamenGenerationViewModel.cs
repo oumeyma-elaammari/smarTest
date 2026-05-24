@@ -119,12 +119,17 @@ namespace smartest_desktop.ViewModels
             set => SetProperty(ref _duree, value);
         }
 
-        private string _difficulte = "Moyen";
-        public string Difficulte
-        {
-            get => _difficulte;
-            set => SetProperty(ref _difficulte, value);
-        }
+        private readonly HashSet<string> _niveauxDifficulte = new(StringComparer.Ordinal) { "Moyen" };
+
+        public string Difficulte =>
+            DifficulteMultiSelectHelper.FormaterLibelle(_niveauxDifficulte);
+
+        public bool IsDifficulteFacileSelected => _niveauxDifficulte.Contains("Facile");
+        public bool IsDifficulteMoyenSelected => _niveauxDifficulte.Contains("Moyen");
+        public bool IsDifficulteDifficileSelected => _niveauxDifficulte.Contains("Difficile");
+
+        public IReadOnlyList<string> NiveauxDifficulteSelectionnes =>
+            DifficulteMultiSelectHelper.Ordre.Where(_niveauxDifficulte.Contains).ToList();
 
         public List<int> DureesDisponibles { get; } = new() { 30, 45, 60, 90, 120, 180 };
         public List<string> NiveauxDifficulte { get; } = new() { "Facile", "Moyen", "Difficile" };
@@ -266,11 +271,21 @@ namespace smartest_desktop.ViewModels
             WireCommands();
         }
 
+        private void NotifierSelectionDifficulte()
+        {
+            OnPropertyChanged(nameof(Difficulte));
+            OnPropertyChanged(nameof(IsDifficulteFacileSelected));
+            OnPropertyChanged(nameof(IsDifficulteMoyenSelected));
+            OnPropertyChanged(nameof(IsDifficulteDifficileSelected));
+            OnPropertyChanged(nameof(NiveauxDifficulteSelectionnes));
+        }
+
         private void WireCommands()
         {
             SetDifficulteCommand = new RelayCommand(p =>
             {
-                if (p is string d) Difficulte = d;
+                if (p is string d && DifficulteMultiSelectHelper.Toggle(_niveauxDifficulte, d))
+                    NotifierSelectionDifficulte();
             });
 
             ImporterFichierCommand = new RelayCommand(
@@ -621,134 +636,78 @@ namespace smartest_desktop.ViewModels
 
                 int tailleContexte = GroqService.TailleContexteParLot;
                 int totalQuestions = TotalQuestions;
+                var niveaux = NiveauxDifficulteSelectionnes;
+                var repQcm = DifficulteMultiSelectHelper.Repartir(NbQCM, niveaux);
+                var repVf = DifficulteMultiSelectHelper.Repartir(NbVF, niveaux);
+                var repCheckbox = DifficulteMultiSelectHelper.Repartir(NbCheckbox, niveaux);
+                var repRedaction = DifficulteMultiSelectHelper.Repartir(NbRedaction, niveaux);
 
-                // ── Décision : batching ou requête unique ? ───────────────────────────
-                //
-                // Si ≤ 4 questions ET cours court → requête unique (plus rapide)
-                // Sinon → batching automatique
-                bool useBatching = totalQuestions > 4 || contenuComplet.Length > tailleContexte;
+                var toutesQuestionsExamen = new List<QuestionExamen>();
+                var swTotal = System.Diagnostics.Stopwatch.StartNew();
 
-                if (!useBatching)
+                foreach (var niveau in niveaux)
                 {
-                    // ── CAS SIMPLE : une seule requête (≤ 4 questions, cours court) ──
-                    string contenu = contenuComplet.Length > tailleContexte
-                        ? contenuComplet[..tailleContexte]
-                        : contenuComplet;
+                    if (ct.IsCancellationRequested) break;
 
-                    string prompt = GroqService.BuildPromptExamen(
-                        contenu, NbQCM, NbVF, NbCheckbox, NbRedaction, Difficulte);
+                    int qcmN = repQcm[niveau];
+                    int vfN = repVf[niveau];
+                    int cbkN = repCheckbox[niveau];
+                    int redN = repRedaction[niveau];
+                    int totalNiveau = qcmN + vfN + cbkN + redN;
+                    if (totalNiveau == 0) continue;
 
-                    StatusMessage = $"🧠 Génération de {totalQuestions} questions ({Difficulte})...";
+                    StatusMessage = niveaux.Count > 1
+                        ? $"🧠 {totalNiveau} questions — {niveau} ({Difficulte})..."
+                        : $"🧠 Génération de {totalNiveau} questions ({niveau})...";
 
-                    var (texte, duree) = await groqClient.GenererAsync(prompt, ct, GroqService.TemperaturePourDifficulte(Difficulte));
+                    var enoncesExistants = toutesQuestionsExamen
+                        .Select(q => q.Enonce)
+                        .Where(e => !string.IsNullOrWhiteSpace(e))
+                        .Select(e => e.Trim())
+                        .ToList();
 
-                    if (string.IsNullOrWhiteSpace(texte))
-                        throw new Exception("Groq n'a retourné aucun texte.");
+                    var questionsNiveau = await GenererQuestionsExamenPourNiveauAsync(
+                        groqClient,
+                        contenuComplet,
+                        tailleContexte,
+                        qcmN,
+                        vfN,
+                        cbkN,
+                        redN,
+                        niveau,
+                        enoncesExistants,
+                        ct,
+                        msg => StatusMessage = msg);
 
-                    StatusMessage = "📝 Extraction des questions...";
-                    var questions = ParseQuestions(texte);
-                    foreach (var q in questions) q.Difficulte = Difficulte;
-                    questions = AjusterTypesQuestions(questions, NbQCM, NbVF, NbCheckbox, NbRedaction);
-                    ExamenBaremeHelper.AppliquerBaremeParDefaut(questions);
-
-                    if (questions.Count == 0)
-                        throw new Exception(
-                            "Le modèle n'a pas produit de JSON valide.\n\n" +
-                            "Essayez avec moins de questions ou changez de cours.");
-
-                    string titreQ = string.IsNullOrWhiteSpace(TitreExamen)
-                        ? $"Examen — {TitreCours}"
-                        : TitreExamen.Trim();
-
-                    StatusMessage = $"✅ {questions.Count} questions générées en {duree.TotalSeconds:F1} s !";
-                    await Task.Delay(400, ct);
-
-                    ExamenGenereAvecSucces?.Invoke(questions, titreQ, Duree, Difficulte, TitreCours);
+                    foreach (var q in questionsNiveau)
+                        q.Difficulte = niveau;
+                    toutesQuestionsExamen.AddRange(questionsNiveau);
                 }
-                else
-                {
-                    // ── CAS BATCHING : boucle custom par lot ─────────────────────────
-                    // Chaque lot reçoit sa répartition exacte (QCM/CHECKBOX/REDACTION)
-                    // et la liste des énoncés déjà générés pour éviter les répétitions.
 
-                    int nbLots = (int)Math.Ceiling((double)totalQuestions / 4.0);
+                swTotal.Stop();
 
-                    var lotsQCM      = DistribuerSurLots(NbQCM,      nbLots);
-                    var lotsVf       = DistribuerSurLots(NbVF,       nbLots);
-                    var lotsCheckbox = DistribuerSurLots(NbCheckbox,  nbLots);
-                    var lotsRedaction= DistribuerSurLots(NbRedaction, nbLots);
+                StatusMessage = "📝 Ajustement des types et barème...";
+                var questionsFinales = AjusterTypesQuestions(
+                    toutesQuestionsExamen, NbQCM, NbVF, NbCheckbox, NbRedaction);
+                ExamenBaremeHelper.AppliquerBaremeParDefaut(questionsFinales);
 
-                    var segmentsContenu = DecoupeContenuEnSegments(contenuComplet, nbLots);
+                if (questionsFinales.Count == 0)
+                    throw new Exception(
+                        "Aucune question n'a pu être extraite.\n\n" +
+                        "Essayez avec moins de questions ou un cours plus structuré.");
 
-                    StatusMessage = $"🧠 Génération par lots : {totalQuestions} questions en {nbLots} lots...";
+                string titre = string.IsNullOrWhiteSpace(TitreExamen)
+                    ? $"Examen — {TitreCours}"
+                    : TitreExamen.Trim();
 
-                    var toutesQuestionsExamen = new List<QuestionExamen>();
-                    var toutesEnonces = new List<string>();
-                    var swTotal = System.Diagnostics.Stopwatch.StartNew();
+                string avertissement = questionsFinales.Count < totalQuestions
+                    ? $"\n⚠️ {questionsFinales.Count}/{totalQuestions} obtenues (certains lots incomplets)"
+                    : string.Empty;
 
-                    for (int lotIdx = 0; lotIdx < nbLots && !ct.IsCancellationRequested; lotIdx++)
-                    {
-                        int qcmLot  = lotsQCM[lotIdx];
-                        int vfLot   = lotsVf[lotIdx];
-                        int cbkLot  = lotsCheckbox[lotIdx];
-                        int redLot  = lotsRedaction[lotIdx];
-                        int totalLot = qcmLot + vfLot + cbkLot + redLot;
-                        if (totalLot == 0) continue;
+                StatusMessage = $"✅ {questionsFinales.Count} questions en {swTotal.Elapsed.TotalSeconds:F1} s !{avertissement}";
+                await Task.Delay(400, ct);
 
-                        if (lotIdx > 0)
-                            await Task.Delay(GroqService.DelaiEntreLotsMs, ct);
-
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                            StatusMessage = $"🧠 Lot {lotIdx + 1}/{nbLots} — {totalLot} questions ({qcmLot} QCM / {vfLot} VF / {cbkLot} Checkbox / {redLot} Rédaction)...");
-
-                        string prompt = GroqService.BuildPromptExamenLot(
-                            segmentsContenu[lotIdx], qcmLot, vfLot, cbkLot, redLot,
-                            Difficulte, toutesQuestionsExamen.Count + 1, toutesEnonces);
-
-                        string texte = await groqClient.GenererAvecRetryAsync(prompt, ct, GroqService.TemperaturePourDifficulte(Difficulte));
-
-                        var questionsLot = ParseQuestions(texte);
-                        foreach (var q in questionsLot) q.Difficulte = Difficulte;
-
-                        foreach (var q in questionsLot)
-                        {
-                            if (!string.IsNullOrWhiteSpace(q.Enonce) &&
-                                !toutesEnonces.Contains(q.Enonce.Trim(), StringComparer.OrdinalIgnoreCase))
-                            {
-                                toutesQuestionsExamen.Add(q);
-                                toutesEnonces.Add(q.Enonce.Trim());
-                            }
-                        }
-
-                        System.Diagnostics.Debug.WriteLine(
-                            $"[ExamenBatch] Lot {lotIdx + 1}: {questionsLot.Count} générées, {toutesQuestionsExamen.Count} total");
-                    }
-
-                    swTotal.Stop();
-
-                    StatusMessage = "📝 Ajustement des types et fusion...";
-
-                    var questions = AjusterTypesQuestions(toutesQuestionsExamen, NbQCM, NbVF, NbCheckbox, NbRedaction);
-                    ExamenBaremeHelper.AppliquerBaremeParDefaut(questions);
-
-                    if (questions.Count == 0)
-                        throw new Exception(
-                            "Aucune question n'a pu être extraite des lots générés.\n\n" +
-                            "Essayez avec moins de questions ou un cours plus structuré.");
-
-                    string titre = string.IsNullOrWhiteSpace(TitreExamen)
-                        ? $"Examen — {TitreCours}"
-                        : TitreExamen.Trim();
-
-                    string avertissement = questions.Count < totalQuestions
-                        ? $"\n⚠️ {questions.Count}/{totalQuestions} obtenues (certains lots incomplets)"
-                        : string.Empty;
-
-                    StatusMessage = $"✅ {questions.Count} questions en {swTotal.Elapsed.TotalSeconds:F1} s !{avertissement}";
-                    await Task.Delay(400, ct);
-
-                    ExamenGenereAvecSucces?.Invoke(questions, titre, Duree, Difficulte, TitreCours);
-                }
+                ExamenGenereAvecSucces?.Invoke(questionsFinales, titre, Duree, Difficulte, TitreCours);
             }
             catch (OperationCanceledException)
             {
@@ -777,6 +736,101 @@ namespace smartest_desktop.ViewModels
             {
                 IsGenerating = false;
             }
+        }
+
+        private async Task<List<QuestionExamen>> GenererQuestionsExamenPourNiveauAsync(
+            IGroqGenerationClient groqClient,
+            string contenuComplet,
+            int tailleContexte,
+            int nbQCM,
+            int nbVF,
+            int nbCheckbox,
+            int nbRedaction,
+            string niveau,
+            IReadOnlyList<string> enoncesDejaGeneres,
+            CancellationToken ct,
+            Action<string>? onStatus = null)
+        {
+            int totalNiveau = nbQCM + nbVF + nbCheckbox + nbRedaction;
+            bool useBatching = totalNiveau > 4 || contenuComplet.Length > tailleContexte;
+
+            if (!useBatching)
+            {
+                string contenu = contenuComplet.Length > tailleContexte
+                    ? contenuComplet[..tailleContexte]
+                    : contenuComplet;
+
+                string prompt = GroqService.BuildPromptExamen(
+                    contenu, nbQCM, nbVF, nbCheckbox, nbRedaction, niveau);
+
+                var (texte, _) = await groqClient.GenererAsync(
+                    prompt, ct, GroqService.TemperaturePourDifficulte(niveau));
+
+                if (string.IsNullOrWhiteSpace(texte))
+                    return new List<QuestionExamen>();
+
+                var questions = ParseQuestions(texte);
+                return FiltrerQuestionsExamenUniques(questions, enoncesDejaGeneres);
+            }
+
+            int nbLots = (int)Math.Ceiling((double)totalNiveau / 4.0);
+            var lotsQcm = DistribuerSurLots(nbQCM, nbLots);
+            var lotsVf = DistribuerSurLots(nbVF, nbLots);
+            var lotsCheckbox = DistribuerSurLots(nbCheckbox, nbLots);
+            var lotsRedaction = DistribuerSurLots(nbRedaction, nbLots);
+            var segmentsContenu = DecoupeContenuEnSegments(contenuComplet, nbLots);
+
+            var resultat = new List<QuestionExamen>();
+            var enoncesConnus = new List<string>(enoncesDejaGeneres);
+
+            for (int lotIdx = 0; lotIdx < nbLots && !ct.IsCancellationRequested; lotIdx++)
+            {
+                int qcmLot = lotsQcm[lotIdx];
+                int vfLot = lotsVf[lotIdx];
+                int cbkLot = lotsCheckbox[lotIdx];
+                int redLot = lotsRedaction[lotIdx];
+                int totalLot = qcmLot + vfLot + cbkLot + redLot;
+                if (totalLot == 0) continue;
+
+                if (lotIdx > 0)
+                    await Task.Delay(GroqService.DelaiEntreLotsMs, ct);
+
+                onStatus?.Invoke(
+                    $"🧠 {niveau} — lot {lotIdx + 1}/{nbLots} ({qcmLot} QCM / {vfLot} VF / {cbkLot} Checkbox / {redLot} Rédaction)...");
+
+                string prompt = GroqService.BuildPromptExamenLot(
+                    segmentsContenu[lotIdx], qcmLot, vfLot, cbkLot, redLot,
+                    niveau, resultat.Count + enoncesConnus.Count + 1, enoncesConnus);
+
+                string texte = await groqClient.GenererAvecRetryAsync(
+                    prompt, ct, GroqService.TemperaturePourDifficulte(niveau));
+
+                var questionsLot = FiltrerQuestionsExamenUniques(ParseQuestions(texte), enoncesConnus);
+                resultat.AddRange(questionsLot);
+                enoncesConnus.AddRange(questionsLot.Select(q => q.Enonce.Trim()));
+            }
+
+            return resultat;
+        }
+
+        private static List<QuestionExamen> FiltrerQuestionsExamenUniques(
+            IEnumerable<QuestionExamen> questions,
+            IReadOnlyList<string> enoncesDejaConnus)
+        {
+            var connus = new HashSet<string>(
+                enoncesDejaConnus.Where(e => !string.IsNullOrWhiteSpace(e)),
+                StringComparer.OrdinalIgnoreCase);
+            var resultat = new List<QuestionExamen>();
+
+            foreach (var q in questions)
+            {
+                if (string.IsNullOrWhiteSpace(q.Enonce)) continue;
+                var enonce = q.Enonce.Trim();
+                if (connus.Add(enonce))
+                    resultat.Add(q);
+            }
+
+            return resultat;
         }
 
         // ── Utilitaire : distribuer N éléments sur K lots ─────────────────────────────

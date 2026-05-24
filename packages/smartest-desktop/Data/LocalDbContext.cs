@@ -84,7 +84,7 @@ namespace smartest_desktop.Data
                 entity.HasKey(q => q.Id);
                 entity.Property(q => q.Enonce).IsRequired().HasColumnType("TEXT");
                 entity.Property(q => q.Type).IsRequired().HasMaxLength(20);
-                entity.Property(q => q.Difficulte).HasMaxLength(20);
+                entity.Property(q => q.Difficulte).HasMaxLength(64);
                 entity.Property(q => q.Explication).HasColumnType("TEXT");
                 entity.Property(q => q.BaremePoints).HasDefaultValue(0.0);
                 entity.Property(q => q.DureeSecondesIndicative).HasDefaultValue(60);

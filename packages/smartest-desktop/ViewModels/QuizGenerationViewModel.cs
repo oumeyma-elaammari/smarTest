@@ -46,6 +46,9 @@ namespace smartest_desktop.ViewModels
         private string _explication = string.Empty;
         public string Explication { get => _explication; set => SetProperty(ref _explication, value); }
 
+        private string _difficulte = "Moyen";
+        public string Difficulte { get => _difficulte; set => SetProperty(ref _difficulte, value); }
+
         private bool _isSelected;
         public bool IsSelected
         {
@@ -125,12 +128,18 @@ namespace smartest_desktop.ViewModels
             set => SetProperty(ref _nombreQuestions, value);
         }
 
-        private string _difficulte = "Moyen";
-        public string Difficulte
-        {
-            get => _difficulte;
-            set => SetProperty(ref _difficulte, value);
-        }
+        private readonly HashSet<string> _niveauxDifficulte = new(StringComparer.Ordinal) { "Moyen" };
+
+        /// <summary>Libellé affiché / stocké (ex. « Facile + Moyen »).</summary>
+        public string Difficulte =>
+            DifficulteMultiSelectHelper.FormaterLibelle(_niveauxDifficulte);
+
+        public bool IsDifficulteFacileSelected => _niveauxDifficulte.Contains("Facile");
+        public bool IsDifficulteMoyenSelected => _niveauxDifficulte.Contains("Moyen");
+        public bool IsDifficulteDifficileSelected => _niveauxDifficulte.Contains("Difficile");
+
+        public IReadOnlyList<string> NiveauxDifficulteSelectionnes =>
+            DifficulteMultiSelectHelper.Ordre.Where(_niveauxDifficulte.Contains).ToList();
 
         public List<int> NombresQuestions { get; } = new() { 3, 5, 7, 10, 15, 20 };
 
@@ -262,7 +271,8 @@ namespace smartest_desktop.ViewModels
 
             SetDifficulteCommand = new RelayCommand(param =>
             {
-                if (param is string niveau) Difficulte = niveau;
+                if (param is string niveau && DifficulteMultiSelectHelper.Toggle(_niveauxDifficulte, niveau))
+                    NotifierSelectionDifficulte();
             });
 
             GenererCommand = new RelayCommand(
@@ -289,6 +299,15 @@ namespace smartest_desktop.ViewModels
 
             RetourDashboardCommand = new RelayCommand(_ => NavigateToDashboard?.Invoke());
             LogoutCommand = new RelayCommand(_ => ExecuteLogout());
+        }
+
+        private void NotifierSelectionDifficulte()
+        {
+            OnPropertyChanged(nameof(Difficulte));
+            OnPropertyChanged(nameof(IsDifficulteFacileSelected));
+            OnPropertyChanged(nameof(IsDifficulteMoyenSelected));
+            OnPropertyChanged(nameof(IsDifficulteDifficileSelected));
+            OnPropertyChanged(nameof(NiveauxDifficulteSelectionnes));
         }
 
         private void ExecuteLogout()
@@ -537,91 +556,34 @@ namespace smartest_desktop.ViewModels
                 StatusMessage = $"Connexion à Groq ({GroqService.NomModele})...";
                 await Task.Delay(100, token);
 
-                // ── Découpe en lots de MAX 5 questions ───────────────────────
-                // Budget par appel : ~625 tokens contenu + ~200 instructions + ~800 réponse = ~1625 TPM ✅
-                int maxParLot = GroqService.MAX_QUESTIONS_PAR_APPEL;
-                int nbLots = (int)Math.Ceiling((double)NombreQuestions / maxParLot);
-                var segmentsCours = DecoupeContenuEnSegments(ContenuCours, nbLots);
+                var niveaux = NiveauxDifficulteSelectionnes;
+                var repartition = DifficulteMultiSelectHelper.Repartir(NombreQuestions, niveaux);
 
                 List<QuestionQCM> toutesQuestions = new();
                 TimeSpan dureeTotale = TimeSpan.Zero;
 
-                for (int lotIdx = 0; lotIdx < nbLots && !token.IsCancellationRequested; lotIdx++)
+                foreach (var niveau in niveaux)
                 {
-                    int dejaObtenu = toutesQuestions.Count;
-                    int resteAObtenir = NombreQuestions - dejaObtenu;
-                    if (resteAObtenir <= 0) break;
+                    if (token.IsCancellationRequested) break;
 
-                    int nbCeLot = Math.Min(maxParLot, resteAObtenir);
-                    string contenuLot = segmentsCours[lotIdx];
+                    int nbPourNiveau = repartition[niveau];
+                    if (nbPourNiveau <= 0) continue;
 
-                    StatusMessage = nbLots > 1
-                        ? $"Lot {lotIdx + 1}/{nbLots} — génération de {nbCeLot} questions ({Difficulte})..."
-                        : $"Génération de {NombreQuestions} questions ({Difficulte})...";
+                    StatusMessage = niveaux.Count > 1
+                        ? $"Génération {nbPourNiveau} question(s) — {niveau} ({Difficulte})..."
+                        : $"Génération de {nbPourNiveau} questions ({niveau})...";
 
-                    // Délai anti-rate-limit entre lots (même réglage que GroqService.GenererParLotsAsync)
-                    if (lotIdx > 0)
-                        await Task.Delay(GroqService.DelaiEntreLotsMs, token);
+                    var enoncesExistants = toutesQuestions.Select(q => q.Enonce).ToList();
+                    var (questionsNiveau, dureeNiveau) = await GenererQuestionsQuizPourNiveauAsync(
+                        groqClient, ContenuCours, nbPourNiveau, niveau, enoncesExistants, token,
+                        (msg) => StatusMessage = msg);
 
-                    // Tentatives par lot (max 2)
-                    int tentativesMax = 2;
-                    List<QuestionQCM> questionsLot = new();
-
-                    for (int tentative = 1; tentative <= tentativesMax && questionsLot.Count < nbCeLot; tentative++)
+                    dureeTotale += dureeNiveau;
+                    foreach (var q in questionsNiveau)
                     {
-                        if (tentative > 1)
-                        {
-                            StatusMessage = $"🔄 Lot {lotIdx + 1} — tentative {tentative}/{tentativesMax}...";
-                            await Task.Delay(2000, token);
-                        }
-
-                        var enoncesExistants = toutesQuestions.Select(q => q.Enonce).ToList();
-                        string prompt = tentative == 1
-                            ? BuildPrompt(contenuLot, nbCeLot, Difficulte, enoncesExistants)
-                            : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, Difficulte, enoncesExistants);
-
-                        var sw = System.Diagnostics.Stopwatch.StartNew();
-                        var reponse = await groqClient.GenererAvecRetryAsync(prompt, token, GroqService.TemperaturePourDifficulte(Difficulte));
-                        sw.Stop();
-                        var duree = sw.Elapsed;
-                        dureeTotale += duree;
-
-                        var nouvelles = ParseQCM(reponse);
-
-                        if (tentative == 1)
-                        {
-                            questionsLot = nouvelles;
-                        }
-                        else
-                        {
-                            var enonceExistants = new HashSet<string>(
-                                questionsLot.Select(q => q.Enonce.ToLowerInvariant().Trim()));
-                            foreach (var q in nouvelles)
-                            {
-                                if (!enonceExistants.Contains(q.Enonce.ToLowerInvariant().Trim()))
-                                {
-                                    questionsLot.Add(q);
-                                    enonceExistants.Add(q.Enonce.ToLowerInvariant().Trim());
-                                }
-                            }
-                        }
+                        q.Difficulte = niveau;
+                        toutesQuestions.Add(q);
                     }
-
-                    // Dédupliquer avec les questions déjà obtenues
-                    var enonceGlobal = new HashSet<string>(
-                        toutesQuestions.Select(q => q.Enonce.ToLowerInvariant().Trim()));
-                    foreach (var q in questionsLot)
-                    {
-                        if (!enonceGlobal.Contains(q.Enonce.ToLowerInvariant().Trim()) &&
-                            toutesQuestions.Count < NombreQuestions)
-                        {
-                            toutesQuestions.Add(q);
-                            enonceGlobal.Add(q.Enonce.ToLowerInvariant().Trim());
-                        }
-                    }
-
-                    if (nbLots > 1)
-                        StatusMessage = $"✅ Lot {lotIdx + 1}/{nbLots} : {toutesQuestions.Count}/{NombreQuestions} questions...";
                 }
 
                 if (toutesQuestions.Count == 0)
@@ -747,6 +709,100 @@ namespace smartest_desktop.ViewModels
             }
 
             return segments;
+        }
+
+        private async Task<(List<QuestionQCM> Questions, TimeSpan Duree)> GenererQuestionsQuizPourNiveauAsync(
+            IGroqGenerationClient groqClient,
+            string contenuCours,
+            int nombreQuestions,
+            string niveau,
+            IReadOnlyList<string> enoncesDejaGeneres,
+            CancellationToken token,
+            Action<string>? onStatus = null)
+        {
+            int maxParLot = GroqService.MAX_QUESTIONS_PAR_APPEL;
+            int nbLots = (int)Math.Ceiling((double)nombreQuestions / maxParLot);
+            var segmentsCours = DecoupeContenuEnSegments(contenuCours, nbLots);
+
+            var questionsNiveau = new List<QuestionQCM>();
+            TimeSpan dureeTotale = TimeSpan.Zero;
+
+            for (int lotIdx = 0; lotIdx < nbLots && !token.IsCancellationRequested; lotIdx++)
+            {
+                int resteAObtenir = nombreQuestions - questionsNiveau.Count;
+                if (resteAObtenir <= 0) break;
+
+                int nbCeLot = Math.Min(maxParLot, resteAObtenir);
+                string contenuLot = segmentsCours[lotIdx];
+
+                if (lotIdx > 0)
+                    await Task.Delay(GroqService.DelaiEntreLotsMs, token);
+
+                int tentativesMax = 2;
+                List<QuestionQCM> questionsLot = new();
+
+                for (int tentative = 1; tentative <= tentativesMax && questionsLot.Count < nbCeLot; tentative++)
+                {
+                    if (tentative > 1)
+                    {
+                        onStatus?.Invoke($"🔄 {niveau} — lot {lotIdx + 1}, tentative {tentative}/{tentativesMax}...");
+                        await Task.Delay(2000, token);
+                    }
+
+                    var enoncesExistants = enoncesDejaGeneres
+                        .Concat(questionsNiveau.Select(q => q.Enonce))
+                        .Concat(questionsLot.Select(q => q.Enonce))
+                        .ToList();
+
+                    string prompt = tentative == 1
+                        ? BuildPrompt(contenuLot, nbCeLot, niveau, enoncesExistants)
+                        : BuildPromptStrict(contenuLot, nbCeLot - questionsLot.Count, niveau, enoncesExistants);
+
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    var reponse = await groqClient.GenererAvecRetryAsync(
+                        prompt, token, GroqService.TemperaturePourDifficulte(niveau));
+                    sw.Stop();
+                    dureeTotale += sw.Elapsed;
+
+                    var nouvelles = ParseQCM(reponse);
+                    if (tentative == 1)
+                        questionsLot = nouvelles;
+                    else
+                    {
+                        var enonceExistants = new HashSet<string>(
+                            questionsLot.Select(q => q.Enonce.ToLowerInvariant().Trim()));
+                        foreach (var q in nouvelles)
+                        {
+                            if (!enonceExistants.Contains(q.Enonce.ToLowerInvariant().Trim()))
+                            {
+                                questionsLot.Add(q);
+                                enonceExistants.Add(q.Enonce.ToLowerInvariant().Trim());
+                            }
+                        }
+                    }
+                }
+
+                var enonceGlobal = new HashSet<string>(
+                    enoncesDejaGeneres.Select(e => e.ToLowerInvariant().Trim()));
+                foreach (var q in questionsNiveau)
+                    enonceGlobal.Add(q.Enonce.ToLowerInvariant().Trim());
+
+                foreach (var q in questionsLot)
+                {
+                    var key = q.Enonce.ToLowerInvariant().Trim();
+                    if (!enonceGlobal.Contains(key) && questionsNiveau.Count < nombreQuestions)
+                    {
+                        questionsNiveau.Add(q);
+                        enonceGlobal.Add(key);
+                    }
+                }
+
+                onStatus?.Invoke(nbLots > 1
+                    ? $"✅ {niveau} — lot {lotIdx + 1}/{nbLots} : {questionsNiveau.Count}/{nombreQuestions}"
+                    : $"✅ {niveau} : {questionsNiveau.Count}/{nombreQuestions}");
+            }
+
+            return (CorrigerNombreQuestions(questionsNiveau, nombreQuestions), dureeTotale);
         }
 
         // ══════════════════════════════════════════════════════════════════════

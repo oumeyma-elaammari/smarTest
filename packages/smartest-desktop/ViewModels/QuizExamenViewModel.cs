@@ -1618,6 +1618,15 @@ namespace smartest_desktop.ViewModels
             var debut = examen.DatePrevue.Value;
             if (debut.Kind == DateTimeKind.Utc)
                 debut = debut.ToLocalTime();
+            if (debut <= DateTime.Now)
+            {
+                MessageBox.Show(
+                    "La date et l'heure du créneau sont déjà passées. Modifiez le créneau dans l'écran de révision (section « Date et horaire de lancement ») avant de publier.",
+                    LibellePublicationWeb,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
             var conf = MessageBox.Show(
                 $"Publier l'examen « {titreEx} » sur le web ?\n\n" +
                 $"{emails.Count} adresse(s) autorisée(s). " +

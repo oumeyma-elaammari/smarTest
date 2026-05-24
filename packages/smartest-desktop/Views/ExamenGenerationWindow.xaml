@@ -104,10 +104,14 @@
                                   SelectedItem="{Binding Duree}"
                                   Margin="0,0,0,24"/>
 
-						<!-- Difficulté (même gabarit que quiz) -->
+						<!-- Difficulté (sélection multiple, même gabarit que quiz) -->
 						<TextBlock Text="NIVEAU DE DIFFICULTÉ" FontSize="10" FontWeight="700"
-                                   Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,10"/>
-						<StackPanel Orientation="Horizontal" Margin="0,0,0,28">
+                                   Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,4"/>
+						<TextBlock Text="Combinez un ou plusieurs niveaux (clic pour activer / désactiver)."
+                                   FontSize="10" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,10"/>
+						<StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,28">
 
 							<Border>
 								<Border.InputBindings>
@@ -118,7 +122,7 @@
 								<Border.Style>
 									<Style TargetType="Border" BasedOn="{StaticResource GenDiffChip}">
 										<Style.Triggers>
-											<DataTrigger Binding="{Binding Difficulte}" Value="Facile">
+											<DataTrigger Binding="{Binding IsDifficulteFacileSelected}" Value="True">
 												<Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
 												<Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
 											</DataTrigger>
@@ -142,7 +146,7 @@
 								<Border.Style>
 									<Style TargetType="Border" BasedOn="{StaticResource GenDiffChip}">
 										<Style.Triggers>
-											<DataTrigger Binding="{Binding Difficulte}" Value="Moyen">
+											<DataTrigger Binding="{Binding IsDifficulteMoyenSelected}" Value="True">
 												<Setter Property="Background" Value="{DynamicResource WarnLightBgBrush}"/>
 												<Setter Property="BorderBrush" Value="{DynamicResource WarnBrush}"/>
 											</DataTrigger>
@@ -167,7 +171,7 @@
 									<Style TargetType="Border" BasedOn="{StaticResource GenDiffChip}">
 										<Setter Property="Margin" Value="0"/>
 										<Style.Triggers>
-											<DataTrigger Binding="{Binding Difficulte}" Value="Difficile">
+											<DataTrigger Binding="{Binding IsDifficulteDifficileSelected}" Value="True">
 												<Setter Property="Background" Value="{DynamicResource DangerZoneBgBrush}"/>
 												<Setter Property="BorderBrush" Value="{DynamicResource DangerZoneBorderBrush}"/>
 											</DataTrigger>
