@@ -26,8 +26,8 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Background" Value="{DynamicResource PrimaryActionHoverBgBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryActionHoverFgBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.6"/>
@@ -51,7 +51,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}"
+                    <Border x:Name="SecondaryBtnBorder"
+                            Background="{TemplateBinding Background}"
                             CornerRadius="9"
                             BorderBrush="{DynamicResource SecondaryBtnBorderBrush}"
                             BorderThickness="1">
@@ -60,7 +61,8 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource MenuHoverBgBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource SecondaryBtnHoverBgBrush}"/>
+                            <Setter TargetName="SecondaryBtnBorder" Property="BorderBrush" Value="{DynamicResource SecondaryBtnHoverBorderBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.6"/>

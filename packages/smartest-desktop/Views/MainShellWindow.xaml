@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
         xmlns:views="clr-namespace:smartest_desktop.Views"
         Title="SmarTest — Shell"
+        Icon="/Assets/SmarTest-AppIcon.png"
         Height="720" Width="1280"
         MinHeight="600" MinWidth="960"
         WindowState="Maximized"

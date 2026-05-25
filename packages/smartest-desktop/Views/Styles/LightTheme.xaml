@@ -21,6 +21,10 @@
     <SolidColorBrush x:Key="WarnBrush"          Color="#D97706"/>
     <SolidColorBrush x:Key="PrimaryActionBgBrush" Color="#0f1e3d"/>
     <SolidColorBrush x:Key="PrimaryActionFgBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryActionHoverBgBrush" Color="#1a2e5a"/>
+    <SolidColorBrush x:Key="PrimaryActionHoverFgBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SecondaryBtnHoverBgBrush" Color="#eef3fd"/>
+    <SolidColorBrush x:Key="SecondaryBtnHoverBorderBrush" Color="#b8cff5"/>
 
     <!-- ══ Arrière-plans ════════════════════════════════════════════════════ -->
     <SolidColorBrush x:Key="BgBrush"            Color="#f0f3f9"/>
