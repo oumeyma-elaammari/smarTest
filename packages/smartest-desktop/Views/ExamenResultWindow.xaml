@@ -4,6 +4,7 @@
         xmlns:smartest_desktop="clr-namespace:smartest_desktop.Helpers"
         xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
         Title="{Binding TitreFenetre}"
+        Icon="/Assets/SmarTest-AppIcon.png"
         Height="780" Width="1280"
         MinHeight="650" MinWidth="1000"
         WindowState="Maximized"

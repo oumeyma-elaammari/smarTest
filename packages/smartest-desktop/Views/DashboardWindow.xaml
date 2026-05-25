@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
         Title="SmarTest"
+        Icon="/Assets/SmarTest-AppIcon.png"
         Height="720" Width="1080"
         MinHeight="600" MinWidth="860"
         WindowState="Maximized"
