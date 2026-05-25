@@ -73,7 +73,7 @@ export function formatTime(value?: string): string {
     return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-export function formatStatutExamen(s?: string): string {
+export function formatStatutExamen(s?: string | null): string {
     switch ((s || '').toUpperCase()) {
         case 'PLANIFIE':
             return 'Planifié'

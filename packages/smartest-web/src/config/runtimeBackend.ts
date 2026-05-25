@@ -1,14 +1,15 @@
 /**
  * Base HTTP pour Axios (sans slash final).
- * - Dev Vite : chaîne vide → URLs relatives, proxifiées vers le backend (évite CORS / OPTIONS bloqués).
+ * - Dev / prod derrière reverse proxy (Docker nginx) : chaîne vide → URLs relatives.
  * - Tests Vitest : http://localhost:8081 (aligné MSW).
- * - Prod sans variable : même défaut qu’avant (backend local) ; déployer avec VITE_API_URL pour une API distante.
+ * - Prod avec API distante : définir VITE_API_URL au build.
  */
 export function resolveHttpApiBase(): string {
     const v = import.meta.env.VITE_API_URL as string | undefined
     if (v?.trim()) return v.trim().replace(/\/$/, '')
     if (import.meta.env.MODE === 'test') return 'http://localhost:8081'
     if (import.meta.env.DEV) return ''
+    if (typeof globalThis.location?.host === 'string' && globalThis.location.host) return ''
     return 'http://localhost:8081'
 }
 
@@ -19,7 +20,7 @@ export function stompBrokerUrl(): string {
     const api = import.meta.env.VITE_API_URL as string | undefined
     if (api?.trim()) return `${api.trim().replace(/^http/, 'ws').replace(/\/$/, '')}/ws`
     if (import.meta.env.MODE === 'test') return 'ws://localhost:8081/ws'
-    if (import.meta.env.DEV && typeof globalThis.location?.host === 'string' && globalThis.location.host) {
+    if (typeof globalThis.location?.host === 'string' && globalThis.location.host) {
         const wsProto = globalThis.location.protocol === 'https:' ? 'wss:' : 'ws:'
         return `${wsProto}//${globalThis.location.host}/ws`
     }
