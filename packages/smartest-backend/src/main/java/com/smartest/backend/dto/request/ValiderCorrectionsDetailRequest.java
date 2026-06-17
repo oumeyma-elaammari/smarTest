@@ -12,9 +12,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class ValiderCorrectionsDetailRequest {
 
-    /**
-     * Notes finales par question (clé = id question sous forme de chaîne JSON).
-     */
+    
     private Map<String, Double> notesFinales = new LinkedHashMap<>();
 
     private Double noteTotale;

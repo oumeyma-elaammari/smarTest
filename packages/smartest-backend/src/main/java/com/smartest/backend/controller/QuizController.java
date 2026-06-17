@@ -33,8 +33,7 @@ public class QuizController {
 
     private final QuizService quizService;
 
-    // ================= GET =================
-
+    //  GET 
     @GetMapping
     public ResponseEntity<List<QuizResponse>> getAllQuizs() {
         return ResponseEntity.ok(quizService.getAllQuizs());
@@ -45,14 +44,14 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getQuizById(id));
     }
 
-    // ================= CREATE =================
+    //  CREATE 
 
     @PostMapping
     public ResponseEntity<QuizResponse> createQuiz(@Valid @RequestBody QuizRequest request) {
         return new ResponseEntity<>(quizService.createQuiz(request), HttpStatus.CREATED);
     }
 
-    // ================= UPDATE =================
+    // UPDATE
 
     @PutMapping("/{id}")
     public ResponseEntity<QuizResponse> updateQuiz(@PathVariable Long id,
@@ -60,7 +59,7 @@ public class QuizController {
         return ResponseEntity.ok(quizService.createQuiz(request));
     }
 
-    // ================= DELETE =================
+    //  DELETE
 
     @DeleteMapping("/{id}")
     public ResponseEntity<MessageResponse> deleteQuiz(
@@ -70,7 +69,7 @@ public class QuizController {
         return ResponseEntity.ok(new MessageResponse("Quiz supprimé avec succès", true, 200));
     }
 
-    // ================= QUESTIONS =================
+    //  QUESTIONS 
 
     @PostMapping("/{quizId}/questions/{questionId}")
     public ResponseEntity<QuizResponse> addQuestionToQuiz(
@@ -87,16 +86,16 @@ public class QuizController {
         return ResponseEntity.ok(new MessageResponse("Question supprimée du quiz", true));
     }
 
-    // ================= PUBLICATION =================
+    //  PUBLICATION 
 
     @GetMapping("/publies")
     public ResponseEntity<List<QuizResponse>> getQuizPublies() {
         return ResponseEntity.ok(quizService.getQuizPublies());
     }
 
-    /**
-     * Quiz publiés sur le web pour lesquels l'étudiant connecté est dans la liste d'emails autorisés.
-     */
+    
+    // Quiz publiés sur le web pour lesquels l'étudiant connecté est dans la liste d'emails autorisés.
+     
     @GetMapping("/mes-publications-web")
     public ResponseEntity<List<QuizResponse>> getMesPublicationsWeb(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -110,9 +109,9 @@ public class QuizController {
         return ResponseEntity.ok("Quiz publié");
     }
 
-    /**
-     * Publication web : enregistre les emails autorisés sur le serveur et publie le quiz.
-     */
+ 
+     // Publication web : enregistre les emails autorisés sur le serveur et publie le quiz.
+
     @PostMapping("/{id}/publication-web")
     public ResponseEntity<MessageResponse> publierSurLeWeb(
             @PathVariable Long id,
@@ -125,9 +124,9 @@ public class QuizController {
         return ResponseEntity.ok(new MessageResponse("Quiz publié sur le web", true, 200));
     }
 
-    /**
-     * Synchronise les questions seules (ex. quiz miroir réservé au QR), sans toucher aux emails ni au statut web.
-     */
+  
+     //Synchronise les questions seules , sans toucher aux emails ni au statut web.
+    
     @PostMapping("/{id}/sync-questions-prof")
     public ResponseEntity<MessageResponse> synchroniserQuestionsProf(
             @PathVariable Long id,
@@ -137,7 +136,7 @@ public class QuizController {
         return ResponseEntity.ok(new MessageResponse("Questions synchronisées", true, 200));
     }
 
-    // ================= QUIZ LOGIC =================
+    // QUIZ LOGIC 
 
     @PostMapping("/{id}/soumettre")
     public ResponseEntity<ResultatQuizResponse> soumettreQuiz(
@@ -147,9 +146,9 @@ public class QuizController {
         return ResponseEntity.ok(quizService.soumettreQuiz(id, request));
     }
 
-    /**
-     * Détails d'un quiz pour passage web (sans exposer les bonnes réponses avant soumission).
-     */
+   
+    // Détails d'un quiz pour passage web (sans exposer les bonnes réponses avant soumission).
+   
     @GetMapping("/{id}/passage-web")
     public ResponseEntity<QuizPassageWebResponse> getQuizPourPassageWeb(
             @PathVariable Long id,
@@ -157,9 +156,8 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getQuizPourPassageWeb(id, userDetails.getUsername()));
     }
 
-    /**
-     * Vérifie une réponse au passage (feedback immédiat, sans enregistrer la tentative).
-     */
+     // Vérifie une réponse au passage (feedback immédiat, sans enregistrer la tentative).
+   
     @PostMapping("/{id}/verifier-question-web")
     public ResponseEntity<VerificationQuestionWebResponse> verifierQuestionWeb(
             @PathVariable Long id,
@@ -168,9 +166,8 @@ public class QuizController {
         return ResponseEntity.ok(quizService.verifierQuestionPassageWeb(id, userDetails.getUsername(), request));
     }
 
-    /**
-     * Soumission web d'un quiz par l'étudiant connecté (tentatives multiples autorisées).
-     */
+   
+     // Soumission web d'un quiz par l'étudiant connecté .
     @PostMapping("/{id}/soumettre-web")
     public ResponseEntity<ResultatQuizWebResponse> soumettreQuizWeb(
             @PathVariable Long id,

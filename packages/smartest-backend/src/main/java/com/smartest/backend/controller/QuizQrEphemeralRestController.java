@@ -24,11 +24,7 @@ public class QuizQrEphemeralRestController {
     private final QuizSessionManager quizSessionManager;
     private final ProfesseurRepository professeurRepository;
 
-    /**
-     * Ouvre une session QR éphémère (sans contenu jusqu’au WS {@code /app/quiz-qr/prof/init}).
-     * Aucune persistance JPA : pas d’écriture dans la table {@code quiz}, uniquement
-     * {@link com.smartest.backend.service.QuizSessionManager} (mémoire).
-     */
+    // Ouvre une session QR
     @PostMapping("/sessions")
     public ResponseEntity<QrLiveSessionCreatedResponse> createSession(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -40,10 +36,7 @@ public class QuizQrEphemeralRestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new QrLiveSessionCreatedResponse(token));
     }
 
-    /**
-     * Clôture : plus aucune donnée session en mémoire ; étudiants reçoivent CLOSED puis 404 au snapshot.
-     * Sans JWT : le jeton dans l’URL fait foi (session éphémère).
-     */
+    // Clôture : plus aucune donnée session en mémoire 
     @DeleteMapping("/sessions/{token}")
     public ResponseEntity<Void> closeSession(@PathVariable String token) {
         if (!quizSessionManager.forceCloseSession(token)) {
@@ -52,9 +45,9 @@ public class QuizQrEphemeralRestController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Permet aux clients sans JWT de charger l’instantané courant ou d’afficher une salle d’attente.
-     */
+    
+     // Permet aux clients sans JWT de charger l’instantané courant ou d’afficher une salle d’attente.
+  
     @GetMapping("/public/{token}/snapshot")
     public ResponseEntity<QrLiveStreamEnvelope> snapshot(@PathVariable String token) {
         return quizSessionManager.snapshotEnvelope(token)
@@ -62,9 +55,8 @@ public class QuizQrEphemeralRestController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Soumission réponse participant (sans JWT) — utilisé par la page web {@code /quiz-live/.../participer}.
-     */
+    
+    // Soumission réponse participant (sans JWT) 
     @PostMapping("/sessions/{token}/reponses")
     public ResponseEntity<QrLiveSubmitAnswerResponse> reponsePublique(
             @PathVariable String token,

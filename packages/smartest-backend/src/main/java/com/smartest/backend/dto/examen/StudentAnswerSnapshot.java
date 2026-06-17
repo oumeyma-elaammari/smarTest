@@ -3,9 +3,7 @@ package com.smartest.backend.dto.examen;
 import java.util.Collections;
 import java.util.Set;
 
-/**
- * Copie des réponses étudiant au moment de la soumission finale (hors état runtime mutable).
- */
+// Copie des réponses étudiant au moment de la soumission finale (hors état runtime mutable).
 public record StudentAnswerSnapshot(
         Long questionId,
         Long singleReponseId,

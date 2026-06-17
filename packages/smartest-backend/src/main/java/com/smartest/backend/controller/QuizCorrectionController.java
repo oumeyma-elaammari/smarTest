@@ -19,11 +19,9 @@ public class QuizCorrectionController {
 
     private final QuizCorrectionService quizCorrectionService;
 
-    /**
-     * POST /api/quiz-correction/question
-     * Corriger la réponse d'un étudiant à une question unique
-     * Retourne immédiatement correct/incorrect avec explication
-     */
+    
+     //Corriger la réponse d'un étudiant à une question unique
+     // Retourne immédiatement correct/incorrect avec explication
     @PostMapping("/question")
     public ResponseEntity<CorrectionResponse> corrigerReponse(
             @Valid @RequestBody ReponseEtudiantRequest request) {
@@ -31,10 +29,9 @@ public class QuizCorrectionController {
         return ResponseEntity.ok(correction);
     }
 
-    /**
-     * POST /api/quiz-correction/quiz
-     * Corriger toutes les réponses d'un étudiant pour un quiz complet
-     */
+   
+    
+     // Corriger toutes les réponses d'un étudiant pour un quiz complet
     @PostMapping("/quiz")
     public ResponseEntity<List<CorrectionResponse>> corrigerQuiz(
             @Valid @RequestBody List<ReponseEtudiantRequest> requests) {
@@ -42,10 +39,7 @@ public class QuizCorrectionController {
         return ResponseEntity.ok(corrections);
     }
 
-    /**
-     * POST /api/quiz-correction/score
-     * Calculer et retourner le score final de l'étudiant (en pourcentage)
-     */
+    // Calculer et retourner le score final de l'étudiant (en pourcentage)
     @PostMapping("/score")
     public ResponseEntity<Map<String, Object>> calculerScore(
             @Valid @RequestBody List<ReponseEtudiantRequest> requests) {

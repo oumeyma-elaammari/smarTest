@@ -77,9 +77,8 @@ public class AuthController {
         }
     }
 
-    // ══════════════════════════════════════════════
+
     //  Ancien système — lien web (conservé pour étudiants)
-    // ══════════════════════════════════════════════
     @GetMapping("/verify-email")
     public ResponseEntity<Void> verifyEmail(
             @RequestParam String token,
@@ -98,9 +97,8 @@ public class AuthController {
         }
     }
 
-    // ══════════════════════════════════════════════
+
     //  Nouveau système — code 6 chiffres (desktop)
-    // ══════════════════════════════════════════════
     @PostMapping("/verify-email/code")
     public ResponseEntity<String> verifyEmailByCode(
             @RequestParam String email,
@@ -114,9 +112,8 @@ public class AuthController {
         }
     }
 
-    // ══════════════════════════════════════════════
+
     //  Renvoyer le code de vérification
-    // ══════════════════════════════════════════════
     @PostMapping("/verify-email/resend")
     public ResponseEntity<String> resendVerificationCode(@RequestParam String email) {
         try {

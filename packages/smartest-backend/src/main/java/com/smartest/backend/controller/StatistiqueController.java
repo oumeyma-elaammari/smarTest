@@ -23,10 +23,7 @@ public class StatistiqueController {
 
     private final StatistiqueService statistiqueService;
 
-    /**
-     * Statistiques complètes d’un quiz (1ʳᵉ tentative, résultats liés au quiz uniquement).
-     * Réservé au professeur propriétaire du quiz (usage desktop).
-     */
+    // Statistiques complètes d’un quiz
     @GetMapping("/quiz/{quizId}")
     public ResponseEntity<StatistiquesQuizResponse> getStatistiquesQuiz(
             @PathVariable Long quizId,
@@ -44,9 +41,8 @@ public class StatistiqueController {
                 statistiqueService.obtenirStatistiqueQuestionPourProfesseur(quizId, questionId, userDetails.getUsername()));
     }
 
-    /**
-     * Questions avec taux d’échec &gt; 70 % (1ʳᵉ tentative, résultats quiz).
-     */
+    // Questions avec taux d’échec &gt; 70 % (1ʳᵉ tentative, résultats quiz).
+     
     @GetMapping("/quiz/{quizId}/alertes")
     public ResponseEntity<List<StatistiqueQuestionResponse>> getQuestionsAlerte(
             @PathVariable Long quizId,
@@ -55,10 +51,7 @@ public class StatistiqueController {
                 statistiqueService.obtenirQuestionsAlertePourProfesseur(quizId, userDetails.getUsername()));
     }
 
-    /**
-     * Statistiques d’un examen publié (notes de passage, taux de réussite par question).
-     * Même forme JSON que {@link #getStatistiquesQuiz} ({@code quizId} = id examen publié).
-     */
+    // Statistiques d’un examen publié (notes de passage, taux de réussite par question).
     @GetMapping("/examen/{examenId}")
     public ResponseEntity<StatistiquesQuizResponse> getStatistiquesExamen(
             @PathVariable Long examenId,

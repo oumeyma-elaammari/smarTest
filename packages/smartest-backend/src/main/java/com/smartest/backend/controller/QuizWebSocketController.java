@@ -15,9 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 
-/**
- * Flux QR hors MySQL : init prof (mémoire) et réponses étudiants anonymes.
- */
+// Flux QR hors MySQL 
+ 
 @Controller
 @Validated
 @RequiredArgsConstructor

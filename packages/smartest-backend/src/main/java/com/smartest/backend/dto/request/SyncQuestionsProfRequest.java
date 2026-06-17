@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * Synchronise uniquement les questions d’un quiz prof (ex. copie « miroir » QR), sans publication web ni emails.
- */
+// Synchronise uniquement les questions d’un quiz prof 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

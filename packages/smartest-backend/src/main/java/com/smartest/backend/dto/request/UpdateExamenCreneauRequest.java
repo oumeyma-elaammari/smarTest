@@ -11,6 +11,6 @@ public class UpdateExamenCreneauRequest {
     @NotNull
     private LocalDateTime dateDebut;
 
-    /** Si renseignée, met à jour la durée et recalcule la date de fin. */
+    // Si renseignée, met à jour la durée et recalcule la date de fin
     private Integer duree;
 }
