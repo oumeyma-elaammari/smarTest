@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:smartest_desktop.ViewModels"
         xmlns:conv="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
         Title="{Binding TitreFenetre}"
+        Icon="/Assets/SmarTest-AppIcon.png"
         Height="780" Width="1280"
         MinHeight="650" MinWidth="1000"
         WindowState="Maximized"

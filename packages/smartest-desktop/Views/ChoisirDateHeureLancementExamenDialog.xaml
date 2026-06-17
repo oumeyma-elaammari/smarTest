@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Créneau de lancement — publication web"
+        Icon="/Assets/SmarTest-AppIcon.png"
         Height="Auto"
         Width="460"
         MinHeight="280"
