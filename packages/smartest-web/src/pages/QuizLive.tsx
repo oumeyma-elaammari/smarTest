@@ -225,33 +225,68 @@ export default function QuizLive() {
         </button>
     )
 
+    const qrBox = (
+        <div
+            style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '1rem 1.125rem',
+                borderRadius: 12,
+                border: '1px solid #e2e8f0',
+                background: '#fff',
+                boxShadow: '0 4px 18px rgba(15,23,42,0.06)',
+            }}
+        >
+            {lienPassageQuiz ? (
+                <QRCodeSVG
+                    value={lienPassageQuiz}
+                    size={qrSize}
+                    level="M"
+                    title="Lien vers le passage du quiz"
+                />
+            ) : null}
+        </div>
+    )
+
+    if (!chargement && totalSoumissionsQuestions === 0) {
+        return (
+            <div className={styles.qrOnlyShell}>
+                <div className={styles.qrOnlyCloseBtn}>{closeBtn}</div>
+                <div className={styles.qrOnlyInner}>
+                    <h1 className={styles.qrOnlyTitle}>{titreAffiche}</h1>
+                    <p className={styles.qrOnlyHint}>
+                        Scannez le QR code ou partagez le lien pour rejoindre le quiz.
+                    </p>
+                    {qrBox}
+                    <input
+                        type="text"
+                        readOnly
+                        className={styles.urlField}
+                        value={lienPassageQuiz}
+                        aria-label="URL de passage du quiz"
+                    />
+                    <button
+                        type="button"
+                        className={styles.copyBtn}
+                        onClick={() => {
+                            Promise.resolve(copierLien()).catch(() => {})
+                        }}
+                    >
+                        {copieOk ? 'Lien copié !' : 'Copier le lien'}
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className={styles.page}>
             <aside className={styles.sidebar} style={sidebarStyle}>
                 <div className={styles.sidebarInner} style={{ width: '100%', maxWidth: '100%' }}>
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            padding: '1rem 1.125rem',
-                            borderRadius: 12,
-                            border: '1px solid #e2e8f0',
-                            background: '#fff',
-                            boxShadow: '0 4px 18px rgba(15,23,42,0.06)',
-                        }}
-                    >
-                        {lienPassageQuiz ? (
-                            <QRCodeSVG
-                                value={lienPassageQuiz}
-                                size={qrSize}
-                                level="M"
-                                title="Lien vers le passage du quiz"
-                            />
-                        ) : null}
-                    </div>
+                    {qrBox}
                     <input
                         type="text"
                         readOnly
