@@ -281,6 +281,51 @@
     max-width: 480px;
 }
 
+/* Vue QR seule (aucune réponse reçue) */
+.qrOnlyShell {
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem clamp(1rem, 4vw, 2rem);
+    background: #f8fafc;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #0f172a;
+    position: relative;
+}
+
+.qrOnlyInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.125rem;
+    width: 100%;
+    max-width: 420px;
+}
+
+.qrOnlyTitle {
+    margin: 0 0 0.25rem;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    font-weight: 700;
+    text-align: center;
+}
+
+.qrOnlyHint {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+    text-align: center;
+}
+
+.qrOnlyCloseBtn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+}
+
 @media (max-width: 767px) {
     .page {
         flex-direction: column;
