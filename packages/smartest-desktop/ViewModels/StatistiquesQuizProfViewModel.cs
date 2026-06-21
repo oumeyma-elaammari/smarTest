@@ -137,6 +137,7 @@ namespace smartest_desktop.ViewModels
 
         private readonly LocalQuizService _quizLocal = new(App.LocalDb);
         private readonly LocalExamenService _examenLocal = new(App.LocalDb);
+        private readonly AuthService _auth = new();
 
         private bool _chargement;
         public bool Chargement
@@ -555,14 +556,19 @@ namespace smartest_desktop.ViewModels
             }
         }
 
+        private static bool EstErreurAuthentification(string? err) =>
+            err != null && (
+                err.Contains("Token invalide", StringComparison.OrdinalIgnoreCase) ||
+                err.Contains("Session expir", StringComparison.OrdinalIgnoreCase) ||
+                err.Contains("Non connect", StringComparison.OrdinalIgnoreCase));
+
         private async Task ChargerDonneesAsync(StatistiqueEvalItem item, bool silentRefresh = false)
         {
             var app = WpfApp.Current;
             if (app == null)
                 return;
 
-            string? token = app.Properties["Token"]?.ToString();
-            if (string.IsNullOrWhiteSpace(token))
+            if (!DesktopSessionTokenHelper.TryObtenir(out string token))
             {
                 await app.Dispatcher.InvokeAsync(() =>
                 {
@@ -584,6 +590,18 @@ namespace smartest_desktop.ViewModels
             var (data, err) = item.Type == TypeEvalStat.Examen
                 ? await api.GetStatistiquesExamenAsync(token, item.BackendId)
                 : await api.GetStatistiquesQuizAsync(token, item.BackendId);
+
+            // Sur 401 (token expiré), rafraîchissement unique puis réessai — même pattern que SessionsActivesViewModel
+            if (EstErreurAuthentification(err))
+            {
+                if (await DesktopSessionTokenHelper.TryRafraichirDepuisApiAsync(_auth)
+                    && DesktopSessionTokenHelper.TryObtenir(out string tokenRafraichi))
+                {
+                    (data, err) = item.Type == TypeEvalStat.Examen
+                        ? await api.GetStatistiquesExamenAsync(tokenRafraichi, item.BackendId)
+                        : await api.GetStatistiquesQuizAsync(tokenRafraichi, item.BackendId);
+                }
+            }
 
             await app.Dispatcher.InvokeAsync(() =>
             {
