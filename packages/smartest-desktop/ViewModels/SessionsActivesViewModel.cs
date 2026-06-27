@@ -160,10 +160,13 @@ namespace smartest_desktop.ViewModels
             {
                 if (!SetProperty(ref _message, value)) return;
                 OnPropertyChanged(nameof(AfficherMessage));
+                OnPropertyChanged(nameof(AfficherLibelleVideEtudiants));
             }
         }
 
         public bool AfficherMessage => !string.IsNullOrWhiteSpace(Message);
+
+        public bool AfficherLibelleVideEtudiants => AucunEtudiant && !AfficherMessage;
 
         public bool AucunExamen => !ChargementExamens && ExamensTermines.Count == 0;
 
@@ -195,6 +198,7 @@ namespace smartest_desktop.ViewModels
                     c.EstSelectionne = c == value;
                 OnPropertyChanged(nameof(TitreExamenSelectionne));
                 OnPropertyChanged(nameof(AucunEtudiant));
+                OnPropertyChanged(nameof(AfficherLibelleVideEtudiants));
             }
         }
 
@@ -536,11 +540,11 @@ namespace smartest_desktop.ViewModels
                 if (EtudiantsDuExamen.Count == 0)
                 {
                     Message =
-                        "Aucun participant trouvé sur le serveur pour cet examen.\n\n" +
-                        "Vérifiez : (1) le backend a été redémarré après la dernière mise à jour, " +
-                        "(2) l'étudiant a rejoint la salle et répondu pendant la session EN_COURS, " +
-                        "(3) vous avez cliqué « Terminer » sur la supervision web (même examen, même numéro d'id), " +
-                        "(4) le desktop pointe vers la même URL que le web (par défaut http://localhost:8081).";
+                        "Aucun participant n'a encore été enregistré pour cet examen.\n\n" +
+                        "Pour que les copies apparaissent ici :\n" +
+                        "• Terminez la session depuis la page de supervision web (bouton « Terminer »).\n" +
+                        "• Vérifiez qu'au moins un étudiant s'est connecté et a répondu pendant l'examen.\n" +
+                        "• Si vous venez de mettre à jour SmarTest, fermez puis rouvrez l'application.";
                 }
             }
             catch (SmartestApiException ex)
@@ -557,14 +561,13 @@ namespace smartest_desktop.ViewModels
                 if (ex.StatusCode == HttpStatusCode.NotFound)
                 {
                     Message =
-                        "Le serveur ne propose pas encore la route des participants. Redémarrez le backend Spring, " +
-                        "puis actualisez.";
+                        "Impossible de récupérer la liste des participants pour le moment. " +
+                        "Fermez puis rouvrez SmarTest, puis réessayez.";
                 }
                 else if (ex.StatusCode == HttpStatusCode.Forbidden)
                 {
                     Message =
-                        "Accès refusé : connectez-vous avec le compte professeur propriétaire de cet examen " +
-                        $"(id serveur {examen.BackendId}).";
+                        "Vous n'avez pas accès à cet examen. Connectez-vous avec le compte professeur qui l'a publié.";
                 }
                 else if (ex.StatusCode == HttpStatusCode.Unauthorized)
                 {
@@ -583,6 +586,7 @@ namespace smartest_desktop.ViewModels
             {
                 ChargementEtudiants = false;
                 OnPropertyChanged(nameof(AucunEtudiant));
+                OnPropertyChanged(nameof(AfficherLibelleVideEtudiants));
             }
         }
 

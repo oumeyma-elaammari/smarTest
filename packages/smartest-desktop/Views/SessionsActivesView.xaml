@@ -139,10 +139,10 @@
                     <TextBlock Text="Chargement des participants…" Foreground="{DynamicResource GrayTextBrush}" FontSize="13"
                                Margin="0,24,0,0" HorizontalAlignment="Center"
                                Visibility="{Binding ChargementEtudiants, Converter={StaticResource BoolToVis}}"/>
-                    <TextBlock Text="Aucun participant enregistré pour cet examen."
+                    <TextBlock Text="Aucun participant pour cet examen."
                                Foreground="{DynamicResource GrayTextBrush}" FontSize="13" Margin="0,24,0,0"
                                HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"
-                               Visibility="{Binding AucunEtudiant, Converter={StaticResource BoolToVis}}"/>
+                               Visibility="{Binding AfficherLibelleVideEtudiants, Converter={StaticResource BoolToVis}}"/>
                     <ItemsControl ItemsSource="{Binding EtudiantsDuExamen}">
                         <ItemsControl.Style>
                             <Style TargetType="ItemsControl">
