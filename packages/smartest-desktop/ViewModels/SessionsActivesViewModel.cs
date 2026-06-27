@@ -220,7 +220,6 @@ namespace smartest_desktop.ViewModels
 
         public ICommand RafraichirCommand { get; }
         public ICommand SelectionnerExamenCommand { get; }
-        public ICommand SupprimerExamenCommand { get; }
         public ICommand RetourExamensCommand { get; }
         public ICommand VoirCorrectionCommand { get; }
         public ICommand RetourEtudiantsCommand { get; }
@@ -231,9 +230,6 @@ namespace smartest_desktop.ViewModels
             RafraichirCommand = new RelayCommand(_ => _ = RafraichirExamensAsync());
             SelectionnerExamenCommand = new RelayCommand(
                 p => _ = SelectionnerExamenAsync(p as ExamenSessionCardVm),
-                p => p is ExamenSessionCardVm);
-            SupprimerExamenCommand = new RelayCommand(
-                p => _ = SupprimerExamenDeLaListeAsync(p as ExamenSessionCardVm),
                 p => p is ExamenSessionCardVm);
             RetourExamensCommand = new RelayCommand(_ => RetourNiveauExamens());
             VoirCorrectionCommand = new RelayCommand(
@@ -273,46 +269,6 @@ namespace smartest_desktop.ViewModels
             NiveauActuel = 2;
             EtudiantSelectionne = null;
             LignesCorrection.Clear();
-        }
-
-        private async Task SupprimerExamenDeLaListeAsync(ExamenSessionCardVm? carte)
-        {
-            if (carte == null || carte.BackendId <= 0) return;
-
-            var titre = string.IsNullOrWhiteSpace(carte.Titre) ? $"Examen #{carte.BackendId}" : carte.Titre.Trim();
-            var confirm = MessageBox.Show(
-                $"Supprimer « {titre} » ?\n\n" +
-                "L'examen sera retiré de cette liste et ne sera plus visible par les étudiants sur le web.",
-                "Sessions examens",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes)
-                return;
-
-            if (!DesktopSessionTokenHelper.TryObtenir(out string? token))
-            {
-                Message = "Reconnectez-vous pour supprimer l'examen sur le serveur.";
-                return;
-            }
-
-            try
-            {
-                await ExecuterAvecRenouvellementJetonAsync(async t =>
-                {
-                    await _api.DeleteExamenPublieAsync(t, carte.BackendId);
-                    return true;
-                });
-                RetirerExamensParBackendIds(new[] { carte.BackendId }, masquerPourSessions: false);
-                Message = null;
-            }
-            catch (SmartestApiException ex)
-            {
-                Message = FormaterMessageErreurApi(ex);
-            }
-            catch (Exception ex)
-            {
-                Message = ex.Message;
-            }
         }
 
         private async Task SelectionnerExamenAsync(ExamenSessionCardVm? carte)
@@ -367,6 +323,7 @@ namespace smartest_desktop.ViewModels
 
         public async Task RafraichirExamensAsync()
         {
+            if (ChargementExamens) return;
             ChargementExamens = true;
             Message = null;
             ExamensTermines.Clear();
@@ -402,8 +359,10 @@ namespace smartest_desktop.ViewModels
 
                 await AjouterCartesDepuisExamensLocauxAsync(cartes, masques);
 
+                var idsExistants = new HashSet<long>(ExamensTermines.Select(x => x.BackendId));
                 foreach (var c in cartes.Values.OrderByDescending(x => x.DateCreneau ?? ""))
-                    ExamensTermines.Add(c);
+                    if (idsExistants.Add(c.BackendId))
+                        ExamensTermines.Add(c);
 
                 foreach (var c in ExamensTermines)
                     HydraterCarteDepuisCacheParticipants(c);

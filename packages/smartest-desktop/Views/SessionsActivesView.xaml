@@ -81,14 +81,6 @@
                                             <TextBlock Text="{Binding StatutAffiche}" Foreground="{DynamicResource SuccessGreenBrush}"
                                                        FontSize="11" FontWeight="SemiBold"/>
                                         </Border>
-                                        <Button Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                                ToolTip="Retirer de la liste"
-                                                Command="{Binding DataContext.SupprimerExamenCommand,
-                                                    RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Background="Transparent" BorderThickness="0"
-                                                Foreground="{DynamicResource DangerBrush}" Cursor="Hand" Padding="4"
-                                                FontFamily="Segoe MDL2 Assets" FontSize="14" Content="&#xE74D;"/>
                                         <Grid Grid.Row="1" Grid.RowSpan="2" Cursor="Hand">
                                             <Grid.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick"
