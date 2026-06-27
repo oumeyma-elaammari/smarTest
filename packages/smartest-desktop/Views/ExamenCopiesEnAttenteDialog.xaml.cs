@@ -75,7 +75,7 @@ namespace smartest_desktop.Views
                 {
                     TxtVide.Text =
                         "Aucune copie en attente.\n\n" +
-                        "Vérifiez que la session est terminée côté supervision web et que les étudiants ont bien soumis leur examen (bouton final sur la page web).";
+                        "Vérifiez que la session est terminée et que les étudiants ont bien soumis leur examen .";
                     TxtVide.Visibility = Visibility.Visible;
                     return;
                 }

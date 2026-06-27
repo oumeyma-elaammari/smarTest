@@ -405,10 +405,9 @@
 					<Border Grid.Row="0" Padding="20,18,20,14" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
 						<StackPanel>
 							<TextBlock Text="Questions de l'examen" FontSize="14" FontWeight="700" Foreground="{DynamicResource NavyBrush}"/>
-							<TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,3,0,0">
+							<TextBlock FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,0">
 								<TextBlock.Style>
 									<Style TargetType="TextBlock">
-										<Setter Property="Text" Value="{Binding NombreQuestions, StringFormat='{}{0} questions · Modifiables directement'}"/>
 										<Style.Triggers>
 											<DataTrigger Binding="{Binding QuestionsVerrouilleesParPublication}" Value="True">
 												<Setter Property="Text" Value="{Binding NombreQuestions, StringFormat='{}{0} questions · Lecture seule (examen publié)'}"/>
@@ -803,8 +802,7 @@
 
 						<StackPanel Margin="0,0,0,12">
 								<TextBlock Text="Date et horaire de lancement" FontSize="13" FontWeight="700" Foreground="{DynamicResource NavyBrush}"/>
-								<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,4,0,12"
-                                           Text="À partir de cette date et heure, les étudiants autorisés peuvent rejoindre l'examen sur le web (selon l'heure du serveur)."/>
+				
 								<TextBlock Text="Jour" FontSize="11" FontWeight="600" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,6"/>
 								<DatePicker Style="{StaticResource ResultDatePicker}"
 											SelectedDate="{Binding DateExamen, Mode=TwoWay}"
@@ -872,14 +870,13 @@
 								  VerticalAlignment="Center"
 								  Margin="0,0,0,16"/>
 
-						<TextBlock Text="TEMPS INDICATIF (PASSAGE WEB)" FontSize="10" FontWeight="700"
+						<TextBlock Text="TEMPS INDICATIF " FontSize="10" FontWeight="700"
                                    Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,8"/>
 						<Border Background="{DynamicResource CardBgBrush}" CornerRadius="10"
                                 BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                                 Padding="16,10" Margin="0,0,0,16">
 							<StackPanel>
-								<TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,10"
-                                           Text="Durée de référence pour cette question lors du passage sur le web (décompte côté élève). La somme des temps de toutes les questions reste égale à la durée totale de l'épreuve : en changeant une question, les autres se rééquilibrent. Réglable avant publication."/>
+							
 								<ComboBox Style="{StaticResource ResultComboBox}"
 										  ItemsSource="{Binding ValeursDureeSecondesIndicative}"
                                           SelectedItem="{Binding QuestionSelectionnee.DureeSecondesIndicative, Mode=TwoWay}"
@@ -1357,21 +1354,7 @@
 
 		</Grid>
 
-		<!-- ══ FOOTER ══ -->
-		<Border Grid.Row="2" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="28,12">
-			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-				<TextBlock Text="&#xE9F3;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                           Foreground="{DynamicResource SubTextBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-				<TextBlock FontSize="12" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center"
-                           Text="{Binding NombreQuestions, StringFormat='{}{0} questions dans cet examen'}"/>
-				<TextBlock Text=" · " FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
-				<TextBlock Text="{Binding ResumeBareme}"
-                           FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}" FontWeight="600"/>
-				<TextBlock Text=" · " FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
-				<TextBlock Text="Le total du barème doit être égal à 20 pour valider · publication web et créneau via le bouton à gauche · publier depuis la liste Examen."
-                           FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
-			</StackPanel>
-		</Border>
+	
 	</Grid>
 </Window>
 

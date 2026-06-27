@@ -172,7 +172,6 @@ namespace smartest_desktop.ViewModels
         /// <summary>Masqué dès que l’examen n’est plus un brouillon non publié — l’état « publié » est porté par la colonne Statut uniquement.</summary>
         public bool PublierBoutonVisible =>
             IsPublicationEnCours
-            || QuizExamenViewModel.EstExamenSessionTermineeOuAnnulee(Examen)
             || (
                 !(Examen.BackendId is long bid && bid > 0)
                 && string.Equals(Examen.Statut?.Trim(), "BROUILLON", StringComparison.OrdinalIgnoreCase)
