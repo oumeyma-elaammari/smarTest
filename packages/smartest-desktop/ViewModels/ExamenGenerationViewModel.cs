@@ -754,6 +754,8 @@ namespace smartest_desktop.ViewModels
             int totalNiveau = nbQCM + nbVF + nbCheckbox + nbRedaction;
             bool useBatching = totalNiveau > 4 || contenuComplet.Length > tailleContexte;
 
+            var resultat = new List<QuestionExamen>();
+
             if (!useBatching)
             {
                 string contenu = contenuComplet.Length > tailleContexte
@@ -766,48 +768,80 @@ namespace smartest_desktop.ViewModels
                 var (texte, _) = await groqClient.GenererAsync(
                     prompt, ct, GroqService.TemperaturePourDifficulte(niveau));
 
-                if (string.IsNullOrWhiteSpace(texte))
-                    return new List<QuestionExamen>();
+                if (!string.IsNullOrWhiteSpace(texte))
+                    resultat = FiltrerQuestionsExamenUniques(ParseQuestions(texte), enoncesDejaGeneres);
+            }
+            else
+            {
+                int nbLots = (int)Math.Ceiling((double)totalNiveau / 4.0);
+                var lotsQcm = DistribuerSurLots(nbQCM, nbLots);
+                var lotsVf = DistribuerSurLots(nbVF, nbLots);
+                var lotsCheckbox = DistribuerSurLots(nbCheckbox, nbLots);
+                var lotsRedaction = DistribuerSurLots(nbRedaction, nbLots);
+                var segmentsContenu = DecoupeContenuEnSegments(contenuComplet, nbLots);
 
-                var questions = ParseQuestions(texte);
-                return FiltrerQuestionsExamenUniques(questions, enoncesDejaGeneres);
+                var enoncesConnus = new List<string>(enoncesDejaGeneres);
+
+                for (int lotIdx = 0; lotIdx < nbLots && !ct.IsCancellationRequested; lotIdx++)
+                {
+                    int qcmLot = lotsQcm[lotIdx];
+                    int vfLot = lotsVf[lotIdx];
+                    int cbkLot = lotsCheckbox[lotIdx];
+                    int redLot = lotsRedaction[lotIdx];
+                    int totalLot = qcmLot + vfLot + cbkLot + redLot;
+                    if (totalLot == 0) continue;
+
+                    if (lotIdx > 0)
+                        await Task.Delay(GroqService.DelaiEntreLotsMs, ct);
+
+                    onStatus?.Invoke(
+                        $"🧠 {niveau} — lot {lotIdx + 1}/{nbLots} ({qcmLot} QCM / {vfLot} VF / {cbkLot} Checkbox / {redLot} Rédaction)...");
+
+                    string prompt = GroqService.BuildPromptExamenLot(
+                        segmentsContenu[lotIdx], qcmLot, vfLot, cbkLot, redLot,
+                        niveau, resultat.Count + enoncesConnus.Count + 1, enoncesConnus);
+
+                    string texte = await groqClient.GenererAvecRetryAsync(
+                        prompt, ct, GroqService.TemperaturePourDifficulte(niveau));
+
+                    var questionsLot = FiltrerQuestionsExamenUniques(ParseQuestions(texte), enoncesConnus);
+                    resultat.AddRange(questionsLot);
+                    enoncesConnus.AddRange(questionsLot.Select(q => q.Enonce.Trim()));
+                }
             }
 
-            int nbLots = (int)Math.Ceiling((double)totalNiveau / 4.0);
-            var lotsQcm = DistribuerSurLots(nbQCM, nbLots);
-            var lotsVf = DistribuerSurLots(nbVF, nbLots);
-            var lotsCheckbox = DistribuerSurLots(nbCheckbox, nbLots);
-            var lotsRedaction = DistribuerSurLots(nbRedaction, nbLots);
-            var segmentsContenu = DecoupeContenuEnSegments(contenuComplet, nbLots);
-
-            var resultat = new List<QuestionExamen>();
-            var enoncesConnus = new List<string>(enoncesDejaGeneres);
-
-            for (int lotIdx = 0; lotIdx < nbLots && !ct.IsCancellationRequested; lotIdx++)
+            // ── Boucle de complément (max 2 tentatives) ───────────────────────────
+            const int MAX_COMPLEMENTS = 2;
+            for (int comp = 0; comp < MAX_COMPLEMENTS && !ct.IsCancellationRequested; comp++)
             {
-                int qcmLot = lotsQcm[lotIdx];
-                int vfLot = lotsVf[lotIdx];
-                int cbkLot = lotsCheckbox[lotIdx];
-                int redLot = lotsRedaction[lotIdx];
-                int totalLot = qcmLot + vfLot + cbkLot + redLot;
-                if (totalLot == 0) continue;
+                try
+                {
+                    int defQCM       = Math.Max(0, nbQCM       - resultat.Count(q => q.Type == "QCM"));
+                    int defVF        = Math.Max(0, nbVF        - resultat.Count(q => q.Type == "VF"));
+                    int defCheckbox  = Math.Max(0, nbCheckbox  - resultat.Count(q => q.Type == "CHECKBOX"));
+                    int defRedaction = Math.Max(0, nbRedaction - resultat.Count(q => q.Type == "REDACTION"));
+                    int totalDef     = defQCM + defVF + defCheckbox + defRedaction;
+                    if (totalDef == 0) break;
 
-                if (lotIdx > 0)
                     await Task.Delay(GroqService.DelaiEntreLotsMs, ct);
+                    onStatus?.Invoke($"🔄 {niveau} — complément {comp + 1}/{MAX_COMPLEMENTS} : {totalDef} question(s) manquante(s)...");
 
-                onStatus?.Invoke(
-                    $"🧠 {niveau} — lot {lotIdx + 1}/{nbLots} ({qcmLot} QCM / {vfLot} VF / {cbkLot} Checkbox / {redLot} Rédaction)...");
-
-                string prompt = GroqService.BuildPromptExamenLot(
-                    segmentsContenu[lotIdx], qcmLot, vfLot, cbkLot, redLot,
-                    niveau, resultat.Count + enoncesConnus.Count + 1, enoncesConnus);
-
-                string texte = await groqClient.GenererAvecRetryAsync(
-                    prompt, ct, GroqService.TemperaturePourDifficulte(niveau));
-
-                var questionsLot = FiltrerQuestionsExamenUniques(ParseQuestions(texte), enoncesConnus);
-                resultat.AddRange(questionsLot);
-                enoncesConnus.AddRange(questionsLot.Select(q => q.Enonce.Trim()));
+                    string contenuComp = contenuComplet.Length > tailleContexte
+                        ? contenuComplet[..tailleContexte]
+                        : contenuComplet;
+                    var enoncesComp = resultat
+                        .Select(q => q.Enonce.Trim())
+                        .Where(e => !string.IsNullOrWhiteSpace(e))
+                        .ToList();
+                    string promptComp = GroqService.BuildPromptExamenLot(
+                        contenuComp, defQCM, defVF, defCheckbox, defRedaction,
+                        niveau, resultat.Count + 1, enoncesComp);
+                    string texteComp = await groqClient.GenererAvecRetryAsync(
+                        promptComp, ct, GroqService.TemperaturePourDifficulte(niveau));
+                    resultat.AddRange(FiltrerQuestionsExamenUniques(ParseQuestions(texteComp), enoncesComp));
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { break; }
             }
 
             return resultat;
