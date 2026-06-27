@@ -626,13 +626,7 @@ namespace smartest_desktop.ViewModels
                 //   Pour varier les questions entre lots, on fait tourner une "fenêtre"
                 //   dans le contenu du cours (lot 1 → début, lot 2 → milieu, lot 3 → fin, etc.)
 
-                string contenuComplet = ContenuCours;
-
-                // Limite raisonnable pour éviter les cours de 100 pages
-                // (inutile d'envoyer 50 000 chars pour générer 20 questions)
-                const int LIMITE_CONTENU_TOTAL = 20_000;
-                if (contenuComplet.Length > LIMITE_CONTENU_TOTAL)
-                    contenuComplet = contenuComplet[..LIMITE_CONTENU_TOTAL];
+                string contenuComplet = BuildContenuMultiCours(FichiersImportes, GroqService.TailleContexteParLot);
 
                 int tailleContexte = GroqService.TailleContexteParLot;
                 int totalQuestions = TotalQuestions;
@@ -773,7 +767,9 @@ namespace smartest_desktop.ViewModels
             }
             else
             {
-                int nbLots = (int)Math.Ceiling((double)totalNiveau / 4.0);
+                int nbLotsParQuestions = (int)Math.Ceiling((double)totalNiveau / 4.0);
+                int nbLotsParContenu   = (int)Math.Ceiling((double)contenuComplet.Length / tailleContexte);
+                int nbLots = Math.Max(nbLotsParQuestions, nbLotsParContenu);
                 var lotsQcm = DistribuerSurLots(nbQCM, nbLots);
                 var lotsVf = DistribuerSurLots(nbVF, nbLots);
                 var lotsCheckbox = DistribuerSurLots(nbCheckbox, nbLots);
@@ -970,40 +966,57 @@ namespace smartest_desktop.ViewModels
         }
 
         /// <summary>
+        /// Alloue à chaque cours importé un budget de <paramref name="limiteParcours"/> chars.
+        /// Empêche le premier cours de consommer tout le quota au détriment des suivants.
+        /// </summary>
+        private static string BuildContenuMultiCours(
+            IReadOnlyList<FichierCoursImporteItem> fichiers,
+            int limiteParcours)
+        {
+            if (fichiers.Count == 0) return string.Empty;
+
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < fichiers.Count; i++)
+            {
+                if (i > 0)
+                {
+                    sb.Append("\n\n────────────────────────────────────────\n");
+                    sb.Append('[').Append(fichiers[i].Titre)
+                      .Append('.').Append(fichiers[i].TypeExtension.ToLowerInvariant())
+                      .AppendLine("]");
+                    sb.AppendLine("────────────────────────────────────────\n");
+                }
+                var bloc = fichiers[i].BlocContenu;
+                sb.Append(bloc.Length > limiteParcours ? bloc[..limiteParcours] : bloc);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Découpe le contenu du cours en N segments de taille ≤ LIMITE_CONTENU_CHARS.
         /// Chaque lot reçoit un segment différent pour couvrir l'ensemble du document.
         /// Si le cours est court, tous les segments sont identiques (le cours entier tronqué).
         /// </summary>
         private static List<string> DecoupeContenuEnSegments(string contenu, int nbSegments)
         {
-            int limite = GroqService.LIMITE_CONTENU_CHARS;
-            var segments = new List<string>();
+            var segments = new List<string>(nbSegments);
+            if (nbSegments <= 0 || string.IsNullOrEmpty(contenu)) return segments;
 
-            if (contenu.Length <= limite || nbSegments <= 1)
-            {
-                // Cours court : même segment pour tout le monde
-                string seg = contenu.Length > limite ? contenu[..limite] : contenu;
-                for (int i = 0; i < nbSegments; i++) segments.Add(seg);
-                return segments;
-            }
-
-            // Cours long : découper en tranches qui se chevauchent légèrement
-            // pour ne pas couper au milieu d'une phrase importante
-            int tailleTranche = Math.Max(limite, contenu.Length / nbSegments);
+            // Tiling contigu : chaque segment couvre une tranche disjointe du contenu.
+            // tailleSegment ≤ LIMITE_CONTENU_CHARS est garanti par nbLots ≥ ceil(longueur/limite).
+            int tailleSegment = (int)Math.Ceiling((double)contenu.Length / nbSegments);
 
             for (int i = 0; i < nbSegments; i++)
             {
-                int debut = i * tailleTranche;
+                int debut = i * tailleSegment;
                 if (debut >= contenu.Length)
                 {
-                    // Plus de contenu : répéter le dernier segment
                     segments.Add(segments[^1]);
                     continue;
                 }
 
-                int fin = Math.Min(debut + limite, contenu.Length);
+                int fin = Math.Min(debut + tailleSegment, contenu.Length);
 
-                // Essayer de couper sur un espace pour ne pas tronquer un mot
                 if (fin < contenu.Length)
                 {
                     int espaceProche = contenu.LastIndexOf(' ', fin, Math.Min(100, fin - debut));

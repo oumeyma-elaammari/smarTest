@@ -28,7 +28,7 @@ namespace smartest_desktop.Services
         /// <summary>Espace les lots pour rester sous le TPM (tokens/minute) Groq gratuit.</summary>
         private const int DELAI_ENTRE_LOTS_MS = 4_000;
 
-        private const int TAILLE_CONTEXTE_PAR_LOT = 2500;
+        private const int TAILLE_CONTEXTE_PAR_LOT = 10_000;
 
         // ══════════════════════════════════════════════════════════════════════
 
