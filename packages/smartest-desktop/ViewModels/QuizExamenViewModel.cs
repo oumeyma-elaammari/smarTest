@@ -219,7 +219,15 @@ namespace smartest_desktop.ViewModels
             && !QuizExamenViewModel.EstExamenSessionTermineeOuAnnulee(Examen);
 
         public bool LancerBoutonVisible =>
-            true;
+            string.Equals(Examen.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase);
+
+        public bool SuperviserBoutonVisible =>
+            Examen.BackendId is long bk && bk > 0
+            && string.Equals(Examen.Statut?.Trim(), "EN_COURS", StringComparison.OrdinalIgnoreCase);
+
+        public bool ResultatsBoutonVisible =>
+            Examen.BackendId is long bk && bk > 0
+            && string.Equals(Examen.Statut?.Trim(), "TERMINE", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>Copies soumises : correction détaillée après publication web.</summary>
         public bool CorrigerCopiesBoutonVisible =>
@@ -228,6 +236,14 @@ namespace smartest_desktop.ViewModels
                 string.Equals(Examen.Statut?.Trim(), "PUBLIE", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(Examen.Statut?.Trim(), "EN_COURS", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(Examen.Statut?.Trim(), "TERMINE", StringComparison.OrdinalIgnoreCase));
+
+        public bool SupprimerBoutonActif =>
+            !string.Equals(Examen.Statut?.Trim(), "EN_COURS", StringComparison.OrdinalIgnoreCase);
+
+        public string SupprimerBoutonToolTip =>
+            string.Equals(Examen.Statut?.Trim(), "EN_COURS", StringComparison.OrdinalIgnoreCase)
+                ? "Suppression indisponible : une session est en cours"
+                : "Supprimer cet examen";
 
         private void NotifierEtatBoutonsWeb()
         {
@@ -243,7 +259,11 @@ namespace smartest_desktop.ViewModels
             OnPropertyChanged(nameof(LancerBoutonTexte));
             OnPropertyChanged(nameof(LancerBoutonActif));
             OnPropertyChanged(nameof(LancerBoutonVisible));
+            OnPropertyChanged(nameof(SuperviserBoutonVisible));
+            OnPropertyChanged(nameof(ResultatsBoutonVisible));
             OnPropertyChanged(nameof(CorrigerCopiesBoutonVisible));
+            OnPropertyChanged(nameof(SupprimerBoutonActif));
+            OnPropertyChanged(nameof(SupprimerBoutonToolTip));
         }
 
         private static bool EstExamenResynchronisableSurLeWeb(ExamenLocal e) =>
@@ -440,6 +460,7 @@ namespace smartest_desktop.ViewModels
         public event Action<QuizLocal>? NavigateToQuizDetails;
         public event Action<ExamenLocal>? NavigateToExamenDetails;
         public event Action? OuvrirStatistiques;
+        public event Action? NaviguerVersSessions;
 
         public ICommand GenererQuizCommand { get; }
         public ICommand GenererExamenCommand { get; }
@@ -454,6 +475,8 @@ namespace smartest_desktop.ViewModels
         public ICommand PublierExamenSurLeWebCommand { get; }
         public ICommand SynchroniserExamenSurLeWebCommand { get; }
         public ICommand LancerExamenCommand { get; }
+        public ICommand SuperviserExamenCommand { get; }
+        public ICommand ResultatsExamenCommand { get; }
         public ICommand CorrigerCopiesExamenCommand { get; }
         public ICommand OuvrirQuizCommand { get; }
         public ICommand OuvrirCodeQrQuizCommand { get; }
@@ -518,6 +541,16 @@ namespace smartest_desktop.ViewModels
                      EstCreneauLancementExamenAtteint(e) &&
                      !EstExamenSessionTermineeOuAnnulee(e) &&
                      !_examenSessionLanceeIds.Contains(e.Id));
+
+            SuperviserExamenCommand = new RelayCommand(
+                p => OuvrirSupervisionEnCours(p),
+                p => p is ExamenListeRow { Examen: var e }
+                     && e.BackendId is long bk && bk > 0
+                     && string.Equals(e.Statut?.Trim(), "EN_COURS", StringComparison.OrdinalIgnoreCase));
+
+            ResultatsExamenCommand = new RelayCommand(
+                _ => NaviguerVersSessions?.Invoke(),
+                p => p is ExamenListeRow);
 
             CorrigerCopiesExamenCommand = new RelayCommand(
                 p => _ = OuvrirCorrectionCopiesExamenAsync(p),
@@ -2027,6 +2060,26 @@ namespace smartest_desktop.ViewModels
             }
 
             await ChargerDonneesAsync();
+        }
+
+        private void OuvrirSupervisionEnCours(object? parameter)
+        {
+            if (parameter is not ExamenListeRow row) return;
+            if (row.Examen.BackendId is not long backendId || backendId <= 0) return;
+            string url = $"{FrontendPublicUrl.Resolve().TrimEnd('/')}/examens/{backendId}";
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Impossible d'ouvrir automatiquement la supervision web.\n\n" +
+                    $"Ouvrez manuellement cette adresse :\n{url}\n\n({ex.Message})",
+                    "Supervision",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
 
         private static void ExecuteLogout()

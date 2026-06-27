@@ -39,6 +39,11 @@ namespace smartest_desktop.Views
                     App.OuvrirShell(MainShellSection.Statistiques);
                 };
 
+                vm.NaviguerVersSessions += () =>
+                {
+                    App.OuvrirShell(MainShellSection.Sessions);
+                };
+
                 vm.NavigateToQuizDetails += async quiz =>
                 {
                     if (Interlocked.CompareExchange(ref _navigationDetailVerrouillee, 1, 0) != 0)

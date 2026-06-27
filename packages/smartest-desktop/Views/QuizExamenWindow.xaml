@@ -118,6 +118,9 @@
 									<Setter TargetName="BdIconDelete" Property="Background" Value="{DynamicResource AlertErrorBgBrush}"/>
 									<Setter TargetName="BdIconDelete" Property="BorderBrush" Value="{DynamicResource DangerZoneBorderBrush}"/>
 								</Trigger>
+								<Trigger Property="IsEnabled" Value="False">
+									<Setter TargetName="BdIconDelete" Property="Opacity" Value="0.35"/>
+								</Trigger>
 							</ControlTemplate.Triggers>
 						</ControlTemplate>
 					</Setter.Value>
@@ -672,8 +675,38 @@
 														</Button.Style>
 														<TextBlock Text="{Binding LancerBoutonTexte}"/>
 													</Button>
+													<Button Margin="0,0,6,0"
+                                                            Visibility="{Binding SuperviserBoutonVisible, Converter={StaticResource BoolToVis}}"
+                                                            Command="{Binding DataContext.SuperviserExamenCommand,
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}">
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="{DynamicResource SuccessLightBgBrush}"/>
+																<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+																<Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="Superviser"/>
+													</Button>
+													<Button Margin="0,0,6,0"
+                                                            Visibility="{Binding ResultatsBoutonVisible, Converter={StaticResource BoolToVis}}"
+                                                            Command="{Binding DataContext.ResultatsExamenCommand,
+                                                                RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}">
+														<Button.Style>
+															<Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+																<Setter Property="Background" Value="{DynamicResource AccentLightBgBrush}"/>
+																<Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+																<Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+															</Style>
+														</Button.Style>
+														<TextBlock Text="Résultats"/>
+													</Button>
 													<Button Style="{StaticResource IconDeleteBtn}"
-                                                            ToolTip="Supprimer cet examen"
+                                                            ToolTip="{Binding SupprimerBoutonToolTip}"
+                                                            ToolTipService.ShowOnDisabled="True"
+                                                            IsEnabled="{Binding SupprimerBoutonActif}"
                                                             Command="{Binding DataContext.SupprimerExamenCommand,
                                                                 RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}">
