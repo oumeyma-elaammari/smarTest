@@ -91,7 +91,7 @@ namespace smartest_desktop.Services
                     }
                 },
                 temperature,
-                max_tokens = 2000,
+                max_tokens = 6000,
                 stream = false
             };
 

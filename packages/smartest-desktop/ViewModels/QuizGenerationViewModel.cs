@@ -802,6 +802,42 @@ namespace smartest_desktop.ViewModels
                     : $"✅ {niveau} : {questionsNiveau.Count}/{nombreQuestions}");
             }
 
+            // ── Boucle de complément (max 2 tentatives) ───────────────────────────
+            const int MAX_COMPLEMENTS = 2;
+            for (int comp = 0; comp < MAX_COMPLEMENTS && questionsNiveau.Count < nombreQuestions && !token.IsCancellationRequested; comp++)
+            {
+                try
+                {
+                    int deficit = nombreQuestions - questionsNiveau.Count;
+                    await Task.Delay(GroqService.DelaiEntreLotsMs, token);
+                    onStatus?.Invoke($"🔄 {niveau} — complément {comp + 1}/{MAX_COMPLEMENTS} : {deficit} question(s) manquante(s)...");
+
+                    var enoncesConnus = enoncesDejaGeneres
+                        .Concat(questionsNiveau.Select(q => q.Enonce))
+                        .ToList();
+                    string contenuComp = segmentsCours[comp % segmentsCours.Count];
+                    string promptComp = BuildPromptStrict(contenuComp, deficit, niveau, enoncesConnus);
+
+                    var swComp = System.Diagnostics.Stopwatch.StartNew();
+                    string reponseComp = await groqClient.GenererAvecRetryAsync(promptComp, token, GroqService.TemperaturePourDifficulte(niveau));
+                    swComp.Stop();
+                    dureeTotale += swComp.Elapsed;
+
+                    var enonceGlobalComp = new HashSet<string>(enoncesConnus.Select(e => e.ToLowerInvariant().Trim()));
+                    foreach (var q in ParseQCM(reponseComp))
+                    {
+                        var key = q.Enonce.ToLowerInvariant().Trim();
+                        if (!enonceGlobalComp.Contains(key) && questionsNiveau.Count < nombreQuestions)
+                        {
+                            questionsNiveau.Add(q);
+                            enonceGlobalComp.Add(key);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { throw; }
+                catch { break; }
+            }
+
             return (CorrigerNombreQuestions(questionsNiveau, nombreQuestions), dureeTotale);
         }
 
