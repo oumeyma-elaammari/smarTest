@@ -32,8 +32,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: smarttest320@gmail.com
-    password: ysvf dmuq jnyo jrxg
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -46,7 +46,7 @@ server:
 
 app:
   jwt:
-    secret: SmArTeSt_S3cr3t_K3y_2026_ENSA_ChangeMe!
+    secret: ${APP_JWT_SECRET}
     expiration: 86400000
 
   websocket:
